@@ -91,7 +91,10 @@
 .readout dd { margin: 0; font-size: 34px; line-height: 1.05; }
 #lead { color: var(--amber-ink); }
 .readout dd small { font-size: 15px; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
-.readout dd.info-text { font-size: 13px; }
+.readout div dd.info-text { font: 400 14px/1.45 var(--body); letter-spacing: normal; color: var(--muted); }
+/* An opened explanation takes the whole row, so on a phone it is not squeezed into one narrow column. */
+.readout { grid-auto-flow: dense; }
+.readout div:has(> .info-text:not([hidden])) { grid-column: 1 / -1; padding-left: 0; border-left: 0; }
 
 .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: calc(var(--cell) * 2); }
 .btn:disabled { opacity: .4; cursor: default; }

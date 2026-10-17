@@ -11,6 +11,7 @@ import { WORLD_H, WORLD_W, IN_LABELS, progressPct, describeInput, describeOutput
 import { drawTrack, drawMinimap, sizeCanvas } from '../racer/track-view.js';
 import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone, makeTeachTrack } from './sim.js';
 import { LESSON_SEED } from './story-data.js';
+import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote } from './words.js';
 
 const $ = id => document.getElementById(id);
 const trackCanvas = $('track'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -19,7 +20,8 @@ let theme = readTheme(), view = {};
 
 // Learning rates on the slider, with what each one does to the loss.
 const LRS = [[0.002, 'crawls'], [0.01, 'slow'], [0.05, 'steady'], [0.2, 'fast but noisy'], [1, 'jumpy'], [3, 'overshoots']];
-const EPOCHS = 40, MORE_EPOCHS = 30, FRAMES_PER_EPOCH = 4, PAUSE = 75;
+// HOLD: how long (in 60 Hz steps) the caption announces the next step before it starts.
+const EPOCHS = 40, MORE_EPOCHS = 30, FRAMES_PER_EPOCH = 4, HOLD = 150;
 const rng = mulberry32(Date.now() >>> 0);
 const freshBrain = () => Float64Array.from(randomGenome(TEACH_GENOME, rng), v => v * 0.5);
 
@@ -27,7 +29,7 @@ const s = {
   // Every visit starts on the same friendly track (the write-up's); New track gives random ones.
   phase: 'teach', track: makeTeachTrack(mulberry32(LESSON_SEED)), car: null, frame: 0, genome: freshBrain(),
   examples: [], attempt: [], losses: [], passes: 0, crashes: [], corrections: 0,
-  started: false, epochsLeft: 0, rest: 0, lr: LRS[2][0], solved: false,
+  started: false, epochsLeft: 0, epochs: 0, wait: 0, rest: 0, lr: LRS[2][0], solved: false,
 };
 s.car = newCar(s.track);
 
@@ -83,7 +85,7 @@ function teachFrame() {
   s.attempt.push(stepTeach(s.car, s.track, { genome: s.genome, want: want(), frame: s.frame++ }));
   if (lapDone(s.car)) {
     s.examples.push(...s.attempt); s.attempt = [];
-    startTraining(EPOCHS, `One lap, ${s.examples.length} examples. Now it learns: every pass over your examples, each of its 65 numbers moves a little in the direction that makes its steering closer to yours. That is gradient descent.`);
+    startTraining(EPOCHS, lapDoneNote(s.examples.length), `One lap, ${s.examples.length} examples. Now it learns: every pass over your examples, each of its 65 numbers moves a little in the direction that makes its steering closer to yours. That is gradient descent.`);
   } else if (!s.car.alive) {
     s.crashes.push({ x: s.car.x, y: s.car.y });
     say(s.car.crashed
@@ -93,34 +95,38 @@ function teachFrame() {
   }
 }
 
-function startTraining(epochs, text) {
-  setPhase('train'); s.epochsLeft = epochs; s.corrections = 0; updateRetrain();
+// Each step is announced on the track first (`note`), and starts a couple of seconds later.
+function startTraining(epochs, note, text) {
+  setPhase('train'); s.epochs = s.epochsLeft = epochs; s.wait = HOLD; s.corrections = 0; updateRetrain();
   // The loss before this round of learning, so the chart shows the drop (and the bump that new corrections cause).
   s.losses.push(datasetLoss(s.genome, TEACH_SIZES, s.examples)); drawChart();
-  resetCar(); prompt(''); say(text);
+  prompt(note); say(text);
 }
 
 function trainFrame() {
+  if (s.wait > 0) { if (--s.wait === 0) resetCar(); return; } // the car stays where it finished while the caption is read
   if (s.frame++ % FRAMES_PER_EPOCH) return;
   s.passes++;
+  prompt(learningNote(s.epochs - s.epochsLeft + 1, s.epochs));
   s.losses.push(trainEpoch(s.genome, TEACH_SIZES, s.examples, { lr: s.lr, batch: 32, rng }));
   drawChart();
   if (--s.epochsLeft === 0) startTest();
 }
 
 function startTest() {
-  setPhase('test'); resetCar(); s.rest = 0;
+  setPhase('test'); resetCar(); s.rest = 0; s.wait = HOLD; prompt(drivesNote());
   say(`Trained for ${s.passes} passes over your examples. Now it drives on its own. If it heads for trouble, take the wheel (slide on the track, or hold Left or Right): whatever you do is added as new examples.`);
 }
 
 function testFrame() {
-  if (s.rest > 0) { if (--s.rest === 0) resetCar(); return; }
+  if (s.wait > 0) { if (--s.wait === 0) prompt(''); return; }
+  if (s.rest > 0) { if (--s.rest === 0) { resetCar(); prompt(''); } return; }
   const w = steering() ? want() : null;
   const ex = stepTeach(s.car, s.track, { genome: s.genome, want: w, frame: s.frame++ });
   prompt(w === null ? '' : 'You have the wheel. Every moment is a new example.');
   if (ex) { s.examples.push(ex); s.corrections++; updateRetrain(); }
   if (s.car.alive) return;
-  s.rest = PAUSE;
+  s.rest = HOLD; prompt(testEndNote(s.car.finished));
   if (s.car.finished) {
     if (!s.solved) say('It drove two laps by itself, copying you. Try New track: did it learn to drive, or only this track?');
     s.solved = true;
@@ -189,7 +195,7 @@ function frame(now) {
   }
 
   // Driver's view whenever the car is moving, so Left always means left on screen; the whole track otherwise.
-  const moving = (s.phase === 'teach' && s.started) || (s.phase === 'test' && s.rest === 0);
+  const moving = (s.phase === 'teach' && s.started) || (s.phase === 'test' && s.rest === 0 && s.wait === 0);
   const c = s.car;
   if (moving) {
     let d = c.angle - cam.heading;
@@ -212,21 +218,21 @@ function frame(now) {
   $('loss').textContent = s.losses.length ? s.losses.at(-1).toFixed(3) : '–';
   // While you teach the goal is one lap; when the brain drives, two.
   const [far, ...goal] = distanceLabel(progressPct(s.car)).split(' ');
-  $('dist').innerHTML = s.phase === 'teach' ? `${far}<small> of 1 lap</small>` : `${far}<small> ${goal.join(' ')}</small>`;
+  $('dist').innerHTML = s.phase !== 'test' ? `${far}<small> of 1 lap</small>` : `${far}<small> ${goal.join(' ')}</small>`;
   requestAnimationFrame(frame);
 }
 
 // ---------- Controls ----------
 $('retrain').addEventListener('click', () => {
-  startTraining(MORE_EPOCHS, `Retraining on all ${s.examples.length} examples, including your corrections. It starts from what it already knows.`);
+  startTraining(MORE_EPOCHS, retrainNote(s.examples.length, s.corrections), `Retraining on all ${s.examples.length} examples, including your corrections. It starts from what it already knows.`);
 });
 $('newTrack').addEventListener('click', () => {
   s.track = makeTeachTrack(rng); s.crashes = []; resetCar();
-  if (s.losses.length) { setPhase('test'); s.rest = 0; say('New track, same brain. If it still drives, it learned to read the walls. If it crashes, it only learned your old track.'); }
+  if (s.losses.length) { setPhase('test'); s.rest = s.wait = 0; prompt(''); say('New track, same brain. If it still drives, it learned to read the walls. If it crashes, it only learned your old track.'); }
   else { s.attempt = []; s.started = false; prompt(START); }
 });
 $('restart').addEventListener('click', () => {
-  Object.assign(s, { genome: freshBrain(), examples: [], attempt: [], losses: [], passes: 0, crashes: [], corrections: 0, started: false, solved: false });
+  Object.assign(s, { genome: freshBrain(), examples: [], attempt: [], losses: [], passes: 0, crashes: [], corrections: 0, started: false, solved: false, wait: 0 });
   setPhase('teach'); resetCar(); updateRetrain(); drawChart();
   prompt(START);
   say('Starting over with a brand-new random brain. Drive one lap without crashing.');
