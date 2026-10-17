@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Teach by Driving works · Neural Arcade</title>
+<meta name="description" content="How a small neural network learns to steer by copying you: examples, loss, gradient descent, learning rate, and why it crashes exactly where your driving never showed it what to do. Every figure is drawn from one real run.">
+<link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../../assets/arcade.css">
+<link rel="stylesheet" href="../../racer/how-it-works/story.css">
+<link rel="stylesheet" href="story.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark back" href="../" aria-label="Back to Teach by Driving"><svg class="ic ic-arrow-left" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/></svg><span>Teach by Driving</span></a>
+    <span class="spacer"></span>
+    <button class="btn lamp icon" id="lamp" type="button" aria-label="Switch theme" title="Switch theme"><svg class="ic ic-sun" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg><svg class="ic ic-moon" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap story">
+  <header class="intro">
+    <p class="kicker">Teach by Driving · How it works</p>
+    <h1>How a car learns to drive by copying you</h1>
+    <p class="lede">You drive. A tiny neural network watches what the car senses and how you steer, then learns to do the same, one small nudge at a time. Then it drives on its own, and crashes exactly where you never showed it what to do.</p>
+    <p class="meta"><span>6 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+  </header>
+
+  <figure class="fig wide">
+    <canvas id="figLap" class="track" aria-label="The car being driven round the track for two teaching laps"></canvas>
+    <figcaption><b>Fig. 1</b> The two teaching laps used on this page. To keep every figure the same on every visit, they were driven by a simple autopilot standing in for you.</figcaption>
+  </figure>
+
+  <section class="step">
+    <p class="num-tag">01</p>
+    <h2>Same brain, a different teacher</h2>
+    <p>In <a href="../../racer/how-it-works/">Neural Racer</a>, nobody teaches the cars. Random brains drive, the best ones have children, and driving improves over generations. That is learning from a score.</p>
+    <p>Here the brain learns from <em>examples</em> instead: you show it what to do, and it learns to copy you. This is how almost every modern AI model is trained, from photo apps to chatbots. The brain is nearly the same: the same six senses, 8 hidden neurons, but only one output, steering. The car holds its own speed, so 65 numbers in all.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">02</p>
+    <h2>Every moment is an example</h2>
+    <p>Sixty times a second while you drive, the car writes down two things: the six numbers it sensed, and how you were steering at that moment. That pair is one <em>example</em>: a question and its right answer. Two laps make about a thousand.</p>
+    <figure class="fig">
+      <div class="table-wrap"><table class="examples" id="figExamples"></table></div>
+      <figcaption><b>Fig. 2</b> A few of the <span id="exCount"></span> examples from the teaching laps. Steering runs from −1 (full left) to +1 (full right).</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">03</p>
+    <h2>A guess, and how wrong it is</h2>
+    <p>Show the untrained brain an example's six numbers and it guesses a steering value. Its weights are random, so the guess is too. The gap between its guess and your answer is its mistake.</p>
+    <figure class="fig">
+      <div class="gap" id="figGap"></div>
+      <figcaption><b>Fig. 3</b> One example, before any learning.</figcaption>
+    </figure>
+    <p>Square the gap and halve it, so big mistakes count much more than small ones, then average over every example. That single number is the <em>loss</em>. For the untrained brain it is <b id="lossStart"></b>. Learning means making it smaller.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">04</p>
+    <h2>One weight, one hill</h2>
+    <p>Take just one of the 65 weights and slide it, keeping the other 64 still. The loss goes up and down like a hill. Learning is finding the bottom.</p>
+    <figure class="fig">
+      <canvas id="figHill" class="hill" aria-label="Loss plotted against one weight, with a ball stepping down to the lowest point"></canvas>
+      <figcaption><b>Fig. 4</b> <span id="hillCaption"></span></figcaption>
+    </figure>
+    <p>The brain cannot see the whole hill. It can only feel the slope right under the ball: that slope is the <em>gradient</em>. So it takes a step downhill, feels the slope again, and steps again. That is <em>gradient descent</em>. The size of each step is the <em>learning rate</em>.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">05</p>
+    <h2>All 65 at once</h2>
+    <p>The real thing does this for all 65 weights at the same time: one hill in 65 directions. A method called <em>backpropagation</em> works out the slope for every weight in one go, by tracing each mistake backwards through the network. Every pass over the examples moves every weight a little downhill.</p>
+    <figure class="fig">
+      <canvas id="figLoss" class="loss" aria-label="Loss falling over passes through the examples"></canvas>
+      <div class="brains">
+        <figure><canvas id="brainBefore" class="brain-mini" aria-label="The brain before learning"></canvas><figcaption>Before: random weights</figcaption></figure>
+        <figure><canvas id="brainAfter" class="brain-mini" aria-label="The brain after learning"></canvas><figcaption id="afterLabel"></figcaption></figure>
+      </div>
+      <figcaption><b>Fig. 5</b> The loss over <span id="passes"></span> passes, and the same example flowing through the brain before and after.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">06</p>
+    <h2>Let it drive</h2>
+    <p>Now the brain steers on its own. The loss is low, so it should drive like the teacher.</p>
+    <figure class="fig wide">
+      <div class="minis two" id="figFirst"></div>
+      <p class="key"><span><i class="dash"></i>teacher's laps</span><span><i class="line"></i>the brain on its own</span><span><i class="crash"></i>crash</span></p>
+      <figcaption><b>Fig. 6</b> <span id="firstCaption"></span></figcaption>
+    </figure>
+    <p>It drives most of the way like the teacher, then drifts a little wide, and a little more, and hits the wall. Look at the close-up: the brain ended up somewhere the teacher never drove. None of its examples were from there, so it had never learned what to do.</p>
+    <p>This is called <em>distribution shift</em>: a model meets situations unlike its training data. A small mistake leads to an unfamiliar place, where it makes a bigger mistake. It is one of the main reasons AI that does well in testing can fail in the real world.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">07</p>
+    <h2>Take the wheel</h2>
+    <p>The fix is to show it exactly those moments. Let the brain drive again, and grab the wheel whenever it gets into trouble. Every moment you steer becomes a new example, from the very places it gets lost. Then train again on everything.</p>
+    <figure class="fig wide">
+      <div class="minis two" id="figFix"></div>
+      <p class="key"><span><i class="line"></i>the brain driving</span><span><i class="took"></i>the teacher took the wheel</span><span><i class="done"></i>retrained brain, on its own</span></p>
+      <figcaption><b>Fig. 7</b> <span id="fixCaption"></span></figcaption>
+    </figure>
+    <p>This idea has a name in robotics research: DAgger, short for Dataset Aggregation. Collect data where the learner actually goes, not just where the expert goes.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">08</p>
+    <h2>The size of the step</h2>
+    <p>The learning rate is how far each weight moves on every step. Here is the same brain trained on the same examples with three different learning rates.</p>
+    <figure class="fig wide">
+      <div class="rates" id="figRates"></div>
+      <figcaption><b>Fig. 8</b> Loss over 40 passes, all on the same scale. Too small and it creeps down more slowly. Too big and the first steps overshoot so far that the loss gets worse, and the brain gets stuck there.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">09</p>
+    <h2>Honest notes</h2>
+    <ul class="notes">
+      <li><b>Low loss is not the same as good driving.</b> The loss only measures how well it copies its examples. The brain that crashed in Fig. 6 had a <i id="noteLossA"></i> loss; the one that finished in Fig. 7 had <i id="noteLossB"></i>. Its corrections were harder examples, and they were the ones that mattered.</li>
+      <li><b>It copies your habits, good and bad.</b> Hug the wall and it hugs the wall. Weave and it weaves. It can never be a better driver than its examples.</li>
+      <li><b>It never reaches zero.</b> You never steer exactly the same way twice in the same spot, so there is no single right answer to copy perfectly.</li>
+      <li><b>The teacher on this page is an autopilot,</b> so the figures are the same on every visit. On the live page the teacher is you.</li>
+    </ul>
+  </section>
+
+  <section class="step">
+    <details class="deep">
+      <summary><span class="num-tag">10</span><span>For ML practitioners</span></summary>
+      <dl>
+        <div><dt>Task</dt><dd>Behaviour cloning: supervised regression from a 6-number observation (five ray lengths in [0, 1], speed over top speed) to one steering value in [−1, 1]. Throttle is a fixed rule that holds cruising speed, for the human and the network alike.</dd></div>
+        <div><dt>Network</dt><dd>6–8–1 multilayer perceptron, tanh on every layer: 6×8 + 8 + 8×1 + 1 = 65 parameters, initial weights drawn from a normal distribution with standard deviation 0.5.</dd></div>
+        <div><dt>Loss</dt><dd>Half the mean squared error. Labels are the human's steering after a first-order smoothing (each frame moves 25% towards the key held), so they are continuous.</dd></div>
+        <div><dt>Optimiser</dt><dd>Plain mini-batch stochastic gradient descent: batches of 32, shuffled every epoch, gradients by backpropagation. 40 epochs at first, 30 per retrain, learning rate 0.05 by default.</dd></div>
+        <div><dt>Corrections</dt><dd>The human can override the policy at any time; only the overridden frames are labelled and added (closer to HG-DAgger, Kelly et al. 2019, than to the original DAgger, Ross, Gordon and Bagnell 2011, where the expert labels every visited state). The figures use a scripted expert that takes over for 20 frames whenever any ray is under 12% of its range.</dd></div>
+        <div><dt>Versus Racer</dt><dd>Neural Racer sets similar weights with a genetic algorithm and only a distance score; this game uses labelled targets and exact gradients. Same observation space, different learning signal.</dd></div>
+      </dl>
+    </details>
+  </section>
+
+  <section class="step finale">
+    <p class="num-tag">11</p>
+    <h2>Your turn</h2>
+    <p>On the live page you are the teacher. Three things to try:</p>
+    <ol class="tries">
+      <li><b>Drive perfectly down the middle.</b> Then watch where it crashes. Perfect examples teach it nothing about recovering.</li>
+      <li><b>Learning rate 3.</b> Start over with it, and watch the loss chart.</li>
+      <li><b>New track.</b> Once it drives your track, change it. Did it learn to drive, or only your track?</li>
+    </ol>
+    <a class="btn solid go" href="../"><span>Teach it yourself</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+  </section>
+</main>
+
+<script type="module" src="story.js"></script>
+</body>
+</html>

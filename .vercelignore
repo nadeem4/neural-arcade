@@ -1,0 +1,7 @@
+.impeccable/
+node_modules/
+tests/
+PRODUCT.md
+DESIGN.md
+.playwright-mcp/
+.remember/

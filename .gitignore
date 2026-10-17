@@ -1,0 +1,7 @@
+.impeccable/
+node_modules/
+.vercel/
+.playwright-mcp/
+
+.vercel
+.remember/

@@ -1,0 +1,38 @@
+/* Teach by Driving: shares the racer page's bench, readouts, info buttons and controls (racer.css), plus a steering wheel. */
+
+/* The three steps, always in view: you drive, it learns, it drives. */
+.phases { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.phases li { display: flex; align-items: center; gap: 10px; padding: 10px 12px 0 0; font-family: var(--display); font-weight: 600; font-size: 17px;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.phases li + li { padding-left: 14px; border-left: 1px solid var(--rule); }
+.phases b { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 1.5px solid currentColor; font-weight: 800; font-size: 15px; }
+.phases li[aria-current] { color: var(--ink); }
+.phases li[aria-current] b { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
+
+/* Steering: two big hold buttons right under the track, sized for thumbs. */
+.wheel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.steer { min-height: 64px; font-size: 20px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.steer .ic { width: 28px; height: 28px; }
+.steer.down { background: var(--ink); color: var(--ground); }
+
+.readout.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.versus { min-height: 1.5em; margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+#chart { height: 150px; }
+
+/* Phones: the wheel sits right under the track, then the step message, then the numbers. */
+@media (max-width: 980px) {
+  .teach .stage > h1 { order: 1; } .teach .brief { order: 2; } .teach .phases { order: 3; } .teach .tray { order: 4; }
+  .teach .wheel { order: 5; } .teach .log { order: 6; } .teach .readout { order: 7; } .teach .howto { order: 8; }
+  .teach .controls { order: 9; } .teach .brain-panel { order: 10; } .teach .chart-panel { order: 11; }
+}
+@media (max-width: 520px) {
+  .phases li { font-size: 14px; gap: 6px; letter-spacing: .03em; }
+  .phases li + li { padding-left: 8px; }
+  .phases b { width: 22px; height: 22px; font-size: 13px; }
+  .readout.three dd { font-size: 26px; }
+  .readout.three dd small { font-size: 12px; }
+  .readout.three div { padding-left: 10px; padding-right: 6px; }
+  .readout.three div:first-child { padding-left: 0; }
+  .teach .controls { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .teach #retrain { grid-column: span 3; } .teach #newTrack { grid-column: span 2; } .teach #restart { grid-column: span 1; }
+}

@@ -1,0 +1,45 @@
+/* Teach by Driving write-up: the shared write-up styles (racer/how-it-works/story.css) plus this page's figures. */
+
+/* Fig. 2: examples as a table that scrolls sideways on phones rather than squeezing. */
+.table-wrap { overflow-x: auto; }
+.examples { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+.examples th { font-weight: 600; font-size: 12px; color: var(--muted); text-align: right; padding: 4px 8px; white-space: nowrap; }
+.examples thead tr:first-child th { text-align: left; font-family: var(--display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.examples td { text-align: right; padding: 6px 8px; border-top: 1px solid var(--rule); }
+.examples .ans { text-align: left; border-left: 1.5px solid var(--ink); padding-left: 12px; white-space: nowrap; }
+.examples td.ans { font-weight: 700; }
+.examples td.ans span { font-weight: 400; color: var(--muted); margin-left: 6px; }
+
+/* Fig. 3: guess and answer on one steering scale, the gap between them shaded. */
+.scale { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.axis { position: relative; height: 34px; margin: 6px 0 16px; border-bottom: 1.5px solid var(--ink); }
+.axis .span { position: absolute; bottom: 0; height: 14px; background: color-mix(in srgb, var(--red) 35%, transparent); }
+.axis .mark { position: absolute; bottom: -1px; width: 3px; height: 30px; transform: translateX(-50%); }
+.axis .you { background: var(--ink); }
+.axis .guess { background: var(--amber); }
+.gap-nums { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.gap-nums dt { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.gap-nums div:first-child dt::before, .gap-nums div:nth-child(2) dt::before { content: ""; width: 3px; height: 14px; background: var(--ink); }
+.gap-nums div:nth-child(2) dt::before { background: var(--amber); }
+.gap-nums dd { margin: 2px 0 0; font-family: var(--display); font-weight: 800; font-size: 22px !important; line-height: 1.2 !important; }
+@media (max-width: 640px) { .gap-nums { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Figs. 4, 5 and 8: plots. */
+.fig .hill { display: block; width: 100%; height: 300px; }
+.fig .loss { display: block; width: 100%; height: 160px; }
+.brains { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.brains figure { margin: 0; }
+.brains figcaption { margin: 4px 0 0; padding: 0; border: 0; font-size: 13px; }
+.brain-mini { display: block; width: 100%; height: 230px; }
+@media (max-width: 640px) { .brains { grid-template-columns: minmax(0, 1fr); } }
+.minis.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.rates canvas { display: block; width: 100%; height: 150px; }
+.rates figcaption { margin: 6px 0 0; padding: 0; border: 0; font-size: 14px; color: var(--ink); font-weight: 600; }
+@media (max-width: 720px) { .minis.two, .rates { grid-template-columns: minmax(0, 1fr); } }
+
+/* Path keys. */
+.key .dash { height: 0 !important; width: 18px !important; border-top: 2px dashed var(--muted); }
+.key .line { height: 2px !important; width: 18px !important; background: var(--ink); }
+.key .took { height: 5px !important; width: 18px !important; background: var(--amber); }
+.key .done { height: 2px !important; width: 18px !important; background: var(--amber); }

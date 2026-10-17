@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Neural Racer works · Neural Arcade</title>
+<meta name="description" content="How ten cars learn to drive without a teacher: what a car senses, what its brain is, and how breeding the best drivers makes better ones. Every figure is drawn from one real run.">
+<link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../../assets/arcade.css">
+<link rel="stylesheet" href="story.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark back" href="../" aria-label="Back to Neural Racer"><svg class="ic ic-arrow-left" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/></svg><span>Neural Racer</span></a>
+    <span class="spacer"></span>
+    <button class="btn lamp icon" id="lamp" type="button" aria-label="Switch theme" title="Switch theme"><svg class="ic ic-sun" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg><svg class="ic ic-moon" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap story">
+  <header class="intro">
+    <p class="kicker">Neural Racer · How it works</p>
+    <h1>How ten cars learn to drive without a teacher</h1>
+    <p class="lede">Nobody writes a driving rule. Nobody shows them a good lap. This is what happens instead, step by step. Every picture on this page is drawn from one real run of the experiment.</p>
+    <p class="meta"><span>5 min read</span><a href="../">Watch it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+  </header>
+
+  <figure class="fig wide">
+    <canvas id="figRace" class="track" aria-label="Ten cars with random brains leave the start grid; most crash or stop within seconds"></canvas>
+    <figcaption><b>Fig. 1</b> Generation 1 of the run on this page. Ten cars, ten random brains, on a loop.</figcaption>
+  </figure>
+
+  <section class="step">
+    <p class="num-tag">01</p>
+    <h2>The question</h2>
+    <p>Can a car learn to drive if nobody teaches it? In this experiment there is no teacher, no example lap and no rule like "turn when the wall gets close". Each car starts with a brain full of random numbers.</p>
+    <p>The experiment does only one thing: after every round, it keeps the cars that happened to drive furthest and lets them have children. Everything else on this page follows from that.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">02</p>
+    <h2>What a car senses</h2>
+    <p>A car never sees the track. Sixty times a second it gets six numbers: how far the wall is along five feelers (left, slightly left, straight ahead, slightly right and right) and how fast it is going. A feeler reads 1 when the road ahead is clear and drops towards 0 as the wall gets close.</p>
+    <figure class="fig split">
+      <canvas id="figCar" class="track" aria-label="A close-up of one car driving, with its five feelers reaching out to the walls"></canvas>
+      <div class="senses" id="senses" aria-hidden="true"></div>
+      <figcaption><b>Fig. 2</b> One car up close. The orange lines are its feelers; the bars are the six numbers its brain receives, live.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">03</p>
+    <h2>What it decides</h2>
+    <p>Those six numbers go into the car's brain, a tiny neural network. The six inputs feed 8 hidden neurons, and those feed 2 outputs: steering (left or right) and throttle (speed up or brake).</p>
+    <p>Each line in the picture is a <em>weight</em>: a number that says how strongly one neuron pushes the next. A solid line pushes up, a dashed line pushes down. That is all the brain does: six numbers in, two numbers out, again and again.</p>
+    <figure class="fig">
+      <canvas id="figBrain" class="brain" aria-label="The car's neural network: six inputs, eight hidden neurons, two outputs"></canvas>
+      <figcaption><b>Fig. 3</b> The same car's brain, at the same moment as Fig. 2. Brighter means more signal right now.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">04</p>
+    <h2>A brain is just 74 numbers</h2>
+    <p>Count every line, plus one extra number per neuron (its <em>bias</em>, a starting nudge), and the whole brain is 74 numbers. Change the numbers and you change how the car drives. Nothing else about it can change.</p>
+    <p>So a brain can be written as a strip of 74 squares. Think of it as the car's DNA: it is what gets passed on to children.</p>
+    <figure class="fig">
+      <div class="genes-block">
+        <p class="genes-label">Senses → hidden <span>56 numbers</span></p>
+        <div class="genes" id="genesA"></div>
+        <p class="genes-label">Hidden → decisions <span>18 numbers</span></p>
+        <div class="genes" id="genesB"></div>
+        <p class="key"><span><i class="pos"></i>positive</span><span><i class="neg"></i>negative</span><span>darker square = bigger number</span></p>
+      </div>
+      <figcaption><b>Fig. 4</b> The brain from Fig. 3, as its 74 numbers.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">05</p>
+    <h2>Round one: random brains</h2>
+    <p>In generation 1 every brain is random, so every car does something different, and almost all of it is useless. Here is where each of the ten went.</p>
+    <figure class="fig wide">
+      <div class="minis" id="figRound"></div>
+      <p class="key"><span><i class="crash"></i>crashed into a wall</span><span><i class="stall"></i>stalled: no progress for a few seconds</span></p>
+      <figcaption><b>Fig. 5</b> Every car's path in generation 1, zoomed in on the start. Nobody tells them what went wrong.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">06</p>
+    <h2>Pick the best</h2>
+    <p>When every car has crashed or stalled, the round ends and the cars are ranked by how far they got. That distance is the only feedback in the whole system. There is no score for style and no hint about why.</p>
+    <p>The top three become parents. The rest leave no children.</p>
+    <figure class="fig">
+      <ol class="rank" id="figRank"></ol>
+      <figcaption><b>Fig. 6</b> Generation 1, ranked. Bars are scaled to the best car of the round.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">07</p>
+    <h2>Make the next generation</h2>
+    <p>A child takes each of its 74 numbers from one parent or the other, like flipping a coin for every square. That is <em>crossover</em>.</p>
+    <p>Then a few numbers, about 8 in every 100, get nudged by a small random amount. That is <em>mutation</em>, and it is the only way something new can appear.</p>
+    <figure class="fig">
+      <div class="breed" id="figBreed" aria-live="polite"></div>
+      <button class="btn" type="button" id="breedAgain"><svg class="ic ic-shuffle" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M237.66,178.34a8,8,0,0,1,0,11.32l-24,24a8,8,0,0,1-11.32-11.32L212.69,192H200.94a72.12,72.12,0,0,1-58.59-30.15l-41.72-58.4A56.1,56.1,0,0,0,55.06,80H32a8,8,0,0,1,0-16H55.06a72.12,72.12,0,0,1,58.59,30.15l41.72,58.4A56.1,56.1,0,0,0,200.94,176h11.75l-10.35-10.34a8,8,0,0,1,11.32-11.32ZM143,107a8,8,0,0,0,11.16-1.86l1.2-1.67A56.1,56.1,0,0,1,200.94,80h11.75L202.34,90.34a8,8,0,0,0,11.32,11.32l24-24a8,8,0,0,0,0-11.32l-24-24a8,8,0,0,0-11.32,11.32L212.69,64H200.94a72.12,72.12,0,0,0-58.59,30.15l-1.2,1.67A8,8,0,0,0,143,107Zm-30,42a8,8,0,0,0-11.16,1.86l-1.2,1.67A56.1,56.1,0,0,1,55.06,176H32a8,8,0,0,0,0,16H55.06a72.12,72.12,0,0,0,58.59-30.15l1.2-1.67A8,8,0,0,0,113,149Z"/></svg><span>Breed another child</span></button>
+      <figcaption><b>Fig. 7</b> Two parents from generation 1 and one of their children. Each press breeds a new one from the same parents.</figcaption>
+    </figure>
+    <p>The new generation is still ten cars. The best car of the round is copied over unchanged, so a good driver is never lost. Eight are children like the one above. One is a brand-new random brain, to keep fresh ideas coming.</p>
+    <figure class="fig">
+      <ul class="lineup" id="figLineup"></ul>
+      <figcaption><b>Fig. 8</b> Generation 2: who its ten cars are.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">08</p>
+    <h2>Repeat</h2>
+    <p>Drive, rank, breed. Then again. No car ever changes its own brain while it drives. Improvement happens only between generations, through which cars get to have children.</p>
+    <p>Here is the best car of every generation in this run.</p>
+    <figure class="fig wide">
+      <div class="minis gens" id="figGens"></div>
+      <figcaption><b>Fig. 9</b> The best car's path in each generation, on the full track.</figcaption>
+    </figure>
+    <p id="finishLine"></p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">09</p>
+    <h2>Honest notes</h2>
+    <ul class="notes">
+      <li><b>Luck can win round one.</b> About one run in five, one of the ten random brains finishes in generation 1. That is luck, not learning. The test is whether its children keep finishing.</li>
+      <li><b>Learned, or memorised?</b> A car might only know this track's corners. On the live page, press New track: if the cars crash, they memorised; if they keep going, they learned to read the walls.</li>
+      <li><b>Not every run is this tidy.</b> Sometimes the best distance stays flat for several generations until a lucky child breaks through.</li>
+    </ul>
+  </section>
+
+  <section class="step">
+    <details class="deep">
+      <summary><span class="num-tag">10</span><span>For ML practitioners</span></summary>
+      <dl>
+        <div><dt>Network</dt><dd>Fixed 6–8–2 multilayer perceptron with tanh activations: 6×8 + 8 + 8×2 + 2 = 74 parameters. Inputs are five ray lengths normalised to [0, 1] and speed over top speed. Outputs are steering and throttle in [−1, 1].</dd></div>
+        <div><dt>Episode</dt><dd>One generation is one episode. A car stops on hitting a wall, after 150 frames without progress, or after 3,600 frames.</dd></div>
+        <div><dt>Fitness</dt><dd>Furthest progress along the track's centreline, plus a bonus of up to one lap for finishing two laps early. Nothing is rewarded during the episode.</dd></div>
+        <div><dt>Selection</dt><dd>Truncation: the top 30% (3 of 10) form the parent pool, drawn with a bias towards the top (index = ⌊u² · pool⌋). Elitism keeps the top 10% unchanged; 10% are fresh random genomes.</dd></div>
+        <div><dt>Variation</dt><dd>Uniform crossover, then per-gene mutation with probability 0.08 (the Mutation slider) and Gaussian noise of σ = 0.4. Initial weights are drawn from N(0, 1).</dd></div>
+        <div><dt>No gradients</dt><dd>This is a genetic algorithm over the weights of a fixed network (neuroevolution, like NEAT without topology growth). Backpropagation needs a differentiable loss; here the only signal is a distance at the end of an episode, the same setting as reinforcement learning. Evolution strategies have been shown to compete with RL on harder versions of this problem (Salimans et al., 2017).</dd></div>
+      </dl>
+    </details>
+  </section>
+
+  <section class="step finale">
+    <p class="num-tag">11</p>
+    <h2>Your turn</h2>
+    <p>The live experiment runs a fresh, random version of everything above. Three things to try:</p>
+    <ol class="tries">
+      <li><b>Population 50.</b> More random tries per round. How much sooner does a car finish?</li>
+      <li><b>Mutation 0.</b> Children can only reshuffle what their parents had. Does learning stall?</li>
+      <li><b>New track.</b> After a car finishes, change the track. Learned, or memorised?</li>
+    </ol>
+    <a class="btn solid go" href="../"><span>Open the live experiment</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+  </section>
+</main>
+
+<script type="module" src="story.js"></script>
+</body>
+</html>

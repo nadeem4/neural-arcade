@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neural Arcade</title>
+<meta name="description" content="Small browser games where tiny neural networks learn in front of you, and you change how they learn. One machine learning idea per game.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/arcade.css">
+<link rel="stylesheet" href="assets/home.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="./">Neural Arcade</a>
+    <span class="spacer"></span>
+    <button class="btn lamp icon" id="lamp" type="button" aria-label="Switch theme" title="Switch theme"><svg class="ic ic-sun" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg><svg class="ic ic-moon" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <h1>Watch a brain learn. Then change how it learns.</h1>
+    <p class="lede">Small games where tiny neural networks train in front of you. Every weight is on screen, and every control changes the training.</p>
+  </section>
+
+  <section class="wrap feature" aria-labelledby="racer-title">
+    <figure class="feature-fig">
+      <a class="feature-tray" href="games/racer/" aria-label="Play Neural Racer">
+        <canvas id="preview" aria-hidden="true"></canvas>
+      </a>
+      <figcaption class="feature-gen">Running live: generation <span class="num" id="pgen">1</span>, <span class="num" id="pdone">0</span> of 10 finished</figcaption>
+    </figure>
+    <div class="feature-text">
+      <h2 id="racer-title" class="feature-title">Neural Racer</h2>
+      <p>Ten cars with random brains learn to lap a track by breeding. Watch each round's winners become parents, then race the first generation's ghost.</p>
+      <p class="teaches">Teaches fitness, selection, mutation and overfitting.</p>
+      <p class="feature-actions"><a class="btn solid" href="games/racer/">Play</a><a class="btn" href="games/racer/how-it-works/">How it works</a></p>
+    </div>
+  </section>
+
+  <section class="wrap feature" aria-labelledby="teach-title">
+    <figure class="feature-fig">
+      <a class="feature-tray" href="games/teach/" aria-label="Play Teach by Driving">
+        <canvas id="preview2" aria-hidden="true"></canvas>
+      </a>
+      <figcaption class="feature-gen">Running live: a brain trained on two laps of examples, driving on its own</figcaption>
+    </figure>
+    <div class="feature-text">
+      <h2 id="teach-title" class="feature-title">Teach by Driving</h2>
+      <p>You drive two laps. A tiny network learns to steer like you by gradient descent, then drives on its own and crashes exactly where you never showed it what to do.</p>
+      <p class="teaches">Teaches training data, loss, gradient descent, learning rate and distribution shift.</p>
+      <p class="feature-actions"><a class="btn solid" href="games/teach/">Play</a><a class="btn" href="games/teach/how-it-works/">How it works</a></p>
+    </div>
+  </section>
+
+  <section class="wrap lab" aria-labelledby="lab-title">
+    <h2 id="lab-title">Still in the lab</h2>
+    <div class="seasons">
+      <div class="season">
+        <h3>Evolution</h3>
+        <dl>
+          <dt>Flappy Flock</dt><dd>A flock learns to flap through gaps while you watch its decision boundary reshape.</dd>
+          <dt>Snake Gym</dt><dd>Edit the reward and stop snakes from looping forever. Reward shaping.</dd>
+        </dl>
+      </div>
+      <div class="season">
+        <h3>Gradients</h3>
+        <dl>
+          <dt>Loss Golf</dt><dd>Roll a ball down a loss landscape. Learning rate and momentum are your club.</dd>
+          <dt>Boundary Builder</dt><dd>Separate the spiral with six neurons or fewer.</dd>
+        </dl>
+      </div>
+      <div class="season">
+        <h3>Reinforcement</h3>
+        <dl>
+          <dt>Lunar Lander</dt><dd>Touch down softly by trial and error. Exploration against exploitation.</dd>
+          <dt>Predators and Prey</dt><dd>Two species evolve against each other in an arms race.</dd>
+        </dl>
+      </div>
+      <div class="season">
+        <h3>Deeper nets</h3>
+        <dl>
+          <dt>Feature Detector</dt><dd>Draw a digit and watch a small conv net's filters light up.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Built by Nadeem.</span>
+    <a href="https://www.codewithnk.com">codewithnk.com</a>
+  </div>
+</footer>
+
+<script type="module" src="assets/home.js"></script>
+</body>
+</html>

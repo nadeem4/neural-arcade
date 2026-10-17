@@ -1,0 +1,43 @@
+.intro { padding-top: calc(var(--cell) * 6); padding-bottom: calc(var(--cell) * 4); }
+.intro h1 { max-width: 26ch; font-size: clamp(40px, 5vw, 76px); }
+.intro .lede { font-size: 19px; margin-top: calc(var(--cell) * 2); }
+
+/* The featured game is a live specimen tray, not a picture of one. */
+.feature {
+  display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+  gap: calc(var(--cell) * 5); align-items: start; padding-bottom: calc(var(--cell) * 10);
+}
+.feature-tray { display: block; background: var(--tray); border: 1.5px solid var(--rule); transition: border-color .2s; }
+.feature-tray:hover { border-color: var(--ink); }
+#preview, #preview2 { display: block; width: 100%; aspect-ratio: 8 / 5; }
+.feature-text { border-top: 1.5px solid var(--ink); padding-top: 12px; }
+.feature-fig { margin: 0; }
+.feature-gen { color: var(--muted); font-size: 14px; margin: 8px 0 0; font-variant-numeric: tabular-nums; }
+.feature-gen .num { font-family: var(--body); font-weight: 600; color: var(--ink); }
+.feature-title { font-weight: 800; font-size: 48px; letter-spacing: .01em; border: 0; padding: 0; margin: 0 0 10px; }
+.feature-text p { max-width: 46ch; }
+.teaches { color: var(--muted); font-size: 15px; }
+.feature .btn { min-width: 140px; }
+.feature-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 0; }
+@media (max-width: 860px) { .feature { grid-template-columns: 1fr; gap: calc(var(--cell) * 3); } }
+
+.lab { padding-bottom: calc(var(--cell) * 10); }
+.lab > h2 { font-size: 30px; font-weight: 800; border-bottom: 1.5px solid var(--ink); }
+.seasons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.season { padding: 4px 24px 0 0; }
+.season + .season { padding-left: 24px; border-left: 1px solid var(--rule); }
+.season h3 { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 8px 0 12px; }
+.season dl { margin: 0; }
+.season dt { font-family: var(--display); font-weight: 800; font-size: 24px; text-transform: uppercase; line-height: 1.1; }
+.season dd { margin: 4px 0 20px; color: var(--muted); font-size: 15px; }
+@media (max-width: 980px) {
+  .seasons { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
+  .season:nth-child(3) { padding-left: 0; border-left: 0; }
+}
+@media (max-width: 560px) {
+  .seasons { grid-template-columns: 1fr; }
+  .season, .season + .season { padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--rule); }
+}
+
+.foot { border-top: 1px solid var(--rule); }
+.foot .wrap { display: flex; gap: 16px; justify-content: space-between; padding-top: 20px; padding-bottom: 28px; color: var(--muted); font-size: 14px; }

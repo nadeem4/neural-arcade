@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neural Racer · Neural Arcade</title>
+<meta name="description" content="Ten cars, each driven by its own 74-weight neural network, learn to drive by breeding. Watch the breeding happen, race the first generation's ghost, set the mutation rate.">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/arcade.css">
+<link rel="stylesheet" href="racer.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark back" href="../../" aria-label="Back to Neural Arcade"><svg class="ic ic-arrow-left" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/></svg><span>Neural Arcade</span></a>
+    <span class="spacer"></span>
+    <a class="btn lamp howto-top" href="how-it-works/" aria-label="How it works" title="How it works"><svg class="ic ic-book-open" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg><span>How it works</span></a>
+    <span class="plate" aria-live="polite">Gen <b id="gen">001</b></span>
+    <button class="btn lamp icon" id="lamp" type="button" aria-label="Switch theme" title="Switch theme"><svg class="ic ic-sun" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg><svg class="ic ic-moon" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap racer">
+  <section class="stage">
+    <h1>Neural Racer</h1>
+    <dl class="brief" aria-label="The experiment">
+      <div><dt>The setup</dt><dd id="briefSetup">Ten cars get random brains. Nobody teaches them how to drive.</dd></div>
+      <div><dt>The rule</dt><dd>After each round, only the cars that drove furthest have children.</dd></div>
+      <div><dt>Watch for</dt><dd>How many rounds until one car drives two full laps.</dd></div>
+    </dl>
+
+    <div class="tray">
+      <canvas id="track" aria-label="Race track with ten cars learning to drive"></canvas>
+      <p class="caption" id="caption" hidden><span id="captionText"></span></p>
+    </div>
+
+    <a class="howto" href="how-it-works/"><svg class="ic ic-book-open" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg><span><b>How it works</b> What you are watching, step by step, with pictures. 5 min read.</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Simulation speed">
+        <button class="btn" type="button" data-speed="1" aria-pressed="true">1×</button>
+        <button class="btn" type="button" data-speed="5" aria-pressed="false">5×</button>
+        <button class="btn" type="button" data-speed="20" aria-pressed="false">20×</button>
+      </div>
+      <button class="btn icon" type="button" id="pause" aria-label="Pause" title="Pause"><svg class="ic ic-pause" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M200,32H160a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16h40a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm0,176H160V48h40ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Zm0,176H56V48H96Z"/></svg><svg class="ic ic-play" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></button>
+      <button class="btn" type="button" id="follow" aria-pressed="false"><svg class="ic ic-crosshair" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,120h-8.34A96.14,96.14,0,0,0,136,32.34V24a8,8,0,0,0-16,0v8.34A96.14,96.14,0,0,0,32.34,120H24a8,8,0,0,0,0,16h8.34A96.14,96.14,0,0,0,120,223.66V232a8,8,0,0,0,16,0v-8.34A96.14,96.14,0,0,0,223.66,136H232a8,8,0,0,0,0-16Zm-96,87.6V200a8,8,0,0,0-16,0v7.6A80.15,80.15,0,0,1,48.4,136H56a8,8,0,0,0,0-16H48.4A80.15,80.15,0,0,1,120,48.4V56a8,8,0,0,0,16,0V48.4A80.15,80.15,0,0,1,207.6,120H200a8,8,0,0,0,0,16h7.6A80.15,80.15,0,0,1,136,207.6ZM128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152Z"/></svg><span><span class="long">Follow leader</span><span class="short">Follow</span></span></button>
+      <button class="btn" type="button" id="ghost" disabled><svg class="ic ic-ghost" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M112,116a12,12,0,1,1-12-12A12,12,0,0,1,112,116Zm44-12a12,12,0,1,0,12,12A12,12,0,0,0,156,104Zm68,16v96a8,8,0,0,1-13.07,6.19l-24.26-19.85L162.4,222.19a8,8,0,0,1-10.13,0L128,202.34l-24.27,19.85a8,8,0,0,1-10.13,0L69.33,202.34,45.07,222.19A8,8,0,0,1,32,216V120a96,96,0,0,1,192,0Zm-16,0a80,80,0,0,0-160,0v79.12l16.27-13.31a8,8,0,0,1,10.13,0l24.27,19.85,24.26-19.85a8,8,0,0,1,10.14,0l24.26,19.85,24.27-19.85a8,8,0,0,1,10.13,0L208,199.12Z"/></svg><span id="ghostText">Ghost race</span></button>
+      <button class="btn" type="button" id="newTrack"><svg class="ic ic-path" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M200,168a32.06,32.06,0,0,0-31,24H72a32,32,0,0,1,0-64h96a40,40,0,0,0,0-80H72a8,8,0,0,0,0,16h96a24,24,0,0,1,0,48H72a48,48,0,0,0,0,96h97a32,32,0,1,0,31-40Zm0,48a16,16,0,1,1,16-16A16,16,0,0,1,200,216Z"/></svg><span>New track</span></button>
+      <button class="btn icon" type="button" id="restart" aria-label="Restart training" title="Restart training"><svg class="ic ic-arrow-counter-clockwise" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"/></svg></button>
+      <div class="dial pop">
+        <span class="dial-name"><span id="popName">Population</span><button class="info" type="button" aria-expanded="false" aria-controls="infoPop" aria-label="Explain population" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></span>
+        <span class="info-text" id="infoPop" hidden>How many cars try in each round. More cars means more random tries, so a good driver usually turns up sooner, but each round takes more work to run.</span>
+        <output id="popOut">Few enough to follow every car. Usually learns within a handful of rounds.</output>
+        <div class="seg" role="group" aria-labelledby="popName">
+          <button class="btn" type="button" data-pop="5" aria-pressed="false">5</button>
+          <button class="btn" type="button" data-pop="10" aria-pressed="true">10</button>
+          <button class="btn" type="button" data-pop="20" aria-pressed="false">20</button>
+          <button class="btn" type="button" data-pop="50" aria-pressed="false">50</button>
+        </div>
+      </div>
+      <label class="dial">
+        <span class="dial-name">Mutation<button class="info" type="button" aria-expanded="false" aria-controls="infoMut" aria-label="Explain mutation" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></span>
+        <span class="info-text" id="infoMut" hidden>After a child gets its weights from its two parents, this share of them is nudged by a small random amount. A little mutation brings new ideas. None means nothing new can ever appear. Too much scrambles what the parents passed on.</span>
+        <output id="mutOut" for="mut">8% of genes nudged</output>
+        <input id="mut" type="range" min="0" max="0.5" step="0.01" value="0.08">
+      </label>
+    </div>
+
+    <p class="log" id="log" aria-live="polite">Generation 1: every brain is random, so most cars crash or stall. Watch for one that turns by luck.</p>
+
+    <section class="round" id="round" aria-label="Last round">
+      <button class="info" type="button" aria-expanded="false" aria-controls="infoRound" aria-label="Explain the last round card" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button>
+      <p class="info-text" id="infoRound" hidden>Updated each time a round ends, while the race carries on. Left: every car ranked by how far it drove; only the top few become parents. Right: one child of the next generation, gene by gene: which parent each of its 74 weights came from, and which were mutated.</p>
+      <div id="roundBody">
+        <p class="m-head">Last round</p>
+        <p class="m-foot">Results appear here when the first round ends: every car ranked by how far it got, and how one child was made from two parents.</p>
+      </div>
+    </section>
+
+  </section>
+
+  <aside class="bench">
+    <section class="ped-panel">
+      <h2>Family tree<button class="info" type="button" aria-expanded="false" aria-controls="infoTree" aria-label="Explain the family tree" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></h2>
+      <p class="info-text" id="infoTree" hidden>On the right is the orange car, the one leading right now. To its left are the two parents its brain was bred from, then their parents. The shape says how each was made (see the key below), and each number is how far that car drove in its own round. Good drivers tend to descend from good drivers: that is selection at work.</p>
+      <p class="ask">Where the orange car's brain came from: its parents and grandparents.</p>
+      <div id="pedigree" class="pedigree"></div>
+      <ul class="key">
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h10v10H3Z"/></svg>Kept unchanged</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/></svg>Bred from two parents</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14.5 8 8 14.5 1.5 8Z"/></svg>Random newcomer</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path class="strike" d="M2 14 14 2"/></svg>Crashed</li>
+      </ul>
+    </section>
+
+    <dl class="readout">
+      <div><dt>Still driving<button class="info" type="button" aria-expanded="false" aria-controls="infoAlive" aria-label="Explain still driving" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></dt><dd class="num" id="alive">10<small> of 10</small></dd><dd class="info-text" id="infoAlive" hidden>Cars still in this round. A car is out when it hits a wall or stops making progress for a few seconds. When none are left, the round ends and the next generation is bred.</dd></div>
+      <div><dt>Furthest car<button class="info" type="button" aria-expanded="false" aria-controls="infoLead" aria-label="Explain furthest car" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></dt><dd class="num" id="lead">0<small> of 2 laps</small></dd><dd class="info-text" id="infoLead" hidden>How far the best car has got this round, in laps. It is a distance, not a speed. A car that reaches 2 laps has finished the track.</dd></div>
+    </dl>
+
+    <section class="brain-panel">
+      <h2>Its brain<button class="info" type="button" aria-expanded="false" aria-controls="infoBrain" aria-label="Explain the brain" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></h2>
+      <p class="info-text" id="infoBrain" hidden>This brain is driving the orange car. Left: the six numbers it senses, its five feelers on the track plus its speed. Middle: 8 hidden neurons that mix them. Right: the two things it controls, steering and throttle. Each line is a weight: solid pushes the next neuron up, dashed pushes it down, brighter means more signal right now. The weights never change while it drives; only breeding changes them.</p>
+      <p class="ask">How it is deciding, right now, this frame.</p>
+      <canvas id="brain" aria-label="Neural network of the leading car"></canvas>
+    </section>
+
+    <section class="chart-panel">
+      <h2>Cars that finished<button class="info" type="button" aria-expanded="false" aria-controls="infoChart" aria-label="Explain this chart" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></h2>
+      <p class="info-text" id="infoChart" hidden>One bar per generation: how many cars drove the full 2 laps. One lucky car can finish early by chance; a row of bars that keeps climbing means the whole population is getting better, not just one car.</p>
+      <p class="ask">Is the whole population getting better?</p>
+      <canvas id="chart" aria-label="Bar chart: cars that finished two laps, per generation"></canvas>
+      <p class="note">Out of <span class="popN">10</span>, one bar per generation. Bars climbing means the population is learning.</p>
+    </section>
+  </aside>
+</main>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>

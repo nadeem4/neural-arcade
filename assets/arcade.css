@@ -1,0 +1,106 @@
+@font-face { font-family: "Saira Condensed"; font-weight: 600; font-display: swap; src: url("fonts/saira-condensed-600.woff2") format("woff2"); }
+@font-face { font-family: "Saira Condensed"; font-weight: 800; font-display: swap; src: url("fonts/saira-condensed-800.woff2") format("woff2"); }
+@font-face { font-family: "Public Sans"; font-weight: 100 900; font-display: swap; src: url("fonts/public-sans-var.woff2") format("woff2"); }
+
+/* The lab bench at night is the default; daylight follows the system or the toggle. */
+:root {
+  color-scheme: dark;
+  --ground: #12352B; --tray: #0B271F; --road: #1D4538; --edge: rgba(238, 242, 230, .3);
+  --ink: #EEF2E6; --muted: #A3BAAD; --muted-on-tray: #A3BAAD; --rule: #2E5849; --car: #EEF2E6;
+  --amber: #F2A93B; --amber-ink: #F2A93B; --on-amber: #12352B; --red: #E5533F;
+  --display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --body: "Public Sans", "Segoe UI", Roboto, sans-serif;
+  --cell: 8px;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --ground: #E3EBE5; --tray: #C6D6CB; --road: #F1F5F0; --edge: rgba(18, 53, 43, .4);
+    --ink: #12352B; --muted: #46685A; --muted-on-tray: #3A5A4C; --rule: #AFC3B6; --car: #12352B;
+    --amber-ink: #8F5300; --red: #C23A2B;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ground: #E3EBE5; --tray: #C6D6CB; --road: #F1F5F0; --edge: rgba(18, 53, 43, .4);
+  --ink: #12352B; --muted: #46685A; --muted-on-tray: #3A5A4C; --rule: #AFC3B6; --car: #12352B;
+  --amber-ink: #8F5300; --red: #C23A2B;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100dvh; background: var(--ground); color: var(--ink);
+  font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+::selection { background: var(--ink); color: var(--ground); }
+a { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+* { scrollbar-color: var(--rule) var(--ground); }
+
+.wrap { max-width: 1360px; margin: 0 auto; padding: 0 calc(var(--cell) * 6); }
+@media (max-width: 720px) { .wrap { padding: 0 16px; } }
+
+/* Top strip: wordmark, generation plate, lamp. */
+.topbar { border-bottom: 1px solid var(--rule); }
+.topbar .wrap { height: 64px; display: flex; align-items: center; gap: 24px; }
+.wordmark { font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: .04em; text-transform: uppercase; text-decoration: none; }
+.wordmark.back { display: inline-flex; align-items: center; gap: 8px; }
+.wordmark.back .ic { width: .9em; height: .9em; transition: transform .15s; }
+.wordmark.back:hover .ic { transform: translateX(-3px); }
+.topbar .spacer { flex: 1; }
+.plate {
+  font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: .08em;
+  border: 1.5px solid var(--ink); padding: 0 12px; height: 36px; display: inline-flex; align-items: center; gap: 8px;
+  font-variant-numeric: tabular-nums; overflow: hidden;
+}
+.plate b { display: inline-block; font-weight: 800; }
+.plate b.flip { animation: flip .32s cubic-bezier(.16, 1, .3, 1); }
+@keyframes flip { from { transform: translateY(70%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Controls: hard rectangles, ink outlines, inverted when pressed. */
+.btn {
+  font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: .06em; text-transform: uppercase;
+  min-height: 44px; padding: 0 16px; border: 1.5px solid var(--ink); border-radius: 0;
+  background: transparent; color: var(--ink); cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+  transition: background-color .15s, color .15s;
+}
+.btn:hover { background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.btn:active { transform: translateY(1px); }
+.btn[aria-pressed="true"], .btn.solid { background: var(--ink); color: var(--ground); }
+.seg { display: inline-flex; }
+.seg .btn + .btn { margin-left: -1.5px; }
+.lamp { min-height: 36px; font-size: 16px; padding: 0 12px; }
+
+/* Icons (Phosphor, regular weight) sit inside buttons in the label's colour. Icon-only buttons are square. */
+.ic { width: 1.25em; height: 1.25em; flex: none; }
+.btn .ic + span, .btn span + .ic { margin-left: 8px; }
+.btn.icon { padding: 0; min-width: 44px; }
+.lamp.icon { min-width: 36px; }
+/* Top-bar link to a game's write-up; icon only on phones. */
+.howto-top { gap: 0; text-transform: uppercase; }
+@media (max-width: 520px) { .howto-top span { display: none; } .howto-top { padding: 0; min-width: 32px; } .howto-top .ic + span { margin: 0; } }
+/* Two-state icon buttons carry both icons; the state attribute picks one. */
+.lamp[data-next="light"] .ic-moon, .lamp[data-next="dark"] .ic-sun,
+.btn[aria-pressed="true"] .ic-speaker-slash, .btn[aria-pressed="false"] .ic-speaker-high,
+.btn[data-state="paused"] .ic-pause, .btn:not([data-state="paused"]) .ic-play { display: none; }
+
+h1, h2 { font-family: var(--display); text-transform: uppercase; margin: 0; text-wrap: balance; }
+h1 { font-weight: 800; font-size: clamp(44px, 6vw, 72px); line-height: .92; letter-spacing: .005em; }
+h2 { font-weight: 600; font-size: 22px; letter-spacing: .08em; padding-bottom: 6px; border-bottom: 1px solid var(--rule); margin-bottom: 12px; }
+.lede { color: var(--muted); font-size: 18px; max-width: 52ch; margin: 8px 0 0; }
+.num { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+@media (max-width: 520px) {
+  .topbar .wrap { gap: 8px; height: 56px; }
+  .wordmark { font-size: 19px; white-space: nowrap; min-width: 0; }
+  .plate { font-size: 18px; height: 32px; padding: 0 8px; flex: none; }
+  .lamp { min-height: 32px; padding: 0 10px; font-size: 15px; }
+}

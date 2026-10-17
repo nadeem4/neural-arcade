@@ -1,0 +1,13 @@
+{
+  "name": "neural-arcade",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "npx --yes serve@14.2.4 -l 4173 ."
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}
