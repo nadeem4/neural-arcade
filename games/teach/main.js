@@ -11,7 +11,7 @@ import { WORLD_H, WORLD_W, IN_LABELS, progressPct, describeInput, describeOutput
 import { drawTrack, drawMinimap, sizeCanvas } from '../racer/track-view.js';
 import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone, makeTeachTrack } from './sim.js';
 import { LESSON_SEED } from './story-data.js';
-import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote, relearnNote } from './words.js';
+import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote, relearnNote, wheelMode } from './words.js';
 
 const $ = id => document.getElementById(id);
 const trackCanvas = $('track'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -63,7 +63,7 @@ trackCanvas.addEventListener('pointermove', e => {
   if (drag) drag.steer = Math.max(-1, Math.min(1, (e.clientX - drag.x0) / (drag.width * 0.2)));
 });
 for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) trackCanvas.addEventListener(ev, () => { drag = null; });
-const steering = () => drag !== null || held.size > 0;
+const steering = () => wheelMode(s) !== 'off' && (drag !== null || held.size > 0);
 const want = () => (AUTO && s.phase === 'teach' ? autopilot(s.car)
   : drag ? drag.steer : (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0));
 for (const side of ['left', 'right']) {
@@ -76,6 +76,21 @@ const KEYS = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 
 addEventListener('keydown', e => { if (KEYS[e.key] && !e.target.closest?.('input')) { e.preventDefault(); held.add(KEYS[e.key]); } });
 addEventListener('keyup', e => { if (KEYS[e.key]) held.delete(KEYS[e.key]); });
 addEventListener('blur', () => held.clear());
+
+// The buttons steer while you teach and take the wheel while it drives; otherwise they are off, and the line above says why.
+let wheel = '';
+function updateWheel() {
+  const mode = wheelMode(s);
+  const note = mode === 'drive' ? 'Your wheel: hold Left or Right, or slide on the track.'
+    : mode === 'takeover' ? 'Take the wheel: hold Left or Right to steer it yourself.'
+    : s.phase === 'train' ? 'Steering is off while it learns.'
+    : s.done ? 'Steering is off: it has finished. Try New track, or Drive again.'
+    : 'Steering is off until it drives.';
+  if (note === wheel) return;
+  wheel = note; $('wheelNote').textContent = note; $('wheelNote').classList.toggle('on', mode === 'takeover');
+  for (const side of ['left', 'right']) $(side).disabled = mode === 'off';
+  if (mode === 'off') { held.clear(); drag = null; $('left').classList.remove('down'); $('right').classList.remove('down'); }
+}
 
 // ---------- The three steps ----------
 function resetCar() { s.car = newCar(s.track); s.frame = 0; }
@@ -208,6 +223,7 @@ function frame(now) {
     else testFrame();
   }
 
+  updateWheel();
   // Driver's view whenever the car is moving, so Left always means left on screen; the whole track otherwise.
   const moving = (s.phase === 'teach' && s.started) || (s.phase === 'test' && s.rest === 0 && s.wait === 0 && !s.done);
   const c = s.car;

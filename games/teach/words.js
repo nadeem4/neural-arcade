@@ -12,3 +12,10 @@ export function testEndNote(end, onNewTrack) {
     : 'Two laps on your track. Now the real test: a track it has never seen.';
 }
 export const relearnNote = (lr, n) => `New learning rate (${lr}): learning your same ${n} examples again, from scratch.`;
+
+// What the steering buttons do right now: steer while you teach, take the wheel from the brain while it drives,
+// and nothing (shown disabled) while it learns, while a caption announces the next step, between drives, or once it is done.
+export function wheelMode({ phase, wait, rest, done }) {
+  if (phase === 'teach') return 'drive';
+  return phase === 'test' && !wait && !rest && !done ? 'takeover' : 'off';
+}

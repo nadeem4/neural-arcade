@@ -14,6 +14,9 @@
 .steer { min-height: 64px; font-size: 20px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .steer .ic { width: 28px; height: 28px; }
 .steer.down { background: var(--ink); color: var(--ground); }
+/* One line above the buttons saying what they do right now, or why they are off. */
+.wheel-note { grid-column: 1 / -1; margin: 0; font-size: 14px; color: var(--muted); }
+.wheel-note.on { color: var(--ink); font-weight: 600; }
 
 .readout.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .versus { min-height: 1.5em; margin: 6px 0 0; font-size: 14px; color: var(--muted); }

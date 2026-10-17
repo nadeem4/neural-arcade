@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote, relearnNote } from '../games/teach/words.js';
+import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote, relearnNote, wheelMode } from '../games/teach/words.js';
 
 describe('teach by driving: what the track says at each step', () => {
   it('says the lap is over and what happens next', () => {
@@ -32,5 +32,17 @@ describe('teach by driving: what the track says at each step', () => {
 
   it('says a new learning rate relearns the same examples from scratch', () => {
     expect(relearnNote(1, 850)).toBe('New learning rate (1): learning your same 850 examples again, from scratch.');
+  });
+});
+
+describe('teach by driving: what the steering buttons do', () => {
+  const at = (phase, more = {}) => wheelMode({ phase, wait: 0, rest: 0, done: false, ...more });
+  it('steer the car while you teach', () => expect(at('teach')).toBe('drive'));
+  it('are off while it learns', () => expect(at('train')).toBe('off'));
+  it('take the wheel from the brain while it drives', () => expect(at('test')).toBe('takeover'));
+  it('are off while a caption announces the next step, between drives, and once it is done', () => {
+    expect(at('test', { wait: 10 })).toBe('off');
+    expect(at('test', { rest: 10 })).toBe('off');
+    expect(at('test', { done: true })).toBe('off');
   });
 });
