@@ -6,9 +6,9 @@ import { TEACH_GENOME } from '../games/teach/sim.js';
 const L = recordLesson(2);
 
 describe('the recorded lesson (track 2)', () => {
-  it('records the teacher laps as examples, one per frame', () => {
+  it('records the teacher lap as examples, one per frame', () => {
     expect(L.examples.length).toBe(L.teacherPath.length - 1);
-    expect(L.examples.length).toBeGreaterThan(900);
+    expect(L.examples.length).toBeGreaterThan(600); // one slow lap
   });
 
   it('learns: the loss falls a long way', () => {

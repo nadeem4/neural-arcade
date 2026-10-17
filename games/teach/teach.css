@@ -18,6 +18,8 @@
 .readout.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .versus { min-height: 1.5em; margin: 6px 0 0; font-size: 14px; color: var(--muted); }
 #chart { height: 150px; }
+/* The track is also a steering pad: touches steer instead of scrolling the page. */
+.teach #track { touch-action: none; cursor: grab; }
 
 /* Phones: the wheel sits right under the track, then the step message, then the numbers. */
 @media (max-width: 980px) {

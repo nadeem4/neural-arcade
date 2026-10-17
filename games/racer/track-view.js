@@ -20,11 +20,19 @@ export function sizeCanvas(canvas, ratio) {
   return { dpr, w, h };
 }
 
-// `focus` zooms the camera onto a point (follow-leader mode); `tags` label cars by name ([{ car, text }]).
+// `focus` zooms the camera onto a point (follow-leader mode); with `focus.heading` it also turns the world so that
+// heading points up the screen, with the point low in the frame (a driver's view). `tags` label cars by name ([{ car, text }]).
 export function drawTrack(ctx, race, leader, theme, { scale, dpr, sensors = true, focus = null, tags = [] }) {
   const track = race.track, path = roadPath(track);
   ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
-  if (focus) {
+  if (focus && focus.heading !== undefined) {
+    const k = scale * dpr * focus.zoom, cw = WORLD_W * scale * dpr, ch = WORLD_H * scale * dpr;
+    ctx.fillStyle = theme.tray; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    const a = -focus.heading - Math.PI / 2, cos = Math.cos(a) * k, sin = Math.sin(a) * k;
+    // Rotate and zoom about the point, then place it in the middle, 70% of the way down.
+    ctx.setTransform(cos, sin, -sin, cos, cw / 2 - (cos * focus.x - sin * focus.y), ch * 0.7 - (sin * focus.x + cos * focus.y));
+    ctx.fillStyle = theme.tray; ctx.fillRect(-WORLD_W, -WORLD_H, WORLD_W * 3, WORLD_H * 3);
+  } else if (focus) {
     const k = scale * dpr * focus.zoom, cw = WORLD_W * scale * dpr, ch = WORLD_H * scale * dpr;
     const clamp = (v, lo) => Math.min(0, Math.max(lo, v));
     ctx.fillStyle = theme.tray; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
@@ -66,7 +74,7 @@ export function drawTrack(ctx, race, leader, theme, { scale, dpr, sensors = true
     drawCar(ctx, leader, theme, 'leader');
   }
   // Name tags sit above their car and stay the same size on screen whatever the zoom.
-  const px = 1 / (ctx.getTransform().a / dpr);
+  const m = ctx.getTransform(), px = 1 / (Math.hypot(m.a, m.b) / dpr);
   ctx.font = `600 ${13 * px}px ${theme.body}`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
   for (const { car, text } of tags) {
     const w = ctx.measureText(text).width + 10 * px, x = car.x, y = car.y - 12 * px;
@@ -95,4 +103,22 @@ function drawCar(ctx, c, theme, state) {
   // Nose mark shows heading.
   if (state !== 'new' && state !== 'ghost') { ctx.globalAlpha = 1; ctx.fillStyle = theme.tray; ctx.globalAlpha = 0.5; ctx.fillRect(3, -2, 2.5, 4); }
   ctx.restore();
+}
+
+// A small whole-track map in the top-right corner, for the driver's view: the road, crash marks and the car.
+export function drawMinimap(ctx, track, car, theme, { scale, dpr, crashes = [] }) {
+  const w = Math.min(150, WORLD_W * scale * 0.3), k = (w / WORLD_W) * dpr, pad = 8 * dpr;
+  const x0 = WORLD_W * scale * dpr - w * dpr - pad, y0 = pad;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = theme.tray; ctx.globalAlpha = 0.85;
+  ctx.fillRect(x0 / dpr - 4, y0 / dpr - 4, w + 8, (w * WORLD_H) / WORLD_W + 8);
+  ctx.globalAlpha = 1;
+  ctx.setTransform(k, 0, 0, k, x0, y0);
+  ctx.lineJoin = 'round'; ctx.lineWidth = TRACK_W; ctx.strokeStyle = theme.road; ctx.stroke(roadPath(track));
+  ctx.strokeStyle = theme.red; ctx.lineWidth = 2.5 / (k / dpr);
+  const r = 5 / (k / dpr);
+  for (const { x, y } of crashes) { ctx.beginPath(); ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r); ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r); ctx.stroke(); }
+  ctx.fillStyle = theme.amber;
+  const d = 5 / (k / dpr);
+  ctx.fillRect(car.x - d, car.y - d, d * 2, d * 2);
 }

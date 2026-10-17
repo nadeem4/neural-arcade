@@ -29,8 +29,8 @@
   </header>
 
   <figure class="fig wide">
-    <canvas id="figLap" class="track" aria-label="The car being driven round the track for two teaching laps"></canvas>
-    <figcaption><b>Fig. 1</b> The two teaching laps used on this page. To keep every figure the same on every visit, they were driven by a simple autopilot standing in for you.</figcaption>
+    <canvas id="figLap" class="track" aria-label="The car being driven round the track for its teaching lap"></canvas>
+    <figcaption><b>Fig. 1</b> The teaching lap used on this page, on a loop. To keep every figure the same on every visit, it was driven by a simple autopilot standing in for you.</figcaption>
   </figure>
 
   <section class="step">
@@ -43,10 +43,10 @@
   <section class="step">
     <p class="num-tag">02</p>
     <h2>Every moment is an example</h2>
-    <p>Sixty times a second while you drive, the car writes down two things: the six numbers it sensed, and how you were steering at that moment. That pair is one <em>example</em>: a question and its right answer. Two laps make about a thousand.</p>
+    <p>Sixty times a second while you drive, the car writes down two things: the six numbers it sensed, and how you were steering at that moment. That pair is one <em>example</em>: a question and its right answer. One lap makes about 850.</p>
     <figure class="fig">
       <div class="table-wrap"><table class="examples" id="figExamples"></table></div>
-      <figcaption><b>Fig. 2</b> A few of the <span id="exCount"></span> examples from the teaching laps. Steering runs from −1 (full left) to +1 (full right).</figcaption>
+      <figcaption><b>Fig. 2</b> A few of the <span id="exCount"></span> examples from the teaching lap. Steering runs from −1 (full left) to +1 (full right).</figcaption>
     </figure>
   </section>
 
@@ -92,7 +92,7 @@
     <p>Now the brain steers on its own. The loss is low, so it should drive like the teacher.</p>
     <figure class="fig wide">
       <div class="minis two" id="figFirst"></div>
-      <p class="key"><span><i class="dash"></i>teacher's laps</span><span><i class="line"></i>the brain on its own</span><span><i class="crash"></i>crash</span></p>
+      <p class="key"><span><i class="dash"></i>teacher's lap</span><span><i class="line"></i>the brain on its own</span><span><i class="crash"></i>crash</span></p>
       <figcaption><b>Fig. 6</b> <span id="firstCaption"></span></figcaption>
     </figure>
     <p>It drives most of the way like the teacher, then drifts a little wide, and a little more, and hits the wall. Look at the close-up: the brain ended up somewhere the teacher never drove. None of its examples were from there, so it had never learned what to do.</p>
@@ -136,7 +136,7 @@
     <details class="deep">
       <summary><span class="num-tag">10</span><span>For ML practitioners</span></summary>
       <dl>
-        <div><dt>Task</dt><dd>Behaviour cloning: supervised regression from a 6-number observation (five ray lengths in [0, 1], speed over top speed) to one steering value in [−1, 1]. Throttle is a fixed rule that holds cruising speed, for the human and the network alike.</dd></div>
+        <div><dt>Task</dt><dd>Behaviour cloning: supervised regression from a 6-number observation (five ray lengths in [0, 1], speed over top speed) to one steering value in [−1, 1]. Throttle is a fixed rule that holds a cruising speed of 1.5 (a third of the racer's top speed), and full steering is 60% of the racer's turn rate, for the human and the network alike, so a person can drive it with two buttons. One teaching lap; the network is tested over two.</dd></div>
         <div><dt>Network</dt><dd>6–8–1 multilayer perceptron, tanh on every layer: 6×8 + 8 + 8×1 + 1 = 65 parameters, initial weights drawn from a normal distribution with standard deviation 0.5.</dd></div>
         <div><dt>Loss</dt><dd>Half the mean squared error. Labels are the human's steering after a first-order smoothing (each frame moves 25% towards the key held), so they are continuous.</dd></div>
         <div><dt>Optimiser</dt><dd>Plain mini-batch stochastic gradient descent: batches of 32, shuffled every epoch, gradients by backpropagation. 40 epochs at first, 30 per retrain, learning rate 0.05 by default.</dd></div>

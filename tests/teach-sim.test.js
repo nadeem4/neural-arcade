@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
 import { makeTrack, progressPct } from '../games/racer/sim.js';
 import { trainEpoch } from '../engine/train.js';
-import { TEACH_SIZES, TEACH_GENOME, CRUISE, newCar, stepTeach, autopilot } from '../games/teach/sim.js';
+import { TEACH_SIZES, TEACH_GENOME, CRUISE, newCar, stepTeach, autopilot, lapDone } from '../games/teach/sim.js';
 
 const track = makeTrack(mulberry32(1));
 
 function teacherLap(t) {
   const c = newCar(t), data = [];
-  for (let f = 0; c.alive && f < 5000; f++) data.push(stepTeach(c, t, { want: autopilot(c), frame: f }));
+  for (let f = 0; c.alive && !lapDone(c) && f < 8000; f++) data.push(stepTeach(c, t, { want: autopilot(c), frame: f }));
   return { car: c, data };
 }
 
@@ -38,8 +38,13 @@ describe('teach by driving', () => {
     expect(car.speed).toBeLessThan(CRUISE * 1.1);
   });
 
-  it('the stand-in teacher drives two laps', () => {
-    for (const s of [1, 2, 3]) expect(teacherLap(makeTrack(mulberry32(s))).car.finished).toBe(true);
+  it('teaching ends after one lap, driven by the stand-in teacher without crashing', () => {
+    for (const s of [1, 2, 3]) {
+      const { car, data } = teacherLap(makeTrack(mulberry32(s)));
+      expect(lapDone(car)).toBe(true);
+      expect(car.alive).toBe(true);
+      expect(data.length).toBeGreaterThan(600); // a slow lap: about 12 seconds
+    }
   });
 
   it('a brain trained on the teacher lap drives two laps by itself', () => {
@@ -47,7 +52,7 @@ describe('teach by driving', () => {
     const g = new Float64Array(TEACH_GENOME).map(() => (rng() - 0.5));
     for (let e = 0; e < 30; e++) trainEpoch(g, TEACH_SIZES, data, { lr: 0.05, batch: 32, rng });
     const c = newCar(track);
-    for (let f = 0; c.alive && f < 5000; f++) stepTeach(c, track, { genome: g, frame: f });
+    for (let f = 0; c.alive && f < 8000; f++) stepTeach(c, track, { genome: g, frame: f });
     expect(progressPct(c)).toBe(200);
   });
 });

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Teach by Driving · Neural Arcade</title>
-<meta name="description" content="You drive two laps. A small neural network learns to steer like you by gradient descent, then drives on its own and crashes exactly where your driving never showed it what to do.">
+<meta name="description" content="You drive one lap. A small neural network learns to steer like you by gradient descent, then drives on its own and crashes exactly where your driving never showed it what to do.">
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../assets/arcade.css">
 <link rel="stylesheet" href="../racer/racer.css">
@@ -26,7 +26,7 @@
   <section class="stage">
     <h1>Teach by Driving</h1>
     <dl class="brief" aria-label="The experiment">
-      <div><dt>The setup</dt><dd>You drive two laps. The car records what it senses and how you steer.</dd></div>
+      <div><dt>The setup</dt><dd>You drive one lap. The car records what it senses and how you steer.</dd></div>
       <div><dt>The rule</dt><dd>A brain is trained to steer like you, by nudging its numbers to shrink its mistakes.</dd></div>
       <div><dt>Watch for</dt><dd>Where it crashes: places your driving never showed it.</dd></div>
     </dl>
@@ -39,7 +39,7 @@
 
     <div class="tray">
       <canvas id="track" aria-label="The track and the car you are teaching"></canvas>
-      <p class="caption" id="prompt"><span id="promptText">Hold ◀ or ▶ to steer. The car starts when you do.</span></p>
+      <p class="caption" id="prompt"><span id="promptText">Slide your thumb on the track, or hold Left or Right. The car starts when you steer.</span></p>
     </div>
 
     <div class="wheel" role="group" aria-label="Steering">
@@ -47,7 +47,7 @@
       <button class="btn steer" type="button" id="right" aria-label="Steer right"><span>Right</span><svg class="ic ic-caret-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></svg></button>
     </div>
 
-    <p class="log" id="log" aria-live="polite">Step 1: drive two laps without crashing. Every moment you drive becomes one example for the brain to learn from. Arrow keys work too.</p>
+    <p class="log" id="log" aria-live="polite">Step 1: drive one lap without crashing. The camera follows the car, so Left always turns left. Every moment you drive becomes one example for the brain to learn from. Arrow keys and A/D work too.</p>
 
     <a class="howto" href="how-it-works/"><svg class="ic ic-book-open" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg><span><b>How it works</b> What gradient descent is, and why it crashes where you never went. 6 min read.</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
 
@@ -66,9 +66,9 @@
 
   <aside class="bench">
     <dl class="readout three">
-      <div><dt>Examples<button class="info" type="button" aria-expanded="false" aria-controls="infoEx" aria-label="Explain examples" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></dt><dd class="num" id="examples">0</dd><dd class="info-text" id="infoEx" hidden>Moments the brain can learn from. Each one pairs what the car sensed (six numbers) with how you steered at that moment. Your two laps give about a thousand; every time you take the wheel later adds more.</dd></div>
+      <div><dt>Examples<button class="info" type="button" aria-expanded="false" aria-controls="infoEx" aria-label="Explain examples" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></dt><dd class="num" id="examples">0</dd><dd class="info-text" id="infoEx" hidden>Moments the brain can learn from. Each one pairs what the car sensed (six numbers) with how you steered at that moment. Your lap gives about 850; every time you take the wheel later adds more.</dd></div>
       <div><dt>Loss<button class="info" type="button" aria-expanded="false" aria-controls="infoLoss" aria-label="Explain loss" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></dt><dd class="num" id="loss">–</dd><dd class="info-text" id="infoLoss" hidden>How far the brain's steering is from yours, averaged over every example (half the squared gap). Zero would mean it copies you exactly. Training is the job of pushing this number down.</dd></div>
-      <div><dt>Distance<button class="info" type="button" aria-expanded="false" aria-controls="infoDist" aria-label="Explain distance" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></dt><dd class="num" id="dist">0<small> of 2 laps</small></dd><dd class="info-text" id="infoDist" hidden>How far the car has got on this drive, out of the two-lap goal.</dd></div>
+      <div><dt>Distance<button class="info" type="button" aria-expanded="false" aria-controls="infoDist" aria-label="Explain distance" title="What is this?"><svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg></button></dt><dd class="num" id="dist">0<small> of 2 laps</small></dd><dd class="info-text" id="infoDist" hidden>How far the car has got on this drive: out of one lap while you teach, and out of two laps when the brain drives on its own.</dd></div>
     </dl>
 
     <section class="brain-panel">

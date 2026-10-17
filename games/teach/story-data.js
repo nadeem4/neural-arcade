@@ -4,9 +4,9 @@ import { mulberry32 } from '../../engine/rng.js';
 import { randomGenome } from '../../engine/evolve.js';
 import { trainEpoch, datasetLoss, gradient } from '../../engine/train.js';
 import { makeTrack, progressPct } from '../racer/sim.js';
-import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot } from './sim.js';
+import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone } from './sim.js';
 
-const MAX_FRAMES = 5000;
+const MAX_FRAMES = 8000;
 const point = c => [c.x, c.y];
 
 // The brain drives alone; `takeOver(car)` may return a steer to grab the wheel for that frame (recorded as an example).
@@ -29,9 +29,9 @@ function train(genome, data, epochs, lr, rng) {
 
 export function recordLesson(seed, { epochs = 30, lr = 0.05 } = {}) {
   const track = makeTrack(mulberry32(seed));
-  // 1. The teacher drives two laps; every frame is an example.
+  // 1. The teacher drives one lap; every frame is an example.
   const teacherCar = newCar(track), teacherPath = [point(teacherCar)], examples = [];
-  for (let f = 0; teacherCar.alive && f < MAX_FRAMES; f++) {
+  for (let f = 0; teacherCar.alive && !lapDone(teacherCar) && f < MAX_FRAMES; f++) {
     examples.push(stepTeach(teacherCar, track, { want: autopilot(teacherCar), frame: f }));
     teacherPath.push(point(teacherCar));
   }

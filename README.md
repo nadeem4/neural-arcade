@@ -25,14 +25,14 @@ The two are a pair: the same car, track and senses, with the brain's numbers set
 - **Lucky first round:** a random brain finishes in generation 1 about one run in five. The commentary says so ("a random brain got lucky") instead of calling it learning.
 
 ### Teach by Driving (`games/teach/`)
-You steer (hold the on-screen Left/Right buttons, arrow keys or A/D); the car holds its own cruising speed. The brain is a 6→8→1 network (65 weights): the same six senses as the racer, one output for steering.
-1. **You drive** two laps. Every frame becomes one example: the six senses, and your (smoothed) steering. A crash throws that attempt away, so it never learns to crash.
+You steer: slide a thumb sideways on the track (the further, the harder it turns), or hold the Left/Right buttons, arrow keys or A/D. The car holds a slow cruising speed (1.5) and full steering is 60% of the racer's turn rate, so it can be driven with two buttons. While a car is moving, the camera is a driver's view: zoomed 3×, turned so the car always points up (Left always turns left on screen), with a whole-track map in the corner and a steering gauge along the bottom. The brain is a 6→8→1 network (65 weights): the same six senses as the racer, one output for steering.
+1. **You drive** one lap (about 14 seconds, about 850 examples). Every frame becomes one example: the six senses, and your (smoothed) steering. A crash throws that attempt away, so it never learns to crash.
 2. **It learns:** 40 passes of mini-batch gradient descent (backpropagation, batches of 32) on your examples. The loss chart starts from the untrained brain's loss, and the brain panel shows its weights changing.
-3. **It drives** on its own. Where it crashes, a red cross stays on the track. Hold Left/Right at any time to take the wheel: those moments are added as new examples, and Retrain (30 more passes) learns from them.
+3. **It drives** two laps on its own. Where it crashes, a red cross stays on the track (and on the map). Hold Left/Right at any time to take the wheel: those moments are added as new examples, and Retrain (30 more passes) learns from them.
 - **Levers:** learning rate (0.002 to 3, with what each does), new track (did it learn to drive, or only your track?), start over.
 - **Panels:** examples, loss and distance readouts; its brain, with "You: … · Its guess: …" while you drive; the loss per pass. Every one has an (i) explanation.
-- **How it works** (`games/teach/how-it-works/`): examples, loss, one weight's loss hill with a ball rolling down it, backpropagation, the copied brain crashing where the teacher never drove (distribution shift), corrections that fix it (DAgger-style), and three learning rates. Every figure is drawn from one seeded lesson (track 2, recorded by `games/teach/story-data.js`) driven by a stand-in autopilot teacher; the page says so.
-- Testing aid: add `?autopilot` to the game's URL and the stand-in teacher drives the teaching laps.
+- **How it works** (`games/teach/how-it-works/`): examples, loss, one weight's loss hill with a ball rolling down it, backpropagation, the copied brain crashing where the teacher never drove (distribution shift), corrections that fix it (DAgger-style), and three learning rates. Every figure is drawn from one seeded lesson (track 2, recorded by `games/teach/story-data.js`) whose teaching lap is driven by a stand-in autopilot; the page says so.
+- Testing aid: add `?autopilot` to the game's URL and the stand-in teacher drives the teaching lap.
 
 ## Run locally
 

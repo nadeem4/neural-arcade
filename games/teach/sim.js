@@ -1,12 +1,16 @@
 // Teach by Driving: you steer, the car records what it sensed and what you did, and a brain learns to copy you.
 // No DOM, so it runs in tests and in the page alike. Track, sensing and physics come from Neural Racer.
 import { createActs, forward, genomeLength } from '../../engine/tinynet.js';
-import { makeGhost, sense, drive } from '../racer/sim.js';
+import { N, makeGhost, sense, drive } from '../racer/sim.js';
 
 // Six senses in, eight hidden neurons, one output: steering. The car holds its own speed.
 export const TEACH_SIZES = [6, 8, 1];
 export const TEACH_GENOME = genomeLength(TEACH_SIZES); // 65
-export const CRUISE = 2.6, STEER_RATE = 0.25;
+// Gentle enough for a person with two buttons: a slow cruising speed and, at full lock, 60% of the racer's turn rate.
+// You teach one lap; the brain is tested on two.
+export const CRUISE = 1.5, STEER_MAX = 0.6, STEER_RATE = 0.25, TEACH_LAPS = 1;
+
+export const lapDone = c => c.maxProg >= N * TEACH_LAPS;
 
 // Throttle that settles at cruising speed, used whether you or the brain is steering.
 export function cruiseThrottle(c) {
@@ -30,7 +34,7 @@ export function stepTeach(c, track, { genome = null, want = null, frame = 0 } = 
     c.steer += (want - c.steer) * STEER_RATE;
     example = { input: Float32Array.from(input), target: Float32Array.of(c.steer) };
   } else c.steer = guess;
-  drive(c, track, c.steer, cruiseThrottle(c), frame);
+  drive(c, track, c.steer * STEER_MAX, cruiseThrottle(c), frame);
   return example;
 }
 
