@@ -1,5 +1,5 @@
 // Draws the tray, the road and the cars. Shared by the game page and the arcade home preview.
-import { WORLD_W, WORLD_H, TRACK_W, SENSOR_ANGLES, RAY_MAX } from './sim.js';
+import { WORLD_W, WORLD_H, SENSOR_ANGLES, RAY_MAX } from './sim.js';
 
 const pathCache = new WeakMap();
 function roadPath(track) {
@@ -41,16 +41,16 @@ export function drawTrack(ctx, race, leader, theme, { scale, dpr, sensors = true
   ctx.fillStyle = theme.tray;
   ctx.fillRect(0, 0, WORLD_W, WORLD_H);
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.lineWidth = TRACK_W; ctx.strokeStyle = theme.road; ctx.stroke(path);
+  ctx.lineWidth = track.width; ctx.strokeStyle = theme.road; ctx.stroke(path);
 
   // Road edges as dashed chalk lines, drawn by stroking wider and masking the middle.
   ctx.save();
-  ctx.lineWidth = TRACK_W + 3; ctx.strokeStyle = theme.edge; ctx.setLineDash([2, 7]); ctx.stroke(path);
-  ctx.setLineDash([]); ctx.lineWidth = TRACK_W - 3; ctx.strokeStyle = theme.road; ctx.stroke(path);
+  ctx.lineWidth = track.width + 3; ctx.strokeStyle = theme.edge; ctx.setLineDash([2, 7]); ctx.stroke(path);
+  ctx.setLineDash([]); ctx.lineWidth = track.width - 3; ctx.strokeStyle = theme.road; ctx.stroke(path);
   ctx.restore();
 
   // Start line across the road.
-  const p0 = track.pts[0], nx = -Math.sin(track.startAngle), ny = Math.cos(track.startAngle), hw = TRACK_W / 2;
+  const p0 = track.pts[0], nx = -Math.sin(track.startAngle), ny = Math.cos(track.startAngle), hw = track.width / 2;
   ctx.lineCap = 'butt'; ctx.lineWidth = 3; ctx.strokeStyle = theme.ink;
   ctx.setLineDash([4, 4]);
   ctx.beginPath(); ctx.moveTo(p0.x - nx * hw, p0.y - ny * hw); ctx.lineTo(p0.x + nx * hw, p0.y + ny * hw); ctx.stroke();
@@ -114,7 +114,7 @@ export function drawMinimap(ctx, track, car, theme, { scale, dpr, crashes = [] }
   ctx.fillRect(x0 / dpr - 4, y0 / dpr - 4, w + 8, (w * WORLD_H) / WORLD_W + 8);
   ctx.globalAlpha = 1;
   ctx.setTransform(k, 0, 0, k, x0, y0);
-  ctx.lineJoin = 'round'; ctx.lineWidth = TRACK_W; ctx.strokeStyle = theme.road; ctx.stroke(roadPath(track));
+  ctx.lineJoin = 'round'; ctx.lineWidth = track.width; ctx.strokeStyle = theme.road; ctx.stroke(roadPath(track));
   ctx.strokeStyle = theme.red; ctx.lineWidth = 2.5 / (k / dpr);
   const r = 5 / (k / dpr);
   for (const { x, y } of crashes) { ctx.beginPath(); ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r); ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r); ctx.stroke(); }

@@ -37,9 +37,10 @@ export function firstFinishNote(gen) {
 
 // ---------- Track ----------
 // A star-shaped closed loop: the radius wobbles with a few sine waves, so it never crosses itself.
-export function makeTrack(rng = Math.random) {
+// `width` is the road width; `wobble` scales the bends (below 1 = gentler corners).
+export function makeTrack(rng = Math.random, { width = TRACK_W, wobble = 1 } = {}) {
   const r = (a, b) => a + rng() * (b - a);
-  const A1 = r(0.08, 0.18), A2 = r(0.05, 0.12), A3 = r(0.02, 0.06);
+  const A1 = r(0.08, 0.18) * wobble, A2 = r(0.05, 0.12) * wobble, A3 = r(0.02, 0.06) * wobble;
   const p1 = r(0, 6.28), p2 = r(0, 6.28), p3 = r(0, 6.28);
   const pts = [];
   for (let i = 0; i < N; i++) {
@@ -48,7 +49,7 @@ export function makeTrack(rng = Math.random) {
     pts.push({ x: 400 + 270 * rad * Math.cos(t), y: 250 + 160 * rad * Math.sin(t) });
   }
   const startAngle = Math.atan2(pts[3].y - pts[0].y, pts[3].x - pts[0].x);
-  return { pts, startAngle, grid: buildGrid(pts, TRACK_W / 2) };
+  return { pts, startAngle, width, grid: buildGrid(pts, width / 2) };
 }
 
 // Road occupancy as a 1px grid, so sensors and crash checks are O(1) lookups.

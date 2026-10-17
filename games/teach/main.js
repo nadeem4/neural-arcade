@@ -5,10 +5,12 @@ import { createActs, forward } from '../../engine/tinynet.js';
 import { drawBrain } from '../../engine/brain-panel.js';
 import { drawLine } from '../../engine/curve.js';
 import { trainEpoch, datasetLoss } from '../../engine/train.js';
+import { makeTicker } from '../../engine/ticker.js';
 import { readTheme, wireLamp } from '../../assets/theme.js';
-import { WORLD_H, WORLD_W, IN_LABELS, makeTrack, progressPct, describeInput, describeOutput, distanceLabel } from '../racer/sim.js';
+import { WORLD_H, WORLD_W, IN_LABELS, progressPct, describeInput, describeOutput, distanceLabel } from '../racer/sim.js';
 import { drawTrack, drawMinimap, sizeCanvas } from '../racer/track-view.js';
-import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone } from './sim.js';
+import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone, makeTeachTrack } from './sim.js';
+import { LESSON_SEED } from './story-data.js';
 
 const $ = id => document.getElementById(id);
 const trackCanvas = $('track'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -22,7 +24,8 @@ const rng = mulberry32(Date.now() >>> 0);
 const freshBrain = () => Float64Array.from(randomGenome(TEACH_GENOME, rng), v => v * 0.5);
 
 const s = {
-  phase: 'teach', track: makeTrack(rng), car: null, frame: 0, genome: freshBrain(),
+  // Every visit starts on the same friendly track (the write-up's); New track gives random ones.
+  phase: 'teach', track: makeTeachTrack(mulberry32(LESSON_SEED)), car: null, frame: 0, genome: freshBrain(),
   examples: [], attempt: [], losses: [], passes: 0, crashes: [], corrections: 0,
   started: false, epochsLeft: 0, rest: 0, lr: LRS[2][0], solved: false,
 };
@@ -177,10 +180,13 @@ function drawGauge(steer, yours) {
   tctx.fillRect(w / 2 + (steer * gw) / 2 - 3, y - 7, 6, 14);
 }
 
-function frame() {
-  if (s.phase === 'teach') teachFrame();
-  else if (s.phase === 'train') trainFrame();
-  else testFrame();
+const ticker = makeTicker(); // 60 simulation steps a second, whatever the screen's refresh rate
+function frame(now) {
+  for (let k = ticker(now); k > 0; k--) {
+    if (s.phase === 'teach') teachFrame();
+    else if (s.phase === 'train') trainFrame();
+    else testFrame();
+  }
 
   // Driver's view whenever the car is moving, so Left always means left on screen; the whole track otherwise.
   const moving = (s.phase === 'teach' && s.started) || (s.phase === 'test' && s.rest === 0);
@@ -215,7 +221,7 @@ $('retrain').addEventListener('click', () => {
   startTraining(MORE_EPOCHS, `Retraining on all ${s.examples.length} examples, including your corrections. It starts from what it already knows.`);
 });
 $('newTrack').addEventListener('click', () => {
-  s.track = makeTrack(rng); s.crashes = []; resetCar();
+  s.track = makeTeachTrack(rng); s.crashes = []; resetCar();
   if (s.losses.length) { setPhase('test'); s.rest = 0; say('New track, same brain. If it still drives, it learned to read the walls. If it crashes, it only learned your old track.'); }
   else { s.attempt = []; s.started = false; prompt(START); }
 });

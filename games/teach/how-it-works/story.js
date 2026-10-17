@@ -1,4 +1,4 @@
-// "How it works" for Teach by Driving: every figure is drawn from one seeded lesson (track 2), recorded by
+// "How it works" for Teach by Driving: every figure is drawn from one seeded lesson (LESSON_SEED), recorded by
 // story-data.js, so the pictures match the words on every visit. Animated figures only run while on screen.
 import { mulberry32 } from '../../../engine/rng.js';
 import { drawBrain } from '../../../engine/brain-panel.js';
@@ -6,12 +6,13 @@ import { drawLine } from '../../../engine/curve.js';
 import { createActs, forward } from '../../../engine/tinynet.js';
 import { trainEpoch, datasetLoss } from '../../../engine/train.js';
 import { readTheme, wireLamp } from '../../../assets/theme.js';
-import { WORLD_W, WORLD_H, TRACK_W, IN_LABELS, describeInput, describeOutput } from '../../racer/sim.js';
+import { makeTicker } from '../../../engine/ticker.js';
+import { WORLD_W, WORLD_H, IN_LABELS, describeInput, describeOutput } from '../../racer/sim.js';
 import { drawTrack, sizeCanvas } from '../../racer/track-view.js';
 import { TEACH_SIZES, newCar, stepTeach, autopilot } from '../sim.js';
-import { recordLesson, lossCurve, rollDown, bestHill } from '../story-data.js';
+import { recordLesson, lossCurve, rollDown, bestHill, LESSON_SEED } from '../story-data.js';
 
-const L = recordLesson(2);
+const L = recordLesson(LESSON_SEED);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
 const laps = pct => `${Math.round(pct) / 100} laps`;
@@ -158,7 +159,7 @@ function drawMini(ctx, size, b, layers, t, ends) {
   ctx.setTransform(k * size.dpr, 0, 0, k * size.dpr, -b.x * k * size.dpr, -b.y * k * size.dpr);
   ctx.fillStyle = theme.tray; ctx.fillRect(b.x, b.y, b.w, b.w);
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.lineWidth = TRACK_W; ctx.strokeStyle = theme.road; ctx.stroke(roadPath);
+  ctx.lineWidth = L.track.width; ctx.strokeStyle = theme.road; ctx.stroke(roadPath);
   for (const layer of layers) {
     const n = Math.max(2, Math.round(layer.path.length * (layer.still ? 1 : t)));
     const seg = (a, z, style) => {
@@ -242,8 +243,10 @@ function minis(el, panels) {
 }
 
 // ---------- Loop ----------
+const ticker = makeTicker(); // 60 simulation steps a second, whatever the screen's refresh rate
 function frame(now) {
-  for (const fig of visible) { fig.step?.(); fig.draw(now); }
+  for (let k = ticker(now); k > 0; k--) for (const fig of visible) fig.step?.();
+  for (const fig of visible) fig.draw(now);
   requestAnimationFrame(frame);
 }
 function resizeAll() { for (const fig of figs) { fig.resize(); fig.draw(performance.now()); } }

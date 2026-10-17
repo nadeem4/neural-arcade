@@ -25,13 +25,13 @@ The two are a pair: the same car, track and senses, with the brain's numbers set
 - **Lucky first round:** a random brain finishes in generation 1 about one run in five. The commentary says so ("a random brain got lucky") instead of calling it learning.
 
 ### Teach by Driving (`games/teach/`)
-You steer: slide a thumb sideways on the track (the further, the harder it turns), or hold the Left/Right buttons, arrow keys or A/D. The car holds a slow cruising speed (1.5) and full steering is 60% of the racer's turn rate, so it can be driven with two buttons. While a car is moving, the camera is a driver's view: zoomed 3×, turned so the car always points up (Left always turns left on screen), with a whole-track map in the corner and a steering gauge along the bottom. The brain is a 6→8→1 network (65 weights): the same six senses as the racer, one output for steering.
+You steer: slide a thumb sideways on the track (the further, the harder it turns), or hold the Left/Right buttons, arrow keys or A/D. The car holds a slow cruising speed (1.5), full steering is 60% of the racer's turn rate, and the road is 85 wide (the racer's is 54) with bends at 70% strength, so it can be driven with two buttons. Every visit starts on the same track (the write-up's, `LESSON_SEED` in `story-data.js`); New track gives random ones. While a car is moving, the camera is a driver's view: zoomed 3×, turned so the car always points up (Left always turns left on screen), with a whole-track map in the corner and a steering gauge along the bottom. The brain is a 6→8→1 network (65 weights): the same six senses as the racer, one output for steering.
 1. **You drive** one lap (about 14 seconds, about 850 examples). Every frame becomes one example: the six senses, and your (smoothed) steering. A crash throws that attempt away, so it never learns to crash.
 2. **It learns:** 40 passes of mini-batch gradient descent (backpropagation, batches of 32) on your examples. The loss chart starts from the untrained brain's loss, and the brain panel shows its weights changing.
 3. **It drives** two laps on its own. Where it crashes, a red cross stays on the track (and on the map). Hold Left/Right at any time to take the wheel: those moments are added as new examples, and Retrain (30 more passes) learns from them.
 - **Levers:** learning rate (0.002 to 3, with what each does), new track (did it learn to drive, or only your track?), start over.
 - **Panels:** examples, loss and distance readouts; its brain, with "You: … · Its guess: …" while you drive; the loss per pass. Every one has an (i) explanation.
-- **How it works** (`games/teach/how-it-works/`): examples, loss, one weight's loss hill with a ball rolling down it, backpropagation, the copied brain crashing where the teacher never drove (distribution shift), corrections that fix it (DAgger-style), and three learning rates. Every figure is drawn from one seeded lesson (track 2, recorded by `games/teach/story-data.js`) whose teaching lap is driven by a stand-in autopilot; the page says so.
+- **How it works** (`games/teach/how-it-works/`): examples, loss, one weight's loss hill with a ball rolling down it, backpropagation, the copied brain crashing where the teacher never drove (distribution shift), corrections that fix it (DAgger-style), and three learning rates. Every figure is drawn from one seeded lesson (track `LESSON_SEED` = 10, recorded by `games/teach/story-data.js`) whose teaching lap is driven by a stand-in autopilot; the page says so.
 - Testing aid: add `?autopilot` to the game's URL and the stand-in teacher drives the teaching lap.
 
 ## Run locally
@@ -54,6 +54,7 @@ engine/                 reusable pieces for every game
   tinynet.js            dense tanh network: forward pass, weight indexing
   evolve.js             elitism, random newcomers, crossover, mutation
   train.js              loss, backpropagation, mini-batch gradient descent
+  ticker.js             fixed 60 Hz simulation clock, so cars move at the same speed on any screen
   lineage.js            who bred whom, for the last few generations
   pedigree.js           pedigree chart layout and SVG
   brain-panel.js        draws any small network live
@@ -65,7 +66,7 @@ games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's tra
 tests/                  Vitest tests for engine/ and each game's simulation and write-up data
 ```
 
-Each game's `sim.js` has no DOM code, so the simulations run under test. Each write-up's `story-data.js` is tested too, so the story the text tells (for example "the copied brain crashes, corrections fix it") is checked on every test run.
+Each game's `sim.js` has no DOM code, so the simulations run under test. Every animation loop asks `engine/ticker.js` how many 60 Hz steps to run, so a 120 Hz phone does not play twice as fast. Each write-up's `story-data.js` is tested too, so the story the text tells (for example "the copied brain crashes, corrections fix it") is checked on every test run.
 
 ## Deploy
 

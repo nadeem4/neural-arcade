@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { recordLesson, lossCurve, rollDown, bestHill } from '../games/teach/story-data.js';
+import { recordLesson, lossCurve, rollDown, bestHill, LESSON_SEED } from '../games/teach/story-data.js';
 import { TEACH_GENOME } from '../games/teach/sim.js';
 
-// Track 2 is the lesson the write-up tells: the copied brain crashes part-way, corrections fix it.
-const L = recordLesson(2);
+// The lesson the write-up tells: the copied brain crashes part-way, corrections fix it.
+const L = recordLesson(LESSON_SEED);
 
-describe('the recorded lesson (track 2)', () => {
+describe('the recorded lesson', () => {
   it('records the teacher lap as examples, one per frame', () => {
     expect(L.examples.length).toBe(L.teacherPath.length - 1);
     expect(L.examples.length).toBeGreaterThan(600); // one slow lap
@@ -27,8 +27,12 @@ describe('the recorded lesson (track 2)', () => {
     expect(L.after.end).toBe('finished');
   });
 
+  it('the brain that crashed had the lower loss (the write-up says so)', () => {
+    expect(L.losses.at(-1)).toBeLessThan(L.relosses.at(-1));
+  });
+
   it('is the same every time', () => {
-    const again = recordLesson(2);
+    const again = recordLesson(LESSON_SEED);
     expect(again.first.pct).toBe(L.first.pct);
     expect(again.losses.at(-1)).toBe(L.losses.at(-1));
   });

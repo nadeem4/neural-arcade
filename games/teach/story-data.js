@@ -3,10 +3,14 @@
 import { mulberry32 } from '../../engine/rng.js';
 import { randomGenome } from '../../engine/evolve.js';
 import { trainEpoch, datasetLoss, gradient } from '../../engine/train.js';
-import { makeTrack, progressPct } from '../racer/sim.js';
-import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone } from './sim.js';
+import { progressPct } from '../racer/sim.js';
+import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone, makeTeachTrack } from './sim.js';
 
 const MAX_FRAMES = 8000;
+
+// The track every visit starts on, and the one the write-up tells: the copied brain crashes in its first lap,
+// a few corrections fix it, and the crashing brain has the lower loss. tests/teach-story.test.js holds it to that.
+export const LESSON_SEED = 10;
 const point = c => [c.x, c.y];
 
 // The brain drives alone; `takeOver(car)` may return a steer to grab the wheel for that frame (recorded as an example).
@@ -28,7 +32,7 @@ function train(genome, data, epochs, lr, rng) {
 }
 
 export function recordLesson(seed, { epochs = 30, lr = 0.05 } = {}) {
-  const track = makeTrack(mulberry32(seed));
+  const track = makeTeachTrack(mulberry32(seed));
   // 1. The teacher drives one lap; every frame is an example.
   const teacherCar = newCar(track), teacherPath = [point(teacherCar)], examples = [];
   for (let f = 0; teacherCar.alive && !lapDone(teacherCar) && f < MAX_FRAMES; f++) {

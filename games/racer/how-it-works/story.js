@@ -4,8 +4,9 @@ import { mulberry32 } from '../../../engine/rng.js';
 import { drawBrain } from '../../../engine/brain-panel.js';
 import { nextGeneration } from '../../../engine/evolve.js';
 import { readTheme, wireLamp } from '../../../assets/theme.js';
+import { makeTicker } from '../../../engine/ticker.js';
 import {
-  WORLD_W, WORLD_H, TRACK_W, SIZES, GENOME, IN_LABELS, OUT_LABELS, LAPS,
+  WORLD_W, WORLD_H, SIZES, GENOME, IN_LABELS, OUT_LABELS, LAPS,
   createRace, tick, leaderOf, makeGhost, stepCar, describeInput, describeOutput, inheritance,
 } from '../sim.js';
 import { scoreLabel as scoreText } from '../../../engine/pedigree.js';
@@ -138,10 +139,10 @@ function drawPath(ctx, size, box, car, t, winner) {
   ctx.setTransform(k * size.dpr, 0, 0, k * size.dpr, -box.x * k * size.dpr, -box.y * k * size.dpr);
   ctx.fillStyle = theme.tray; ctx.fillRect(box.x, box.y, box.w, box.w);
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.lineWidth = TRACK_W; ctx.strokeStyle = theme.road; ctx.stroke(road(run.track));
+  ctx.lineWidth = run.track.width; ctx.strokeStyle = theme.road; ctx.stroke(road(run.track));
   const p0 = run.track.pts[0], nx = -Math.sin(run.track.startAngle), ny = Math.cos(run.track.startAngle);
   ctx.lineWidth = 2 * px; ctx.strokeStyle = theme.ink; ctx.setLineDash([3 * px, 3 * px]);
-  ctx.beginPath(); ctx.moveTo(p0.x - nx * TRACK_W / 2, p0.y - ny * TRACK_W / 2); ctx.lineTo(p0.x + nx * TRACK_W / 2, p0.y + ny * TRACK_W / 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p0.x - nx * run.track.width / 2, p0.y - ny * run.track.width / 2); ctx.lineTo(p0.x + nx * run.track.width / 2, p0.y + ny * run.track.width / 2); ctx.stroke();
   ctx.setLineDash([]);
 
   const n = car.path.length / 2, m = Math.max(1, Math.round(n * t));
@@ -231,9 +232,10 @@ $('finishLine').textContent = `Generation ${run.firstFinish}: a car drives ${LAP
 
 // ---------- Loop ----------
 let frameNo = 0;
+const ticker = makeTicker(); // 60 simulation steps a second, whatever the screen's refresh rate
 function frame(now) {
-  frameNo++;
-  for (const fig of visible) { fig.step?.(frameNo); fig.draw(now); }
+  for (let k = ticker(now); k > 0; k--) { frameNo++; for (const fig of visible) fig.step?.(frameNo); }
+  for (const fig of visible) fig.draw(now);
   requestAnimationFrame(frame);
 }
 function resizeAll() { for (const fig of figs) { fig.resize(); fig.draw(performance.now()); } }

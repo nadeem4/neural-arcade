@@ -2,6 +2,7 @@
 import { WORLD_W, WORLD_H, createRace, tick, leaderOf, finishedCount } from '../games/racer/sim.js';
 import { drawTrack, sizeCanvas } from '../games/racer/track-view.js';
 import { readTheme, wireLamp } from './theme.js';
+import { makeTicker } from '../engine/ticker.js';
 
 const canvas = document.getElementById('preview'), ctx = canvas.getContext('2d');
 const race = createRace();
@@ -13,9 +14,11 @@ function resize() {
   view = { dpr: t.dpr, scale: t.w / WORLD_W, sensors: false };
 }
 
-function frame() {
+const ticker = makeTicker(), ticker2 = makeTicker(); // 60 steps a second on any screen
+function frame(now) {
+  const steps = ticker(now);
   if (visible) {
-    if (!reduceMotion) for (let k = 0; k < 3; k++) tick(race);
+    if (!reduceMotion) for (let k = 0; k < 3 * steps; k++) tick(race);
     drawTrack(ctx, race, leaderOf(race), theme, view);
     document.getElementById('pgen').textContent = race.gen;
     document.getElementById('pdone').textContent = finishedCount(race);
@@ -38,12 +41,13 @@ let lesson = null, car2 = null, frame2 = 0, view2 = {}, visible2 = false, starte
 const sim2 = Promise.all([import('../games/teach/story-data.js'), import('../games/teach/sim.js')]);
 
 async function startTeach() {
-  const [{ recordLesson }, { newCar, stepTeach }] = await sim2;
-  lesson ??= recordLesson(2);
+  const [{ recordLesson, LESSON_SEED }, { newCar, stepTeach }] = await sim2;
+  lesson ??= recordLesson(LESSON_SEED);
   car2 = newCar(lesson.track);
-  const loop = () => {
+  const loop = now => {
+    const steps = ticker2(now);
     if (visible2) {
-      if (!reduceMotion) {
+      if (!reduceMotion) for (let k = 0; k < steps; k++) {
         stepTeach(car2, lesson.track, { genome: lesson.final, frame: frame2++ });
         if (!car2.alive) { car2 = newCar(lesson.track); frame2 = 0; }
       }

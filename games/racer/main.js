@@ -4,6 +4,7 @@ import {
   makeGhost, stepCar, inheritance, distanceLabel, firstFinishNote,
 } from './sim.js';
 import { drawTrack, sizeCanvas } from './track-view.js';
+import { makeTicker } from '../../engine/ticker.js';
 import { drawBrain } from '../../engine/brain-panel.js';
 import { drawBars } from '../../engine/curve.js';
 import { pedigreeSvg, scoreLabel, updateScores } from '../../engine/pedigree.js';
@@ -177,9 +178,11 @@ function onGeneration(s) {
   updateRound(s);
 }
 
-function frame() {
+const ticker = makeTicker(); // 60 simulation steps a second, whatever the screen's refresh rate
+function frame(now) {
+  const steps = ticker(now);
   if (!paused) {
-    for (let k = 0; k < speed; k++) {
+    for (let k = 0; k < speed * steps; k++) {
       if (ghost) { stepGhost(); if (!ghost) break; continue; }
       const s = tick(race);
       if (s) onGeneration(s);
