@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote } from '../games/teach/words.js';
+import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote, relearnNote } from '../games/teach/words.js';
 
 describe('teach by driving: what the track says at each step', () => {
   it('says the lap is over and what happens next', () => {
@@ -18,8 +18,19 @@ describe('teach by driving: what the track says at each step', () => {
     expect(retrainNote(910, 60)).toBe('Step 2 again: it learns from all 910 examples, including your 60 corrections.');
   });
 
-  it('says how the brain\'s drive ended and that it goes again', () => {
-    expect(testEndNote(true)).toBe('Two laps on its own! It drives again in a moment.');
-    expect(testEndNote(false)).toBe('It crashed at the red cross. It tries again in a moment.');
+  it('after two clean laps on your track, moves on to a track it has never seen', () => {
+    expect(testEndNote('finished', false)).toBe('Two laps on your track. Now the real test: a track it has never seen.');
+  });
+
+  it('stops after two clean laps on a new track', () => {
+    expect(testEndNote('finished', true)).toBe('Done: two laps on a track it never saw. It learned to drive, not just your track. Try New track, or change the learning rate.');
+  });
+
+  it('goes again after a crash, so you can take the wheel', () => {
+    expect(testEndNote('crashed', false)).toBe('It crashed at the red cross. It goes again in a moment: take the wheel just before the cross, then press Retrain.');
+  });
+
+  it('says a new learning rate relearns the same examples from scratch', () => {
+    expect(relearnNote(1, 850)).toBe('New learning rate (1): learning your same 850 examples again, from scratch.');
   });
 });

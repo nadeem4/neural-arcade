@@ -36,5 +36,6 @@
   .readout.three div { padding-left: 10px; padding-right: 6px; }
   .readout.three div:first-child { padding-left: 0; }
   .teach .controls { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .teach #retrain { grid-column: span 3; } .teach #newTrack { grid-column: span 2; } .teach #restart { grid-column: span 1; }
+  .teach #retrain { grid-column: 1 / -1; }
+  .teach #newTrack, .teach #restart { grid-column: span 3; padding: 0 6px; font-size: 15px; letter-spacing: .03em; }
 }

@@ -11,7 +11,7 @@ import { WORLD_H, WORLD_W, IN_LABELS, progressPct, describeInput, describeOutput
 import { drawTrack, drawMinimap, sizeCanvas } from '../racer/track-view.js';
 import { TEACH_SIZES, TEACH_GENOME, newCar, stepTeach, autopilot, lapDone, makeTeachTrack } from './sim.js';
 import { LESSON_SEED } from './story-data.js';
-import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote } from './words.js';
+import { lapDoneNote, learningNote, drivesNote, retrainNote, testEndNote, relearnNote } from './words.js';
 
 const $ = id => document.getElementById(id);
 const trackCanvas = $('track'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -29,8 +29,11 @@ const s = {
   // Every visit starts on the same friendly track (the write-up's); New track gives random ones.
   phase: 'teach', track: makeTeachTrack(mulberry32(LESSON_SEED)), car: null, frame: 0, genome: freshBrain(),
   examples: [], attempt: [], losses: [], passes: 0, crashes: [], corrections: 0,
-  started: false, epochsLeft: 0, epochs: 0, wait: 0, rest: 0, lr: LRS[2][0], solved: false,
+  started: false, epochsLeft: 0, epochs: 0, wait: 0, rest: 0, lr: LRS[2][0],
+  // Step 3 drives your track first, then (after two clean laps) a track it has never seen: the real test.
+  home: null, onNew: false, toNew: false, done: false,
 };
+s.home = s.track;
 s.car = newCar(s.track);
 
 // ---------- Words ----------
@@ -114,22 +117,33 @@ function trainFrame() {
 }
 
 function startTest() {
-  setPhase('test'); resetCar(); s.rest = 0; s.wait = HOLD; prompt(drivesNote());
+  setPhase('test'); resetCar(); s.rest = 0; s.wait = HOLD; s.done = false; prompt(drivesNote());
   say(`Trained for ${s.passes} passes over your examples. Now it drives on its own. If it heads for trouble, take the wheel (slide on the track, or hold Left or Right): whatever you do is added as new examples.`);
 }
 
 function testFrame() {
+  if (s.done) return; // two clean laps on a new track: it parks until you change something
   if (s.wait > 0) { if (--s.wait === 0) prompt(''); return; }
-  if (s.rest > 0) { if (--s.rest === 0) { resetCar(); prompt(''); } return; }
+  if (s.rest > 0) {
+    if (--s.rest > 0) return;
+    if (s.toNew) Object.assign(s, { track: makeTeachTrack(rng), crashes: [], onNew: true, toNew: false });
+    resetCar(); prompt(''); return;
+  }
   const w = steering() ? want() : null;
   const ex = stepTeach(s.car, s.track, { genome: s.genome, want: w, frame: s.frame++ });
   prompt(w === null ? '' : 'You have the wheel. Every moment is a new example.');
   if (ex) { s.examples.push(ex); s.corrections++; updateRetrain(); }
   if (s.car.alive) return;
-  s.rest = HOLD; prompt(testEndNote(s.car.finished));
+  prompt(testEndNote(s.car.finished ? 'finished' : 'crashed', s.onNew));
+  if (s.car.finished && s.onNew) {
+    s.done = true;
+    say('It drove two laps on a track it had never seen, so it learned to read the walls, not just to replay your track. Try New track for another, or change the learning rate to see if it still learns as well.');
+    return;
+  }
+  s.rest = HOLD;
   if (s.car.finished) {
-    if (!s.solved) say('It drove two laps by itself, copying you. Try New track: did it learn to drive, or only this track?');
-    s.solved = true;
+    s.toNew = true;
+    say('It drove two laps by itself on the track you taught it. But it could have just memorised that track, so the real test is a track it has never seen.');
   } else {
     s.crashes.push({ x: s.car.x, y: s.car.y });
     say(s.car.crashed
@@ -195,7 +209,7 @@ function frame(now) {
   }
 
   // Driver's view whenever the car is moving, so Left always means left on screen; the whole track otherwise.
-  const moving = (s.phase === 'teach' && s.started) || (s.phase === 'test' && s.rest === 0 && s.wait === 0);
+  const moving = (s.phase === 'teach' && s.started) || (s.phase === 'test' && s.rest === 0 && s.wait === 0 && !s.done);
   const c = s.car;
   if (moving) {
     let d = c.angle - cam.heading;
@@ -228,11 +242,13 @@ $('retrain').addEventListener('click', () => {
 });
 $('newTrack').addEventListener('click', () => {
   s.track = makeTeachTrack(rng); s.crashes = []; resetCar();
-  if (s.losses.length) { setPhase('test'); s.rest = s.wait = 0; prompt(''); say('New track, same brain. If it still drives, it learned to read the walls. If it crashes, it only learned your old track.'); }
+  if (s.phase === 'teach') s.home = s.track; // a new track to teach on
+  if (s.losses.length) { setPhase('test'); Object.assign(s, { rest: 0, wait: 0, onNew: true, toNew: false, done: false }); prompt(''); say('New track, same brain. If it still drives, it learned to read the walls. If it crashes, it only learned your old track.'); }
   else { s.attempt = []; s.started = false; prompt(START); }
 });
 $('restart').addEventListener('click', () => {
-  Object.assign(s, { genome: freshBrain(), examples: [], attempt: [], losses: [], passes: 0, crashes: [], corrections: 0, started: false, solved: false, wait: 0 });
+  Object.assign(s, { genome: freshBrain(), examples: [], attempt: [], losses: [], passes: 0, crashes: [], corrections: 0, started: false,
+    wait: 0, track: s.home, onNew: false, toNew: false, done: false });
   setPhase('teach'); resetCar(); updateRetrain(); drawChart();
   prompt(START);
   say('Starting over with a brand-new random brain. Drive one lap without crashing.');
@@ -240,6 +256,14 @@ $('restart').addEventListener('click', () => {
 $('lr').addEventListener('input', e => {
   const [lr, word] = LRS[Number(e.target.value)];
   s.lr = lr; $('lrOut').textContent = `${lr}: ${word}`;
+});
+// Letting go of the slider after it has learned relearns the same examples from a fresh brain, back on your track,
+// so learning rates can be compared on the same lap.
+$('lr').addEventListener('change', () => {
+  if (s.phase === 'teach') return;
+  Object.assign(s, { genome: freshBrain(), losses: [], passes: 0, crashes: [], track: s.home, onNew: false, toNew: false, done: false });
+  drawChart();
+  startTraining(EPOCHS, relearnNote(s.lr, s.examples.length), `Learning rate ${s.lr}, a fresh random brain, and your same ${s.examples.length} examples. Watch how the loss line falls this time, and whether it still drives.`);
 });
 document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', () => {
   const open = btn.getAttribute('aria-expanded') !== 'true';
