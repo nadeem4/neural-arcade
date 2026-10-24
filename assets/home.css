@@ -21,22 +21,18 @@
 .feature-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 0; }
 @media (max-width: 860px) { .feature { grid-template-columns: 1fr; gap: calc(var(--cell) * 3); } }
 
-.lab { padding-bottom: calc(var(--cell) * 10); }
-.lab > h2 { font-size: 30px; font-weight: 800; border-bottom: 1.5px solid var(--ink); }
-.seasons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.season { padding: 4px 24px 0 0; }
-.season + .season { padding-left: 24px; border-left: 1px solid var(--rule); }
-.season h3 { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 8px 0 12px; }
-.season dl { margin: 0; }
-.season dt { font-family: var(--display); font-weight: 800; font-size: 24px; text-transform: uppercase; line-height: 1.1; }
-.season dd { margin: 4px 0 20px; color: var(--muted); font-size: 15px; }
-@media (max-width: 980px) {
-  .seasons { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
-  .season:nth-child(3) { padding-left: 0; border-left: 0; }
-}
-@media (max-width: 560px) {
-  .seasons { grid-template-columns: 1fr; }
-  .season, .season + .season { padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--rule); }
+/* Each shelf groups games by what they teach: a heading, a line on what the shelf covers, its games, then what's coming. */
+.shelf-head { padding-bottom: calc(var(--cell) * 4); }
+.shelf-head h2 { font-size: 30px; font-weight: 800; border-bottom: 1.5px solid var(--ink); }
+.shelf-head p { color: var(--muted); font-size: 17px; max-width: 60ch; margin: 12px 0 0; }
+
+.coming { padding-bottom: calc(var(--cell) * 10); }
+.coming h3 { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+.coming dl { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+.coming dt { font-family: var(--display); font-weight: 800; font-size: 24px; text-transform: uppercase; line-height: 1.1; grid-row: 1; }
+.coming dd { margin: 4px 0 20px; color: var(--muted); font-size: 15px; grid-row: 2; }
+@media (max-width: 860px) {
+  .coming dl { display: block; }
 }
 
 .foot { border-top: 1px solid var(--rule); }

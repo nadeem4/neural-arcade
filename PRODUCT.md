@@ -27,7 +27,7 @@ Small browser games where tiny neural networks learn in front of you, and the pl
 - One concept per game; the network is always visible; the player always has a lever that changes training; each game has a way to break learning on purpose.
 - Runs on a phone browser; under 1M multiply-adds per frame at the fastest speed.
 - First game: Neural Racer (neuroevolution: 50 cars, 5 distance sensors + speed, 6→8→2 tanh net, 74 weights; elitism, crossover, mutation; New track tests overfitting).
-- Planned games (not built): Flappy Flock, Snake Gym, Loss Golf, Boundary Builder, Teach by Driving, Lunar Lander, Predators and Prey, Feature Detector. Grouped into Season 1 Evolution, Season 2 Gradients, Season 3 Reinforcement learning, Season 4 Inside deeper networks.
+- Built: Neural Racer, Teach by Driving. The home page groups games into two shelves. **How AI learns** (evolution, copying examples, trial and error): Neural Racer, Teach by Driving; coming: Lunar Lander (learning from reward). **Physical AI** (a brain with a body: lag, noisy sensors, wind, sim to real): coming: Hover, Balance, The real world. Earlier ideas (Flappy Flock, Snake Gym, Loss Golf, Boundary Builder, Predators and Prey, Feature Detector) are dropped from the home page for now.
 - Undecided: leaderboards (deferred, needs shared state), share-a-brain links, Breeder mode.
 
 ## Brand Commitments

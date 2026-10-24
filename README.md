@@ -49,7 +49,7 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 ## Layout
 
 ```
-index.html              arcade home (live previews of both games)
+index.html              arcade home: games grouped into shelves (How AI learns, Physical AI), live previews, what is coming
 assets/                 shared styles, theme helper, self-hosted fonts, icon
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
