@@ -9,7 +9,7 @@
 .runner .dial.presets .seg, .runner .dial.speed .seg { grid-column: 1 / -1; grid-row: 3; }
 .runner .dial.presets output, .runner .dial.speed output { grid-column: 2; grid-row: 1; }
 .runner .seg { flex-wrap: wrap; }
-.rules { display: grid; gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 6px 0; }
+.rules { display: grid; gap: 4px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 12px 0; }
 .rules .dial-name { font-size: 16px; }
 #fresh { align-self: flex-start; }
 
