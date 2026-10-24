@@ -9,7 +9,8 @@
 }
 .feature-tray { display: block; background: var(--tray); border: 1.5px solid var(--rule); transition: border-color .2s; }
 .feature-tray:hover { border-color: var(--ink); }
-#preview, #preview2 { display: block; width: 100%; aspect-ratio: 8 / 5; }
+#preview, #preview2, #preview3 { display: block; width: 100%; aspect-ratio: 8 / 5; }
+#preview3 { image-rendering: pixelated; }
 .feature-text { border-top: 1.5px solid var(--ink); padding-top: 12px; }
 .feature-fig { margin: 0; }
 .feature-gen { color: var(--muted); font-size: 14px; margin: 8px 0 0; font-variant-numeric: tabular-nums; }

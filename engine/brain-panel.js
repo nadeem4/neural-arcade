@@ -64,7 +64,7 @@ export function drawBrain(ctx, { sizes, genome, acts, inLabels = [], outLabels =
   inLabels.forEach((t, i) => ctx.fillText(inWords ? `${t} · ${inWords(i, acts[0][i])}` : t, xs[0] - 14, ys[0][i]));
   ctx.textAlign = 'left';
   outLabels.forEach((t, k) => {
-    const v = acts[last][k], x = below ? (width / 2) * k : xs[last] + 14, y = below ? height - 30 : ys[last][k];
+    const v = acts[last][k], x = below ? (width / outLabels.length) * k : xs[last] + 14, y = below ? height - 30 : ys[last][k];
     ctx.fillStyle = theme.ink; ctx.fillText(outWords ? `${t} ${num(v)}` : t, x, y - 9);
     ctx.fillStyle = outWords ? theme['amber-ink'] || theme.amber : theme.muted;
     ctx.fillText(outWords ? outWords(k, v) : num(v), x, y + 9);

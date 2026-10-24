@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coin Runner · How it works</title>
+<meta name="description" content="How a tiny neural network learns a platformer level from points alone, and why it learns to cheat when the points are wrong: reward hacking, step by step, with figures from real runs.">
+<link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../../assets/arcade.css">
+<link rel="stylesheet" href="../../racer/how-it-works/story.css">
+<link rel="stylesheet" href="story.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark back" href="../" aria-label="Back to Coin Runner"><svg class="ic ic-arrow-left" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/></svg><span>Coin Runner</span></a>
+    <span class="spacer"></span>
+    <button class="btn lamp icon" id="lamp" type="button" aria-label="Switch theme" title="Switch theme"><svg class="ic ic-sun" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg><svg class="ic ic-moon" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap story">
+  <header class="intro">
+    <p class="kicker">Coin Runner · How it works</p>
+    <h1>How a brain learns a level from points alone</h1>
+    <p class="lede">Nobody shows it what to do. It tries, it gets points, and it slowly does more of whatever earned more. Change the points and it learns something else entirely, including things you never meant.</p>
+    <p class="meta"><span>6 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+  </header>
+
+  <figure class="fig wide">
+    <canvas id="figPlay" class="level" aria-label="The trained hero playing the level"></canvas>
+    <figcaption><b>Fig. 1</b> <span id="playCaption"></span></figcaption>
+  </figure>
+
+  <section class="step">
+    <p class="num-tag">01</p>
+    <h2>The third way to learn</h2>
+    <p>A brain can get better in three ways. In <a href="../../racer/how-it-works/">Neural Racer</a> it is bred: the best of many random brains have children. In <a href="../../teach/how-it-works/">Teach by Driving</a> it copies examples you give it. Here nobody gives it any examples. It only gets <em>points</em> after it acts, and has to work out for itself what earned them.</p>
+    <p>This is called <em>reinforcement learning</em>. It is how game-playing AIs learned chess and Go, and how robots learn to balance and walk in simulation.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">02</p>
+    <h2>What it senses, and what it can do</h2>
+    <p>About eight times a second the hero senses twelve simple things: is there a pit one, two or three tiles ahead, a wall, how far is the enemy, is it on the ground, is it under the coin block, how far through the level it is, how much time is left. Then it picks one of four moves: <b>wait</b>, <b>run</b>, <b>leap</b> (run and jump), or <b>jump</b> on the spot.</p>
+    <p>Its brain is small: 12 numbers in, 8 hidden neurons, 4 numbers out, 140 weights in all. It never sees the screen, and it never sees your rules. Only the twelve numbers, and afterwards the points.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">03</p>
+    <h2>Rolling the dice</h2>
+    <p>The brain's four outputs are turned into chances, one per move, and it picks a move by rolling the dice. A brand-new brain gives every move a similar chance, so it flails. That randomness matters: it is how it stumbles on things that work. The real term is <em>exploration</em>.</p>
+    <figure class="fig">
+      <div class="chances" id="figChances"></div>
+      <figcaption><b>Fig. 2</b> The chance of each move at the very start of the level, for a brand-new brain and for the same brain after <span class="n-tries"></span> tries with the Balanced rules.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">04</p>
+    <h2>Which moves earned the points?</h2>
+    <p>A try ends at the flag, in a pit, at the enemy, or after 20 seconds. By then it has made up to 170 moves. Which of them earned the points? It can't know for sure, so it gives each move credit for the points that came <em>after</em> it, counting points far in the future a little less.</p>
+    <p>Then it compares: was that better or worse than it usually gets from where it was? It keeps a rough guess of that, learned alongside. Every 12 tries it nudges all 140 weights so the moves that turned out better than expected become a little more likely, and the worse ones a little less. That is a <em>policy gradient</em>, the simplest version called REINFORCE.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">05</p>
+    <h2>Watching it learn</h2>
+    <p>One try at a time, very little changes. Over hundreds of tries the mix of how tries end shifts completely.</p>
+    <figure class="fig">
+      <canvas id="figLearn" class="outcomes" aria-label="Bar chart: how each batch of 50 tries ended, with the Balanced rules"></canvas>
+      <p class="key"><span><i class="flag"></i>reached the flag</span><span><i class="died"></i>died</span><span><i class="time"></i>ran out of time</span></p>
+      <figcaption><b>Fig. 3</b> <span id="learnCaption"></span></figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">06</p>
+    <h2>It learns what you pay for</h2>
+    <p>Now the same fresh brain, the same level, three different sets of points. Nothing else changes.</p>
+    <figure class="fig wide">
+      <div class="three" id="figThree"></div>
+      <figcaption><b>Fig. 4</b> Each brain after <span class="n-tries"></span> tries, playing on a loop, with how its tries ended underneath. Coin hungry pays 3 points a coin and 1 for the flag. Afraid of dying takes 50 points for dying and pays 1 for every second alive.</figcaption>
+    </figure>
+    <p>With Coin hungry it stands under the block above the start and bumps it until time runs out: about 50 coins, worth 150 points, against 1 for the flag. With Afraid of dying it hardly moves at all: 20 points for surviving, and no risk of losing 50. Both are the best plan their rules allow. Neither is what anyone wanted.</p>
+    <p>This is called <em>reward hacking</em> (or specification gaming): the AI does exactly what the points say, not what you meant.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">07</p>
+    <h2>It happens to real AI too</h2>
+    <ul class="notes">
+      <li><b>A boat that never finished.</b> In 2016 OpenAI trained an agent on the boat racing game CoastRunners, scored by points for hitting targets. It found a lagoon where three targets kept coming back and circled it forever, on fire, never finishing the race, and scored higher than human players. (<a href="https://openai.com/index/faulty-reward-functions/">OpenAI</a>)</li>
+      <li><b>Pausing forever.</b> A program built to play Tetris without losing learned to pause the game just before it lost, and stay paused.</li>
+      <li><b>Robots.</b> A robot rewarded for moving fast can learn to fall over in a way that counts as speed. In the physical world, a loophole can break something. Researchers keep a long list of these (<a href="https://vkrakovna.wordpress.com/2018/04/02/specification-gaming-examples-in-ai/">specification gaming examples</a>).</li>
+    </ul>
+    <p>The lesson for anyone building AI: writing the reward is the hard part, and you only find the loopholes by watching what it actually learns.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">08</p>
+    <h2>Honest notes</h2>
+    <ul class="notes">
+      <li><b>The level is built to make the loopholes easy to find.</b> The coin block sits right above the start, so even a random brain bumps it early. Further away, some brains never find it and simply finish.</li>
+      <li><b>Different brains learn at different speeds.</b> Tested on 20 random brains each, Balanced learned to finish within 4,000 tries on at least 18, and both loopholes were found by all 20. On the live page, yours may take more or fewer tries than Fig. 3.</li>
+      <li><b>"Each second alive" was added for Afraid of dying.</b> With only a big penalty for dying, some brains still finished. Paying for every second alive made standing still clearly the best plan.</li>
+      <li><b>The figures come from one recorded run per rule set</b> (seed <span id="seed"></span>), so they are the same on every visit. The moves in Fig. 1 and Fig. 4 are still rolled live with the trained brain's chances.</li>
+    </ul>
+  </section>
+
+  <section class="step">
+    <details class="deep">
+      <summary><span class="num-tag">09</span><span>For ML practitioners</span></summary>
+      <dl>
+        <div><dt>Environment</dt><dd>A fixed 48-tile side-scroller with two 2-tile pits, a 1-tile step, five ground coins, a coin block that pays on every bump from below (re-armed on landing) and one patrolling enemy that dies if landed on. Fixed 60 Hz physics; jump 3.5 tiles high, 0.35 s to apex, fall gravity 1.8 times rise gravity. Episodes end on death, the flag, or 1,200 steps (20 s).</dd></div>
+        <div><dt>Observation and actions</dt><dd>12 hand-made features in [−1, 1] (pit flags at +1..+3 tiles, wall ahead, enemy distance and presence, grounded, vertical velocity, under-block, block armed, progress, time left). 4 discrete actions (noop, right, right+jump, jump), held for 7 steps (action repeat), so at most about 171 decisions per episode.</dd></div>
+        <div><dt>Policy</dt><dd>12–8–4 tanh MLP (140 parameters), outputs × 3 into a softmax. Initial weights from a normal distribution with standard deviation 0.2.</dd></div>
+        <div><dt>Learner</dt><dd>REINFORCE with reward-to-go (γ = 0.99 per decision), a linear state-value baseline (one averaged gradient step per update, step 0.05), advantages normalised per batch, entropy bonus falling from 0.01 to 0.001 over 4,000 episodes, Adam (lr 0.01) with the update clipped to norm 1. 12 episodes per update. Only the shown episode is played at real speed; the rest run headless.</dd></div>
+        <div><dt>Reward</dt><dd>Per step: coins × coin + seconds × per-second, plus progress × (new maximum x − old maximum x), so oscillating earns nothing; − death on death; + flag at the flag. Presets: Balanced 30 / 0.5 / 1 / 5 / −0.5; Coin hungry 1 / 3 / 0 / 2 / 0; Afraid of dying 0 / 0 / 0 / 50 / +1 (flag / coin / progress / death / per second).</dd></div>
+        <div><dt>Reliability</dt><dd>Checked by tests on 20 seeds per preset at 4,000 episodes: Balanced finishes at least 70% of its last 100 episodes on at least 18 seeds; Coin hungry and Afraid of dying show their behaviour on at least 70% of the last 100 on every seed.</dd></div>
+      </dl>
+    </details>
+  </section>
+
+  <section class="step finale">
+    <p class="num-tag">10</p>
+    <h2>Your turn</h2>
+    <p>On the live page you write the rules. Three things to try:</p>
+    <ol class="tries">
+      <li><b>Fix Coin hungry.</b> Start from Coin hungry and change one slider until it finishes again. Which one, and how far?</li>
+      <li><b>Make it rush.</b> From Balanced, make each second cost more. Does it get faster, or start dying?</li>
+      <li><b>Pay only for coins.</b> Set everything else to nothing. What does it do once the five ground coins are gone?</li>
+    </ol>
+    <a class="btn solid go" href="../"><span>Write the rules yourself</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+    <p class="credit">Art: Pixel Platformer by <a href="https://kenney.nl">Kenney</a> (CC0).</p>
+  </section>
+</main>
+
+<script type="module" src="story.js"></script>
+</body>
+</html>

@@ -10,8 +10,9 @@ Small browser games where tiny neural networks learn in front of you, and the pl
 |---|---|---|---|
 | **Neural Racer** | [Play](https://neuralarcade.vercel.app/games/racer/) | [How it works](https://neuralarcade.vercel.app/games/racer/how-it-works/) | Learning from a score: fitness, selection, crossover, mutation, overfitting |
 | **Teach by Driving** | [Play](https://neuralarcade.vercel.app/games/teach/) | [How it works](https://neuralarcade.vercel.app/games/teach/how-it-works/) | Learning from examples: training data, loss, gradient descent, learning rate, distribution shift |
+| **Coin Runner** | [Play](https://neuralarcade.vercel.app/games/runner/) | [How it works](https://neuralarcade.vercel.app/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
 
-The two are a pair: the same car, track and senses, with the brain's numbers set two different ways (breeding by score, or gradient descent on your examples).
+The home page groups them into shelves. **How AI learns** holds all three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways. **Physical AI** (a brain with a body) is next: Hover, Balance and The real world are planned.
 
 ### Neural Racer (`games/racer/`)
 10 cars, each driven by a 6→8→2 network (74 weights), learn to lap a track by neuroevolution. Cars start on a grid, in rows of five behind the start line, and every car's distance is measured from the line itself. With the default 10 cars, each round the best car is kept, 8 children are bred from the top 3 and 1 random newcomer joins.
@@ -36,6 +37,17 @@ You steer: slide a thumb sideways on the track (the further, the harder it turns
 - **How it works** (`games/teach/how-it-works/`): examples, loss, one weight's loss hill with a ball rolling down it, backpropagation, the copied brain crashing where the teacher never drove (distribution shift), corrections that fix it (DAgger-style), and three learning rates. Every figure is drawn from one seeded lesson (track `LESSON_SEED` = 10, recorded by `games/teach/story-data.js`) whose teaching lap is driven by a stand-in autopilot; the page says so.
 - Testing aid: add `?autopilot` to the game's URL and the stand-in teacher drives the teaching lap.
 
+### Coin Runner (`games/runner/`)
+A hero that has never played learns a short side-scrolling level (two pits, a step, five coins, a coin block above the start, one walking enemy, a flag) by trial and error from points. Nobody shows it what to do. The player sets what earns points, and it learns whatever earns the most, including loopholes.
+- **Brain:** 12 senses (pits 1 to 3 tiles ahead, wall ahead, enemy distance and presence, on the ground, rising or falling, under the block, block ready, how far through the level, time left), 8 hidden neurons, 4 moves (wait, run, leap, jump), 140 weights. Outputs become chances and it rolls the dice for a move about 8 times a second; the randomness is its exploration.
+- **Learning:** REINFORCE (a policy gradient) with a learned value baseline, in `engine/reinforce.js`: every 12 tries, moves that led to more points than expected become more likely. Tries end at the flag, on death, or after 20 seconds.
+- **Rules (the lever):** five sliders, every one visible: reaching the flag, each coin, each new tile forward, dying, each second alive (a cost or a payment). Three ready-made sets: **Balanced** (learns to finish), **Coin hungry** (learns to bump the block forever), **Afraid of dying** (learns never to move). Changing the rules starts a fresh brain. Once most recent tries use a loophole, a line under the chart says so and names it: reward hacking.
+- **Practice speed:** one try plays at real speed while more run unseen in the background (0, 5 or 30 a second, at most 6 ms a frame), all learning into the same brain. At 30 a second it learns to finish in about a minute.
+- **Panels:** tries, score and coins readouts; its brain with each move's chance; how tries end, one stacked bar per 50 tries (amber reached the flag, red died, grey ran out of time). Every one has an (i) explanation.
+- **Art:** Kenney's Pixel Platformer (CC0) in `games/runner/art/`, drawn at 288 x 180 and scaled up so pixels stay crisp. Dust, coin pops, squash and stretch and a small shake are drawing only (`render.js`); they never touch the simulation.
+- **Tested promise:** `tests/runner-presets.test.js` trains 20 random brains per rule set (about 90 s): Balanced finishes on at least 18, both loopholes appear on all 20.
+- **How it works** (`games/runner/how-it-works/`): the third way to learn, senses and moves, rolling the dice, credit for points, watching it learn, three rule sets side by side, real reward-hacking cases, honest notes. Its figures come from `story.json`: three seeded runs (seed 1000) recorded by `node games/runner/story-data.js`; a test re-records them and checks the file still matches.
+
 ## Run locally
 
 ```
@@ -49,7 +61,7 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 ## Layout
 
 ```
-index.html              arcade home: games grouped into shelves (How AI learns, Physical AI), live previews, what is coming
+index.html              arcade home: games grouped into shelves (How AI learns, Physical AI), live previews of all three games, what is coming
 assets/                 shared styles, theme helper, self-hosted fonts, icon
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
@@ -61,9 +73,12 @@ engine/                 reusable pieces for every game
   pedigree.js           pedigree chart layout and SVG
   brain-panel.js        draws any small network live
   curve.js              per-generation bar chart and loss line chart
+  reinforce.js          learning from reward: policy, sampling, REINFORCE with a value baseline
 games/racer/            Neural Racer: sim.js (no DOM), track-view.js, main.js, story-data.js
   how-it-works/         the illustrated write-up (story.js draws its figures; story.css is shared by all write-ups)
 games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's track and physics), main.js, story-data.js
+  how-it-works/         its write-up
+games/runner/           Coin Runner: sim.js (no DOM), render.js, words.js, main.js, story-data.js + story.json, art/ (Kenney, CC0)
   how-it-works/         its write-up
 tests/                  Vitest tests for engine/ and each game's simulation and write-up data
 ```
