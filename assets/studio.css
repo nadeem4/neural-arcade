@@ -1,11 +1,13 @@
 /* Neural Arcade studio system: cool ground, deep ink, one signal orange, dark game stages. Shared by the home, browse, category and game pages. */
-@font-face { font-family: "Public Sans"; font-weight: 100 900; font-display: swap; src: url("fonts/public-sans-var.woff2") format("woff2"); }
+@font-face { font-family: "Schibsted Grotesk"; font-weight: 400 900; font-display: swap; src: url("fonts/schibsted-grotesk-latin-wght-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 500; font-display: swap; src: url("fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 700; font-display: swap; src: url("fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2"); }
 
 :root {
   --bg: #F5F6F8; --surface: #FFFFFF; --ink: #0D1015; --ink-2: #4A515B; --line: #DDE1E6; --track: #E4E8EC;
   --stage: #0F1319; --stage-2: #1A2029; --stage-ink: #E9EDF2; --stage-dim: #7D8794;
   --signal: #FF5A1F; --signal-ink: #FFFFFF; --ok: #2FA36B; --bad: #7D8794; --coin: #F4B740; --ghost: rgba(233, 237, 242, .18);
-  --sans: "Public Sans", "Segoe UI", system-ui, sans-serif; --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --sans: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
   --wrap: 1200px;
   /* names the canvas code reads through assets/theme.js */
   --ground: var(--bg); --tray: var(--stage); --road: var(--stage-2); --edge: var(--ghost);
