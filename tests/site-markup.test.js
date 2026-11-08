@@ -7,7 +7,7 @@ const themeJs = readFileSync(new URL('../assets/theme.js', import.meta.url), 'ut
 
 const names = block => new Set([...block.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
 const light = names(css.match(/:root\s*\{([^}]*)\}/)[1]);
-const darkMedia = names(css.match(/@media \(prefers-color-scheme:\s*dark\)\s*\{\s*:root:not\(\[data-theme="light"\]\)\s*\{([^}]*)\}/)[1]);
+const darkMedia = names(css.match(/@media not \(prefers-color-scheme:\s*light\)\s*\{\s*:root:not\(\[data-theme="light"\]\)\s*\{([^}]*)\}/)[1]);
 const darkAttr = names(css.match(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/)[1]);
 
 const LIGHT = ['bg', 'surface', 'ink', 'ink-2', 'line', 'track', 'stage', 'stage-2', 'stage-ink', 'stage-dim',
@@ -55,6 +55,7 @@ describe('shared header and footer', () => {
     expect(hrefs.length).toBeGreaterThan(0);
     for (const h of hrefs) expect(h.startsWith('../../')).toBe(true);
   });
+  it('logo links to ./ when base is empty', () => expect(headerHtml('', '')).toContain('class="logo" href="./"'));
   it('has the lamp button', () => expect(headerHtml('', '')).toContain('id="lamp"'));
   it('footer keeps the credit and the codewithnk link', () => {
     const f = footerHtml();

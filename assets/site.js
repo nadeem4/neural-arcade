@@ -10,7 +10,7 @@ export function headerHtml(base, current) {
   const link = (id, href, label) =>
     `<a href="${base}${href}"${current === id ? ' aria-current="page"' : ''}>${label}</a>`;
   return `<div class="wrap top">
-  <a class="logo" href="${base}">${MARK}Neural Arcade</a>
+  <a class="logo" href="${base || './'}">${MARK}Neural Arcade</a>
   <nav aria-label="Main">${link('games', 'games/', 'Games')}${link('about', 'about/', 'About')}<button class="btn lamp" id="lamp" type="button" aria-label="Switch theme" title="Switch theme">${SUN}${MOON}</button></nav>
 </div>`;
 }
@@ -19,10 +19,10 @@ export function footerHtml() {
   return '<div class="wrap"><span>Built by Nadeem.</span><a href="https://www.codewithnk.com">codewithnk.com</a></div>';
 }
 
-export function mountSite(base, current = '') {
+export function mountSite(base) {
   const header = document.querySelector('header[data-site]');
   const footer = document.querySelector('footer[data-site]');
-  if (header) header.innerHTML = headerHtml(base, current || header.dataset.site);
+  if (header) header.innerHTML = headerHtml(base, header.dataset.site);
   if (footer) footer.innerHTML = footerHtml();
   const lamp = document.getElementById('lamp');
   if (lamp) wireLamp(lamp, () => {});

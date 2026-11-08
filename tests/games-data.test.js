@@ -16,6 +16,7 @@ describe('games data', () => {
   it('path folder and writeup page exist on disk', () => {
     for (const g of GAMES) {
       expect(existsSync(new URL('../' + g.path, import.meta.url)), g.path).toBe(true);
+      expect(existsSync(new URL('../' + g.shot, import.meta.url)), g.shot).toBe(true);
       expect(existsSync(new URL('../' + g.writeup + 'index.html', import.meta.url)), g.writeup).toBe(true);
     }
   });
@@ -24,7 +25,7 @@ describe('games data', () => {
     for (const g of GAMES) expect(ids).toContain(g.category);
   });
   it('youtube is null or a valid id', () => {
-    for (const g of GAMES) if (g.youtube !== null) expect(g.youtube).toMatch(/^[\w-]{6,20}$/);
+    for (const g of GAMES) if (g.youtube !== null) expect(g.youtube).toMatch(/^[\w-]{11}$/);
   });
   it('ids are unique and added parses as a date', () => {
     expect(new Set(GAMES.map(g => g.id)).size).toBe(GAMES.length);
@@ -67,19 +68,18 @@ describe('categories', () => {
 describe('browse', () => {
   const cats = [{ id: 'x', title: 'Evolution' }, { id: 'y', title: 'Reward' }];
   const games = [
-    fake('b', { title: 'Bravo', category: 'x', lesson: 'Overfitting', added: '2026-01-01' }),
-    fake('a', { title: 'Alpha', category: 'y', lesson: 'Loopholes', added: '2026-03-01' }),
+    fake('b', { title: 'Alpha', category: 'x', lesson: 'Overfitting', added: '2026-01-01' }),
+    fake('a', { title: 'Zulu', category: 'y', lesson: 'Loopholes', added: '2026-03-01' }),
   ];
   it('searches title, lesson and category title, case-insensitively', () => {
-    expect(browse(games, cats, { q: 'BRAVO' }).items.map(g => g.id)).toEqual(['b']);
+    expect(browse(games, cats, { q: 'ALPHA' }).items.map(g => g.id)).toEqual(['b']);
     expect(browse(games, cats, { q: 'overfit' }).items.map(g => g.id)).toEqual(['b']);
     expect(browse(games, cats, { q: 'reward' }).items.map(g => g.id)).toEqual(['a']);
   });
   it('filters by category', () => expect(browse(games, cats, { category: 'y' }).items.map(g => g.id)).toEqual(['a']));
   it('sorts newest or a to z', () => {
     expect(browse(games, cats, {}).items.map(g => g.id)).toEqual(['a', 'b']);
-    expect(browse(games, cats, { sort: 'az' }).items.map(g => g.id)).toEqual(['a', 'b']);
-    expect(browse([games[0], { ...games[1], title: 'Zulu' }], cats, { sort: 'az' }).items.map(g => g.id)).toEqual(['b', 'a']);
+    expect(browse(games, cats, { sort: 'az' }).items.map(g => g.id)).toEqual(['b', 'a']);
   });
   it('pages 30 games into 2 pages of 24 and clamps the page', () => {
     const many = Array.from({ length: 30 }, (_, i) => fake('g' + i, { title: 'G' + String(i).padStart(2, '0') }));
