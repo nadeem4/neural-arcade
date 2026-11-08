@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
-import { CATEGORIES, GAMES, videoOf, newest, categoriesWithGames, groupCategories, browse, gameById } from '../assets/games.js';
+import { CATEGORIES, GAMES, videoOf, newest, categoriesWithGames, groupCategories, browse, gameById, homeModel } from '../assets/games.js';
 
 const FIELDS = ['id', 'title', 'category', 'lesson', 'learnsBy', 'goesWrongWhen', 'added', 'shot', 'path', 'writeup'];
 const fake = (id, o = {}) => ({ id, title: id, category: 'how-ai-learns', lesson: '', added: '2026-01-01', ...o });
@@ -93,5 +93,28 @@ describe('browse', () => {
     const r = browse(games, cats, { q: 'zzz' });
     expect([r.total, r.items.length, r.page]).toEqual([0, 0, 1]);
     expect(r.pages).toBe(1);
+  });
+});
+
+describe('homeModel', () => {
+  const cats = [{ id: 'x', title: 'X' }, { id: 'y', title: 'Y' }, { id: 'empty', title: 'Empty' }];
+  const games = [
+    fake('a', { category: 'x', added: '2026-01-01' }),
+    fake('b', { category: 'x', added: '2026-03-01' }),
+    fake('c', { category: 'x', added: '2026-02-01' }),
+    fake('d', { category: 'y', added: '2026-02-15' }),
+  ];
+  const m = homeModel(cats, games);
+  it('hero is the newest game overall', () => expect(m.hero.id).toBe('b'));
+  it('a category has its newest as big and the others newest-first in rest', () => {
+    expect(m.categories[0].big.id).toBe('b');
+    expect(m.categories[0].rest.map(g => g.id)).toEqual(['c', 'a']);
+  });
+  it('leaves empty categories out of categories and chips', () => {
+    expect(m.categories.map(c => c.category.id)).toEqual(['x', 'y']);
+    expect(m.chips.map(c => c.id)).toEqual(['x', 'y']);
+  });
+  it('flags the New badge only on the newest game overall', () => {
+    expect(m.categories.map(c => c.bigIsNew)).toEqual([true, false]);
   });
 });

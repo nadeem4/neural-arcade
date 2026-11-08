@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>About · Neural Arcade</title>
+<meta name="description" content="Why Neural Arcade exists: small games where you are part of the training loop, not a spectator.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/studio.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="about"></header>
+
+<main class="wrap about">
+  <h1>About Neural Arcade</h1>
+  <p>Neural Arcade is a set of small browser games where a tiny neural network learns in front of you. Each game teaches exactly one machine learning idea, so the arcade works as a curriculum you can play.</p>
+  <p>Videos of an AI learning to drive can only be watched. Here you are part of the training loop: you set the fitness, the mutation rate, the track, the data or the reward, and you see what that does to the learning. The networks stay tiny, so every neuron and weight can be drawn live.</p>
+  <p>Failure is part of the lesson. Each game has a way to break learning on purpose, because seeing a brain overfit, drift or find a loophole teaches more than seeing it succeed. Built by <a href="https://www.codewithnk.com">Nadeem</a>.</p>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../assets/site.js';
+  mountSite('../');
+</script>
+</body>
+</html>

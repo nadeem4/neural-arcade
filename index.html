@@ -6,96 +6,40 @@
 <title>Neural Arcade</title>
 <meta name="description" content="Small browser games where tiny neural networks learn in front of you, and you change how they learn. One machine learning idea per game.">
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/arcade.css">
-<link rel="stylesheet" href="assets/home.css">
+<link rel="stylesheet" href="assets/studio.css">
 <script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
 <body>
-<header class="topbar">
-  <div class="wrap">
-    <a class="wordmark" href="./">Neural Arcade</a>
-    <span class="spacer"></span>
-    <button class="btn lamp icon" id="lamp" type="button" aria-label="Switch theme" title="Switch theme"><svg class="ic ic-sun" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></svg><svg class="ic ic-moon" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></svg></button>
-  </div>
-</header>
+<header data-site=""></header>
 
 <main>
-  <section class="wrap intro">
-    <h1>Watch a brain learn. Then change how it learns.</h1>
-    <p class="lede">Small games where tiny neural networks train in front of you. Every weight is on screen, and every control changes the training.</p>
-  </section>
+  <section class="wrap hero" aria-labelledby="h">
+    <h1 id="h">Watch an AI learn to play. <span>Then change how it learns.</span></h1>
+    <div class="hero-row">
+      <p>Small browser games where a tiny neural network starts knowing nothing and gets better in front of you. Every number is real, and every control changes the training.</p>
+      <div class="acts" id="hero-actions"></div>
+    </div>
 
-  <section class="wrap shelf-head" aria-labelledby="learns-title">
-    <h2 id="learns-title">How AI learns</h2>
-    <p>The ways a brain gets better: by evolution, by copying examples, and by trial and error.</p>
-  </section>
-
-  <section class="wrap feature" aria-labelledby="racer-title">
-    <figure class="feature-fig">
-      <a class="feature-tray" href="games/racer/" aria-label="Play Neural Racer">
-        <canvas id="preview" aria-hidden="true"></canvas>
-      </a>
-      <figcaption class="feature-gen">Running live: generation <span class="num" id="pgen">1</span>, <span class="num" id="pdone">0</span> of 10 finished</figcaption>
-    </figure>
-    <div class="feature-text">
-      <h2 id="racer-title" class="feature-title">Neural Racer</h2>
-      <p>Ten cars with random brains learn to lap a track by breeding. Watch each round's winners become parents, then race the first generation's ghost.</p>
-      <p class="teaches">Teaches fitness, selection, mutation and overfitting.</p>
-      <p class="feature-actions"><a class="btn solid" href="games/racer/">Play</a><a class="btn" href="games/racer/how-it-works/">How it works</a></p>
+    <div class="stage">
+      <div class="stage-head"><span class="live"><i></i><b>Recorded run</b></span><span id="stage-title">Coin Runner</span><span>12 inputs, 8 hidden, 4 moves</span><span class="sp">Learning from points only</span></div>
+      <div class="stage-body">
+        <div class="scene"><canvas id="demo" class="pixel" role="img" aria-label="A trained hero playing the Coin Runner level on a loop"></canvas></div>
+        <aside class="brain" aria-label="What the brain decides right now">
+          <h2>Its four moves, right now</h2>
+          <ul class="acts-list" id="moves"></ul>
+        </aside>
+      </div>
     </div>
   </section>
 
-  <section class="wrap feature" aria-labelledby="teach-title">
-    <figure class="feature-fig">
-      <a class="feature-tray" href="games/teach/" aria-label="Play Teach by Driving">
-        <canvas id="preview2" aria-hidden="true"></canvas>
-      </a>
-      <figcaption class="feature-gen">Running live: a brain trained on one lap of examples, driving on its own</figcaption>
-    </figure>
-    <div class="feature-text">
-      <h2 id="teach-title" class="feature-title">Teach by Driving</h2>
-      <p>You drive one lap. A tiny network learns to steer like you by gradient descent, then drives on its own and crashes exactly where you never showed it what to do.</p>
-      <p class="teaches">Teaches training data, loss, gradient descent, learning rate and distribution shift.</p>
-      <p class="feature-actions"><a class="btn solid" href="games/teach/">Play</a><a class="btn" href="games/teach/how-it-works/">How it works</a></p>
-    </div>
-  </section>
-
-  <section class="wrap feature" aria-labelledby="runner-title">
-    <figure class="feature-fig">
-      <a class="feature-tray" href="games/runner/" aria-label="Play Coin Runner">
-        <canvas id="preview3" class="pixel" aria-hidden="true"></canvas>
-      </a>
-      <figcaption class="feature-gen">Running live: a brain that learned the level from points alone</figcaption>
-    </figure>
-    <div class="feature-text">
-      <h2 id="runner-title" class="feature-title">Coin Runner</h2>
-      <p>A hero that has never played learns a platformer level by trial and error, from the points you give it. Pay for the wrong thing and it finds a loophole: farming coins forever, or never moving at all.</p>
-      <p class="teaches">Teaches reward, exploration, policy gradients and reward hacking.</p>
-      <p class="feature-actions"><a class="btn solid" href="games/runner/">Play</a><a class="btn" href="games/runner/how-it-works/">How it works</a></p>
-    </div>
-  </section>
-
-  <section class="wrap shelf-head" aria-labelledby="physical-title">
-    <h2 id="physical-title">Physical AI</h2>
-    <p>What changes when the brain has a body: motors that lag, sensors that lie, wind, and a real world that never quite matches the simulation.</p>
-  </section>
-
-  <section class="wrap coming" aria-label="Coming to Physical AI">
-    <h3>Coming</h3>
-    <dl>
-      <dt>Hover</dt><dd>Hold a drone steady in gusts of wind. Feedback control: how every robot corrects itself.</dd>
-      <dt>Balance</dt><dd>Keep a pole upright on a moving cart, on real robot physics. Stable and unstable systems.</dd>
-      <dt>The real world</dt><dd>A brain that drives perfectly in simulation crashes in the real world. Fix it with messy training. Sim to real.</dd>
-    </dl>
+  <section class="wrap games" id="games" aria-labelledby="gh">
+    <div class="sec-h"><h2 id="gh">Pick what you want to understand</h2><p>Games are grouped by the idea they teach. Each category shows its newest game and a few more.</p></div>
+    <div id="categories"></div>
+    <nav class="cats" id="chips" aria-label="All categories"><a class="chip" href="games/">Browse every game</a></nav>
   </section>
 </main>
 
-<footer class="foot">
-  <div class="wrap">
-    <span>Built by Nadeem.</span>
-    <a href="https://www.codewithnk.com">codewithnk.com</a>
-  </div>
-</footer>
+<footer data-site></footer>
 
 <script type="module" src="assets/home.js"></script>
 </body>
