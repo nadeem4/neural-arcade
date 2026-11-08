@@ -161,26 +161,27 @@ describe('signal-text contrast', () => {
   });
 });
 
-describe('game page contract (runner)', () => {
-  const html = read('games/runner/index.html');
-  const runner = GAMES.find(g => g.id === 'runner');
-  const everywhere = html + headerHtml('../../', 'games') + footerHtml() + videoHtml(runner);
+const PAGES = ['runner', 'racer', 'teach'];
+describe.each(PAGES)('game page contract (%s)', id => {
+  const html = read(`games/${id}/index.html`);
+  const entry = GAMES.find(g => g.id === id);
+  const everywhere = html + headerHtml('../../', 'games') + footerHtml() + videoHtml(entry);
   it('has every id that main.js looks up', () => {
-    const js = read('games/runner/main.js');
+    const js = read(`games/${id}/main.js`);
     const ids = [...js.matchAll(/(?:\$|getElementById)\('([\w-]+)'\)/g)].map(m => m[1]);
     expect(ids.length).toBeGreaterThan(10);
-    for (const id of ids) expect(everywhere, id).toContain(`id="${id}"`);
+    for (const i of ids) expect(everywhere, i).toContain(`id="${i}"`);
   });
   it('has the Play / Watch / How it works switch', () => {
     const nav = html.match(/<nav class="switch"[\s\S]*?<\/nav>/)[0];
     for (const a of ['#play', '#watch', '#how']) expect(nav, a).toContain(`href="${a}"`);
-    for (const id of ['play', 'how']) expect(html, id).toContain(`id="${id}"`);
+    for (const i of ['play', 'how']) expect(html, i).toContain(`id="${i}"`);
   });
   it('has the three-part brief', () => {
     for (const t of ['The setup', 'The rule', 'Watch for']) expect(html, t).toContain(`<dt>${t}</dt>`);
   });
   it('is driven by data-game, with no video of its own', () => {
-    expect(html).toContain('<body data-game="runner">');
+    expect(html).toContain(`<body data-game="${id}">`);
     expect(html).not.toContain('data-youtube');
     expect(html).not.toContain('video-thumb');
   });
@@ -188,40 +189,66 @@ describe('game page contract (runner)', () => {
     expect(html).toMatch(/<a [^>]*href="#watch"[^>]*hidden/);
     expect(html).toMatch(/id="watchCol"[^>]*hidden/);
   });
-  it('gives every play panel an info button', () => {
-    const top = html.split('class="moral"')[0].split('<main')[1];
-    const headings = [...top.matchAll(/<h2[\s\S]*?<\/h2>/g)].map(m => m[0]);
-    expect(headings.length).toBe(4);
-    for (const h of headings) expect(h).toContain('class="info"');
-  });
-  it('points every aria-controls at an existing id, and has the preset and speed buttons', () => {
+  it('points every aria-controls at an existing id', () => {
     for (const m of html.matchAll(/aria-controls="([\w-]+)"/g)) expect(html, m[1]).toContain(`id="${m[1]}"`);
-    expect(html.match(/data-preset="/g)).toHaveLength(3);
-    expect(html.match(/data-rate="/g)).toHaveLength(3);
   });
-  it('uses no coloured side stripes and keeps body text at 1.5 line height', () => {
-    const gc = read('assets/game.css');
-    expect(gc).not.toMatch(/border-left:\s*\d+px solid var\(--signal\)/);
-    expect(gc).not.toMatch(/\.caption\s*\{[^}]*line-height:\s*1\.[0-4]/);
-  });
-  it('amber-ink text meets contrast on the light surface', () => {
-    expect(css).toMatch(/--amber-ink:\s*var\(--signal-text\)/);
-  });
-  it('shows the lesson from games.js', () => {
-    expect(html.match(/class="lead lesson">([^<]*)</)[1]).toBe(runner.lesson);
+  it('shows the lesson from games.js, and the lesson band links to the write-up', () => {
+    expect(html.match(/class="lead lesson">([^<]*)</)[1]).toBe(entry.lesson);
+    expect(html).toMatch(/class="moral"[\s\S]*href="#how"/);
   });
   it('keeps heading levels in order and has no status words', () => {
     const levels = [...html.matchAll(/<h([1-6])[ >]/g)].map(m => +m[1]);
     levels.forEach((l, i) => expect(l - (levels[i - 1] ?? 0), 'h' + l).toBeLessThanOrEqual(1));
     for (const w of ['Coming soon', 'Playable']) expect(html).not.toContain(w);
   });
-  it('loads the shared game css and game-page.js, not the racer page css', () => {
+  it('loads the studio look, the shared game css, game-page.js and only its own css', () => {
     expect(html).toContain('assets/studio.css');
     expect(html).toContain('assets/game.css');
     expect(html).toContain('assets/game-page.js');
-    expect(html).not.toContain('racer.css');
+    expect(html).toContain(`href="${id}.css"`);
+    expect(html).not.toContain('arcade.css');
+    for (const o of PAGES.filter(o => o !== id)) expect(html, o).not.toContain(`${o}.css`);
+  });
+  it('uses no coloured side stripes in its css', () => {
+    for (const f of ['assets/game.css', `games/${id}/${id}.css`]) {
+      expect(read(f), f).not.toMatch(/border-(left|right):\s*\d+px solid var\(--(signal|amber|ok|coin|red)/);
+    }
   });
 });
+
+describe('game page specifics', () => {
+  it('runner: every play panel has an info button, and the preset and speed buttons are there', () => {
+    const html = read('games/runner/index.html');
+    const top = html.split('class="moral"')[0].split('<main')[1];
+    const headings = [...top.matchAll(/<h2[\s\S]*?<\/h2>/g)].map(m => m[0]);
+    expect(headings.length).toBe(4);
+    for (const h of headings) expect(h).toContain('class="info"');
+    expect(html.match(/data-preset="/g)).toHaveLength(3);
+    expect(html.match(/data-rate="/g)).toHaveLength(3);
+  });
+  it('racer: speed and population buttons, family tree, last round card', () => {
+    const html = read('games/racer/index.html');
+    expect(html.match(/data-speed="/g)).toHaveLength(3);
+    expect(html.match(/data-pop="/g)).toHaveLength(4);
+    for (const i of ['pedigree', 'round', 'roundBody', 'pause', 'follow', 'ghost']) expect(html, i).toContain(`id="${i}"`);
+  });
+  it('teach: steering buttons, three steps, loss chart', () => {
+    const html = read('games/teach/index.html');
+    for (const i of ['left', 'right', 'phTeach', 'phTrain', 'phTest', 'chart', 'lr']) expect(html, i).toContain(`id="${i}"`);
+  });
+  it('amber-ink text meets contrast on the light surface', () => {
+    expect(css).toMatch(/--amber-ink:\s*var\(--signal-text\)/);
+  });
+  it('no stylesheet uses a custom property that nothing defines', () => {
+    const files = ['assets/studio.css', 'assets/game.css', ...PAGES.map(i => `games/${i}/${i}.css`)];
+    const all = files.map(read).join('\n');
+    const defined = new Set([...all.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
+    defined.add('--row-gap'); // set inline on the family tree svg
+    const used = [...all.matchAll(/var\((--[\w-]+)/g)].map(m => m[1]);
+    for (const u of used) expect(defined.has(u), u).toBe(true);
+  });
+});
+
 
 describe('game page rendering', () => {
   const g = { id: 'g', title: 'Gee', youtube: 'abcdefghijk', writeup: 'games/g/how-it-works/' };

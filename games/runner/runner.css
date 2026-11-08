@@ -15,4 +15,4 @@
 /* Once most recent tries use a loophole, one line names it. */
 .loophole { font-weight: 600; max-width: 60ch; }
 .loophole:empty { display: none; }
-.loophole:not(:empty) { padding-left: 12px; border-left: 3px solid var(--amber); }
+.loophole:not(:empty) { padding: 8px 12px; border-radius: 8px; background: var(--track); }
