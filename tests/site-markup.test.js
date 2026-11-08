@@ -16,7 +16,7 @@ const darkMedia = names(css.match(/@media not \(prefers-color-scheme:\s*light\)\
 const darkAttr = names(css.match(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/)[1]);
 
 const LIGHT = ['bg', 'surface', 'ink', 'ink-2', 'line', 'track', 'stage', 'stage-2', 'stage-ink', 'stage-dim',
-  'signal', 'signal-text', 'signal-ink', 'ok', 'bad', 'coin', 'ghost', 'sans', 'mono', 'wrap'];
+  'signal', 'signal-text', 'signal-ink', 'ghost', 'sans', 'mono', 'wrap'];
 const DARK = ['bg', 'surface', 'ink', 'ink-2', 'line', 'track', 'stage', 'stage-2', 'signal-text'];
 
 describe('studio.css tokens', () => {
@@ -131,7 +131,7 @@ describe('review fixes', () => {
     expect(main.replace(/<[^>]*>/g, '')).not.toMatch(/\d/);
   });
   it('category blocks are sections', () => {
-    expect(categoryHtml({ category: cat, big: game(), rest: [], bigIsNew: false })).toMatch(/^<section class="shelf"/);
+    expect(categoryHtml({ category: cat, big: game(), rest: [], bigIsNew: false })).toMatch(/^<section class="category"/);
   });
   it('demo canvas stays pixelated and the stage title is static', () => {
     expect(css).toMatch(/\.scene canvas\s*\{[^}]*image-rendering:\s*pixelated/);
@@ -173,6 +173,17 @@ describe.each(PAGES)('game page contract (%s)', id => {
     const ids = [...js.matchAll(/(?:\$|getElementById)\('([\w-]+)'\)/g)].map(m => m[1]);
     expect(ids.length).toBeGreaterThan(10);
     for (const i of ids) expect(everywhere, i).toContain(`id="${i}"`);
+  });
+  it('labels sections by a heading span, never a heading holding the (i) button', () => {
+    for (const m of html.matchAll(/aria-labelledby="([\w-]+)"/g)) {
+      if (m[1] === 'moreTitle') continue;
+      const tag = html.match(new RegExp('<(\\w+) id="' + m[1] + '"[^>]*>([\\s\\S]*?)</\\1>'));
+      expect(tag, m[1]).not.toBeNull();
+      expect(tag[2], m[1]).not.toContain('<button');
+    }
+  });
+  it('keeps body text at line-height 1.5 or more', () => {
+    for (const m of html.matchAll(/line-height:\s*([\d.]+)/g)) expect(+m[1]).toBeGreaterThanOrEqual(1.5);
   });
   it('has the Play / Watch / How it works switch', () => {
     const nav = html.match(/<nav class="switch"[\s\S]*?<\/nav>/)[0];
@@ -301,11 +312,21 @@ describe.each(PAGES)('how it works page (%s)', id => {
     expect(html).toContain('<footer data-site>');
     expect(html).toContain('assets/story-page.js');
   });
+  it('uses the shared story.css and a styled finale button', () => {
+    expect(html).toContain('assets/story.css');
+    expect(html).not.toContain('btn solid');
+    expect(html).toMatch(/class="btn primary go"/);
+  });
+  it('uses no old colour aliases in story css', () => {
+    for (const f of ['assets/story.css', `games/${id}/how-it-works/story.css`].filter(f => existsSync(new URL('../' + f, import.meta.url)))) {
+      expect(read(f), f).not.toMatch(/--amber-ink|--muted/);
+    }
+  });
   it('links back to its game page', () => {
     expect(html).toMatch(/href="\.\.\/"/);
   });
   it('uses only tokens that exist', () => {
-    const files = ['assets/studio.css', 'games/racer/how-it-works/story.css', `games/${id}/how-it-works/story.css`];
+    const files = ['assets/studio.css', 'assets/story.css', `games/${id}/how-it-works/story.css`].filter(f => existsSync(new URL('../' + f, import.meta.url)));
     const all = files.map(read).join('\n');
     const defined = new Set([...all.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
     defined.add('--k'); // set inline on each weight square
@@ -315,6 +336,15 @@ describe.each(PAGES)('how it works page (%s)', id => {
   it('keeps heading levels in order', () => {
     const levels = [...html.matchAll(/<h([1-6])[ >]/g)].map(m => +m[1]);
     levels.forEach((l, i) => expect(l - (levels[i - 1] ?? 0), 'h' + l).toBeLessThanOrEqual(1));
+  });
+});
+
+describe('no dead css or shelf wording', () => {
+  it('studio.css has no .status, .chip .count, --ok, --bad or --coin', () => {
+    expect(css).not.toMatch(/\.status\b|\.chip \.count|--ok\b|--bad\b|--coin\b/);
+  });
+  it('the home category block is called category', () => {
+    expect(css).not.toContain('.shelf');
   });
 });
 

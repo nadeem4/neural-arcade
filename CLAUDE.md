@@ -18,7 +18,7 @@ Small browser games where tiny neural networks learn in front of you; each game 
 
 ## Conventions
 - No build step: plain HTML, CSS and ES modules; deployed as static files to Vercel
-- Every page links assets/studio.css; game pages add game.css and a game-only file, How it works pages add their story.css. Adding a youtube id to assets/games.js is all a video needs
+- Every page links assets/studio.css; game pages add game.css and a game-only file, How it works pages add assets/story.css (and a story.css of their own if they need one). Adding a youtube id to assets/games.js is all a video needs
 - Every game has a brief, (i) buttons, an illustrated How it works write-up and one stated lesson; no tours or quizzes; one optional narrated explainer video per game, hosted on YouTube, shown as a click-to-play facade (assets/video.js)
 - How it works figures come from a seeded run recorded by story-data.js; regenerate it when the sim changes
 - Plans and design docs go in Notion, never git (docs/ is ignored)

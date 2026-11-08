@@ -67,7 +67,7 @@
         </div>
       </section>
       <section aria-labelledby="popName">
-        <h2 id="popName">Population <button class="info" type="button" aria-expanded="false" aria-controls="infoPop" aria-label="Explain population" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <h2><span id="popName">Population</span> <button class="info" type="button" aria-expanded="false" aria-controls="infoPop" aria-label="Explain population" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="infoPop" hidden>How many cars try in each round. More cars means more random tries, so a good driver usually turns up sooner, but each round takes more work to run.</p>
         <div class="seg" role="group" aria-labelledby="popName">
           <button type="button" data-pop="5" aria-pressed="false">5</button>
@@ -78,7 +78,7 @@
         <output class="hint" id="popOut">Few enough to follow every car. Usually learns within a handful of rounds.</output>
       </section>
       <section aria-labelledby="mutName">
-        <h2 id="mutName">Mutation <button class="info" type="button" aria-expanded="false" aria-controls="infoMut" aria-label="Explain mutation" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <h2><span id="mutName">Mutation</span> <button class="info" type="button" aria-expanded="false" aria-controls="infoMut" aria-label="Explain mutation" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="infoMut" hidden>After a child gets its weights from its two parents, this share of them is nudged by a small random amount. A little mutation brings new ideas. None means nothing new can ever appear. Too much scrambles what the parents passed on.</p>
         <output class="hint" id="mutOut" for="mut">8% of genes nudged</output>
         <input id="mut" type="range" min="0" max="0.5" step="0.01" value="0.08" aria-labelledby="mutName">

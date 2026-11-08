@@ -71,7 +71,7 @@
         </div>
       </section>
       <section aria-labelledby="lh">
-        <h2 id="lh">Learning rate <button class="info" type="button" aria-expanded="false" aria-controls="infoLr" aria-label="Explain learning rate" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <h2><span id="lh">Learning rate</span> <button class="info" type="button" aria-expanded="false" aria-controls="infoLr" aria-label="Explain learning rate" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="infoLr" hidden>How big a step each weight takes downhill on every update. Too small and the loss crawls down; too big and the steps overshoot, so the loss jumps around or gets worse. Change it after it has learned and it learns your same lap again from a fresh brain, so you can compare.</p>
         <output class="hint" id="lrOut" for="lr">0.05: steady</output>
         <input id="lr" type="range" min="0" max="5" step="1" value="2" aria-labelledby="lh">

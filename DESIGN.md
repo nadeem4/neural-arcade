@@ -259,7 +259,7 @@ A two-column pair: "Watch it learn" with the video, and "How it works" with a pr
 Crumb: 14px `ink-2` text, links underlined at 4px offset, "Category / Game" on game pages and "Every game / Category" on category pages. Pager: chips, hidden when there is one page.
 
 ### How it works page
-Intro (headline, 20px lede, read time and a "Try it live" arrow link), a wide opening figure, then numbered steps: a bold `signal-text` step number, a 30px 800 heading, reading prose with bold (not italic) terms. Figures are white hairline plates with "Fig. N" captions under a rule; bar figures use track troughs with orange fills. A "deep" details box with a heavy top rule holds the practitioner notes. The shared styles live in `games/racer/how-it-works/story.css`; each write-up adds its own figure CSS.
+Intro (headline, 20px lede, read time and a "Try it live" arrow link), a wide opening figure, then numbered steps: a bold `signal-text` step number, a 30px 800 heading, reading prose with bold (not italic) terms. Figures are white hairline plates with "Fig. N" captions under a rule; bar figures use track troughs with orange fills. A "deep" details box with a heavy top rule holds the practitioner notes. The shared styles live in `assets/story.css`; the Coin Runner and Teach write-ups add their own figure CSS. The finale button is `btn primary`.
 
 ## Do's and Don'ts
 
