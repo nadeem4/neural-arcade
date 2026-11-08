@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
+import { headerHtml, footerHtml } from '../assets/site.js';
 
 const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
 const themeJs = readFileSync(new URL('../assets/theme.js', import.meta.url), 'utf8');
@@ -35,5 +36,29 @@ describe('studio.css tokens', () => {
       const file = f.match(/url\("([^"]+)"\)/)[1];
       expect(existsSync(new URL('../assets/' + file, import.meta.url)), file).toBe(true);
     }
+  });
+});
+
+describe('shared header and footer', () => {
+  it('header links Games and About, not Videos', () => {
+    const h = headerHtml('', 'games');
+    expect(h).toContain('>Games</a>');
+    expect(h).toContain('>About</a>');
+    expect(h).not.toContain('Videos');
+  });
+  it('marks the current page', () => {
+    expect(headerHtml('', 'about')).toMatch(/aria-current="page"[^>]*>About</);
+    expect(headerHtml('', '')).not.toContain('aria-current');
+  });
+  it('base prefixes every href', () => {
+    const hrefs = [...headerHtml('../../', 'games').matchAll(/href="([^"]+)"/g)].map(m => m[1]);
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const h of hrefs) expect(h.startsWith('../../')).toBe(true);
+  });
+  it('has the lamp button', () => expect(headerHtml('', '')).toContain('id="lamp"'));
+  it('footer keeps the credit and the codewithnk link', () => {
+    const f = footerHtml();
+    expect(f).toContain('Built by Nadeem.');
+    expect(f).toContain('<a href="https://www.codewithnk.com">codewithnk.com</a>');
   });
 });

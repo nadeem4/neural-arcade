@@ -10,7 +10,7 @@ Small browser games where tiny neural networks learn in front of you; each game 
 ## Layout
 - engine/: shared learning code (tinynet, evolve, reinforce, train, brain-panel, curve)
 - games/<name>/: one game each (index.html, sim.js, main.js, words.js, story-data.js, how-it-works/)
-- assets/: home page, shared CSS, fonts, theme, video.js (click-to-play video facade)
+- assets/: home page, shared CSS, fonts, theme, video.js (click-to-play video facade), games.js (games and categories data), studio.css (new site tokens), site.js (shared header/footer)
 - videos/<game>/: git-ignored upload pack per explainer video (mp4, captions, description, thumbnail)
 - tests/: Vitest tests for the engine and each game's sim, words and story
 
