@@ -1,283 +1,278 @@
 ---
 name: Neural Arcade
-description: Small browser games where tiny neural networks learn in front of you, drawn on a lab bench.
+description: Small browser games where tiny neural networks learn in front of you, shown on dark stages in a cool, quiet studio.
 colors:
-  bench-green: "#12352B"
-  specimen-tray: "#0B271F"
-  tray-road: "#1D4538"
-  road-edge: "rgba(238, 242, 230, .3)"
-  chalk: "#EEF2E6"
-  lichen-muted: "#A3BAAD"
-  slate-rule: "#2E5849"
-  agar-amber: "#F2A93B"
-  fly-eye-red: "#E5533F"
-  daylight-paper: "#E3EBE5"
-  daylight-tray: "#C6D6CB"
-  daylight-road: "#F1F5F0"
-  daylight-road-edge: "rgba(18, 53, 43, .4)"
-  daylight-muted: "#46685A"
-  daylight-muted-on-tray: "#3A5A4C"
-  daylight-rule: "#AFC3B6"
-  daylight-amber-ink: "#8F5300"
-  daylight-red: "#C23A2B"
+  ground: "#F5F6F8"
+  surface: "#FFFFFF"
+  ink: "#0D1015"
+  ink-2: "#4A515B"
+  line: "#DDE1E6"
+  track: "#E4E8EC"
+  stage: "#0F1319"
+  stage-2: "#1A2029"
+  stage-ink: "#E9EDF2"
+  stage-dim: "#7D8794"
+  signal: "#FF5A1F"
+  signal-text: "#C2410C"
+  signal-ink: "#FFFFFF"
+  crash-red: "#E5533F"
+  dark-ground: "#0B0E12"
+  dark-surface: "#12161C"
+  dark-ink: "#ECEFF3"
+  dark-ink-2: "#A0A9B4"
+  dark-line: "#232A33"
+  dark-stage: "#161B23"
+  dark-stage-2: "#1F2630"
 typography:
   display:
-    fontFamily: "Saira Condensed, Arial Narrow, sans-serif"
-    fontSize: "clamp(44px, 6vw, 72px)"
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(2.6rem, 6.2vw, 5.4rem)"
     fontWeight: 800
-    lineHeight: 0.92
-    letterSpacing: "0.005em"
+    lineHeight: 0.98
+    letterSpacing: "-0.04em"
   headline:
-    fontFamily: "Saira Condensed, Arial Narrow, sans-serif"
-    fontSize: "48px"
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(2.4rem, 5vw, 4.2rem)"
     fontWeight: 800
-    letterSpacing: "0.01em"
+    lineHeight: 1
+    letterSpacing: "-0.04em"
+  section:
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(2rem, 4vw, 3.2rem)"
+    fontWeight: 800
+    lineHeight: 1
+    letterSpacing: "-0.035em"
   title:
-    fontFamily: "Saira Condensed, Arial Narrow, sans-serif"
-    fontSize: "22px"
-    fontWeight: 600
-    letterSpacing: "0.08em"
-  numeral:
-    fontFamily: "Saira Condensed, Arial Narrow, sans-serif"
-    fontSize: "34px"
-    fontWeight: 800
-    lineHeight: 1.05
-    fontFeature: "tnum"
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
+    fontSize: "20px"
+    fontWeight: 700
+    letterSpacing: "-0.02em"
   body:
-    fontFamily: "Public Sans, Segoe UI, Roboto, sans-serif"
-    fontSize: "16px"
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
+    fontSize: "17px"
     fontWeight: 400
-    lineHeight: 1.5
-  lede:
-    fontFamily: "Public Sans, Segoe UI, Roboto, sans-serif"
+    lineHeight: 1.55
+  lead:
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
+    fontSize: "19px"
+    fontWeight: 400
+    lineHeight: 1.55
+  reading:
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
     fontSize: "18px"
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: 1.65
   label:
-    fontFamily: "Saira Condensed, Arial Narrow, sans-serif"
-    fontSize: "18px"
-    fontWeight: 600
-    letterSpacing: "0.06em"
-  note:
-    fontFamily: "Public Sans, Segoe UI, Roboto, sans-serif"
+    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
     fontSize: "13px"
-    fontWeight: 400
+    fontWeight: 700
+    letterSpacing: "0.06em"
+  numeral:
+    fontFamily: "JetBrains Mono, ui-monospace, Consolas, monospace"
+    fontSize: "26px"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.03em"
+    fontFeature: "tnum"
 rounded:
-  none: "0px"
+  pill: "999px"
+  stage: "20px"
+  card: "18px"
+  shot: "14px"
+  tile: "12px"
+  thumb: "10px"
+  inset: "8px"
 spacing:
-  cell: "8px"
-  cell-2: "16px"
-  cell-3: "24px"
-  cell-4: "32px"
-  cell-5: "40px"
-  cell-6: "48px"
-  cell-8: "64px"
-  cell-10: "80px"
+  gutter: "16px"
+  gap: "20px"
+  block: "40px"
+  section: "96px"
 components:
-  button-outline:
-    backgroundColor: "transparent"
-    textColor: "{colors.chalk}"
-    typography: "{typography.label}"
-    rounded: "{rounded.none}"
-    padding: "0 16px"
-    height: "44px"
-  button-solid:
-    backgroundColor: "{colors.chalk}"
-    textColor: "{colors.bench-green}"
-    typography: "{typography.label}"
-    rounded: "{rounded.none}"
-    padding: "0 16px"
-    height: "44px"
-  button-pressed:
-    backgroundColor: "{colors.chalk}"
-    textColor: "{colors.bench-green}"
-  lamp-toggle:
-    backgroundColor: "transparent"
-    textColor: "{colors.chalk}"
-    rounded: "{rounded.none}"
-    padding: "0 12px"
-    height: "36px"
-  generation-plate:
-    backgroundColor: "transparent"
-    textColor: "{colors.chalk}"
-    rounded: "{rounded.none}"
-    padding: "0 12px"
-    height: "36px"
-  specimen-tray:
-    backgroundColor: "{colors.specimen-tray}"
-    rounded: "{rounded.none}"
+  button:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    padding: "0 20px"
+    height: "46px"
+  button-primary:
+    backgroundColor: "{colors.signal}"
+    textColor: "{colors.signal-ink}"
+    rounded: "{rounded.pill}"
+    padding: "0 20px"
+    height: "46px"
+  chip:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    padding: "0 14px"
+    height: "38px"
+  chip-pressed:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.ground}"
+  switch-tab-current:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.ground}"
+    rounded: "{rounded.pill}"
+    padding: "0 18px"
+    height: "42px"
+  search:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    padding: "0 18px"
+    height: "52px"
+  stage:
+    backgroundColor: "{colors.stage}"
+    textColor: "{colors.stage-ink}"
+    rounded: "{rounded.stage}"
+  card:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.card}"
+    padding: "18px 20px"
 ---
 
 # Design System: Neural Arcade
 
 ## Overview
 
-**Creative North Star: "The Breeding Lab"**
+**Creative North Star: "The Studio"**
 
-Neural Arcade is a lab bench, not a dashboard. The ground is a slate bench green, the play area is a deeper specimen tray, and everything the network does is drawn on it in chalk-white ink strokes (1.5px) as if a researcher were annotating the dish. Evolution reads as breeding: generations, parents, survivors, crashes, written in a small fixed vocabulary of marks rather than glowing graphics. The default is the bench at night (dark); the daylight variant is the same lab with the lights on, a pale green-grey paper ground and ink in bench green.
+A cool, quiet studio with a dark stage in the middle of it. The page around a game is pale grey ground, white surfaces and deep ink, set in one grotesk; the game itself always plays on a near-black stage. Everything the network does happens on that stage, so the chrome stays neutral and the stage is the only dark, lively thing on a light page.
 
-The system is flat, hard-edged and quiet so the simulation is the only thing that moves. Chrome is outlines and hairline rules; colour is held back for meaning. Two signal colours exist and each carries exactly one idea: amber is survival, red is a crash. Weight sign, lineage and car state are all encoded by line style and shape, never by extra hues.
+One signal orange carries action and emphasis: the primary button, the selected move, the live dot, the lesson's last words, focus rings. Numbers the learning produces are set in a monospace with tabular figures, so they read as data, not decoration. Shapes are soft: pill controls, large-radius stages and cards, hairline dividers between rows.
 
-It rejects the dark neon "AI dashboard" with a glowing net in a side card: no glow, no gradients, no rounded cards, no shadows.
+The site follows the system colour scheme by default and has a sun/moon toggle in the header that stores the choice (`na-theme` in localStorage). In dark mode the ground and surfaces go near-black and the stage lifts slightly so it still reads as its own plane.
 
 **Key Characteristics:**
-- Bench green ground, deeper specimen tray, chalk ink strokes.
-- Two signal hues only: amber = survivor/leader, red = crash.
-- Meaning by mark and stroke style (solid/dashed, square/circle/diamond/strike), not by colour.
-- Saira Condensed uppercase for every display, label and button; Public Sans for reading.
-- Radius 0 everywhere, no shadows, everything on an 8px cell.
-- Dark bench by default, daylight variant, Light/Dark lamp toggle.
+- Light cool ground, white surfaces, deep ink; dark stage for every game.
+- One accent: signal orange, with a darker text variant for orange words on light ground.
+- Schibsted Grotesk for everything; JetBrains Mono for live numbers.
+- Pill controls, 18 to 20px stages and cards, 1px hairline rules.
+- Flat, apart from the home demo stage's soft drop shadow.
 
 ## Colors
 
-A near-monochrome lab-green palette with chalk ink and two strictly rationed signal colours.
+A neutral cool-grey palette with one orange signal and a separate dark stage palette.
 
 ### Primary
-- **Agar Amber** (`agar-amber`): The survivor colour. Fills the leader car, its sensor rays, the leader node in the pedigree, finished cars (at reduced opacity) and the finished-per-generation bars. On the daylight bench, amber text (the "Furthest car" readout) switches to **Burnt Agar** (`daylight-amber-ink`) for contrast; amber fills stay `agar-amber` in both themes.
-
-### Secondary
-- **Fly-Eye Red** (`fly-eye-red`, daylight `daylight-red`): Crashes only. The crashed-car fill on the track and the 2px strike through a crashed pedigree node.
+- **Signal Orange** (`signal`): primary buttons, the selected move's bar and value, the live dot, the logo's output node, range-slider accents, focus outlines and text selection. On light ground, orange text uses **Burnt Signal** (`signal-text`) instead, which passes contrast; in dark mode `--signal-text` resolves to `signal` itself. White (`signal-ink`) is the only text colour on an orange fill.
 
 ### Neutral
-- **Bench Green** (`bench-green`): Dark page ground; also the text colour on amber and on inverted (pressed/solid) buttons, and the daylight ink.
-- **Specimen Tray** (`specimen-tray`, daylight `daylight-tray`): The track tray and the home preview tray. Nothing but the cars lives in it.
-- **Tray Road** (`tray-road`, daylight `daylight-road`) with **Road Edge** (`road-edge`, daylight `daylight-road-edge`): The road surface and its dotted kerb on the canvas.
-- **Chalk** (`chalk`): Dark-theme ink: text, button outlines, pedigree strokes, brain weights, ordinary cars.
-- **Lichen** (`lichen-muted`, daylight `daylight-muted`): Secondary text: ledes, notes, readout labels, chart axis labels, "Coming" headings. Inside the How it works link, the Last round card and the write-up's figure plates, which sit on the tray colour, daylight uses the darker `daylight-muted-on-tray` to keep 4.5:1.
-- **Slate Rule** (`slate-rule`, daylight `daylight-rule`): Hairline dividers, tray borders, chart reference lines, scrollbar.
-- **Daylight Paper** (`daylight-paper`): Light-theme page ground.
+- **Cool Ground** (`ground`, CSS `--bg`): page background; the sticky browse toolbar uses it too.
+- **White Surface** (`surface`): buttons, chips, the switch, the search field, controls panel, cards, figure plates.
+- **Deep Ink** (`ink`) and **Slate Ink** (`ink-2`): headings and body; secondary copy, nav links, hints, legends, captions.
+- **Hairline** (`line`): every border and row divider. **Track** (`track`): segmented-control trough, opened (i) explanations, figure bar troughs.
+- **Stage** (`stage`), **Stage Raised** (`stage-2`), **Stage Ink** (`stage-ink`), **Stage Dim** (`stage-dim`): the game stage and the dark thumbnails behind game shots; inner dividers; text on the stage; secondary stage text and idle bars.
+- Dark mode swaps ground, surface, ink, ink-2, line, track and stage to the `dark-*` values (track uses `dark-line`); stage-ink, stage-dim and signal stay.
+
+### Canvas colours
+Canvas code reads colours through `assets/theme.js` using older names that alias the studio tokens: `--ground`, `--tray` (stage), `--road` (stage-2), `--edge`, `--muted`, `--rule`, `--car`, `--amber` (signal), `--amber-ink` (signal-text) and `--red` (`crash-red`, deaths and crashes in charts and legends). New CSS uses the studio names.
 
 ### Named Rules
-**The Agar Rule.** Amber means survived, leading, or what the leader is doing, and nothing else: the leader car, finished cars, the leader's pedigree node and readout, the finished-per-generation bars, the leader's outputs in words in the brain panel, the How it works link's and ghost caption's edge marks, the info explanations' edge marks, the write-up's section numbers, kicker and the finishing car's path, the parents in the Last round card, its update flash and mutated genes (the new material a child carries). If an element is not one of these, it is not amber.
+**The One Signal Rule.** Orange is the only accent. Charts may add `crash-red` for failure; nothing else gets a hue.
 
-**The Fly-Eye Rule.** Red appears only where a car crashed. No red for errors, warnings, emphasis or destructive buttons.
-
-**The Sign-Is-Stroke Rule.** A weight's sign is drawn as a solid (positive) or dashed (negative, 4/4 dash) ink line, never as a hue. Magnitude is line width (0.6 to 2.2px) and live signal is opacity.
+**The Burnt Text Rule.** Orange words on a light surface use `--signal-text`, never `--signal`.
 
 ## Typography
 
-**Display and body font:** Schibsted Grotesk variable (with system sans-serif), self-hosted; **Mono:** JetBrains Mono 500/700, for numbers and labels (the older Saira Condensed and Public Sans files are gone)
+**Display and Body Font:** Schibsted Grotesk, variable 400 to 900 (with Segoe UI, system-ui)
+**Numeral Font:** JetBrains Mono 500 and 700 (with ui-monospace, Consolas)
 
-
-**Character:** A condensed, stencil-plate display face for everything that is a label on the bench, set uppercase; a plain, sturdy grotesque for every sentence the player reads.
+**Character:** One tight, heavy grotesk does both the shouting and the reading; the mono appears only where the network produces a number.
 
 ### Hierarchy
-- **Display** (800, clamp(44px, 6vw, 72px), 0.92): Page titles (h1), uppercase, balanced wrap. Home intro runs clamp(40px, 5vw, 76px) at max 26ch.
-- **Headline** (800, 48px): Featured game title on the home page; section headings on home step to 30px/800 with a 1.5px ink underline.
-- **Title** (600, 22px, 0.08em, uppercase): Panel headings (h2) with a 1px rule beneath and 6px padding.
-- **Numeral** (800, 34px, tabular): Big readouts (still driving, furthest car). The generation plate uses 22px/800 at 0.08em; every live number is tabular.
-- **Body** (400, 16px, 1.5): Running text; log line capped at 70ch, feature copy at 46ch.
-- **Lede** (400, 18px, muted): One-line page lede under the title, max 52ch.
-- **Label** (600, 18px, 0.06em, uppercase): Buttons and the dial name. Lamp toggle at 16px.
-- **Note** (400, 13-15px, muted): Panel notes, readout labels, key legend, chart labels.
+- **Display** (800, clamp(2.6rem, 6.2vw, 5.4rem), 0.98): the home hero headline only, max 14ch.
+- **Headline** (800, clamp(2.4rem, 5vw, 4.2rem), 1): page h1s; game pages cap it at 3.8rem, how it works intros at 64px. Balanced wrapping.
+- **Section** (800, clamp(2rem, 4vw, 3.2rem), 1): home section headings. The game lesson line uses the same voice at clamp(1.6rem, 3.4vw, 2.6rem), max 22ch.
+- **Title** (700, 20px): row and step titles; card and panel headings drop to 15px 700.
+- **Body** (400, 17px, 1.55): default. **Lead** (19px, max 52ch, `ink-2`): the paragraph under an h1. **Reading** (18px, 1.65, 680px column): how it works prose.
+- **Label** (700, 13px, 0.06em, uppercase): brief terms and the home stage's panel heading. Used sparingly.
+- **Numeral** (JetBrains Mono 700, 26px, tabular): stage readouts (20px on phones); dial outputs at 14px; percentages in move bars.
 
 ### Named Rules
-**The Plate Rule.** Anything that names, labels or counts is Saira Condensed uppercase; anything that explains is Public Sans sentence case.
+**The Mono Means Data Rule.** JetBrains Mono is for live numbers only, never for headings or labels.
 
 ## Layout
 
-One 8px cell drives every gap and pad (multiples 2, 3, 4, 5, 6, 8, 10 in use). Content sits in a 1360px wrap with 48px side padding, 16px under 720px. The top strip is 64px tall (56px under 520px): wordmark left (on game pages it carries a back arrow and links to the arcade home), flexible spacer, (on the race page) a "How it works" link with a book icon, styled like the lamp and icon-only under 520px, generation plate, lamp toggle. Under 520px the strip's gap tightens to 8px and the wordmark drops to 19px so the plate is never clipped. The game page is a 2fr / 1fr grid (right column min 320px) with a 40px gap: stage left (title, lede, tray, controls, log), bench right (pedigree, readouts, brain, chart) stacked at 32px. Phones come first in the design: below 980px the two halves dissolve into one column in reading order (title, experiment brief, tray, live readouts, How it works link, controls, brain, commentary, Last round card, chart, pedigree), so the numbers and the brain sit right under the track. Under 520px the controls form two rows: speed, pause and restart, then Follow, Ghost race and New track sharing the width equally (Follow leader shortens to Follow). Under 380px the brain's outputs and their "What it does" heading move beneath the network. The home page features the live tray at 1.7fr / 1fr, collapsing at 860px; games are grouped into shelves by what they teach (How AI learns, Physical AI): each shelf has a 30px heading over an ink rule, a muted one-line description, its games, then a "Coming" list of planned games in 3 columns that stack under 860px (a shelf with nothing coming has no list). Trays and the home preview hold an 8:5 aspect ratio.
+Content sits in a 1200px wrap with 16px side gutters that respect safe-area insets. Sections breathe in tens of pixels: 40px between hero blocks, 56px around game-page bands, 96px at the end of a page.
+
+- **Home:** hero (headline, lead plus actions, then the demo stage with a 300px brain column), then "Pick what you want to understand", one block per category (260px info column beside a four-column tile grid, the newest game as a two-column feature tile), then a row of category chips.
+- **Browse (`games/`):** headline and lead, a sticky toolbar (search pill, category chips, sort select), then a list of rows (150px thumb, title and lesson, category and video note, Play button) and a pager of chips.
+- **Category (`category/?c=`):** crumb, headline, lead, a "Start with" primary button (oldest game), then large two-column steps that alternate image side, each with a Learns by / Goes wrong when list and Play, Watch explainer (only with a video) and How it works actions; then chips for other categories.
+- **About:** headline and three paragraphs in a 680px column.
+- **Game page** (`assets/game.css`; `games/runner` is the reference): crumb and h1 with the lesson as lead, with a Play / Watch / How it works switch on the right; the brief (setup, rule, watch for) in three columns between hairlines; the play row (dark stage beside a 360px controls panel); two cards (brain, chart); the lesson band with a "Why it happens" button; a watch-and-read pair; "More from <category>" as up to three tiles; the art credit.
+- **How it works:** one 680px reading column of numbered steps; figures sit in plates, some up to 1040px wide.
+
+Breakpoints: 1000px stacks the game page's play row, cards and watch/read pair; 900px stacks the home stage and categories and folds browse rows; 640px stacks the brief and lesson and makes the switch full width; 560px makes tiles one column.
 
 ## Elevation & Depth
 
-There are no shadows. Depth is tonal and stroked: the tray is a darker green set into the bench and outlined with a 1.5px rule, panels are separated by 1px hairlines, and emphasis comes from 1.5px ink rules and ink inversion (pressed buttons fill with ink). 
+Flat. Depth comes from the dark stage sitting on a light ground, and from white surfaces on grey. Three shadows exist, each with one job.
 
-### Named Rules
-**The Flat Bench Rule.** Nothing floats. No box-shadow, no glow, no blur; separate with tone and a rule line.
+### Shadow Vocabulary
+- **Stage lift** (`box-shadow: 0 30px 60px -30px rgba(13, 16, 21, .45)`): the home demo stage only; game pages set it to none.
+- **Pressed segment** (`box-shadow: 0 1px 3px rgba(13, 16, 21, .15)`): the selected option in a segmented control.
+- **Play glow** (`box-shadow: 0 12px 30px -8px rgba(255, 90, 31, .6)`): the orange play disc on a video facade.
 
 ## Shapes
 
-Hard rectangles throughout, radius 0 on every control and container. Lines are 1px hairlines for structure and 1.5px for ink (button outlines, plate border, tray border, pedigree strokes, emphasis rules). Cars, brain nodes and chart bars are rectangles. Circles and diamonds exist only as pedigree lineage marks.
-
-### Named Rules
-**The Lineage Mark Rule.** Pedigree and key marks are fixed: square = kept unchanged (elite), circle = bred from two parents, diamond = random newcomer, a 2px red diagonal strike = crashed, amber fill = the current leader. Cars echo it: kept = solid, child = solid at reduced opacity, newcomer = hollow outline. A ghost-race car is a dashed ink outline. Each round starts from a grid, in rows of five behind the start line, so every car is visible.
+Every control is a pill (999px): buttons, chips, the switch, search, sort select, the "New" badge. Containers get large soft corners: 20px home stage (18px on game pages), 18px panels and cards, 16px video, 14px category shots, 12px tiles and segmented troughs, 10px row thumbs, 8px for captions and opened explanations. Borders are 1px `line` hairlines (1.5px on buttons and search). Figure plates on how it works pages are square-cornered.
 
 ## Components
 
+### Header and footer
+Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. The header is the logo mark (ink rounded square, two ground-coloured input dots, one orange output dot) with "Neural Arcade" at 800, then Games and About links (`ink-2`; current page `ink` 700) and a 40px round sun/moon lamp button. The footer is a hairline-topped row: "Built by Nadeem." and a codewithnk.com link.
+
 ### Buttons
-Ink-outlined plates, inverted when pressed.
-- **Shape:** Square corners (0), 1.5px ink border, min height 44px, 0 16px padding.
-- **Outline (default):** Transparent fill, ink label in the Label style.
-- **Hover / Focus:** 12% ink tint fill (color-mix), 0.15s colour transition; active nudges down 1px; focus ring is a 2px outline at 2px offset.
-- **Solid / Pressed:** Ink fill with ground-coloured label (primary Play link, the selected speed in a segment).
-- **Segmented group:** Buttons butt together with a -1.5px overlap so borders share one stroke.
-- **Icons:** Phosphor (regular weight), inlined as SVG in the label colour at 1.25em, 8px from any text. Icon only where the symbol is universal (pause/play, restart, theme, info), always with an accessible name and tooltip; icon plus text where a symbol alone is ambiguous (how it works, follow leader, ghost race, new track, breed another child). Numbers (speeds, population sizes) stay as text. Icon-only buttons are square (44px).
+- **Shape:** pill, 46px tall, 0 20px, 600 15px; 52px tall on the home hero.
+- **Default:** white surface, ink text, 1.5px hairline.
+- **Primary:** orange fill and border, white text. One per action group; Play and Read How it works use it.
+- **Text link:** 46px tall underlined 600 text, for How it works beside buttons.
+- **Disabled:** 50% opacity. **Focus:** 2px orange outline, 3px offset, on every link, button and input.
 
-### Lamp Toggle
-A compact square icon button (36px) in the top strip showing a sun (switches to light) or a moon (switches to dark), with a matching accessible name and tooltip. The choice persists; otherwise the system preference applies, and dark is the default.
+### Chips
+38px pills, white with hairline, 500 14px. Pressed (browse filters) and current (pager) invert to ink fill with ground text. Used for categories, filters and pages.
 
-### Generation Plate
-A 1.5px ink-bordered plate (36px tall) reading GEN and a three-digit tabular number. The number flips up into place (0.32s, cubic-bezier(.16, 1, .3, 1)) on each new generation; this is one of only two chrome animations.
+### Rows and tiles
+- **Row (browse):** a grid between hairlines; 4:3 dark thumb, title and lesson, category name plus "Video explainer" in `signal-text` when a video exists, Play on the right.
+- **Tile (home, More from):** 16:10 dark thumb with the game shot, title in 700 16px, "learns by" line in `ink-2`; the thumb lifts 3px on hover (0.25s, cubic-bezier(.2, .8, .2, 1)). The newest game's feature tile carries an orange "New" pill.
 
-### Specimen Tray
-The canvas container: tray fill, 1.5px slate rule border, 8:5 aspect, no chrome inside. On the home page the whole tray is the link to the game.
+### Stage
+The dark plane every game plays on. A head row (live orange dot, bold stage-ink label, dim details), the canvas, then on game pages a narration line (`say`, polite live region) and a row of three or two readouts: dim label with an (i) button over a mono numeral. Captions float bottom-left on the canvas in a small stage-coloured box.
 
-### Readout
-A two-column definition list between hairlines: muted 13px label ("Still driving", "Furthest car") above an 800-weight 34px tabular numeral followed by its goal in 15px muted ("7 of 10", "0.42 of 2 laps"), so a distance never reads as a speed. The furthest-car value is amber ink.
+### Controls panel and cards
+White, hairline, 18px. The panel stacks sections split by hairlines; each has a 15px 700 heading with an (i) button, a segmented control (track trough, white raised selection), hints in 13px `ink-2`, range dials (name, mono value, orange accent) and default buttons. Cards hold one canvas each (the brain, a chart) under a heading and a one-line question, with a legend of small rounded swatches.
 
-### Info button
-A borderless 32px (i) after a label (readouts, panel headings, Population, Mutation, the Last round card's top-right corner), muted until hovered or open. It toggles a short explanation directly under the label: 14px muted body text with a 3px amber left edge, capped at 62ch. Nothing pops over the race; the explanation pushes content down. In a readout, the opened one takes the whole row (the others move to the next row), so on a phone its explanation is not squeezed into one narrow column; its text stays 14px whatever size the numbers are.
+### (i) buttons
+A 28px round, transparent icon button beside a heading or readout label; it toggles a short explanation in a track-coloured 8px box (stage-2 on the stage). An opened readout explanation spans the full row.
 
-### Dial (slider)
-Uppercase Label-style name, native range input tinted ink, muted tabular value to the right on desktop, full-width input below on narrow screens.
+### Switch, brief, lesson
+- **Switch:** a white pill holding pill links; the current one is ink-filled. Watch is hidden until the game has a video.
+- **Brief:** a definition list in three columns between hairlines, uppercase labels over 15px text.
+- **Lesson (`moral`):** a band between hairlines: a small "The lesson" line, the lesson in 800 headline type with its last clause in `signal-text`, and a default button to the write-up.
 
-### Pedigree (signature)
-Headed "Family tree" on the page. Three generations of the leader's family as an SVG in chalk 1.5px strokes using the lineage marks, with orthogonal elbow links and tabular score labels beneath each node. Each generation the previous family slides up a row and the new leader settles in (0.55s, cubic-bezier(.16, 1, .3, 1)). A key beneath repeats the marks at 14px.
+### Watch and read, video facade
+A two-column pair: "Watch it learn" with the video, and "How it works" with a primary button. Without a video only the read column shows, full width. The facade (`assets/video.js`) is a 16:9 rounded box with the YouTube thumbnail, a 76px orange play disc and a dark pill label "Watch: how it learns"; a click swaps in the iframe.
 
-### Brain Panel
-The network drawn live: square nodes (14px) filled by activation, a ground-coloured dash through negative nodes, weight lines in ink obeying the Sign-Is-Stroke Rule. Muted 11px uppercase column heads ("What it senses", "8 hidden", "What it does"). Each input label adds a plain word for its value (clear, far, near, close; slow, cruising, fast); each output shows its number in ink with a word beneath in amber ink (turning left, going straight, turning right; speeding up, coasting, braking). Under 380px the outputs move beneath the network.
+### Crumb and pager
+Crumb: 14px `ink-2` text, links underlined at 4px offset, "Category / Game" on game pages and "Every game / Category" on category pages. Pager: chips, hidden when there is one page.
 
-### How It Works Link
-Directly under the tray: a tray-coloured block with a 3px amber left edge, linking to the write-up. A book icon, an uppercase display "How it works" (20px/800) over one muted line ("What you are watching, step by step, with pictures. 5 min read."), and a trailing arrow that nudges right on hover. The race page no longer has a guided tour or voiceover; explaining lives in the write-up and in the info buttons.
-
-### Explainer Video
-Optional, one per game. A click-to-play facade (`assets/video.js`, `.video` in studio.css): a local 16:9 thumbnail in a tray-bordered button with an amber play label; no YouTube request until clicked, then a youtube-nocookie iframe replaces it. On the Coin Runner page it sits at the top of the right-hand bench, beside the brief; on phones the page sets its order (Coin Runner: directly before the How it works link, after the chart).
-
-### Write-up (How it works)
-`games/racer/how-it-works/`, `games/teach/how-it-works/` and `games/runner/how-it-works/` read like lab reports and share `story.css`. One 680px reading column of 18px body text (17px under 720px) at 1.65 line height; an amber-ink uppercase kicker, an h1 at clamp(40px, 6vw, 64px), a 20px lede and a muted meta line (read time, "Watch it live" link). Eleven numbered steps: an amber-ink display number ("01") over a 30px uppercase heading. Figures are tray-coloured plates with a 1.5px rule border and a caption under a hairline that starts with a bold uppercase "Fig. N". Plates holding tracks or small multiples break out of the column to 1040px, centred on it; the opening race plate is also capped so its height fits the window. Every figure is drawn from one seeded run of the real simulation (seed 307), so the pictures match the words; animated figures run only while on screen and stand still under reduced motion. Small multiples are 8:5 mini tracks: the path in ink (amber for the car that finished), a red cross where a car crashed, an ink ring where it stalled; they draw themselves out over 2.4s the first time they scroll into view. The genome figure shows 74 squares: filled = positive, outlined = negative, stronger = darker. The practitioners' section is a `details` box between an ink rule and a hairline, with a +/− marker. The page ends with three numbered experiments and a solid "Open the live experiment" button.
-
-### Experiment Brief
-Under the page title, three columns between a top hairline and vertical hairlines: an amber-ink uppercase label (The setup, The rule, Watch for) over one 15px sentence each. Under 640px the three stack as label-and-sentence rows. The setup sentence follows the chosen population.
-
-### Ghost Caption
-One line of 17px body text (14px under 760px) on a ground-coloured plate with a 3px amber left edge, pinned 12px from the tray's bottom-left, shown only during a ghost race.
-
-### Population Picker
-A segmented row of four buttons (5, 10, 20, 50) after the Population label, with a muted 14px hint that wraps beside it on desktop and sits below it on narrow screens.
-
-### Last Round Card
-A tray-coloured card with a 1.5px slate border under the controls, updated the moment a round ends; the race never stops for it. Its border flashes amber and fades back over 0.6s on each update. An uppercase display headline ("Last round · generation N: X of 10 finished"), then two columns (stacked under 760px). Left: every car ranked, each with an 8px distance bar, laps and its role; parents are full ink with amber bars, the rest drop to 45% opacity. Right: "How a child is made", three DNA strips of 74 cells in two rows of 37 (solid ink = first parent, ink outline = second parent, amber = mutated) with a key. Up to 12 cars are listed, then "and N more with no children". Before the first round ends it holds a one-line empty state.
-
-### Ghost Race
-The best brain of generation 1 drives as a dashed ink outline beside the latest best (the amber leader), both from the start line, each with a small name tag ("Gen 1", "Gen N") on a tray-coloured plate.
-
-### Per-Generation Bars
-Amber bars on a slate baseline with a dashed slate reference line at the maximum, muted Gen labels at each end.
-
-### Teach by Driving
-Same page structure as the racer, reusing its styles (`games/racer/racer.css`) plus `games/teach/teach.css`. Under the brief, a three-step strip (You drive, It learns, It drives) between hairlines: numbered squares, the current step's square filled amber with dark text and its label in ink, the others muted. The plate in the top strip reads "Step 1", "Step 2" or "Step 3". Directly under the tray, two equal hold-to-steer buttons (64px tall, caret icon plus label) that invert while held, under one 14px line saying what they do right now (muted; ink and 600 weight for "Take the wheel" while the brain drives); they are disabled (40% opacity) while it learns, while a step is being announced, between drives and once it is done; they take no touch scrolling or text selection. The track canvas is also a steering pad (touch-action none): slide sideways to steer in proportion. While a car is moving the tray shows a driver's view: zoom 3×, the world turned so the car points up, the car 70% of the way down, smoothed heading; a whole-track minimap (road, red crash crosses, amber car square) sits top-right on a translucent tray-coloured plate, and a steering gauge (hairline with a centre tick and a 6×14 marker, ink when you steer, amber when the brain does) runs along the bottom. While it learns and after a crash or finish, the tray shows the whole track. Every change of step is announced in the tray's caption (the same plate as the start prompt) and held for 2.5 seconds before the step starts: the lap is over and step 2 is next; the pass count while it learns; step 3 is next; how the brain's drive ended. The strip and plate switch to the new step as the caption appears. Teaching tracks have a wider road (85 against the racer's 54) with gentler bends; the road and its dashed edges are drawn at each track's own width. A red cross marks every crash until the track changes. Readouts run in three columns (Examples, Loss, Distance). The brain panel adds one muted line under the network: "You: … · Its guess: …" while you drive. The chart panel holds a loss line (ink, 2px, a 6px square on the latest point) from "Start" (the untrained loss) to "N passes", scaled from zero; a retrain adds its own starting point, so new corrections show as a bump. Retrain is the one solid button, disabled until you have added corrections, and shows how many ("Retrain (+120)"). New track and Drive again (a circular-arrow icon and label) sit beside it; on phones Retrain takes its own row and the other two share the next. Step 3 ends parked, with the caption held, after two clean laps on a track it has never seen.
-
-### Loss Line
-`drawLine` in `engine/curve.js`: a zero-based line chart with the top value in muted text at the top left, a hairline baseline, and "Start" and "N passes" under the ends. Charts meant to be compared pass a shared `max`.
+### How it works page
+Intro (headline, 20px lede, read time and a "Try it live" arrow link), a wide opening figure, then numbered steps: a bold `signal-text` step number, a 30px 800 heading, reading prose with bold (not italic) terms. Figures are white hairline plates with "Fig. N" captions under a rule; bar figures use track troughs with orange fills. A "deep" details box with a heavy top rule holds the practitioner notes. The shared styles live in `games/racer/how-it-works/story.css`; each write-up adds its own figure CSS.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** reserve amber for the uses listed in the Agar Rule.
-- **Do** use red only for crashes (car fill, pedigree strike).
-- **Do** encode weight sign as solid (positive) vs dashed (negative) ink lines.
-- **Do** use the lineage marks exactly: square kept, circle bred, diamond newcomer, red strike crashed.
-- **Do** keep every corner at 0 and every gap on the 8px cell.
-- **Do** set display, labels and buttons in Saira Condensed uppercase; body in Public Sans.
-- **Do** ship both themes from the same tokens, dark bench by default, with the Light/Dark lamp toggle.
-- **Do** keep chrome still: only the plate number flip, the pedigree row slide and the Last round card's border flash animate.
+- **Do** render games, categories and their order from `assets/games.js`; adding a game is one entry there.
+- **Do** show a game's video, its Watch tab and every "Watch the explainer" link only when its `youtube` field is set.
+- **Do** say "category" for a group of games, in copy and in new class names.
+- **Do** put every game on a dark stage, with its controls in the white panel beside it.
+- **Do** use `--signal-text` for orange words on light ground and JetBrains Mono for live numbers.
+- **Do** give every control an (i) explanation and every game page one lesson band.
 
 ### Don't:
-- **Don't** add shadows, glows, blur or gradients.
-- **Don't** introduce a third signal hue, or colour-code weights, lineage or car state.
-- **Don't** round corners on any control, tray or panel.
-- **Don't** put chrome, labels or overlays inside the specimen tray; it holds only the track and the cars.
-- **Don't** build the dark neon "AI dashboard" look with a glowing network in a side card.
-
-### Coin Runner
-Built on the studio system: `assets/studio.css` plus the shared game layout `assets/game.css` and `games/runner/runner.css` (pixel canvas, chart legend, loophole line). Order: crumb, title with the lesson line and a Play / Watch / How it works switch, the three-part brief, a dark stage (try plate, level, commentary, three readouts) beside a controls panel (rules, five sliders, New brain, practice speed), brain and chart cards, the lesson band, Watch (only when the game has a youtube id) beside How it works, More from the category. `assets/game-page.js` fills the header, footer, crumb, video, write-up link and More from. Below, older notes still describe the stage art and drawing details. The plate in the top strip reads "Try N". The tray is the one place the site's palette gives way: Kenney's Pixel Platformer art (CC0) with its own bright sky, grass and dirt, drawn at 288 x 180 (16 x 10 tiles of 18px) and scaled up with smoothing off so pixels stay crisp; pits are drawn in dark slate `#1d2b2a`. The camera keeps the hero a third of the way in and eases after it; hills scroll at 35% (parallax). Effects are drawing only: dust on jump and land, squash and stretch from the feet, a coin popping out of the block, a spark on pickup, a decaying shake on stomps and deaths (none under reduced motion). Controls stack in one column: Rules (three ready-made sets as a segmented group, with a line saying what the selected set pays, or "Your own rules"), five rule sliders between hairlines (15px names) and New brain, then Practice speed (Only what you see / 5 a second / 30 a second). Readouts run in three columns (Tries, Score, Coins). The brain panel's outputs read as each move's chance ("57% likely"). The chart panel holds one stacked bar per 50 tries (amber reached the flag, red died, muted ran out of time) with a legend and, once most recent tries use a loophole, a 600-weight line in a tinted box naming it reward hacking. A footer credits the art.
+- **Don't** show counts of games, "Coming soon" or "Playable" labels, or tiles for unbuilt games.
+- **Don't** add a second accent colour; failure in charts is the only use of `crash-red`.
+- **Don't** add shadows beyond the three in Elevation & Depth.
+- **Don't** reintroduce Saira or Public Sans, uppercase condensed labels or square-cornered controls; that was the previous design.
