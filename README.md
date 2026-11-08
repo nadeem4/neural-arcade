@@ -17,7 +17,7 @@ The home page shows the newest game as a recorded demo, then groups games into c
 ### Neural Racer (`games/racer/`)
 10 cars, each driven by a 6→8→2 network (74 weights), learn to lap a track by neuroevolution. Cars start on a grid, in rows of five behind the start line, and every car's distance is measured from the line itself. With the default 10 cars, each round the best car is kept, 8 children are bred from the top 3 and 1 random newcomer joins.
 - **Experiment brief:** above the track, three short lines state the setup, the rule and what to watch for.
-- **How it works** (`games/racer/how-it-works/`): an illustrated write-up, linked from the race page's top bar, under the track, and from the home page. It explains what a car senses, what its brain is, how a round is ranked and how children are bred, then shows the best car of each generation improving. Every figure is drawn live from one seeded run of the real simulation (seed 307, recorded by `story-data.js`), so the pictures always match the text. A collapsed section gives practitioners the exact network, fitness, selection and mutation settings.
+- **How it works** (`games/racer/how-it-works/`): an illustrated write-up, linked from the race page's Play / Watch / How it works switch and its write-up section. It explains what a car senses, what its brain is, how a round is ranked and how children are bred, then shows the best car of each generation improving. Every figure is drawn live from one seeded run of the real simulation (seed 307, recorded by `story-data.js`), so the pictures always match the text. A collapsed section gives practitioners the exact network, fitness, selection and mutation settings.
 - **Last round card:** under the controls, updated the moment each round ends without stopping the race: every car ranked by distance with its role (kept, parent, no children), and one child's genes shown coming from its two parents, with mutated genes marked.
 - **Ghost race:** replays the best brain of generation 1 against the latest best on the current track.
 - **Levers:** speed, follow leader, population (5, 10, 20 or 50 cars; kept cars and newcomers scale at 10%, the parent pool at 30%), mutation rate, new track (tests overfitting), restart.
@@ -65,7 +65,7 @@ index.html              arcade home, rendered from assets/games.js: hero, record
 about/                  the About page
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
-assets/                 shared styles, theme helper, self-hosted fonts, icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (new site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; Coin Runner uses them)
+assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; all three games use them), story-page.js (header and footer for the How it works pages)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing
@@ -78,7 +78,7 @@ engine/                 reusable pieces for every game
   curve.js              per-generation bar chart and loss line chart
   reinforce.js          learning from reward: policy, sampling, REINFORCE with a value baseline
 games/racer/            Neural Racer: sim.js (no DOM), track-view.js, main.js, story-data.js
-  how-it-works/         the illustrated write-up (story.js draws its figures; story.css is shared by all write-ups)
+  how-it-works/         the illustrated write-up (story.js draws its figures; the shared styles are assets/story.css)
 games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's track and physics), main.js, story-data.js
   how-it-works/         its write-up
 games/runner/           Coin Runner: sim.js (no DOM), render.js, words.js, main.js, story-data.js + story.json, art/ (Kenney, CC0)
@@ -101,9 +101,11 @@ Custom domain: add `arcade.codewithnk.com` under the Vercel project's Domains.
 
 ## Adding a game
 
-Every game follows the same pattern:
-1. Write the simulation as a DOM-free module under `games/<name>/` with tests in `tests/`.
-2. Reuse `engine/` for the network, training or evolution, brain panel and charts.
-3. Give the page the shared top bar (with a How it works link), an experiment brief (setup, rule, watch for), and an (i) button on every readout, panel and control.
-4. Write an illustrated `how-it-works/` page whose figures are drawn from a seeded, tested run.
-5. Say what it teaches on its home-page card, and add it to the Experiments table above.
+1. Write the simulation as a DOM-free module under `games/<name>/` with tests in `tests/`, reusing `engine/` for the network, training or evolution, brain panel and charts.
+2. Add one entry to `GAMES` in `assets/games.js`: id, title, category, lesson, `learnsBy`, `goesWrongWhen`, `shot`, `path`, `writeup`, `added`, `youtube`. The home page, browse page, category page and More from lists all render from it.
+3. Copy the page skeleton from `games/runner/index.html` (and `assets/game.css`), keep `<body data-game="<name>">`, and add a game-only CSS file. Give it an experiment brief (setup, rule, watch for) and an (i) button on every readout, panel and control. `assets/game-page.js` fills the header, footer, crumb, video, write-up link and More from.
+4. Add a `how-it-works/` folder (copy one, link `assets/story.css`) whose figures are drawn from a seeded, tested run, and a `shot.jpg` for the tiles.
+
+Add a video: set `youtube` to the YouTube id in `assets/games.js`. Nothing else.
+
+Add a category: one entry in `CATEGORIES`. Empty categories stay hidden.
