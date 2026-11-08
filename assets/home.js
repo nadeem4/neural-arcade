@@ -8,7 +8,6 @@ import { sizeCanvas } from '../games/racer/track-view.js';
 mountSite('');
 const model = homeModel(CATEGORIES, GAMES);
 document.getElementById('hero-actions').innerHTML = heroActionsHtml(model.hero);
-document.getElementById('stage-title').textContent = model.hero.title;
 document.getElementById('categories').innerHTML = model.categories.map(categoryHtml).join('');
 document.getElementById('chips').innerHTML = chipsHtml(model.chips);
 

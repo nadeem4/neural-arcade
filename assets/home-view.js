@@ -10,11 +10,11 @@ const tileHtml = (g, { feature = false, isNew = false } = {}) =>
   `<a class="tile${feature ? ' feature' : ''}" href="${g.path}"><div class="thumb"><img src="${g.shot}" alt="" loading="lazy">${isNew ? '<span class="badge">New</span>' : ''}</div><b>${esc(g.title)}</b><span>${esc(g.learnsBy)}</span></a>`;
 
 export const categoryHtml = ({ category, big, rest, bigIsNew }) =>
-  `<div class="shelf" aria-labelledby="cat-${category.id}">
+  `<section class="shelf" aria-labelledby="cat-${category.id}">
   <div class="shelf-info"><h3 id="cat-${category.id}">${esc(category.title)}</h3><p>${esc(category.lead)}</p>
     <a class="seeall" href="category/?c=${category.id}">See every ${esc(category.title)} game</a>${big.youtube ? `<a class="seeall" href="${big.path}#watch">Watch the explainer</a>` : ''}</div>
   <div class="tiles">${tileHtml(big, { feature: true, isNew: bigIsNew })}${rest.map(g => tileHtml(g)).join('')}</div>
-</div>`;
+</section>`;
 
 export const chipsHtml = chips =>
   '<span class="lbl">All categories</span>' +

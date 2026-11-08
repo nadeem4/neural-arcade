@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { headerHtml, footerHtml } from '../assets/site.js';
+import { GAMES } from '../assets/games.js';
 import { heroActionsHtml, categoryHtml, chipsHtml } from '../assets/home-view.js';
 
 const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
@@ -114,5 +115,23 @@ describe('home rendering', () => {
     expect(c).toContain('href="category/?c=c"');
     expect(c).not.toContain('games/?category');
     expect(c).toContain('Browse every game');
+  });
+});
+
+describe('review fixes', () => {
+  it('every game with a youtube id has id="watch" on its page', () => {
+    for (const g of GAMES.filter(g => g.youtube)) expect(read(g.path + 'index.html'), g.id).toContain('id="watch"');
+  });
+  it('about has three paragraphs and no counts', () => {
+    const main = read('about/index.html').match(/<main[\s\S]*<\/main>/)[0];
+    expect(main.match(/<p>/g)).toHaveLength(3);
+    expect(main.replace(/<[^>]*>/g, '')).not.toMatch(/\d/);
+  });
+  it('category blocks are sections', () => {
+    expect(categoryHtml({ category: cat, big: game(), rest: [], bigIsNew: false })).toMatch(/^<section class="shelf"/);
+  });
+  it('demo canvas stays pixelated and the stage title is static', () => {
+    expect(css).toMatch(/\.scene canvas\s*\{[^}]*image-rendering:\s*pixelated/);
+    expect(read('assets/home.js')).not.toContain('stage-title');
   });
 });
