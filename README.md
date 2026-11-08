@@ -65,7 +65,7 @@ index.html              arcade home, rendered from assets/games.js: hero, record
 about/                  the About page
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
-assets/                 shared styles, theme helper, self-hosted fonts, icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (new site tokens and shared styles), site.js (shared header and footer)
+assets/                 shared styles, theme helper, self-hosted fonts, icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (new site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; Coin Runner uses them)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing

@@ -236,3 +236,16 @@ describe('game page rendering', () => {
     expect(moreFromHtml([], '../../')).toBe('');
   });
 });
+
+describe('game styles', () => {
+  const game = read('assets/game.css'), runnerCss = read('games/runner/runner.css');
+  it('game.css holds the shared game page components', () => {
+    for (const sel of ['.switch', '.brief', '.panel', '.seg', '.dial', '.info', '.readouts', '.card', '.moral', '.video-play', '.more-from']) {
+      expect(game, sel).toContain(sel + ' ');
+    }
+  });
+  it('runner.css keeps only runner rules', () => {
+    expect(runnerCss).toContain('image-rendering: pixelated');
+    expect(runnerCss).not.toMatch(/racer|\.runner |\.controls|\.readout\b/);
+  });
+});
