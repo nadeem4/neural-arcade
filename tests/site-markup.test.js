@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { headerHtml, footerHtml } from '../assets/site.js';
+import { heroActionsHtml, categoryHtml, chipsHtml } from '../assets/home-view.js';
 
 const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
 const themeJs = readFileSync(new URL('../assets/theme.js', import.meta.url), 'utf8');
@@ -61,5 +62,49 @@ describe('shared header and footer', () => {
     const f = footerHtml();
     expect(f).toContain('Built by Nadeem.');
     expect(f).toContain('<a href="https://www.codewithnk.com">codewithnk.com</a>');
+  });
+});
+
+const read = p => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
+const game = (o = {}) => ({ id: 'g', title: 'Gee', learnsBy: 'Things', shot: 'games/g/shot.jpg', path: 'games/g/', youtube: null, ...o });
+const cat = { id: 'c', title: 'Cee', lead: 'Lead text.' };
+
+describe('home page', () => {
+  const html = read('index.html');
+  it('has no status words', () => {
+    for (const w of ['Coming soon', 'Playable', 'Videos']) expect(html).not.toContain(w);
+  });
+  it('loads home.js and links to browse every game', () => {
+    expect(html).toContain('src="assets/home.js"');
+    expect(html).toMatch(/<a [^>]*href="games\/"[^>]*>Browse every game</);
+  });
+  it('about page uses the shared header and footer', () => {
+    const about = read('about/index.html');
+    expect(about).toContain('<header data-site="about">');
+    expect(about).toContain('<footer data-site>');
+    expect(about).toContain('studio.css');
+  });
+});
+
+describe('home rendering', () => {
+  it('hero shows Watch the explainer only when the game has a video', () => {
+    expect(heroActionsHtml(game())).not.toContain('Watch');
+    const h = heroActionsHtml(game({ youtube: 'abc' }));
+    expect(h).toContain('href="games/g/#watch"');
+    expect(h).toContain('Play Gee');
+  });
+  it('category block links tiles by path, badges only the new big tile, and gates the explainer link', () => {
+    const plain = categoryHtml({ category: cat, big: game(), rest: [game({ id: 'h', title: 'Aitch', path: 'games/h/' })], bigIsNew: false });
+    expect(plain).toContain('href="games/h/"');
+    expect(plain).not.toContain('badge');
+    expect(plain).not.toContain('Watch');
+    const fresh = categoryHtml({ category: cat, big: game({ youtube: 'abc' }), rest: [], bigIsNew: true });
+    expect(fresh).toContain('badge');
+    expect(fresh).toContain('href="games/g/#watch"');
+  });
+  it('chips link each category and end with Browse every game', () => {
+    const c = chipsHtml([cat]);
+    expect(c).toContain('Cee');
+    expect(c).toContain('Browse every game');
   });
 });

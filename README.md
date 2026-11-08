@@ -12,7 +12,7 @@ Small browser games where tiny neural networks learn in front of you, and the pl
 | **Teach by Driving** | [Play](https://neuralarcade.vercel.app/games/teach/) | [How it works](https://neuralarcade.vercel.app/games/teach/how-it-works/) | Learning from examples: training data, loss, gradient descent, learning rate, distribution shift |
 | **Coin Runner** | [Play](https://neuralarcade.vercel.app/games/runner/) | [How it works](https://neuralarcade.vercel.app/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
 
-The home page groups them into shelves. **How AI learns** holds all three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways. **Physical AI** (a brain with a body) is next: Hover, Balance and The real world are planned.
+The home page shows the newest game as a recorded demo, then groups games into categories. **How AI learns** holds all three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways.
 
 ### Neural Racer (`games/racer/`)
 10 cars, each driven by a 6→8→2 network (74 weights), learn to lap a track by neuroevolution. Cars start on a grid, in rows of five behind the start line, and every car's distance is measured from the line itself. With the default 10 cars, each round the best car is kept, 8 children are bred from the top 3 and 1 random newcomer joins.
@@ -61,8 +61,9 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 ## Layout
 
 ```
-index.html              arcade home: games grouped into shelves (How AI learns, Physical AI), live previews of all three games, what is coming
-assets/                 shared styles, theme helper, self-hosted fonts, icon; games.js (the list of games and categories), studio.css (new site tokens and shared styles), site.js (shared header and footer)
+index.html              arcade home, rendered from assets/games.js: hero, recorded Coin Runner demo, categories, chips
+about/                  the About page
+assets/                 shared styles, theme helper, self-hosted fonts, icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (new site tokens and shared styles), site.js (shared header and footer)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing
