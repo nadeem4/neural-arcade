@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseQuery, toQuery, rowHtml, chipsHtml, pagerHtml } from '../assets/browse.js';
+import { stepHtml } from '../assets/category.js';
 
 describe('browse url state', () => {
   it('has defaults', () => {
@@ -67,5 +68,25 @@ describe('browse renderers', () => {
     expect(h).toContain('data-page="1"');
     expect(h).toContain('data-page="3"');
     expect(h).toContain('aria-current="page"');
+  });
+});
+
+const levels = html => [...html.matchAll(/<h([1-6])[\s>]/g)].map(m => +m[1]);
+const noSkips = ls => ls.every((l, i) => i === 0 || l <= ls[i - 1] + 1);
+
+describe('accessibility', () => {
+  it('browse page headings go h1 then h2 with no skips, rows included', () => {
+    const ls = levels(page + rowHtml(g, cats, ''));
+    expect(ls[0]).toBe(1);
+    expect(noSkips(ls)).toBe(true);
+    expect(levels(rowHtml(g, cats, ''))).toEqual([2]);
+  });
+  it('category rows use h2', () => {
+    expect(levels(stepHtml(g, ''))).toEqual([2]);
+  });
+  it('labels the search input and keeps aria-live off the whole results section', () => {
+    expect(page).toMatch(/<label class="search"[^>]*>.*<span class="sr">Search games<\/span>/);
+    expect(page).not.toMatch(/<section[^>]*aria-live/);
+    expect(page).toMatch(/id="status"[^>]*aria-live="polite"/);
   });
 });

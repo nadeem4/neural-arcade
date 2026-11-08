@@ -20,7 +20,7 @@
 
   <div class="tools">
     <div class="wrap">
-      <label class="search" for="q"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6"/><path d="M13 13l5 5" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Search games and ideas" autocomplete="off"></label>
+      <label class="search" for="q"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6"/><path d="M13 13l5 5" stroke-linecap="round"/></svg><span class="sr">Search games</span><input id="q" type="search" placeholder="Search games and ideas" autocomplete="off"></label>
       <div class="filters">
         <div class="filters" id="chips" role="group" aria-label="Category"></div>
         <label class="sort" for="sort">Sort <select id="sort"><option value="newest">Newest</option><option value="az">A to Z</option></select></label>
@@ -28,9 +28,10 @@
     </div>
   </div>
 
-  <section class="wrap results" aria-live="polite">
+  <section class="wrap results">
+    <p class="sr" id="status" aria-live="polite"></p>
     <ul class="list" id="list"></ul>
-    <div class="empty" id="empty" hidden><h3>No game teaches that yet</h3><p>Try a broader idea, or clear the filters.</p><button class="btn" type="button" id="clear">Clear search and filters</button></div>
+    <div class="empty" id="empty" hidden><h2>No game teaches that yet</h2><p>Try a broader idea, or clear the filters.</p><button class="btn" type="button" id="clear">Clear search and filters</button></div>
     <nav class="pager" id="pager" aria-label="Pages"></nav>
   </section>
 </main>

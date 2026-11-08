@@ -27,7 +27,7 @@ export function toQuery({ q, category, sort, page }) {
 
 export const rowHtml = (g, categories, base) =>
   `<li class="row"><a class="thumb" href="${base}${g.path}" tabindex="-1" aria-hidden="true"><img src="${base}${g.shot}" alt="" loading="lazy"></a>
-  <div><h3>${esc(g.title)}</h3><p>${esc(g.lesson)}</p></div>
+  <div><h2>${esc(g.title)}</h2><p>${esc(g.lesson)}</p></div>
   <div class="meta"><span>${esc(categories.find(c => c.id === g.category)?.title ?? '')}</span>${g.youtube ? '<b>Video explainer</b>' : ''}</div>
   <div class="go"><a class="btn primary" href="${base}${g.path}">Play<span class="sr"> ${esc(g.title)}</span></a></div></li>`;
 
@@ -48,7 +48,7 @@ if (typeof document !== 'undefined') {
   const chips = categoriesWithGames(CATEGORIES, GAMES);
   let state = parseQuery(location.search);
 
-  const render = () => {
+  const render = focusSel => {
     const r = browse(GAMES, CATEGORIES, { ...state, pageSize: PAGE_SIZE });
     state.page = r.page;
     $('chips').innerHTML = chipsHtml(chips, state.category);
@@ -56,7 +56,9 @@ if (typeof document !== 'undefined') {
     $('list').hidden = !r.total;
     $('empty').hidden = !!r.total;
     $('pager').innerHTML = pagerHtml(r.page, r.pages);
+    $('status').textContent = r.total ? '' : 'No games match. Clear the search and filters to see them all.';
     history.replaceState(null, '', location.pathname + toQuery(state));
+    if (focusSel) document.querySelector(focusSel)?.focus();
   };
 
   $('q').value = state.q;
@@ -65,11 +67,11 @@ if (typeof document !== 'undefined') {
   $('sort').addEventListener('change', e => { state = { ...state, sort: e.target.value, page: 1 }; render(); });
   $('chips').addEventListener('click', e => {
     const b = e.target.closest('[data-c]');
-    if (b) { state = { ...state, category: b.dataset.c, page: 1 }; render(); }
+    if (b) { state = { ...state, category: b.dataset.c, page: 1 }; render(`[data-c="${b.dataset.c}"]`); }
   });
   $('pager').addEventListener('click', e => {
     const b = e.target.closest('[data-page]');
-    if (b) { state = { ...state, page: +b.dataset.page }; render(); scrollTo(0, 0); }
+    if (b) { state = { ...state, page: +b.dataset.page }; render(`[data-page="${b.dataset.page}"]`); scrollTo(0, 0); }
   });
   $('clear').addEventListener('click', () => {
     state = { q: '', category: '', sort: state.sort, page: 1 };

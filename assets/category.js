@@ -5,7 +5,7 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 
 export const stepHtml = (g, base) =>
   `<li class="step"><a class="shot" href="${base}${g.path}" tabindex="-1" aria-hidden="true"><img src="${base}${g.shot}" alt="" loading="lazy"></a>
-  <div><h3>${esc(g.title)}</h3><p>${esc(g.lesson)}</p>
+  <div><h2>${esc(g.title)}</h2><p>${esc(g.lesson)}</p>
     <dl class="facts"><dt>Learns by</dt><dd>${esc(g.learnsBy)}</dd><dt>Goes wrong when</dt><dd class="warn">${esc(g.goesWrongWhen)}</dd></dl>
     <div class="acts"><a class="btn primary" href="${base}${g.path}">Play<span class="sr"> ${esc(g.title)}</span></a>${g.youtube ? `<a class="btn" href="${base}${g.path}#watch">Watch explainer</a>` : ''}<a class="textlink" href="${base}${g.writeup}">How it works</a></div></div></li>`;
 
