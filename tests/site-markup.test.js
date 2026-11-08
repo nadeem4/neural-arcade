@@ -135,3 +135,10 @@ describe('review fixes', () => {
     expect(read('assets/home.js')).not.toContain('stage-title');
   });
 });
+
+describe('tile layout', () => {
+  it('small tiles stack from the top', () => {
+    expect(css).toMatch(/\.tile\s*\{[^}]*align-content:\s*start/);
+    expect(css).toMatch(/\.tile\s*\{[^}]*align-self:\s*start/);
+  });
+});
