@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { headerHtml, footerHtml } from '../assets/site.js';
 import { GAMES } from '../assets/games.js';
 import { videoHtml, crumbHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
@@ -313,5 +315,22 @@ describe.each(PAGES)('how it works page (%s)', id => {
   it('keeps heading levels in order', () => {
     const levels = [...html.matchAll(/<h([1-6])[ >]/g)].map(m => +m[1]);
     levels.forEach((l, i) => expect(l - (levels[i - 1] ?? 0), 'h' + l).toBeLessThanOrEqual(1));
+  });
+});
+
+describe('old styles and fonts are gone', () => {
+  const skip = ['node_modules', 'docs', 'videos', '.git', '.claude', 'tests'];
+  const walk = d => readdirSync(d, { withFileTypes: true }).flatMap(e =>
+    skip.includes(e.name) ? [] : e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]);
+  const files = walk(fileURLToPath(new URL('../', import.meta.url)));
+  it('has no arcade.css, home.css or old font files', () => {
+    for (const f of files) expect(f, f).not.toMatch(/arcade\.css$|home\.css$|public-sans|saira/);
+  });
+  it('no page, script or style refers to them', () => {
+    for (const f of files.filter(f => /\.(html|js|css)$/.test(f))) {
+      const text = readFileSync(f, 'utf8');
+      expect(text, f).not.toMatch(/arcade\.css|home\.css|public-sans|saira-condensed|Public Sans|Saira Condensed/);
+      if (f.endsWith('.html')) expect(text, f).not.toMatch(/Coming soon|Playable/);
+    }
   });
 });
