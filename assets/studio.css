@@ -12,7 +12,7 @@
   /* names the canvas code reads through assets/theme.js */
   --ground: var(--bg); --tray: var(--stage); --road: var(--stage-2); --edge: var(--ghost);
   --muted: var(--ink-2); --rule: var(--line); --car: var(--stage-ink);
-  --amber: var(--signal); --amber-ink: var(--signal); --red: #E5533F; --body: var(--sans);
+  --amber: var(--signal); --amber-ink: var(--signal-text); --red: #E5533F; --body: var(--sans);
 }
 @media not (prefers-color-scheme: light) {
   :root:not([data-theme="light"]) { --bg: #0B0E12; --surface: #12161C; --ink: #ECEFF3; --ink-2: #A0A9B4; --line: #232A33; --track: #232A33; --stage: #161B23; --stage-2: #1F2630; --signal-text: var(--signal); color-scheme: dark; }

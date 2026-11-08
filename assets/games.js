@@ -39,7 +39,7 @@ const byTitle = (a, b) => a.title.localeCompare(b.title);
 // a game page's "More from <category>": the other games in its category, newest first.
 export const moreFrom = (game, games, max = 3) =>
   games.filter(g => g.category === game.category && g.id !== game.id).sort(byNewest).slice(0, max);
-export const newest =games => [...games].sort(byNewest)[0];
+export const newest = games => [...games].sort(byNewest)[0];
 
 export const categoriesWithGames = (categories, games) => categories.filter(c => games.some(g => g.category === c.id));
 

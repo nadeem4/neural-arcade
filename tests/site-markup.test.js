@@ -194,6 +194,19 @@ describe('game page contract (runner)', () => {
     expect(headings.length).toBe(4);
     for (const h of headings) expect(h).toContain('class="info"');
   });
+  it('points every aria-controls at an existing id, and has the preset and speed buttons', () => {
+    for (const m of html.matchAll(/aria-controls="([\w-]+)"/g)) expect(html, m[1]).toContain(`id="${m[1]}"`);
+    expect(html.match(/data-preset="/g)).toHaveLength(3);
+    expect(html.match(/data-rate="/g)).toHaveLength(3);
+  });
+  it('uses no coloured side stripes and keeps body text at 1.5 line height', () => {
+    const gc = read('assets/game.css');
+    expect(gc).not.toMatch(/border-left:\s*\d+px solid var\(--signal\)/);
+    expect(gc).not.toMatch(/\.caption\s*\{[^}]*line-height:\s*1\.[0-4]/);
+  });
+  it('amber-ink text meets contrast on the light surface', () => {
+    expect(css).toMatch(/--amber-ink:\s*var\(--signal-text\)/);
+  });
   it('shows the lesson from games.js', () => {
     expect(html.match(/class="lead lesson">([^<]*)</)[1]).toBe(runner.lesson);
   });

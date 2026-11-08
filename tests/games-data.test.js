@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
 import { CATEGORIES, GAMES, videoOf, newest, categoriesWithGames, groupCategories, browse, gameById, homeModel, categoryModel, moreFrom } from '../assets/games.js';
 

@@ -25,7 +25,7 @@
 .stage-head { padding: 14px 18px; }
 .level { position: relative; }
 .caption { position: absolute; left: 12px; bottom: 12px; margin: 0; width: fit-content; max-width: calc(100% - 24px); padding: 7px 12px;
-  background: var(--stage); border-left: 3px solid var(--signal); color: var(--stage-ink); font-size: 15px; line-height: 1.35; }
+  background: var(--stage); border: 1px solid var(--stage-2); border-radius: 8px; color: var(--stage-ink); font-size: 15px; line-height: 1.5; }
 .say { margin: 0; min-height: 4.4em; padding: 14px 18px; border-top: 1px solid var(--stage-2); font-size: 15px; color: var(--stage-ink); }
 .readouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--stage-2); }
 .readouts div { min-width: 0; padding: 14px 18px; border-right: 1px solid var(--stage-2); }
@@ -34,17 +34,17 @@
 .readouts dd { margin: 4px 0 0; font: 700 26px/1 var(--mono); letter-spacing: -.03em; }
 /* an opened explanation takes the whole row */
 .readouts div:has(> .info-text:not([hidden])) { grid-column: 1 / -1; border-right: 0; }
-.readouts dd.info-text { margin: 8px 0 0; font: 400 14px/1.45 var(--sans); letter-spacing: normal; }
+.readouts dd.info-text { margin: 8px 0 0; font: 400 14px/1.5 var(--sans); letter-spacing: normal; }
 
 /* (i) buttons and the short explanation each one opens */
 .info { display: inline-grid; place-items: center; width: 28px; height: 28px; margin: -4px -2px; padding: 0; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink-2); cursor: pointer; vertical-align: middle; flex: none; }
 .info svg { width: 16px; height: 16px; }
 .info:hover, .info[aria-expanded="true"] { color: var(--ink); }
-.info-text { margin: 0; max-width: 62ch; padding-left: 10px; border-left: 3px solid var(--signal); font: 400 14px/1.45 var(--sans); color: var(--ink-2); }
+.info-text { margin: 0; max-width: 62ch; padding: 8px 12px; border-radius: 8px; background: var(--track); font: 400 14px/1.5 var(--sans); color: var(--ink-2); }
 .stage .info { color: var(--stage-dim); }
 .stage .info:hover, .stage .info[aria-expanded="true"] { color: var(--stage-ink); }
-.stage .info-text { color: var(--stage-dim); }
+.stage .info-text { background: var(--stage-2); color: var(--stage-dim); }
 
 /* controls panel and cards */
 .panel { display: grid; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
