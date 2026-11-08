@@ -15,6 +15,7 @@ colors:
   signal: "#FF5A1F"
   signal-text: "#C2410C"
   signal-ink: "#FFFFFF"
+  signal-fill: "#C2410C"
   crash-red: "#E5533F"
   dark-ground: "#0B0E12"
   dark-surface: "#12161C"
@@ -95,7 +96,7 @@ components:
     padding: "0 20px"
     height: "46px"
   button-primary:
-    backgroundColor: "{colors.signal}"
+    backgroundColor: "{colors.signal-fill}"
     textColor: "{colors.signal-ink}"
     rounded: "{rounded.pill}"
     padding: "0 20px"
@@ -156,7 +157,7 @@ The site follows the system colour scheme by default and has a sun/moon toggle i
 A neutral cool-grey palette with one orange signal and a separate dark stage palette.
 
 ### Primary
-- **Signal Orange** (`signal`): primary buttons, the selected move's bar and value, the live dot, the logo's output node, range-slider accents, focus outlines and text selection. On light ground, orange text uses **Burnt Signal** (`signal-text`) instead, which passes contrast; in dark mode `--signal-text` resolves to `signal` itself. White (`signal-ink`) is the only text colour on an orange fill.
+- **Signal Orange** (`signal`): the selected move's bar and value, the live dot, the logo's output node, range-slider accents and focus outlines. On light ground, orange text uses **Burnt Signal** (`signal-text`) instead, which passes contrast; in dark mode `--signal-text` resolves to `signal` itself. Orange fills that carry white text (the primary button, the New badge, the current Teach phase, text selection) use **Signal Fill** (`signal-fill`, #C2410C) so white (`signal-ink`) reaches 4.5:1.
 
 ### Neutral
 - **Cool Ground** (`ground`, CSS `--bg`): page background; the sticky browse toolbar uses it too.

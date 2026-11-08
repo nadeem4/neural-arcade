@@ -157,6 +157,11 @@ describe('signal-text contrast', () => {
     expect(ratio(val('--signal-text'), val('--bg'))).toBeGreaterThanOrEqual(4.5);
     expect(ratio(val('--signal-text'), val('--surface'))).toBeGreaterThanOrEqual(4.5);
   });
+  it('filled orange buttons and badges reach 4.5:1 with white text', () => {
+    expect(ratio(val('--signal-fill'), val('--signal-ink'))).toBeGreaterThanOrEqual(4.5);
+    expect(css).toMatch(/\.btn\.primary\s*\{[^}]*background:\s*var\(--signal-fill\)/);
+    expect(css).toMatch(/\.tile \.badge\s*\{[^}]*background:\s*var\(--signal-fill\)/);
+  });
   it('is used for the small orange text', () => {
     expect(css).toMatch(/\.facts dd\.warn\s*\{[^}]*var\(--signal-text\)/);
     expect(css).toMatch(/\.row \.meta b\s*\{[^}]*var\(--signal-text\)/);
