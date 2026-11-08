@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
-import { CATEGORIES, GAMES, videoOf, newest, categoriesWithGames, groupCategories, browse, gameById, homeModel } from '../assets/games.js';
+import { CATEGORIES, GAMES, videoOf, newest, categoriesWithGames, groupCategories, browse, gameById, homeModel, categoryModel } from '../assets/games.js';
 
 const FIELDS = ['id', 'title', 'category', 'lesson', 'learnsBy', 'goesWrongWhen', 'added', 'shot', 'path', 'writeup'];
 const fake = (id, o = {}) => ({ id, title: id, category: 'how-ai-learns', lesson: '', added: '2026-01-01', ...o });
@@ -116,5 +116,25 @@ describe('homeModel', () => {
   });
   it('flags the New badge only on the newest game overall', () => {
     expect(m.categories.map(c => c.bigIsNew)).toEqual([true, false]);
+  });
+});
+
+describe('categoryModel', () => {
+  const cats = [{ id: 'x', title: 'X' }, { id: 'y', title: 'Y' }, { id: 'empty', title: 'Empty' }];
+  const games = [
+    fake('a', { category: 'x', added: '2026-01-01' }),
+    fake('b', { category: 'x', added: '2026-03-01' }),
+    fake('c', { category: 'x', added: '2026-01-01', title: 'Zed' }),
+    fake('d', { category: 'y', added: '2026-02-15' }),
+  ];
+  it('is null for an unknown id', () => expect(categoryModel(cats, games, 'nope')).toBeNull());
+  it('lists games newest first', () => {
+    expect(categoryModel(cats, games, 'x').games.map(g => g.id)).toEqual(['b', 'a', 'c']);
+  });
+  it('first is the oldest, ties by title', () => {
+    expect(categoryModel(cats, games, 'x').first.id).toBe('a');
+  });
+  it('others excludes the current and empty categories', () => {
+    expect(categoryModel(cats, games, 'x').others.map(c => c.id)).toEqual(['y']);
   });
 });

@@ -56,6 +56,19 @@ export function homeModel(categories, games) {
   return { hero, categories: groups, chips: groups.map(g => g.category) };
 }
 
+// What a category page shows: its games newest first, the one to start with (the oldest), and the other categories that have games.
+export function categoryModel(categories, games, categoryId) {
+  const category = categories.find(c => c.id === categoryId);
+  if (!category) return null;
+  const mine = games.filter(g => g.category === categoryId);
+  return {
+    category,
+    games: [...mine].sort(byNewest),
+    first: [...mine].sort((a, b) => a.added.localeCompare(b.added) || a.title.localeCompare(b.title))[0],
+    others: categoriesWithGames(categories, games).filter(c => c.id !== categoryId),
+  };
+}
+
 export function browse(games, categories, { q = '', category = '', sort = 'newest', page = 1, pageSize = 24 } = {}) {
   const needle = q.trim().toLowerCase();
   const titleOf = id => categories.find(c => c.id === id)?.title ?? '';

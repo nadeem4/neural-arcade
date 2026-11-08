@@ -63,6 +63,8 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 ```
 index.html              arcade home, rendered from assets/games.js: hero, recorded Coin Runner demo, categories, chips
 about/                  the About page
+games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
+category/index.html     one category page, /category/?c=<id> (assets/category.js)
 assets/                 shared styles, theme helper, self-hosted fonts, icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (new site tokens and shared styles), site.js (shared header and footer)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers

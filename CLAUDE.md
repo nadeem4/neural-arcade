@@ -8,6 +8,7 @@ Small browser games where tiny neural networks learn in front of you; each game 
 - Run: npm run dev (serves http://localhost:4173)
 
 ## Layout
+- games/index.html, category/: browse and category pages (assets/browse.js, assets/category.js)
 - engine/: shared learning code (tinynet, evolve, reinforce, train, brain-panel, curve)
 - about/: the About page
 - games/<name>/: one game each (index.html, sim.js, main.js, words.js, story-data.js, how-it-works/)

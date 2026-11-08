@@ -13,8 +13,8 @@ const darkMedia = names(css.match(/@media not \(prefers-color-scheme:\s*light\)\
 const darkAttr = names(css.match(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/)[1]);
 
 const LIGHT = ['bg', 'surface', 'ink', 'ink-2', 'line', 'track', 'stage', 'stage-2', 'stage-ink', 'stage-dim',
-  'signal', 'signal-ink', 'ok', 'bad', 'coin', 'ghost', 'sans', 'mono', 'wrap'];
-const DARK = ['bg', 'surface', 'ink', 'ink-2', 'line', 'track', 'stage', 'stage-2'];
+  'signal', 'signal-text', 'signal-ink', 'ok', 'bad', 'coin', 'ghost', 'sans', 'mono', 'wrap'];
+const DARK = ['bg', 'surface', 'ink', 'ink-2', 'line', 'track', 'stage', 'stage-2', 'signal-text'];
 
 describe('studio.css tokens', () => {
   it('defines every mockup token in the light root', () => {
@@ -140,5 +140,22 @@ describe('tile layout', () => {
   it('small tiles stack from the top', () => {
     expect(css).toMatch(/\.tile\s*\{[^}]*align-content:\s*start/);
     expect(css).toMatch(/\.tile\s*\{[^}]*align-self:\s*start/);
+  });
+});
+
+describe('signal-text contrast', () => {
+  const lum = hex => {
+    const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+    return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+  };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+  const val = n => css.match(/:root\s*\{([^}]*)\}/)[1].match(new RegExp(n + '\\s*:\\s*(#[0-9A-Fa-f]{6})'))[1];
+  it('reaches 4.5:1 on the light bg and surface', () => {
+    expect(ratio(val('--signal-text'), val('--bg'))).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(val('--signal-text'), val('--surface'))).toBeGreaterThanOrEqual(4.5);
+  });
+  it('is used for the small orange text', () => {
+    expect(css).toMatch(/\.facts dd\.warn\s*\{[^}]*var\(--signal-text\)/);
+    expect(css).toMatch(/\.row \.meta b\s*\{[^}]*var\(--signal-text\)/);
   });
 });
