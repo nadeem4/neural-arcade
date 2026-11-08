@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Every game · Neural Arcade</title>
+<meta name="description" content="Every Neural Arcade game. Search by name or by the idea you want to understand, like overfitting or reward.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/studio.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="games"></header>
+
+<main>
+  <section class="wrap b-head" aria-labelledby="bh">
+    <h1 id="bh">Every game</h1>
+    <p class="lead">Search by name or by the idea you want to understand, like "overfitting" or "reward".</p>
+  </section>
+
+  <div class="tools">
+    <div class="wrap">
+      <label class="search" for="q"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6"/><path d="M13 13l5 5" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Search games and ideas" autocomplete="off"></label>
+      <div class="filters">
+        <div class="filters" id="chips" role="group" aria-label="Category"></div>
+        <label class="sort" for="sort">Sort <select id="sort"><option value="newest">Newest</option><option value="az">A to Z</option></select></label>
+      </div>
+    </div>
+  </div>
+
+  <section class="wrap results" aria-live="polite">
+    <ul class="list" id="list"></ul>
+    <div class="empty" id="empty" hidden><h3>No game teaches that yet</h3><p>Try a broader idea, or clear the filters.</p><button class="btn" type="button" id="clear">Clear search and filters</button></div>
+    <nav class="pager" id="pager" aria-label="Pages"></nav>
+  </section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="../assets/browse.js"></script>
+</body>
+</html>
