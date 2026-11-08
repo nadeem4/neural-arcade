@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
-import { CATEGORIES, GAMES, videoOf, newest, categoriesWithGames, groupCategories, browse, gameById, homeModel, categoryModel } from '../assets/games.js';
+import { CATEGORIES, GAMES, videoOf, newest, categoriesWithGames, groupCategories, browse, gameById, homeModel, categoryModel, moreFrom } from '../assets/games.js';
 
 const FIELDS = ['id', 'title', 'category', 'lesson', 'learnsBy', 'goesWrongWhen', 'added', 'shot', 'path', 'writeup'];
 const fake = (id, o = {}) => ({ id, title: id, category: 'how-ai-learns', lesson: '', added: '2026-01-01', ...o });
@@ -136,5 +136,21 @@ describe('categoryModel', () => {
   });
   it('others excludes the current and empty categories', () => {
     expect(categoryModel(cats, games, 'x').others.map(c => c.id)).toEqual(['y']);
+  });
+});
+
+describe('moreFrom', () => {
+  const a = fake('a', { added: '2026-01-01' }), b = fake('b', { added: '2026-03-01' }), c = fake('c', { added: '2026-02-01' });
+  const other = fake('o', { category: 'elsewhere', added: '2026-04-01' });
+  it('lists the same category, newest first, without the game itself', () => {
+    expect(moreFrom(a, [a, b, c, other]).map(g => g.id)).toEqual(['b', 'c']);
+  });
+  it('caps at max (default 3)', () => {
+    const many = Array.from({ length: 6 }, (_, i) => fake('g' + i, { added: `2026-01-0${i + 1}` }));
+    expect(moreFrom(a, [a, ...many])).toHaveLength(3);
+    expect(moreFrom(a, [a, ...many], 2)).toHaveLength(2);
+  });
+  it('is empty when the game is alone in its category', () => {
+    expect(moreFrom(a, [a, other])).toEqual([]);
   });
 });

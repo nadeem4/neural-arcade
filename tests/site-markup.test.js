@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { headerHtml, footerHtml } from '../assets/site.js';
 import { GAMES } from '../assets/games.js';
+import { videoHtml, crumbHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
 import { heroActionsHtml, categoryHtml, chipsHtml } from '../assets/home-view.js';
 
 const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
@@ -119,8 +120,8 @@ describe('home rendering', () => {
 });
 
 describe('review fixes', () => {
-  it('every game with a youtube id has id="watch" on its page', () => {
-    for (const g of GAMES.filter(g => g.youtube)) expect(read(g.path + 'index.html'), g.id).toContain('id="watch"');
+  it('every game with a youtube id gets a video box with id="watch"', () => {
+    for (const g of GAMES.filter(g => g.youtube)) expect(videoHtml(g), g.id).toContain('id="watch"');
   });
   it('about has three paragraphs and no counts', () => {
     const main = read('about/index.html').match(/<main[\s\S]*<\/main>/)[0];
@@ -157,5 +158,107 @@ describe('signal-text contrast', () => {
   it('is used for the small orange text', () => {
     expect(css).toMatch(/\.facts dd\.warn\s*\{[^}]*var\(--signal-text\)/);
     expect(css).toMatch(/\.row \.meta b\s*\{[^}]*var\(--signal-text\)/);
+  });
+});
+
+describe('game page contract (runner)', () => {
+  const html = read('games/runner/index.html');
+  const runner = GAMES.find(g => g.id === 'runner');
+  const everywhere = html + headerHtml('../../', 'games') + footerHtml() + videoHtml(runner);
+  it('has every id that main.js looks up', () => {
+    const js = read('games/runner/main.js');
+    const ids = [...js.matchAll(/(?:\$|getElementById)\('([\w-]+)'\)/g)].map(m => m[1]);
+    expect(ids.length).toBeGreaterThan(10);
+    for (const id of ids) expect(everywhere, id).toContain(`id="${id}"`);
+  });
+  it('has the Play / Watch / How it works switch', () => {
+    const nav = html.match(/<nav class="switch"[\s\S]*?<\/nav>/)[0];
+    for (const a of ['#play', '#watch', '#how']) expect(nav, a).toContain(`href="${a}"`);
+    for (const id of ['play', 'how']) expect(html, id).toContain(`id="${id}"`);
+  });
+  it('has the three-part brief', () => {
+    for (const t of ['The setup', 'The rule', 'Watch for']) expect(html, t).toContain(`<dt>${t}</dt>`);
+  });
+  it('is driven by data-game, with no video of its own', () => {
+    expect(html).toContain('<body data-game="runner">');
+    expect(html).not.toContain('data-youtube');
+    expect(html).not.toContain('video-thumb');
+  });
+  it('hides the Watch item and column until game-page.js finds a video', () => {
+    expect(html).toMatch(/<a [^>]*href="#watch"[^>]*hidden/);
+    expect(html).toMatch(/id="watchCol"[^>]*hidden/);
+  });
+  it('gives every play panel an info button', () => {
+    const top = html.split('class="moral"')[0].split('<main')[1];
+    const headings = [...top.matchAll(/<h2[\s\S]*?<\/h2>/g)].map(m => m[0]);
+    expect(headings.length).toBe(4);
+    for (const h of headings) expect(h).toContain('class="info"');
+  });
+  it('points every aria-controls at an existing id, and has the preset and speed buttons', () => {
+    for (const m of html.matchAll(/aria-controls="([\w-]+)"/g)) expect(html, m[1]).toContain(`id="${m[1]}"`);
+    expect(html.match(/data-preset="/g)).toHaveLength(3);
+    expect(html.match(/data-rate="/g)).toHaveLength(3);
+  });
+  it('uses no coloured side stripes and keeps body text at 1.5 line height', () => {
+    const gc = read('assets/game.css');
+    expect(gc).not.toMatch(/border-left:\s*\d+px solid var\(--signal\)/);
+    expect(gc).not.toMatch(/\.caption\s*\{[^}]*line-height:\s*1\.[0-4]/);
+  });
+  it('amber-ink text meets contrast on the light surface', () => {
+    expect(css).toMatch(/--amber-ink:\s*var\(--signal-text\)/);
+  });
+  it('shows the lesson from games.js', () => {
+    expect(html.match(/class="lead lesson">([^<]*)</)[1]).toBe(runner.lesson);
+  });
+  it('keeps heading levels in order and has no status words', () => {
+    const levels = [...html.matchAll(/<h([1-6])[ >]/g)].map(m => +m[1]);
+    levels.forEach((l, i) => expect(l - (levels[i - 1] ?? 0), 'h' + l).toBeLessThanOrEqual(1));
+    for (const w of ['Coming soon', 'Playable']) expect(html).not.toContain(w);
+  });
+  it('loads the shared game css and game-page.js, not the racer page css', () => {
+    expect(html).toContain('assets/studio.css');
+    expect(html).toContain('assets/game.css');
+    expect(html).toContain('assets/game-page.js');
+    expect(html).not.toContain('racer.css');
+  });
+});
+
+describe('game page rendering', () => {
+  const g = { id: 'g', title: 'Gee', youtube: 'abcdefghijk', writeup: 'games/g/how-it-works/' };
+  it('builds no video box without a youtube id', () => expect(videoHtml({ ...g, youtube: null })).toBe(''));
+  it('builds the click-to-play box from the youtube id alone', () => {
+    const v = videoHtml(g);
+    expect(v).toContain('id="watch"');
+    expect(v).toContain('data-youtube="abcdefghijk"');
+    expect(v).toContain('data-title="Gee: how it learns"');
+    expect(v).toContain('src="https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg"');
+    expect(v).toContain('Watch: how it learns');
+    expect(v).toContain('class="video-play"');
+  });
+  it('links the write-up and the category crumb from the site root', () => {
+    expect(writeupHref(g, '../../')).toBe('../../games/g/how-it-works/');
+    const c = crumbHtml({ title: 'Gee', category: 'c' }, [{ id: 'c', title: 'Cee' }], '../../');
+    expect(c).toContain('<a href="../../category/?c=c">Cee</a>');
+    expect(c).toContain('Gee');
+  });
+  it('renders More from tiles, and nothing when alone', () => {
+    const t = moreFromHtml([{ title: 'Aitch', path: 'games/h/', shot: 'games/h/shot.jpg', learnsBy: 'Things' }], '../../');
+    expect(t).toContain('href="../../games/h/"');
+    expect(t).toContain('src="../../games/h/shot.jpg"');
+    expect(t).toContain('Aitch');
+    expect(moreFromHtml([], '../../')).toBe('');
+  });
+});
+
+describe('game styles', () => {
+  const game = read('assets/game.css'), runnerCss = read('games/runner/runner.css');
+  it('game.css holds the shared game page components', () => {
+    for (const sel of ['.switch', '.brief', '.panel', '.seg', '.dial', '.info', '.readouts', '.card', '.moral', '.video-play', '.more-from']) {
+      expect(game, sel).toContain(sel + ' ');
+    }
+  });
+  it('runner.css keeps only runner rules', () => {
+    expect(runnerCss).toContain('image-rendering: pixelated');
+    expect(runnerCss).not.toMatch(/racer|\.runner |\.controls|\.readout\b/);
   });
 });
