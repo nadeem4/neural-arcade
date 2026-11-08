@@ -34,14 +34,14 @@ h1 { margin: 0; font-weight: 800; font-size: clamp(2.4rem, 5vw, 4.2rem); line-he
 
 /* header */
 .top { display: flex; align-items: center; gap: 32px; padding-block: 22px; }
-.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; text-decoration: none; }
+.logo { white-space: nowrap; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; text-decoration: none; }
 .logo svg { width: 26px; height: 26px; }
 .top nav { display: flex; align-items: center; gap: 28px; margin-left: auto; font-weight: 500; font-size: 15px; }
 .top nav a { text-decoration: none; color: var(--ink-2); }
 .top nav a:hover { color: var(--ink); }
 .top nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
-.lamp { width: 40px; height: 40px; padding: 0; justify-content: center; }
-.lamp .ic { width: 18px; height: 18px; }
+.btn.lamp { width: 40px; height: 40px; padding: 0; justify-content: center; }
+.lamp .ic { width: 18px; height: 18px; flex: none; }
 .lamp .ic-moon { display: none; }
 :root[data-theme="dark"] .lamp .ic-sun { display: none; }
 :root[data-theme="dark"] .lamp .ic-moon { display: inline; }
@@ -89,7 +89,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   .row .go { grid-column: 2; justify-self: start; }
 }
 @media (max-width: 560px) {
-  .top nav { gap: 18px; }
+  .top { gap: 16px; }
+  .top nav { gap: 16px; }
   .row { grid-template-columns: 88px minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
