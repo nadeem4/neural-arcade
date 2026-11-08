@@ -62,7 +62,7 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 
 ```
 index.html              arcade home: games grouped into shelves (How AI learns, Physical AI), live previews of all three games, what is coming
-assets/                 shared styles, theme helper, self-hosted fonts, icon
+assets/                 shared styles, theme helper, self-hosted fonts, icon; games.js (the list of games and categories), studio.css (new site tokens and shared styles), site.js (shared header and footer)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing
