@@ -154,6 +154,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 }
 
 /* browse: search, filters, rows, pager */
+[hidden] { display: none !important; }
 .b-head, .s-head { display: grid; gap: 14px; padding-block: 32px 28px; }
 .tools { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-block: 1px solid var(--line); padding-block: 14px; }
 .tools .wrap { display: grid; gap: 12px; }
