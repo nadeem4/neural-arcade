@@ -12,11 +12,11 @@ const tileHtml = (g, { feature = false, isNew = false } = {}) =>
 export const categoryHtml = ({ category, big, rest, bigIsNew }) =>
   `<div class="shelf" aria-labelledby="cat-${category.id}">
   <div class="shelf-info"><h3 id="cat-${category.id}">${esc(category.title)}</h3><p>${esc(category.lead)}</p>
-    <a class="seeall" href="games/?category=${category.id}">See every ${esc(category.title)} game</a>${big.youtube ? `<a class="seeall" href="${big.path}#watch">Watch the explainer</a>` : ''}</div>
+    <a class="seeall" href="category/?c=${category.id}">See every ${esc(category.title)} game</a>${big.youtube ? `<a class="seeall" href="${big.path}#watch">Watch the explainer</a>` : ''}</div>
   <div class="tiles">${tileHtml(big, { feature: true, isNew: bigIsNew })}${rest.map(g => tileHtml(g)).join('')}</div>
 </div>`;
 
 export const chipsHtml = chips =>
   '<span class="lbl">All categories</span>' +
-  chips.map(c => `<a class="chip" href="games/?category=${c.id}">${esc(c.title)}</a>`).join('') +
+  chips.map(c => `<a class="chip" href="category/?c=${c.id}">${esc(c.title)}</a>`).join('') +
   '<a class="chip" href="games/">Browse every game</a>';

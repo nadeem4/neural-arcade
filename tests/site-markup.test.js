@@ -78,6 +78,11 @@ describe('home page', () => {
     expect(html).toContain('src="assets/home.js"');
     expect(html).toMatch(/<a [^>]*href="games\/"[^>]*>Browse every game</);
   });
+  it('keeps heading levels in order and the recorded-run dot still', () => {
+    const levels = [...html.matchAll(/<h([1-6])[ >]/g)].map(m => +m[1]);
+    levels.forEach((l, i) => expect(l - (levels[i - 1] ?? 0), 'h' + l).toBeLessThanOrEqual(1));
+    expect(css).not.toContain('pulse');
+  });
   it('about page uses the shared header and footer', () => {
     const about = read('about/index.html');
     expect(about).toContain('<header data-site="about">');
@@ -100,11 +105,14 @@ describe('home rendering', () => {
     expect(plain).not.toContain('Watch');
     const fresh = categoryHtml({ category: cat, big: game({ youtube: 'abc' }), rest: [], bigIsNew: true });
     expect(fresh).toContain('badge');
+    expect(fresh).toContain('href="category/?c=c"');
     expect(fresh).toContain('href="games/g/#watch"');
   });
   it('chips link each category and end with Browse every game', () => {
     const c = chipsHtml([cat]);
     expect(c).toContain('Cee');
+    expect(c).toContain('href="category/?c=c"');
+    expect(c).not.toContain('games/?category');
     expect(c).toContain('Browse every game');
   });
 });
