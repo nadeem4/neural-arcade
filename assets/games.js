@@ -9,14 +9,14 @@ export const GAMES = [
     lesson: 'Ten cars with random brains learn to lap a track by breeding. Teaches fitness, selection, mutation and overfitting.',
     learnsBy: 'Fitness, selection, mutation',
     goesWrongWhen: 'It overfits the one track it bred on',
-    added: '2026-10-16', shot: 'games/racer/shot.jpg', path: 'games/racer/', writeup: 'games/racer/how-it-works/', youtube: null,
+    added: '2026-10-16', shot: 'games/racer/shot.jpg', path: 'games/racer/', writeup: 'games/racer/how-it-works/', youtube: 'tG00TxTB8ns',
   },
   {
     id: 'teach', title: 'Teach by Driving', category: 'how-ai-learns',
     lesson: 'You drive one lap and a tiny network learns to steer like you. Teaches training data, loss, gradient descent, learning rate and distribution shift.',
     learnsBy: 'Training data, loss, gradient descent',
     goesWrongWhen: 'The road leaves what it was shown',
-    added: '2026-10-16', shot: 'games/teach/shot.jpg', path: 'games/teach/', writeup: 'games/teach/how-it-works/', youtube: null,
+    added: '2026-10-16', shot: 'games/teach/shot.jpg', path: 'games/teach/', writeup: 'games/teach/how-it-works/', youtube: 'qfzRiq3DoJo',
   },
   {
     id: 'runner', title: 'Coin Runner', category: 'how-ai-learns',

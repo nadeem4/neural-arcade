@@ -27,6 +27,10 @@ describe('games data', () => {
   it('youtube is null or a valid id', () => {
     for (const g of GAMES) if (g.youtube !== null) expect(g.youtube).toMatch(/^[\w-]{11}$/);
   });
+  it('each game links its explainer video', () => {
+    const ids = Object.fromEntries(GAMES.map(g => [g.id, g.youtube]));
+    expect(ids).toMatchObject({ racer: 'tG00TxTB8ns', teach: 'qfzRiq3DoJo', runner: 'K1I7QxfrgIk' });
+  });
   it('ids are unique and added parses as a date', () => {
     expect(new Set(GAMES.map(g => g.id)).size).toBe(GAMES.length);
     for (const g of GAMES) expect(Number.isNaN(Date.parse(g.added)), g.id).toBe(false);
