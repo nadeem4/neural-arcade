@@ -8,13 +8,13 @@ Small browser games where tiny neural networks learn in front of you; each game 
 - Run: npm run dev (serves http://localhost:4173)
 
 ## Layout
-- games/index.html, category/: browse and category pages (assets/browse.js, assets/category.js)
-- engine/: shared learning code (tinynet, evolve, reinforce, train, brain-panel, curve)
-- about/: the About page
+- assets/games.js: the one config: every game (page, write-up, category, optional youtube id) and category
+- assets/: shared code and styles: studio.css (tokens), site.js (header/footer), game.css + game-page.js (game page), home.js, browse.js, category.js, story-page.js, video.js, theme.js, fonts/
+- index.html, about/, games/index.html, category/: home, About, browse and category pages
 - games/<name>/: one game each (index.html, sim.js, main.js, words.js, story-data.js, how-it-works/)
-- assets/: home page, shared CSS, fonts, theme, video.js (click-to-play video facade), games.js (games and categories data), studio.css (tokens, shared styles), site.js (shared header/footer), game.css + game-page.js (game page layout and loader), story-page.js (How it works header/footer)
+- engine/: shared learning code (tinynet, evolve, reinforce, train, brain-panel, curve)
 - videos/<game>/: git-ignored upload pack per explainer video (mp4, captions, description, thumbnail)
-- tests/: Vitest tests for the engine and each game's sim, words and story
+- tests/: Vitest tests for the engine, each game's sim, words and story, the games config and page markup
 
 ## Conventions
 - No build step: plain HTML, CSS and ES modules; deployed as static files to Vercel
