@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Category · Neural Arcade</title>
+<meta name="description" content="The Neural Arcade games in one category, from the one to start with onward.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/studio.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="games"></header>
+
+<main id="found">
+  <section class="wrap s-head" aria-labelledby="title">
+    <div class="l">
+      <span class="crumb" id="crumb"></span>
+      <h1 id="title"></h1>
+      <p class="lead" id="lead"></p>
+      <div class="acts"><a class="btn primary" id="start" href="../games/">Start</a></div>
+    </div>
+  </section>
+
+  <section class="wrap path" aria-label="Games in this category">
+    <ul class="steps" id="steps"></ul>
+  </section>
+
+  <section class="wrap others" aria-labelledby="oh">
+    <h2 id="oh">Other categories</h2>
+    <div class="filters" id="others"></div>
+  </section>
+</main>
+
+<main class="wrap s-head" id="missing" hidden></main>
+
+<footer data-site></footer>
+
+<script type="module" src="../assets/category.js"></script>
+</body>
+</html>
