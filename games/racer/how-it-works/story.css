@@ -1,29 +1,35 @@
 /* How it works: a lab report. One reading column; figures sit in tray-coloured plates, some wider than the text. */
-.story { --col: 680px; padding-top: calc(var(--cell) * 6); padding-bottom: calc(var(--cell) * 12); }
+.story h1 { margin: 0; }
+.story { --col: 680px; padding-top: 48px; padding-bottom: 96px; }
 .story > * { max-width: var(--col); margin-left: auto; margin-right: auto; }
 .story > .fig.wide { max-width: 1040px; }
 .story p, .story li, .story dd { font-size: 18px; line-height: 1.65; }
 .story em { font-style: normal; font-weight: 700; }
 
-.intro { padding-bottom: calc(var(--cell) * 4); }
-.kicker { margin: 0 0 12px; font-family: var(--display); font-weight: 600; font-size: 16px !important; letter-spacing: .1em; text-transform: uppercase; color: var(--amber-ink); }
+/* studio.css styles .step (category page rows) and .brain (home demo panel); here they are plain blocks. */
+.story .step { display: block; padding: 0; border: 0; }
+.story .fig .brain { display: block; padding: 0; border: 0; }
+.story p, .story li { color: var(--ink); }
+.intro { padding-bottom: 32px; }
+.kicker { margin: 0 0 12px; font-family: var(--sans); font-weight: 600; font-size: 15px !important; letter-spacing: normal; color: var(--amber-ink); }
 .intro h1 { font-size: clamp(40px, 6vw, 64px); }
 .intro .lede { font-size: 20px; max-width: none; margin-top: 16px; }
 .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin: 20px 0 0; color: var(--muted); font-size: 15px !important; }
-.meta a { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; }
+.meta a { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; }
 
-.step { margin-top: calc(var(--cell) * 8); }
+.story .ic { width: 18px; height: 18px; flex: none; }
+.step { margin-top: 64px; }
 .step > p { margin: 0 0 16px; }
-.num-tag { margin: 0 0 4px !important; font-family: var(--display); font-weight: 800; font-size: 18px !important; letter-spacing: .08em; color: var(--amber-ink); font-variant-numeric: tabular-nums; }
-.step h2 { font-size: 30px; font-weight: 800; letter-spacing: .03em; margin-bottom: 18px; }
+.num-tag { margin: 0 0 4px !important; font-family: var(--sans); font-weight: 800; font-size: 18px !important; letter-spacing: normal; color: var(--amber-ink); font-variant-numeric: tabular-nums; }
+.step h2 { margin: 0 0 18px; font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
 
 /* Figures: a plate, then a caption under a hairline. */
-.fig { margin: 28px 0; padding: 16px; background: var(--tray); border: 1.5px solid var(--rule); --muted: var(--muted-on-tray); }
+.fig { margin: 28px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); }
 /* The opening race: centred, as wide as the other wide plates, but never taller than the window leaves room for. */
 .story > .fig.wide { margin: 0 auto; max-width: min(1040px, calc((100svh - 140px) * 1.6)); }
 .step > .fig.wide { width: min(1040px, calc(100vw - 96px)); margin-left: 50%; transform: translateX(-50%); }
 .fig figcaption { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.5; color: var(--muted); }
-.fig figcaption b { font-family: var(--display); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); margin-right: 6px; }
+.fig figcaption b { font-family: var(--sans); font-weight: 800; letter-spacing: normal; color: var(--ink); margin-right: 6px; }
 .fig .track { display: block; width: 100%; aspect-ratio: 8 / 5; }
 .fig .brain { display: block; width: 100%; height: 280px; }
 @media (max-width: 520px) { .fig .brain { height: 330px; } }
@@ -36,7 +42,7 @@
 .fig.split figcaption { grid-column: 1 / -1; }
 .senses { display: grid; gap: 10px; }
 .sense { display: grid; grid-template-columns: 78px minmax(0, 1fr) 62px; align-items: center; gap: 10px; font-size: 13px; }
-.sense i { height: 10px; background: var(--road); }
+.sense i { height: 10px; background: var(--track); }
 .sense b { display: block; height: 100%; background: var(--amber); }
 .sense:last-child b { background: var(--ink); }
 .sense em { font-style: normal; color: var(--muted); }
@@ -47,7 +53,7 @@
 .genes i, .key i.pos, .key i.neg { width: 16px; height: 16px; }
 .genes .pos, .key .pos { background: color-mix(in srgb, var(--ink) calc(var(--k, 1) * 100%), transparent); }
 .genes .neg, .key .neg { border: 1.5px solid color-mix(in srgb, var(--ink) calc(var(--k, 1) * 100%), transparent); }
-.genes-label { margin: 0 0 6px !important; font-family: var(--display); font-weight: 600; font-size: 16px !important; letter-spacing: .06em; text-transform: uppercase; }
+.genes-label { margin: 0 0 6px !important; font-family: var(--sans); font-weight: 600; font-size: 16px !important; letter-spacing: normal; }
 .genes-label span { font-family: var(--body); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); margin-left: 8px; font-size: 14px; }
 
 /* Figs. 5 and 9: small multiples. */
@@ -65,7 +71,7 @@
 .story .rank li { display: grid; grid-template-columns: 20px 56px minmax(0, 1fr) 76px 170px; align-items: center; gap: 10px; font-size: 14px; line-height: 1.4; white-space: nowrap; color: var(--muted); opacity: .5; }
 .story .rank li.is-parent { opacity: 1; color: var(--ink); }
 .r-n, .r-pct { font-variant-numeric: tabular-nums; text-align: right; }
-.r-bar { height: 10px; background: var(--road); }
+.r-bar { height: 10px; background: var(--track); }
 .r-bar i { display: block; height: 100%; background: var(--muted); }
 .is-parent .r-bar i { background: var(--amber); }
 @media (max-width: 640px) {
@@ -94,23 +100,24 @@
 .notes, .tries { margin: 0; padding-left: 22px; display: grid; gap: 12px; }
 .deep { border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--rule); }
 .deep summary { display: flex; align-items: baseline; gap: 14px; padding: 16px 0; cursor: pointer; list-style: none;
-  font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: .03em; text-transform: uppercase; }
+  font-family: var(--sans); font-weight: 800; font-size: 26px; letter-spacing: normal; }
 .deep summary::-webkit-details-marker { display: none; }
 .deep summary::after { content: "+"; margin-left: auto; font-size: 28px; }
 .deep[open] summary::after { content: "−"; }
 .deep summary .num-tag { margin: 0 !important; }
 .deep dl { margin: 0 0 20px; display: grid; gap: 14px; }
 .deep dl div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 16px; }
-.deep dt { font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; padding-top: 2px; }
+.deep dt { font-family: var(--sans); font-weight: 600; font-size: 17px; letter-spacing: normal; padding-top: 2px; }
 .deep dd { margin: 0; font-size: 16px !important; }
 @media (max-width: 560px) { .deep dl div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
 
 .finale .go { margin-top: 24px; gap: 10px; }
 
 @media (max-width: 720px) {
-  .story { padding-top: calc(var(--cell) * 4); }
+  .story { padding-top: 32px; }
   .story p, .story li { font-size: 17px; }
-  .step { margin-top: calc(var(--cell) * 6); }
+  .story .ic { width: 18px; height: 18px; flex: none; }
+.step { margin-top: 48px; }
   .step h2 { font-size: 26px; }
   .fig { padding: 12px; }
   .step > .fig.wide { width: calc(100vw - 32px); }

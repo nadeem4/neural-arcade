@@ -289,3 +289,29 @@ describe('game styles', () => {
     expect(runnerCss).not.toMatch(/racer|\.runner |\.controls|\.readout\b/);
   });
 });
+
+describe.each(PAGES)('how it works page (%s)', id => {
+  const html = read(`games/${id}/how-it-works/index.html`);
+  it('links studio.css, not the old styles, and mounts the shared header', () => {
+    expect(html).toContain('assets/studio.css');
+    expect(html).not.toContain('arcade.css');
+    expect(html).toContain('<header data-site="games">');
+    expect(html).toContain('<footer data-site>');
+    expect(html).toContain('assets/story-page.js');
+  });
+  it('links back to its game page', () => {
+    expect(html).toMatch(/href="\.\.\/"/);
+  });
+  it('uses only tokens that exist', () => {
+    const files = ['assets/studio.css', 'games/racer/how-it-works/story.css', `games/${id}/how-it-works/story.css`];
+    const all = files.map(read).join('\n');
+    const defined = new Set([...all.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
+    defined.add('--k'); // set inline on each weight square
+    for (const u of [...all.matchAll(/var\((--[\w-]+)/g)].map(m => m[1])) expect(defined.has(u), u).toBe(true);
+    expect(all).not.toContain('--display');
+  });
+  it('keeps heading levels in order', () => {
+    const levels = [...html.matchAll(/<h([1-6])[ >]/g)].map(m => +m[1]);
+    levels.forEach((l, i) => expect(l - (levels[i - 1] ?? 0), 'h' + l).toBeLessThanOrEqual(1));
+  });
+});
