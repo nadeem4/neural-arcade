@@ -46,6 +46,16 @@ export const groupCategories = (categories, games, max = 4) =>
     games: games.filter(g => g.category === category.id).sort(byNewest).slice(0, max),
   }));
 
+// What the home page shows: the newest game as the hero, then each category's newest as its big tile and the rest beside it.
+export function homeModel(categories, games) {
+  const hero = newest(games);
+  const groups = categoriesWithGames(categories, games).map(category => {
+    const [big, ...rest] = games.filter(g => g.category === category.id).sort(byNewest);
+    return { category, big, rest, bigIsNew: big === hero };
+  });
+  return { hero, categories: groups, chips: groups.map(g => g.category) };
+}
+
 export function browse(games, categories, { q = '', category = '', sort = 'newest', page = 1, pageSize = 24 } = {}) {
   const needle = q.trim().toLowerCase();
   const titleOf = id => categories.find(c => c.id === id)?.title ?? '';
