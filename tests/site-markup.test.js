@@ -267,6 +267,19 @@ describe('game page specifics', () => {
     for (const i of ['playStart', 'playAgain', 'playBack']) expect(card, i).toContain(`id="${i}"`);
     expect(card.split('id="playCard"')[1].split('</section>')[0]).not.toContain('<h2');
   });
+  it('runner: icon-only sound button in the stage head, off by default, with an info button', () => {
+    const html = read('games/runner/index.html');
+    const head = html.split('class="stage-head"')[1].split('<div class="level">')[0];
+    expect(head).toMatch(/<button[^>]*id="sound"[^>]*aria-pressed="false"/);
+    expect(head).toMatch(/<button[^>]*id="sound"[^>]*aria-label="Sound off"[^>]*title="Sound off"/);
+    expect(head).toMatch(/aria-controls="infoSound"/);
+    expect(head).toContain('<svg');
+    expect(html).toMatch(/id="infoSound"[^>]*class="info-text"|class="info-text"[^>]*id="infoSound"/);
+    expect(html.match(/<button[^>]*id="sound"[^>]*>([\s\S]*?)<\/button>/)[1].replace(/<[^>]*>/g, '').trim()).toBe('');
+    expect(read('games/runner/main.js')).toMatch(/readSound[\s\S]*saveSound|saveSound[\s\S]*readSound/);
+    expect(read('games/runner/main.js')).toContain('visibilitychange');
+    expect(read('games/runner/runner.css')).toContain('#sound');
+  });
   it('runner main.js wires play mode and fullscreen', () => {
     const js = read('games/runner/main.js');
     for (const w of ['actionFor', 'tickHuman', 'KEY_MAP', 'compareNote', 'playSelf', 'fullscreen', 'fullscreenchange']) expect(js, w).toContain(w);

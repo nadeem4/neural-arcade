@@ -50,3 +50,14 @@
 .rules-line { color: var(--stage-ink); }
 .rule-item { white-space: nowrap; }
 .count { font: 800 72px/1 var(--mono); }
+
+/* Sound: an icon-only button. The speaker shows waves when on and a cross when off. */
+#sound { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border-radius: 8px; border: 1px solid var(--stage-2); background: var(--stage); color: var(--stage-ink); cursor: pointer; }
+#sound[hidden] { display: none; }
+#sound[aria-pressed="true"] { background: var(--amber); color: #000; }
+#sound .on, #sound[aria-pressed="true"] .off { display: none; }
+#sound[aria-pressed="true"] .on { display: inline; }
+
+/* The level's placeholder while the art loads, in the dark theme's night colour. */
+:root[data-theme="dark"] #level { background: #0d1b3a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #level { background: #0d1b3a; } }

@@ -7,6 +7,7 @@ import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
 import { timeLeft, RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
 import { loadArt, createFx, react, settle, follow, drawLevel, drawOutcomes } from './render.js';
+import { createPlayer, readSound, saveSound } from './music.js';
 import { tryNote, endWords, compareNote, whyNote, rulesItems, pausedNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
 
 const $ = id => document.getElementById(id);
@@ -210,7 +211,7 @@ function frame(now) {
   for (let k = steps; k > 0; k--) { if (s.mode === 'human') stepHuman(); else stepShown(); settle(s.fx); }
   if (s.mode === 'ai') runUnseen(steps);
   follow(s.fx, s.run.g);
-  if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr });
+  if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr, dark: theme.dark });
   drawBrainPanel();
   $('tries').textContent = s.trainer.tries; $('plate').textContent = s.mode === 'human' ? 'You are playing' : 'AI is playing';
   $('hudScore').textContent = s.run.score.toFixed(1); $('hudCoins').textContent = s.run.coins; $('hudTime').textContent = timeLeft(s.run);
@@ -224,7 +225,21 @@ document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', 
   btn.setAttribute('aria-expanded', String(open));
   $(btn.getAttribute('aria-controls')).hidden = !open;
 }));
-wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); });
+wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); }); // the level repaints every frame, so night follows the lamp
+
+// ---------- Sound: muted until asked, remembered, and quiet while the tab is hidden ----------
+// Browsers only allow audio after a gesture, so a remembered "on" starts with the first click or key.
+if (window.AudioContext || window.webkitAudioContext) {
+  const btn = $('sound'), player = createPlayer();
+  let store = null; try { store = localStorage; } catch { /* storage blocked */ }
+  let on = readSound(store), hidden = document.hidden, gestured = false;
+  const sync = () => { const l = on ? 'Sound on' : 'Sound off'; btn.setAttribute('aria-pressed', String(on)); btn.setAttribute('aria-label', l); btn.title = l; };
+  const apply = () => { if (on && !hidden && gestured) player.start(); else player.stop(); };
+  btn.hidden = false; sync();
+  btn.addEventListener('click', () => { on = !on; gestured = true; saveSound(store, on); sync(); apply(); });
+  if (on) for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { if (!gestured) { gestured = true; apply(); } }, { once: true });
+  document.addEventListener('visibilitychange', () => { hidden = document.hidden; apply(); });
+}
 const sizer = new ResizeObserver(resize); sizer.observe(document.body); sizer.observe(levelCanvas); // the canvas itself, so entering or leaving full screen always re-measures
 
 showRules();
