@@ -168,7 +168,7 @@ A neutral cool-grey palette with one orange signal and a separate dark stage pal
 - Dark mode swaps ground, surface, ink, ink-2, line, track and stage to the `dark-*` values (track uses `dark-line`); stage-ink, stage-dim and signal stay.
 
 ### Canvas colours
-Canvas code reads colours through `assets/theme.js` using older names that alias the studio tokens: `--ground`, `--tray` (stage), `--road` (stage-2), `--edge`, `--muted`, `--rule`, `--car`, `--amber` (signal), `--amber-ink` (signal-text) and `--red` (`crash-red`, deaths and crashes in charts and legends). New CSS uses the studio names.
+Canvas code reads colours through `assets/theme.js`, which also reports `dark` (true in the dark theme) so a canvas can change its scene: the Coin Runner level has a night version in dark mode (navy sky, stars, dimmed hills, drawn in `games/runner/render.js`) and the day drawing in light mode. Colours use older names that alias the studio tokens: `--ground`, `--tray` (stage), `--road` (stage-2), `--edge`, `--muted`, `--rule`, `--car`, `--amber` (signal), `--amber-ink` (signal-text) and `--red` (`crash-red`, deaths and crashes in charts and legends). New CSS uses the studio names.
 
 ### Named Rules
 **The One Signal Rule.** Orange is the only accent. Charts may add `crash-red` for failure; nothing else gets a hue.

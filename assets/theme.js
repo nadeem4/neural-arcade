@@ -3,12 +3,12 @@ const KEYS = ['ground', 'tray', 'road', 'edge', 'ink', 'muted', 'rule', 'car', '
 
 export function readTheme() {
   const cs = getComputedStyle(document.documentElement);
-  const t = { body: cs.getPropertyValue('--body').trim() };
+  const t = { body: cs.getPropertyValue('--body').trim(), dark: isDark() };
   for (const k of KEYS) t[k] = cs.getPropertyValue('--' + k).trim();
   return t;
 }
 
-function isDark() {
+export function isDark() {
   const set = document.documentElement.dataset.theme;
   return set ? set === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches;
 }

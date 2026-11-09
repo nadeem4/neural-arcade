@@ -49,14 +49,23 @@ export function follow(fx, g, snap = false) {
   fx.cam = snap ? target : fx.cam + (target - fx.cam) * 0.12;
 }
 
+// Night is a recolour, not new art: a navy sky, a few fixed stars, and the hills dimmed. Day is the original drawing.
+const STARS = (() => { // a small seeded scatter, so the same sky every time
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  return Array.from({ length: 24 }, () => ({ x: Math.floor(rnd() * VIEW_W * TILE), y: Math.floor(rnd() * ((VIEW_H - 3) * TILE - 8)) + 4 }));
+})();
+export function skyFor(dark) {
+  return dark ? { night: true, sky: '#0d1b3a', hillTint: 'rgba(8, 16, 48, 0.62)', stars: STARS } : { night: false, stars: [] };
+}
+
 // The level is drawn at its true pixel size (288 × 180) and then scaled up in one go, so the pixels stay crisp
 // and tiles never show seams. The shake moves that one finished picture.
 let small = null;
-export function drawLevel(out, g, fx, art, { width, dpr }) {
+export function drawLevel(out, g, fx, art, { width, dpr, dark = false }) {
   small ??= Object.assign(document.createElement('canvas'), { width: VIEW_W * TILE, height: VIEW_H * TILE });
   const ctx = small.getContext('2d');
   ctx.imageSmoothingEnabled = false;
-  paint(ctx, g, fx, art);
+  paint(ctx, g, fx, art, skyFor(dark));
   const scale = (width * dpr) / small.width, sh = fx.trauma * fx.trauma;
   const ox = sh * 4 * Math.sin(fx.frame * 1.7), oy = sh * 3 * Math.sin(fx.frame * 2.3);
   out.setTransform(1, 0, 0, 1, 0, 0);
@@ -65,16 +74,26 @@ export function drawLevel(out, g, fx, art, { width, dpr }) {
   out.drawImage(small, Math.round(ox * scale), Math.round(oy * scale), out.canvas.width, out.canvas.height);
 }
 
-function paint(ctx, g, fx, art) {
+function paint(ctx, g, fx, art, look) {
   const cam = fx.cam, sx = tx => Math.round((tx - cam) * TILE), sy = ty => (VIEW_H - 1 - ty) * TILE;
 
   // Sky and far hills, scrolling slower than the level (parallax).
   const far = -((cam * TILE * 0.35) % (BG * 2));
+  if (look.night) {
+    ctx.fillStyle = look.sky; ctx.fillRect(0, 0, VIEW_W * TILE, VIEW_H * TILE);
+    const drift = (cam * TILE * 0.1) % (VIEW_W * TILE);
+    for (const st of look.stars) {
+      ctx.globalAlpha = 0.55 + 0.45 * Math.sin((fx.frame + st.x * 3) / 24);
+      ctx.fillStyle = '#fff6d8'; ctx.fillRect(Math.round(((st.x - drift) % (VIEW_W * TILE) + VIEW_W * TILE) % (VIEW_W * TILE)), st.y, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+  }
   for (let x = far - BG; x < VIEW_W * TILE + BG * 2; x += BG) {
-    for (let y = 0; y < VIEW_H * TILE; y += BG) sprite(ctx, art.bg, BG, 8, 6, x, y);
+    if (!look.night) for (let y = 0; y < VIEW_H * TILE; y += BG) sprite(ctx, art.bg, BG, 8, 6, x, y);
     sprite(ctx, art.bg, BG, 8, Math.round((x - far) / BG) % 2 ? 15 : 14, x, sy(GROUND) - BG);
     sprite(ctx, art.bg, BG, 8, 22, x, sy(GROUND));
   }
+  if (look.night) { ctx.fillStyle = look.hillTint; ctx.fillRect(0, sy(GROUND) - BG, VIEW_W * TILE, BG + (VIEW_H * TILE - sy(GROUND))); }
 
   const x0 = Math.max(0, Math.floor(cam) - 1), x1 = Math.min(W - 1, Math.ceil(cam + VIEW_W));
   for (let tx = x0; tx <= x1; tx++) {

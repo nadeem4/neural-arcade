@@ -7,6 +7,7 @@ import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
 import { timeLeft, RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
 import { loadArt, createFx, react, settle, follow, drawLevel, drawOutcomes } from './render.js';
+import { createSfx, soundsFor, readSound, saveSound } from './sfx.js';
 import { tryNote, endWords, compareNote, whyNote, rulesItems, pausedNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
 
 const $ = id => document.getElementById(id);
@@ -31,6 +32,9 @@ const RULE_INFO = {
 };
 
 // `rate`: unseen tries a second, run in the background while one try plays on screen (0: only the tries you see).
+// Sound effects play only for the try on screen: full volume for your own, quieter for the AI's.
+const sfx = createSfx(), AI_VOLUME = 0.4;
+const cue = (ev, volume) => { for (const n of soundsFor(ev)) sfx.play(n, volume); };
 const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '', mode: 'ai', phase: null, count: 0, down: new Set(), guard: new Set(), held: new Set() };
 function freshBrain() {
   s.trainer = createTrainer(s.rules, (Math.random() * 2 ** 32) >>> 0);
@@ -150,7 +154,7 @@ function stepHuman() {
   if (s.phase !== 'play') return;
   const flags = { left: s.held.has('left'), right: s.held.has('right'), jump: s.held.has('jump') };
   const ev = tickHuman(s.run, actionFor(flags));
-  react(s.fx, s.run.g, ev, { reduceMotion });
+  react(s.fx, s.run.g, ev, { reduceMotion }); cue(ev, 1);
   if (!s.run.outcome) return;
   s.held.clear(); s.guard = new Set(s.down); s.phase = 'end';
   const best = bestOf(s.trainer.history);
@@ -160,7 +164,7 @@ function stepHuman() {
 function stepShown() {
   if (s.hold > 0) { if (--s.hold === 0) startShown(); return; } // the finished try stays up with its result
   const ev = tick(s.run);
-  react(s.fx, s.run.g, ev, { reduceMotion });
+  react(s.fx, s.run.g, ev, { reduceMotion }); cue(ev, AI_VOLUME);
   if (!s.run.outcome) return;
   s.trainer.learnFrom(s.run);
   caption(tryNote(s.run, s.trainer.tries));
@@ -210,7 +214,7 @@ function frame(now) {
   for (let k = steps; k > 0; k--) { if (s.mode === 'human') stepHuman(); else stepShown(); settle(s.fx); }
   if (s.mode === 'ai') runUnseen(steps);
   follow(s.fx, s.run.g);
-  if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr });
+  if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr, dark: theme.dark });
   drawBrainPanel();
   $('tries').textContent = s.trainer.tries; $('plate').textContent = s.mode === 'human' ? 'You are playing' : 'AI is playing';
   $('hudScore').textContent = s.run.score.toFixed(1); $('hudCoins').textContent = s.run.coins; $('hudTime').textContent = timeLeft(s.run);
@@ -224,7 +228,23 @@ document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', 
   btn.setAttribute('aria-expanded', String(open));
   $(btn.getAttribute('aria-controls')).hidden = !open;
 }));
-wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); });
+wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); }); // the level repaints every frame, so night follows the lamp
+
+// ---------- Sound switch: muted until asked, remembered, and silent while the tab is hidden ----------
+// Browsers only allow audio after a gesture, so a remembered "on" starts with the first click or key.
+if (window.AudioContext || window.webkitAudioContext) {
+  const btn = $('sound'), player = sfx;
+  let store = null; try { store = localStorage; } catch { /* storage blocked */ }
+  let on = readSound(store), hidden = document.hidden, gestured = false;
+  const sync = () => { btn.setAttribute('aria-pressed', String(on)); };
+  const apply = () => { if (on && !hidden && gestured) player.start(); else player.stop(); };
+  btn.hidden = false; sync();
+  btn.addEventListener('click', () => { on = !on; gestured = true; saveSound(store, on); sync(); apply(); });
+  // A remembered "on" waits for a gesture that browsers accept (pointerup, not pointerdown, on touch) and stays listening until audio runs.
+  const unlock = () => { gestured = true; apply(); if (player.running()) for (const ev of ['pointerup', 'keydown']) window.removeEventListener(ev, unlock); };
+  if (on) for (const ev of ['pointerup', 'keydown']) window.addEventListener(ev, unlock);
+  document.addEventListener('visibilitychange', () => { hidden = document.hidden; apply(); });
+}
 const sizer = new ResizeObserver(resize); sizer.observe(document.body); sizer.observe(levelCanvas); // the canvas itself, so entering or leaving full screen always re-measures
 
 showRules();
