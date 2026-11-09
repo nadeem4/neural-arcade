@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
+import { genomeLength, biasIndex, createActs } from '../engine/tinynet.js';
 import { createLearner } from '../engine/reinforce.js';
 import {
   newGame, step, sense, isPit, N_IN, RUNNER_SIZES, LIMIT, DECIDE, PITS, BLOCK, ENEMY, FLAG_X, PRESETS,
-  scoreFrame, playTry, createTrainer, startTry, actionFor, tickHuman, KEY_MAP,
+  scoreFrame, playTry, createTrainer, startTry, actionFor, tickHuman, tick, KEY_MAP,
 } from '../games/runner/sim.js';
 
 // Plays a fixed strategy (a function of the game state) until the try ends.
@@ -160,6 +161,15 @@ describe('playing it yourself', () => {
     Object.assign(run.g, { x: FLAG_X - 0.05 });
     tickHuman(run, 1);
     expect(run.outcome).toBe('finished');
+  });
+  it('gives the same final state as the AI tick when both play the same action', () => {
+    const sizes = RUNNER_SIZES, genome = new Float64Array(genomeLength(sizes));
+    genome[biasIndex(sizes, 1, 2)] = 1000; // a stub brain that always picks Leap (action 2)
+    const L = { sizes, genome, acts: createActs(sizes) };
+    const ai = startTry(L, rules, () => 0.5), human = startTry(null, rules, null);
+    for (let i = 0; i < 100; i++) { tick(ai); tickHuman(human, 2); }
+    expect(ai.g).toEqual(human.g);
+    expect(ai.score).toBeCloseTo(human.score, 9);
   });
   it('never touches learning', () => {
     const tr = createTrainer(rules, 9);

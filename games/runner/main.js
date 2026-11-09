@@ -56,7 +56,7 @@ function endHuman() {
   $('playSelf').setAttribute('aria-pressed', 'false'); delete levelEl.dataset.mode;
 }
 $('playSelf').addEventListener('click', () => { if (s.mode === 'human') { endHuman(); s.hold = 0; startShown(); } else startHuman(); });
-const heldKey = e => (s.mode === 'human' ? KEY_MAP[e.code] : undefined);
+const heldKey = e => (s.mode === 'human' && !e.ctrlKey && !e.metaKey && !e.altKey ? KEY_MAP[e.code] : undefined);
 window.addEventListener('keydown', e => { const k = heldKey(e); if (k) { e.preventDefault(); s.held.add(k); } });
 window.addEventListener('keyup', e => { const k = heldKey(e); if (k) { e.preventDefault(); s.held.delete(k); } });
 window.addEventListener('blur', () => s.held.clear());
@@ -68,7 +68,7 @@ document.querySelectorAll('[data-hold]').forEach(b => {
 // Full screen where the browser allows it (not on iPhone Safari): the canvas is resized when it changes.
 if (document.fullscreenEnabled) {
   $('fullscreen').hidden = false;
-  $('fullscreen').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else levelEl.requestFullscreen(); });
+  $('fullscreen').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else levelEl.requestFullscreen().catch(() => {}); });
   document.addEventListener('fullscreenchange', () => {
     $('fullscreen').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
     resize();
@@ -124,6 +124,7 @@ function stepHuman() {
   say(compareNote(s.run, bestOf(s.trainer.history)));
   caption(`Your try: ${endWords({ outcome: s.run.outcome, coins: s.run.coins, maxX: s.run.g.maxX })}. Score ${s.run.score.toFixed(1)}`);
   s.hold = HOLD;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); // the Play button is outside the level, so leave full screen to play again
 }
 function stepShown() {
   if (s.hold > 0) { if (--s.hold === 0) startShown(); return; } // the finished try stays up with its result
@@ -180,7 +181,7 @@ function frame(now) {
   follow(s.fx, s.run.g);
   if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr });
   drawBrainPanel();
-  $('tries').textContent = s.trainer.tries; $('triesPlate').textContent = s.trainer.tries + 1;
+  $('tries').textContent = s.trainer.tries; $('triesPlate').textContent = s.mode === 'human' ? '(you)' : s.trainer.tries + 1;
   $('score').textContent = s.run.score.toFixed(1); $('coins').textContent = s.run.coins;
   requestAnimationFrame(frame);
 }
