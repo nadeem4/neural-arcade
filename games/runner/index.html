@@ -38,7 +38,7 @@
 
   <section class="play" id="play" aria-label="The game">
     <div class="stage">
-      <div class="stage-head"><span class="live"><i></i><b>Try <span class="num" id="triesPlate">1</span></b></span>
+      <div class="stage-head"><span class="live"><i></i><b id="plate">AI is playing</b></span>
         <span class="stage-tools">
           <button class="btn" type="button" id="playSelf" aria-pressed="false">Play it yourself</button>
           <button class="info" type="button" aria-expanded="false" aria-controls="infoPlay" aria-label="Explain play it yourself" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
@@ -52,6 +52,7 @@
           <div id="cardIntro">
             <p class="card-title">Your turn</p>
             <ul class="keys keys-pointer"><li><kbd>&rarr;</kbd> or <kbd>D</kbd> run</li><li><kbd>&uarr;</kbd>, <kbd>W</kbd> or <kbd>Space</kbd> jump</li><li><kbd>Esc</kbd> quit</li></ul>
+            <p class="rules-line" id="cardRules"></p>
             <p class="keys-touch">Use the buttons on the screen.</p>
             <button class="btn primary" type="button" id="playStart">Start</button>
           </div>

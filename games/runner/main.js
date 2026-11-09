@@ -7,7 +7,7 @@ import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
 import { timeLeft, RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
 import { loadArt, createFx, react, settle, follow, drawLevel, drawOutcomes } from './render.js';
-import { tryNote, endWords, compareNote, whyNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
+import { tryNote, endWords, compareNote, whyNote, rulesNote, pausedNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
 
 const $ = id => document.getElementById(id);
 const levelCanvas = $('level'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -53,6 +53,7 @@ function newHumanTry() {
 function startHuman() {
   s.mode = 'human'; s.phase = 'intro'; newHumanTry();
   $('playSelf').setAttribute('aria-pressed', 'true'); levelEl.dataset.mode = 'human';
+  s.said = $('log').textContent; say(pausedNote(s.trainer.tries)); $('cardRules').textContent = rulesNote(s.rules);
   show('cardIntro'); $('playStart').focus();
   levelEl.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
 }
@@ -60,7 +61,7 @@ function beginCount() { s.phase = 'count'; s.count = 3 * COUNT_STEP; $('countNum
 function playAgain() { newHumanTry(); beginCount(); }
 function endHuman() {
   if (s.mode !== 'human') return;
-  s.mode = 'ai'; s.phase = null; s.held.clear(); show(null);
+  s.mode = 'ai'; s.phase = null; s.held.clear(); show(null); say(s.said);
   $('playSelf').setAttribute('aria-pressed', 'false'); delete levelEl.dataset.mode;
 }
 function backToAi() {
@@ -207,7 +208,7 @@ function frame(now) {
   follow(s.fx, s.run.g);
   if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr });
   drawBrainPanel();
-  $('tries').textContent = s.trainer.tries; $('triesPlate').textContent = s.mode === 'human' ? '(you)' : s.trainer.tries + 1;
+  $('tries').textContent = s.trainer.tries; $('plate').textContent = s.mode === 'human' ? 'You are playing' : 'AI is playing';
   $('hudScore').textContent = s.run.score.toFixed(1); $('hudCoins').textContent = s.run.coins; $('hudTime').textContent = timeLeft(s.run);
   $('score').textContent = s.run.score.toFixed(1); $('coins').textContent = s.run.coins;
   requestAnimationFrame(frame);

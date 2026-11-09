@@ -43,4 +43,6 @@
 .keys kbd { display: inline-block; min-width: 2em; padding: 2px 8px; border: 1px solid var(--stage-dim); border-bottom-width: 3px; border-radius: 6px; background: var(--stage-2); font: 600 14px var(--mono); }
 .keys-touch { display: none; }
 @media (pointer: coarse) { .keys-pointer { display: none; } .keys-touch { display: block; } }
+.level[data-mode="human"] .caption { display: none; }
+.rules-line { font-size: 14px; color: var(--stage-dim); }
 .count { font: 800 72px/1 var(--mono); }

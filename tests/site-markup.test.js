@@ -248,6 +248,8 @@ describe('game page specifics', () => {
     const html = read('games/runner/index.html');
     expect(html).toMatch(/<button[^>]*id="playSelf"[^>]*aria-pressed="false"/);
     expect(html).toMatch(/aria-controls="infoPlay"/);
+    expect(html).toContain('id="plate"');
+    expect(html).toContain('id="cardRules"');
     expect(html).toMatch(/id="infoPlay"[^>]*class="info-text"|class="info-text"[^>]*id="infoPlay"/);
     const level = html.split('<div class="level">')[1].split('id="say"')[0].split('id="log"')[0];
     for (const k of ['left', 'right', 'jump']) expect(level, k).toContain(`data-hold="${k}"`);

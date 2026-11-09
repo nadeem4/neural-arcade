@@ -34,6 +34,15 @@ export function whyNote(run, best) {
     : 'You beat it. Give it more tries, or check what your rules pay for.';
 }
 
+// The current rules as signed points, skipping any that pay nothing, so the player knows how their try is scored.
+export function rulesNote(rules) {
+  const sign = v => `${v < 0 ? '\u2212' : '+'}${Math.abs(v)}`;
+  const parts = [['Flag', rules.flag], ['Coin', rules.coin], ['Each tile forward', rules.progress], ['Dying', -rules.death], ['Each second', rules.second]];
+  return parts.filter(([, v]) => v !== 0).map(([n, v]) => `${n} ${sign(v)}`).join(' \u00b7 ');
+}
+
+export const pausedNote = n => `The AI is paused while you play. It has had ${n} ${n === 1 ? 'try' : 'tries'} so far.`;
+
 export function ruleValue(key, v) {
   if (key === 'second') return v < 0 ? `costs ${-v}` : v > 0 ? `earns ${v}` : 'nothing';
   return v === 0 ? 'nothing' : `${v} point${v === 1 ? '' : 's'}`;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tryNote, endWords, bestOf, compareNote, whyNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
+import { tryNote, endWords, bestOf, compareNote, whyNote, rulesNote, pausedNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
 import { PRESETS } from '../games/runner/sim.js';
 
 const run = (outcome, extra = {}) => ({ outcome, coins: 0, score: 12.4, g: { maxX: 20 }, ...extra });
@@ -70,5 +70,16 @@ describe('why the two runs differ', () => {
     expect(whyNote(run('died', { score: 1 }), best)).toMatch(/rules pay more for what the AI did/);
     expect(whyNote(run('finished', { score: 20 }), best)).toMatch(/You beat it/);
     expect(whyNote(run('died'), null)).toBe('');
+  });
+});
+
+describe('what the player is told about the rules and the paused AI', () => {
+  it('lists the current rules with signs and skips zeros', () => {
+    expect(rulesNote(PRESETS.balanced.rules)).toBe('Flag +30 \u00b7 Coin +0.5 \u00b7 Each tile forward +1 \u00b7 Dying \u22125 \u00b7 Each second \u22120.5');
+    expect(rulesNote(PRESETS.afraid.rules)).toBe('Dying \u221250 \u00b7 Each second +1');
+  });
+  it('says the AI is paused and how many tries it has had', () => {
+    expect(pausedNote(42)).toBe('The AI is paused while you play. It has had 42 tries so far.');
+    expect(pausedNote(1)).toBe('The AI is paused while you play. It has had 1 try so far.');
   });
 });
