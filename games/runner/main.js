@@ -31,7 +31,7 @@ const RULE_INFO = {
 };
 
 // `rate`: unseen tries a second, run in the background while one try plays on screen (0: only the tries you see).
-const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '', mode: 'ai', phase: null, count: 0, held: new Set() };
+const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '', mode: 'ai', phase: null, count: 0, down: new Set(), guard: new Set(), held: new Set() };
 function freshBrain() {
   s.trainer = createTrainer(s.rules, (Math.random() * 2 ** 32) >>> 0);
   endHuman(); s.owed = 0; s.hold = 0; startShown(); drawChart();
@@ -66,7 +66,7 @@ function endHuman() {
   $('playSelf').setAttribute('aria-pressed', 'false'); delete levelEl.dataset.mode;
 }
 function backToAi() {
-  endHuman(); s.hold = 0; startShown();
+  endHuman(); s.hold = 0; startShown(); $('playSelf').focus();
 }
 $('playSelf').addEventListener('click', () => { if (s.mode === 'human') backToAi(); else startHuman(); });
 $('playStart').addEventListener('click', () => { if (s.phase === 'intro') beginCount(); });
@@ -76,10 +76,13 @@ const heldKey = e => (s.phase === 'play' && !e.ctrlKey && !e.metaKey && !e.altKe
 window.addEventListener('keydown', e => {
   if (s.mode !== 'human') return;
   if (e.key === 'Escape') { backToAi(); return; }
-  if (s.phase === 'intro' && !e.repeat && (e.code === 'Enter' || KEY_MAP[e.code]) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); beginCount(); return; }
+  if (s.guard.has(e.code)) { e.preventDefault(); return; } // a key still held when the try ended must not press Play again
+  const t = e.target, typing = /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || (t.tagName === 'BUTTON' && t.id !== 'playStart');
+  if (s.phase === 'intro' && !typing && !e.repeat && (e.code === 'Enter' || KEY_MAP[e.code]) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); beginCount(); return; }
   const k = heldKey(e);
-  if (k) { e.preventDefault(); s.held.add(k); }
+  if (k) { e.preventDefault(); s.held.add(k); s.down.add(e.code); }
 });
+window.addEventListener('keyup', e => { s.down.delete(e.code); if (s.guard.delete(e.code)) e.preventDefault(); });
 window.addEventListener('keyup', e => { const k = heldKey(e); if (k) { e.preventDefault(); s.held.delete(k); } });
 window.addEventListener('blur', () => s.held.clear());
 document.querySelectorAll('[data-hold]').forEach(b => {
@@ -149,7 +152,7 @@ function stepHuman() {
   const ev = tickHuman(s.run, actionFor(flags));
   react(s.fx, s.run.g, ev, { reduceMotion });
   if (!s.run.outcome) return;
-  s.held.clear(); s.phase = 'end';
+  s.held.clear(); s.guard = new Set(s.down); s.phase = 'end';
   const best = bestOf(s.trainer.history);
   $('endNote').textContent = compareNote(s.run, best); $('endWhy').textContent = whyNote(s.run, best);
   show('cardEnd'); $('playAgain').focus();

@@ -40,7 +40,6 @@ export function rulesItems(rules) {
   const parts = [['Flag', rules.flag], ['Coin', rules.coin], ['Each tile forward', rules.progress], ['Dying', -rules.death], ['Each second', rules.second]];
   return parts.filter(([, v]) => v !== 0).map(([n, v]) => `${n} ${sign(v)}`);
 }
-export const rulesNote = rules => rulesItems(rules).join(' \u00b7 ');
 
 export const pausedNote = n => `The AI is paused while you play. It has had ${n} ${n === 1 ? 'try' : 'tries'} so far.`;
 

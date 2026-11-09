@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tryNote, endWords, bestOf, compareNote, whyNote, rulesItems, rulesNote, pausedNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
+import { tryNote, endWords, bestOf, compareNote, whyNote, rulesItems, pausedNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
 import { PRESETS } from '../games/runner/sim.js';
 
 const run = (outcome, extra = {}) => ({ outcome, coins: 0, score: 12.4, g: { maxX: 20 }, ...extra });
@@ -75,8 +75,7 @@ describe('why the two runs differ', () => {
 
 describe('what the player is told about the rules and the paused AI', () => {
   it('lists the current rules with signs and skips zeros', () => {
-    expect(rulesNote(PRESETS.balanced.rules)).toBe('Flag +30 \u00b7 Coin +0.5 \u00b7 Each tile forward +1 \u00b7 Dying \u22125 \u00b7 Each second \u22120.5');
-    expect(rulesNote(PRESETS.afraid.rules)).toBe('Dying \u221250 \u00b7 Each second +1');
+    expect(rulesItems(PRESETS.balanced.rules)).toEqual(['Flag +30', 'Coin +0.5', 'Each tile forward +1', 'Dying −5', 'Each second −0.5']);
   });
   it('gives the rules as separate items so the page can wrap between them', () => {
     expect(rulesItems(PRESETS.afraid.rules)).toEqual(['Dying \u221250', 'Each second +1']);
