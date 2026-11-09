@@ -156,15 +156,25 @@ export function tick(run) {
     run.current = { input, out: c.out, p: c.p, a: c.a, rew: 0 };
     run.steps.push(run.current);
   }
-  const ev = step(g, run.current.a);
+  return advance(run, run.current.a);
+}
+// One step of a try, whoever chose the action: physics, score, outcome. The AI and a human player share it.
+function advance(run, action) {
+  const { g } = run;
+  const ev = step(g, action);
   const r = scoreFrame(g, ev, run.rules);
-  run.current.rew += r; run.score += r; run.coins += ev.coins;
+  if (run.current) run.current.rew += r;
+  run.score += r; run.coins += ev.coins;
   if (ev.died) run.outcome = 'died';
   else if (ev.finished) run.outcome = 'finished';
   else if (g.t >= LIMIT) run.outcome = 'timeout';
   run.frameEvents = ev;
   return ev;
 }
+// A person plays a try started with startTry(null, rules, null): same level, physics and scoring, and it records no steps, so it can never teach the brain.
+export const KEY_MAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
+export const actionFor = held => (held.right ? (held.jump ? 2 : 1) : held.jump ? 3 : 0); // no walking left: Left is Wait
+export const tickHuman = (run, action) => advance(run, action);
 export function playTry(L, rules, rng) {
   const run = startTry(L, rules, rng);
   while (!run.outcome) tick(run);

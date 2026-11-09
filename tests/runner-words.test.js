@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tryNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
+import { tryNote, endWords, bestOf, compareNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
 import { PRESETS } from '../games/runner/sim.js';
 
 const run = (outcome, extra = {}) => ({ outcome, coins: 0, score: 12.4, g: { maxX: 20 }, ...extra });
@@ -41,5 +41,25 @@ describe('presets', () => {
     expect(loopholeNote(still)).toMatch(/standing still/);
     expect(loopholeNote(flag)).toBe('');
     expect(loopholeNote(farm.slice(0, 10))).toBe('');
+  });
+});
+
+describe('comparing your try with the AI', () => {
+  it('endWords names how a try ended', () => {
+    expect(endWords({ outcome: 'finished' })).toBe('reached the flag');
+    expect(endWords({ outcome: 'died' })).toBe('died');
+    expect(endWords({ outcome: 'timeout', coins: 12, maxX: 3 })).toBe('farmed the coin block until time ran out (12 coins)');
+    expect(endWords({ outcome: 'timeout', coins: 0, maxX: 1 })).toBe('stayed put until time ran out');
+    expect(endWords({ outcome: 'timeout', coins: 0, maxX: 10 })).toBe('ran out of time');
+  });
+  it('bestOf picks the highest score, or null', () => {
+    expect(bestOf([])).toBe(null);
+    expect(bestOf([{ score: 1 }, { score: 9 }, { score: 4 }])).toEqual({ score: 9 });
+  });
+  it('compareNote sets your try beside the AI best', () => {
+    const mine = run('finished', { score: 4 });
+    const best = { outcome: 'timeout', coins: 30, maxX: 2, score: 9 };
+    expect(compareNote(mine, best)).toBe("Your run: reached the flag, score 4.0. The AI's best: farmed the coin block until time ran out (30 coins), 9.0.");
+    expect(compareNote(run('died', { score: -3 }), null)).toBe('Your run: died, score -3.0. The AI has not finished a try yet.');
   });
 });

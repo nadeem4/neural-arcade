@@ -4,14 +4,27 @@ import { PRESETS, RULES } from './sim.js';
 const farmed = t => t.outcome === 'timeout' && t.coins >= 8;
 const stayed = t => t.outcome === 'timeout' && !farmed(t) && (t.maxX ?? t.g?.maxX) < 3;
 
-// One line about how a try ended, for the caption on the level.
-export function tryNote(run, n) {
-  const t = { outcome: run.outcome, coins: run.coins, maxX: run.g.maxX };
-  const what = t.outcome === 'finished' ? 'reached the flag'
+// How a try ended, in words. `t` has outcome, coins and maxX.
+export function endWords(t) {
+  return t.outcome === 'finished' ? 'reached the flag'
     : t.outcome === 'died' ? 'died'
     : farmed(t) ? `farmed the coin block until time ran out (${t.coins} coins)`
     : stayed(t) ? 'stayed put until time ran out' : 'ran out of time';
+}
+
+// One line about how a try ended, for the caption on the level.
+export function tryNote(run, n) {
+  const what = endWords({ outcome: run.outcome, coins: run.coins, maxX: run.g.maxX });
   return `Try ${n}: ${what}. Score ${run.score.toFixed(1)}`;
+}
+
+// The AI's best try so far, or null before it has played one.
+export const bestOf = history => history.reduce((b, t) => (!b || t.score > b.score ? t : b), null);
+
+// Your finished try beside the AI's best one.
+export function compareNote(run, best) {
+  const mine = `Your run: ${endWords({ outcome: run.outcome, coins: run.coins, maxX: run.g.maxX })}, score ${run.score.toFixed(1)}.`;
+  return best ? `${mine} The AI's best: ${endWords(best)}, ${best.score.toFixed(1)}.` : `${mine} The AI has not finished a try yet.`;
 }
 
 export function ruleValue(key, v) {
