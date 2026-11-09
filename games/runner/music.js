@@ -53,12 +53,14 @@ export function createPlayer({ makeContext = () => new (window.AudioContext || w
     start() {
       if (timer) return;
       if (!ctx) { ctx = makeContext(); master = ctx.createGain(); master.gain.value = GAIN; master.connect(ctx.destination); next = ctx.currentTime + 0.05; }
-      ctx.resume();
+      ctx.resume()?.catch(() => {});
+      next = Math.max(next, ctx.currentTime + 0.05);
       pump(); timer = setInterval(pump, 100);
     },
+    running: () => ctx?.state === 'running',
     stop() {
       if (!timer) return;
-      clearInterval(timer); timer = null; ctx.suspend();
+      clearInterval(timer); timer = null; ctx.suspend()?.catch(() => {});
     },
   };
 }

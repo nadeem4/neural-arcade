@@ -60,4 +60,4 @@
 
 /* The level's placeholder while the art loads, in the dark theme's night colour. */
 :root[data-theme="dark"] #level { background: #0d1b3a; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #level { background: #0d1b3a; } }
+@media not (prefers-color-scheme: light) { :root:not([data-theme="light"]) #level { background: #0d1b3a; } }

@@ -60,4 +60,23 @@ describe('the player', () => {
     expect(ctx.created).toBe(after);
     vi.useRealTimers();
   });
+  it('start after stop reuses the context and schedules from now on', () => {
+    vi.useFakeTimers();
+    const ctx = fakeCtx(); const make = vi.fn(() => ctx);
+    const p = createPlayer({ makeContext: make });
+    p.start(); p.stop(); ctx.currentTime = 30;
+    const times = []; const orig = ctx.createOscillator;
+    ctx.createOscillator = function () { const o = orig.call(this); o.start = t => times.push(t); return o; };
+    p.start();
+    expect(make).toHaveBeenCalledTimes(1);
+    expect(times.length).toBeGreaterThan(0);
+    for (const t of times) expect(t).toBeGreaterThanOrEqual(30);
+    p.stop(); vi.useRealTimers();
+  });
+  it('tolerates resume and suspend that return nothing or reject', () => {
+    const ctx = fakeCtx(); ctx.resume = () => Promise.reject(new Error('x')); ctx.suspend = () => undefined;
+    const p = createPlayer({ makeContext: () => ctx });
+    expect(() => { p.start(); p.stop(); }).not.toThrow();
+    expect(p.running()).toBe(true);
+  });
 });

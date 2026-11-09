@@ -271,7 +271,7 @@ describe('game page specifics', () => {
     const html = read('games/runner/index.html');
     const head = html.split('class="stage-head"')[1].split('<div class="level">')[0];
     expect(head).toMatch(/<button[^>]*id="sound"[^>]*aria-pressed="false"/);
-    expect(head).toMatch(/<button[^>]*id="sound"[^>]*aria-label="Sound off"[^>]*title="Sound off"/);
+    expect(head).toMatch(/<button[^>]*id="sound"[^>]*aria-label="Sound"[^>]*title="Sound"/);
     expect(head).toMatch(/aria-controls="infoSound"/);
     expect(head).toContain('<svg');
     expect(html).toMatch(/id="infoSound"[^>]*class="info-text"|class="info-text"[^>]*id="infoSound"/);
@@ -279,6 +279,10 @@ describe('game page specifics', () => {
     expect(read('games/runner/main.js')).toMatch(/readSound[\s\S]*saveSound|saveSound[\s\S]*readSound/);
     expect(read('games/runner/main.js')).toContain('visibilitychange');
     expect(read('games/runner/runner.css')).toContain('#sound');
+    const js = read('games/runner/main.js');
+    expect(js).toContain("'pointerup'"); expect(js).not.toMatch(/'pointerdown', 'keydown'/); expect(js).toContain('running()');
+    expect(js).not.toContain('Sound on');
+    expect(read("games/runner/runner.css")).toContain("@media not (prefers-color-scheme: light)");
   });
   it('runner main.js wires play mode and fullscreen', () => {
     const js = read('games/runner/main.js');

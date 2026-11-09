@@ -233,11 +233,13 @@ if (window.AudioContext || window.webkitAudioContext) {
   const btn = $('sound'), player = createPlayer();
   let store = null; try { store = localStorage; } catch { /* storage blocked */ }
   let on = readSound(store), hidden = document.hidden, gestured = false;
-  const sync = () => { const l = on ? 'Sound on' : 'Sound off'; btn.setAttribute('aria-pressed', String(on)); btn.setAttribute('aria-label', l); btn.title = l; };
+  const sync = () => { btn.setAttribute('aria-pressed', String(on)); };
   const apply = () => { if (on && !hidden && gestured) player.start(); else player.stop(); };
   btn.hidden = false; sync();
   btn.addEventListener('click', () => { on = !on; gestured = true; saveSound(store, on); sync(); apply(); });
-  if (on) for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { if (!gestured) { gestured = true; apply(); } }, { once: true });
+  // A remembered "on" waits for a gesture that browsers accept (pointerup, not pointerdown, on touch) and stays listening until audio runs.
+  const unlock = () => { gestured = true; apply(); if (player.running()) for (const ev of ['pointerup', 'keydown']) window.removeEventListener(ev, unlock); };
+  if (on) for (const ev of ['pointerup', 'keydown']) window.addEventListener(ev, unlock);
   document.addEventListener('visibilitychange', () => { hidden = document.hidden; apply(); });
 }
 const sizer = new ResizeObserver(resize); sizer.observe(document.body); sizer.observe(levelCanvas); // the canvas itself, so entering or leaving full screen always re-measures
