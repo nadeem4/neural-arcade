@@ -38,9 +38,32 @@
 
   <section class="play" id="play" aria-label="The game">
     <div class="stage">
-      <div class="stage-head"><span class="live"><i></i><b>Try <span class="num" id="triesPlate">1</span></b></span></div>
+      <div class="stage-head"><span class="live"><i></i><b id="plate">AI is playing</b></span>
+        <span class="stage-tools">
+          <button class="btn" type="button" id="playSelf" aria-pressed="false">Play it yourself</button>
+          <button class="info" type="button" aria-expanded="false" aria-controls="infoPlay" aria-label="Explain play it yourself" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
+        </span></div>
+      <p class="info-text" id="infoPlay" hidden>One try on the same level and physics as the AI, with arrows, WASD or Space, or the buttons on a touch screen. Your moves never teach the AI, and its learning pauses until you go back to it. Your try is scored with the current rules.</p>
       <div class="level">
         <canvas id="level" aria-label="The level, and the hero learning to play it"></canvas>
+        <button class="fs-btn" type="button" id="fullscreen" aria-label="Full screen" title="Full screen" hidden><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <div class="hud" id="hud" hidden aria-hidden="true"><span>Score <b id="hudScore">0.0</b></span><span>Coins <b id="hudCoins">0</b></span><span>Time <b id="hudTime">20</b> s</span></div>
+        <section class="play-card" id="playCard" role="dialog" aria-label="Play it yourself" hidden>
+          <div id="cardIntro">
+            <p class="card-title">Your turn</p>
+            <ul class="keys"><li><span class="caps"><kbd>&rarr;</kbd><kbd>D</kbd></span><span>run</span></li><li><span class="caps"><kbd>&uarr;</kbd><kbd>W</kbd><kbd>Space</kbd></span><span>jump</span></li><li><span class="caps"><kbd>Esc</kbd></span><span>quit</span></li></ul>
+            <p class="rules-line"><b>Points:</b> <span id="cardRules"></span></p>
+            <button class="btn primary" type="button" id="playStart">Start</button>
+          </div>
+          <div id="cardCount" hidden><p class="count" id="countNum" aria-live="assertive">3</p></div>
+          <div id="cardEnd" hidden>
+            <p class="card-title">Try over</p>
+            <p id="endNote"></p>
+            <p id="endWhy"></p>
+            <div class="row-btns"><button class="btn primary" type="button" id="playAgain">Play again</button><button class="btn" type="button" id="playBack">Back to the AI</button></div>
+          </div>
+        </section>
+        <div class="touch" aria-label="Touch controls"><button type="button" data-hold="left" aria-label="Left">&larr;</button><button type="button" data-hold="right" aria-label="Right">&rarr;</button><button type="button" data-hold="jump" aria-label="Jump">Jump</button></div>
         <p class="caption" id="caption"><span id="captionText">Try 1: a brand-new random brain.</span></p>
       </div>
       <p class="say" id="log" aria-live="polite">Every brain starts random, so the first tries are flailing: jumping in place, running into pits. Watch the chart: each bar is 50 tries.</p>

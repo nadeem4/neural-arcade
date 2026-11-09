@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
+import { genomeLength, biasIndex, createActs } from '../engine/tinynet.js';
 import { createLearner } from '../engine/reinforce.js';
 import {
   newGame, step, sense, isPit, N_IN, RUNNER_SIZES, LIMIT, DECIDE, PITS, BLOCK, ENEMY, FLAG_X, PRESETS,
-  scoreFrame, playTry, createTrainer,
+  scoreFrame, playTry, createTrainer, startTry, timeLeft, actionFor, tickHuman, tick, KEY_MAP,
 } from '../games/runner/sim.js';
 
 // Plays a fixed strategy (a function of the game state) until the try ends.
@@ -117,5 +118,74 @@ describe('a try', () => {
     expect(tr.tries).toBe(30);
     expect(tr.history.length).toBe(30);
     expect(tr.updates).toBe(2);
+  });
+});
+
+describe('playing it yourself', () => {
+  const rules = PRESETS.balanced.rules;
+  it('maps held keys to the four actions', () => {
+    expect(actionFor({ right: true })).toBe(1);
+    expect(actionFor({ right: true, jump: true })).toBe(2);
+    expect(actionFor({ jump: true })).toBe(3);
+    expect(actionFor({})).toBe(0);
+    expect(actionFor({ left: true })).toBe(0);
+    expect(actionFor({ left: true, right: true })).toBe(1);
+  });
+  it('sends arrows, WASD and Space to left, right and jump', () => {
+    expect(KEY_MAP.ArrowLeft).toBe('left'); expect(KEY_MAP.KeyA).toBe('left');
+    expect(KEY_MAP.ArrowRight).toBe('right'); expect(KEY_MAP.KeyD).toBe('right');
+    expect(KEY_MAP.ArrowUp).toBe('jump'); expect(KEY_MAP.KeyW).toBe('jump'); expect(KEY_MAP.Space).toBe('jump');
+  });
+  it('uses the same physics and scoring as the AI', () => {
+    const human = startTry(null, rules, null), g = newGame();
+    let score = 0;
+    for (let i = 0; i < 100; i++) {
+      tickHuman(human, 1);
+      const ev = step(g, 1); score += scoreFrame(g, ev, rules);
+    }
+    expect(human.g).toEqual(g);
+    expect(human.g.x).toBeGreaterThan(1);
+    expect(human.score).toBeCloseTo(score, 9);
+  });
+  it('dies in the first pit when only running right, with the death cost applied', () => {
+    const run = startTry(null, rules, null);
+    while (!run.outcome) tickHuman(run, 1);
+    expect(run.outcome).toBe('died');
+    expect(run.score).toBeLessThan(-rules.death + 20);
+  });
+  it('times out at the limit and finishes at the flag', () => {
+    const idle = startTry(null, rules, null);
+    while (!idle.outcome) tickHuman(idle, 0);
+    expect(idle.outcome).toBe('timeout');
+    const run = startTry(null, rules, null);
+    Object.assign(run.g, { x: FLAG_X - 0.05 });
+    tickHuman(run, 1);
+    expect(run.outcome).toBe('finished');
+  });
+  it('gives the same final state as the AI tick when both play the same action', () => {
+    const sizes = RUNNER_SIZES, genome = new Float64Array(genomeLength(sizes));
+    genome[biasIndex(sizes, 1, 2)] = 1000; // a stub brain that always picks Leap (action 2)
+    const L = { sizes, genome, acts: createActs(sizes) };
+    const ai = startTry(L, rules, () => 0.5), human = startTry(null, rules, null);
+    for (let i = 0; i < 100; i++) { tick(ai); tickHuman(human, 2); }
+    expect(ai.g).toEqual(human.g);
+    expect(ai.score).toBeCloseTo(human.score, 9);
+  });
+  it('timeLeft counts whole seconds down from 20 and stops at 0', () => {
+    const run = startTry(null, rules, null);
+    expect(timeLeft(run)).toBe(20);
+    run.g.t = 60; expect(timeLeft(run)).toBe(19);
+    run.g.t = LIMIT + 5; expect(timeLeft(run)).toBe(0);
+  });
+  it('never touches learning', () => {
+    const tr = createTrainer(rules, 9);
+    for (let i = 0; i < 5; i++) tr.runTry();
+    const w = Array.from(tr.L.genome), tries = tr.tries, hist = tr.history.length;
+    const run = startTry(null, rules, null);
+    while (!run.outcome) tickHuman(run, 1);
+    expect(run.steps).toHaveLength(0);
+    expect(tr.tries).toBe(tries);
+    expect(tr.history).toHaveLength(hist);
+    expect(Array.from(tr.L.genome)).toEqual(w);
   });
 });

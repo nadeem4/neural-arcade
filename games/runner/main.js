@@ -5,9 +5,9 @@ import { drawBrain } from '../../engine/brain-panel.js';
 import { makeTicker } from '../../engine/ticker.js';
 import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
-import { RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick } from './sim.js';
+import { timeLeft, RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
 import { loadArt, createFx, react, settle, follow, drawLevel, drawOutcomes } from './render.js';
-import { tryNote, ruleValue, matchPreset, loopholeNote } from './words.js';
+import { tryNote, endWords, compareNote, whyNote, rulesItems, pausedNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
 
 const $ = id => document.getElementById(id);
 const levelCanvas = $('level'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -31,14 +31,74 @@ const RULE_INFO = {
 };
 
 // `rate`: unseen tries a second, run in the background while one try plays on screen (0: only the tries you see).
-const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '' };
+const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '', mode: 'ai', phase: null, count: 0, down: new Set(), guard: new Set(), held: new Set() };
 function freshBrain() {
   s.trainer = createTrainer(s.rules, (Math.random() * 2 ** 32) >>> 0);
-  s.owed = 0; s.hold = 0; startShown(); drawChart();
+  endHuman(); s.owed = 0; s.hold = 0; startShown(); drawChart();
 }
 function startShown() {
   s.run = s.trainer.start(); s.fx = createFx(); follow(s.fx, s.run.g, true);
   caption(`Try ${s.trainer.tries + 1}${s.rate ? ', with more tries running unseen' : ''}`);
+}
+
+// ---------- Play it yourself ----------
+// One try by hand on the same level and physics. It never reaches the trainer, and the AI's learning pauses until "Back to the AI".
+// Phases: intro (start card), count (3-2-1, counted in 60 Hz steps), play, end (end card).
+const levelEl = document.querySelector('.level');
+const COUNT_STEP = 30;
+const show = id => { for (const c of ['cardIntro', 'cardCount', 'cardEnd']) $(c).hidden = c !== id; $('playCard').hidden = !id; $('hud').hidden = s.phase !== 'play'; };
+function newHumanTry() {
+  s.held.clear(); s.run = startTry(null, s.rules, null); s.fx = createFx(); follow(s.fx, s.run.g, true);
+}
+function startHuman() {
+  s.mode = 'human'; s.phase = 'intro'; newHumanTry();
+  $('playSelf').setAttribute('aria-pressed', 'true'); levelEl.dataset.mode = 'human';
+  s.said = $('log').textContent; say(pausedNote(s.trainer.tries)); $('cardRules').innerHTML = rulesItems(s.rules).map(t => `<span class="rule-item">${t}</span>`).join(' \u00b7 ');
+  show('cardIntro'); $('playStart').focus();
+  levelEl.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+function beginCount() { s.phase = 'count'; s.count = 3 * COUNT_STEP; $('countNum').textContent = '3'; show('cardCount'); }
+function playAgain() { newHumanTry(); beginCount(); }
+function endHuman() {
+  if (s.mode !== 'human') return;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); // full screen is for playing only
+  s.mode = 'ai'; s.phase = null; s.held.clear(); show(null); say(s.said);
+  $('playSelf').setAttribute('aria-pressed', 'false'); delete levelEl.dataset.mode;
+}
+function backToAi() {
+  endHuman(); s.hold = 0; startShown(); $('playSelf').focus();
+}
+$('playSelf').addEventListener('click', () => { if (s.mode === 'human') backToAi(); else startHuman(); });
+$('playStart').addEventListener('click', () => { if (s.phase === 'intro') beginCount(); });
+$('playAgain').addEventListener('click', playAgain);
+$('playBack').addEventListener('click', backToAi);
+const heldKey = e => (s.phase === 'play' && !e.ctrlKey && !e.metaKey && !e.altKey ? KEY_MAP[e.code] : undefined);
+window.addEventListener('keydown', e => {
+  if (s.mode !== 'human') return;
+  if (e.key === 'Escape') { backToAi(); return; }
+  if (s.guard.has(e.code)) { e.preventDefault(); return; } // a key still held when the try ended must not press Play again
+  const t = e.target, typing = /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || (t.tagName === 'BUTTON' && t.id !== 'playStart');
+  if (s.phase === 'intro' && !typing && !e.repeat && (e.code === 'Enter' || KEY_MAP[e.code]) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); beginCount(); return; }
+  const k = heldKey(e);
+  if (k) { e.preventDefault(); s.held.add(k); s.down.add(e.code); }
+});
+window.addEventListener('keyup', e => { s.down.delete(e.code); if (s.guard.delete(e.code)) e.preventDefault(); });
+window.addEventListener('keyup', e => { const k = heldKey(e); if (k) { e.preventDefault(); s.held.delete(k); } });
+window.addEventListener('blur', () => s.held.clear());
+document.querySelectorAll('[data-hold]').forEach(b => {
+  const k = b.dataset.hold;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); s.held.add(k); });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => s.held.delete(k));
+});
+// Full screen where the browser allows it (not on iPhone Safari): the canvas is resized when it changes.
+if (document.fullscreenEnabled) {
+  $('fullscreen').hidden = false;
+  $('fullscreen').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else levelEl.requestFullscreen().catch(() => {}); });
+  document.addEventListener('fullscreenchange', () => {
+    const label = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+    $('fullscreen').setAttribute('aria-label', label); $('fullscreen').title = label;
+    requestAnimationFrame(resize); // measure once the new layout has settled
+  });
 }
 
 function caption(t) { $('captionText').textContent = t; }
@@ -80,6 +140,23 @@ document.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click'
 $('fresh').addEventListener('click', () => { freshBrain(); say('A fresh random brain, same rules. Every brain starts by flailing.'); });
 
 // ---------- Running ----------
+function stepHuman() {
+  if (s.phase === 'count') {
+    s.count--;
+    $('countNum').textContent = Math.ceil(s.count / COUNT_STEP);
+    if (s.count <= 0) { s.phase = 'play'; show(null); }
+    return;
+  }
+  if (s.phase !== 'play') return;
+  const flags = { left: s.held.has('left'), right: s.held.has('right'), jump: s.held.has('jump') };
+  const ev = tickHuman(s.run, actionFor(flags));
+  react(s.fx, s.run.g, ev, { reduceMotion });
+  if (!s.run.outcome) return;
+  s.held.clear(); s.guard = new Set(s.down); s.phase = 'end';
+  const best = bestOf(s.trainer.history);
+  $('endNote').textContent = compareNote(s.run, best); $('endWhy').textContent = whyNote(s.run, best);
+  show('cardEnd'); $('playAgain').focus();
+}
 function stepShown() {
   if (s.hold > 0) { if (--s.hold === 0) startShown(); return; } // the finished try stays up with its result
   const ev = tick(s.run);
@@ -130,12 +207,13 @@ function drawBrainPanel() {
 const ticker = makeTicker();
 function frame(now) {
   const steps = ticker(now);
-  for (let k = steps; k > 0; k--) { stepShown(); settle(s.fx); }
-  runUnseen(steps);
+  for (let k = steps; k > 0; k--) { if (s.mode === 'human') stepHuman(); else stepShown(); settle(s.fx); }
+  if (s.mode === 'ai') runUnseen(steps);
   follow(s.fx, s.run.g);
   if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr });
   drawBrainPanel();
-  $('tries').textContent = s.trainer.tries; $('triesPlate').textContent = s.trainer.tries + 1;
+  $('tries').textContent = s.trainer.tries; $('plate').textContent = s.mode === 'human' ? 'You are playing' : 'AI is playing';
+  $('hudScore').textContent = s.run.score.toFixed(1); $('hudCoins').textContent = s.run.coins; $('hudTime').textContent = timeLeft(s.run);
   $('score').textContent = s.run.score.toFixed(1); $('coins').textContent = s.run.coins;
   requestAnimationFrame(frame);
 }
@@ -147,7 +225,7 @@ document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', 
   $(btn.getAttribute('aria-controls')).hidden = !open;
 }));
 wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); });
-new ResizeObserver(resize).observe(document.body);
+const sizer = new ResizeObserver(resize); sizer.observe(document.body); sizer.observe(levelCanvas); // the canvas itself, so entering or leaving full screen always re-measures
 
 showRules();
 freshBrain();

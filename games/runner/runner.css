@@ -16,3 +16,37 @@
 .loophole { font-weight: 600; max-width: 60ch; }
 .loophole:empty { display: none; }
 .loophole:not(:empty) { padding: 8px 12px; border-radius: 8px; background: var(--track); }
+
+/* Play it yourself: header tools, the touch pad (touch screens, while you play) and full screen. */
+.stage-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.fs-btn { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid var(--stage-2); background: var(--stage); color: var(--stage-ink); cursor: pointer; }
+.fs-btn[hidden], .level:not([data-mode="human"]) .fs-btn { display: none; }
+.stage-tools .btn[aria-pressed="true"] { background: var(--amber); color: #000; }
+.stage > .info-text { margin: 0 18px 12px; }
+.touch { display: none; position: absolute; left: 0; right: 0; bottom: 56px; padding: 0 12px; justify-content: space-between; pointer-events: none; touch-action: none; }
+.touch button { min-width: 72px; min-height: 72px; border-radius: 50%; border: 2px solid var(--stage-ink); background: var(--stage); color: var(--stage-ink); font: 700 22px var(--sans); opacity: .85; pointer-events: auto; touch-action: none; user-select: none; }
+.touch [data-hold="left"], .touch [data-hold="right"] { margin-right: 8px; }
+.touch [data-hold="jump"] { margin-left: auto; }
+@media (pointer: coarse) { .level[data-mode="human"] .touch { display: flex; } }
+.level:fullscreen { position: fixed; inset: 0; width: 100vw; height: 100vh; display: grid; place-items: center; background: #000; }
+.level:fullscreen #level { width: min(100vw, 160vh); max-height: 100vh; }
+
+/* Start and end cards, and the score readout, over the level while you play. */
+.hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 14px; padding: 6px 12px; border-radius: 8px; background: var(--stage); border: 1px solid var(--stage-2); color: var(--stage-ink); font: 600 14px var(--sans); }
+.hud[hidden] { display: none; }
+.hud b { font-family: var(--mono); }
+.play-card { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 16px; text-align: center; background: color-mix(in srgb, var(--stage) 88%, transparent); color: var(--stage-ink); font-size: 16px; }
+.play-card[hidden] { display: none; }
+.play-card > div { display: grid; justify-items: center; gap: 14px; max-width: 46ch; }
+.play-card > div[hidden] { display: none; }
+.play-card p, .play-card ul { margin: 0; }
+.card-title { font: 800 28px/1.1 var(--sans); letter-spacing: -.02em; }
+.keys { list-style: none; padding: 0; display: grid; grid-template-columns: auto auto; gap: 8px 14px; align-items: center; justify-items: start; }
+.keys li { display: contents; }
+.caps { display: flex; gap: 4px; justify-self: end; }
+.keys kbd { display: inline-block; min-width: 2em; padding: 2px 8px; border: 1px solid var(--stage-dim); border-bottom-width: 3px; border-radius: 6px; background: var(--stage-2); font: 600 14px var(--mono); }
+@media (pointer: coarse) { .keys { display: none; } }
+.level[data-mode="human"] .caption { display: none; }
+.rules-line { color: var(--stage-ink); }
+.rule-item { white-space: nowrap; }
+.count { font: 800 72px/1 var(--mono); }

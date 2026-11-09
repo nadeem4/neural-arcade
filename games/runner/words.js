@@ -4,15 +4,44 @@ import { PRESETS, RULES } from './sim.js';
 const farmed = t => t.outcome === 'timeout' && t.coins >= 8;
 const stayed = t => t.outcome === 'timeout' && !farmed(t) && (t.maxX ?? t.g?.maxX) < 3;
 
-// One line about how a try ended, for the caption on the level.
-export function tryNote(run, n) {
-  const t = { outcome: run.outcome, coins: run.coins, maxX: run.g.maxX };
-  const what = t.outcome === 'finished' ? 'reached the flag'
+// How a try ended, in words. `t` has outcome, coins and maxX.
+export function endWords(t) {
+  return t.outcome === 'finished' ? 'reached the flag'
     : t.outcome === 'died' ? 'died'
     : farmed(t) ? `farmed the coin block until time ran out (${t.coins} coins)`
     : stayed(t) ? 'stayed put until time ran out' : 'ran out of time';
+}
+
+// One line about how a try ended, for the caption on the level.
+export function tryNote(run, n) {
+  const what = endWords({ outcome: run.outcome, coins: run.coins, maxX: run.g.maxX });
   return `Try ${n}: ${what}. Score ${run.score.toFixed(1)}`;
 }
+
+// The AI's best try so far, or null before it has played one.
+export const bestOf = history => history.reduce((b, t) => (!b || t.score > b.score ? t : b), null);
+
+// Your finished try beside the AI's best one.
+export function compareNote(run, best) {
+  const mine = `Your run: ${endWords({ outcome: run.outcome, coins: run.coins, maxX: run.g.maxX })}, score ${run.score.toFixed(1)}.`;
+  return best ? `${mine} The AI's best: ${endWords(best)}, ${best.score.toFixed(1)}.` : `${mine} The AI has not finished a try yet.`;
+}
+
+// One line on why your try and the AI's best differ; nothing before the AI has a best.
+export function whyNote(run, best) {
+  if (!best) return '';
+  return best.score > run.score ? 'Your rules pay more for what the AI did than for what you did.'
+    : 'You beat it. Give it more tries, or check what your rules pay for.';
+}
+
+// The current rules as signed points, skipping any that pay nothing, so the player knows how their try is scored.
+export function rulesItems(rules) {
+  const sign = v => `${v < 0 ? '\u2212' : '+'}${Math.abs(v)}`;
+  const parts = [['Flag', rules.flag], ['Coin', rules.coin], ['Each tile forward', rules.progress], ['Dying', -rules.death], ['Each second', rules.second]];
+  return parts.filter(([, v]) => v !== 0).map(([n, v]) => `${n} ${sign(v)}`);
+}
+
+export const pausedNote = n => `The AI is paused while you play. It has had ${n} ${n === 1 ? 'try' : 'tries'} so far.`;
 
 export function ruleValue(key, v) {
   if (key === 'second') return v < 0 ? `costs ${-v}` : v > 0 ? `earns ${v}` : 'nothing';

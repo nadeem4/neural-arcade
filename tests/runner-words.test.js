@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tryNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
+import { tryNote, endWords, bestOf, compareNote, whyNote, rulesItems, pausedNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
 import { PRESETS } from '../games/runner/sim.js';
 
 const run = (outcome, extra = {}) => ({ outcome, coins: 0, score: 12.4, g: { maxX: 20 }, ...extra });
@@ -41,5 +41,47 @@ describe('presets', () => {
     expect(loopholeNote(still)).toMatch(/standing still/);
     expect(loopholeNote(flag)).toBe('');
     expect(loopholeNote(farm.slice(0, 10))).toBe('');
+  });
+});
+
+describe('comparing your try with the AI', () => {
+  it('endWords names how a try ended', () => {
+    expect(endWords({ outcome: 'finished' })).toBe('reached the flag');
+    expect(endWords({ outcome: 'died' })).toBe('died');
+    expect(endWords({ outcome: 'timeout', coins: 12, maxX: 3 })).toBe('farmed the coin block until time ran out (12 coins)');
+    expect(endWords({ outcome: 'timeout', coins: 0, maxX: 1 })).toBe('stayed put until time ran out');
+    expect(endWords({ outcome: 'timeout', coins: 0, maxX: 10 })).toBe('ran out of time');
+  });
+  it('bestOf picks the highest score, or null', () => {
+    expect(bestOf([])).toBe(null);
+    expect(bestOf([{ score: 1 }, { score: 9 }, { score: 4 }])).toEqual({ score: 9 });
+  });
+  it('compareNote sets your try beside the AI best', () => {
+    const mine = run('finished', { score: 4 });
+    const best = { outcome: 'timeout', coins: 30, maxX: 2, score: 9 };
+    expect(compareNote(mine, best)).toBe("Your run: reached the flag, score 4.0. The AI's best: farmed the coin block until time ran out (30 coins), 9.0.");
+    expect(compareNote(run('died', { score: -3 }), null)).toBe('Your run: died, score -3.0. The AI has not finished a try yet.');
+  });
+});
+
+describe('why the two runs differ', () => {
+  it('says what to look at, or nothing without an AI best', () => {
+    const best = { outcome: 'finished', coins: 0, maxX: 45, score: 9 };
+    expect(whyNote(run('died', { score: 1 }), best)).toMatch(/rules pay more for what the AI did/);
+    expect(whyNote(run('finished', { score: 20 }), best)).toMatch(/You beat it/);
+    expect(whyNote(run('died'), null)).toBe('');
+  });
+});
+
+describe('what the player is told about the rules and the paused AI', () => {
+  it('lists the current rules with signs and skips zeros', () => {
+    expect(rulesItems(PRESETS.balanced.rules)).toEqual(['Flag +30', 'Coin +0.5', 'Each tile forward +1', 'Dying −5', 'Each second −0.5']);
+  });
+  it('gives the rules as separate items so the page can wrap between them', () => {
+    expect(rulesItems(PRESETS.afraid.rules)).toEqual(['Dying \u221250', 'Each second +1']);
+  });
+  it('says the AI is paused and how many tries it has had', () => {
+    expect(pausedNote(42)).toBe('The AI is paused while you play. It has had 42 tries so far.');
+    expect(pausedNote(1)).toBe('The AI is paused while you play. It has had 1 try so far.');
   });
 });
