@@ -255,6 +255,7 @@ describe('game page specifics', () => {
     for (const k of ['left', 'right', 'jump']) expect(level, k).toContain(`data-hold="${k}"`);
     expect(html).toMatch(/<button[^>]*id="fullscreen"[^>]*hidden/);
     expect(read('games/runner/runner.css')).toContain(':fullscreen');
+    expect(read('games/runner/runner.css')).toMatch(/\.level:fullscreen \{[^}]*position: fixed/); // .level's own position: relative would otherwise beat the browser's fixed
     const card = html.split('<div class="level">')[1];
     expect(card).toMatch(/id="playCard"[^>]*role="dialog"[^>]*aria-label=[^>]*hidden|id="playCard"[^>]*hidden[^>]*role="dialog"/);
     for (const i of ['playStart', 'playAgain', 'playBack']) expect(card, i).toContain(`id="${i}"`);

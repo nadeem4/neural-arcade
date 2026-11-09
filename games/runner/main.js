@@ -7,7 +7,7 @@ import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
 import { timeLeft, RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
 import { loadArt, createFx, react, settle, follow, drawLevel, drawOutcomes } from './render.js';
-import { tryNote, endWords, compareNote, whyNote, rulesNote, pausedNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
+import { tryNote, endWords, compareNote, whyNote, rulesItems, pausedNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
 
 const $ = id => document.getElementById(id);
 const levelCanvas = $('level'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -53,7 +53,7 @@ function newHumanTry() {
 function startHuman() {
   s.mode = 'human'; s.phase = 'intro'; newHumanTry();
   $('playSelf').setAttribute('aria-pressed', 'true'); levelEl.dataset.mode = 'human';
-  s.said = $('log').textContent; say(pausedNote(s.trainer.tries)); $('cardRules').textContent = rulesNote(s.rules);
+  s.said = $('log').textContent; say(pausedNote(s.trainer.tries)); $('cardRules').innerHTML = rulesItems(s.rules).map(t => `<span class="rule-item">${t}</span>`).join(' \u00b7 ');
   show('cardIntro'); $('playStart').focus();
   levelEl.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
 }
@@ -93,7 +93,7 @@ if (document.fullscreenEnabled) {
   $('fullscreen').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else levelEl.requestFullscreen().catch(() => {}); });
   document.addEventListener('fullscreenchange', () => {
     $('fullscreen').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
-    resize();
+    requestAnimationFrame(resize); // measure once the new layout has settled
   });
 }
 
@@ -221,7 +221,7 @@ document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', 
   $(btn.getAttribute('aria-controls')).hidden = !open;
 }));
 wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); });
-new ResizeObserver(resize).observe(document.body);
+const sizer = new ResizeObserver(resize); sizer.observe(document.body); sizer.observe(levelCanvas); // the canvas itself, so entering or leaving full screen always re-measures
 
 showRules();
 freshBrain();
