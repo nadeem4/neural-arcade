@@ -61,11 +61,11 @@ function beginCount() { s.phase = 'count'; s.count = 3 * COUNT_STEP; $('countNum
 function playAgain() { newHumanTry(); beginCount(); }
 function endHuman() {
   if (s.mode !== 'human') return;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); // full screen is for playing only
   s.mode = 'ai'; s.phase = null; s.held.clear(); show(null); say(s.said);
   $('playSelf').setAttribute('aria-pressed', 'false'); delete levelEl.dataset.mode;
 }
 function backToAi() {
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   endHuman(); s.hold = 0; startShown();
 }
 $('playSelf').addEventListener('click', () => { if (s.mode === 'human') backToAi(); else startHuman(); });
@@ -92,7 +92,8 @@ if (document.fullscreenEnabled) {
   $('fullscreen').hidden = false;
   $('fullscreen').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else levelEl.requestFullscreen().catch(() => {}); });
   document.addEventListener('fullscreenchange', () => {
-    $('fullscreen').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+    const label = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+    $('fullscreen').setAttribute('aria-label', label); $('fullscreen').title = label;
     requestAnimationFrame(resize); // measure once the new layout has settled
   });
 }

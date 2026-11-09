@@ -19,6 +19,8 @@
 
 /* Play it yourself: header tools, the touch pad (touch screens, while you play) and full screen. */
 .stage-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.fs-btn { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid var(--stage-2); background: var(--stage); color: var(--stage-ink); cursor: pointer; }
+.fs-btn[hidden], .level:not([data-mode="human"]) .fs-btn { display: none; }
 .stage-tools .btn[aria-pressed="true"] { background: var(--amber); color: #000; }
 .stage > .info-text { margin: 0 18px 12px; }
 .touch { display: none; position: absolute; left: 0; right: 0; bottom: 56px; padding: 0 12px; justify-content: space-between; pointer-events: none; touch-action: none; }
@@ -39,10 +41,11 @@
 .play-card > div[hidden] { display: none; }
 .play-card p, .play-card ul { margin: 0; }
 .card-title { font: 800 28px/1.1 var(--sans); letter-spacing: -.02em; }
-.keys { list-style: none; padding: 0; display: grid; gap: 8px; }
+.keys { list-style: none; padding: 0; display: grid; grid-template-columns: auto auto; gap: 8px 14px; align-items: center; justify-items: start; }
+.keys li { display: contents; }
+.caps { display: flex; gap: 4px; justify-self: end; }
 .keys kbd { display: inline-block; min-width: 2em; padding: 2px 8px; border: 1px solid var(--stage-dim); border-bottom-width: 3px; border-radius: 6px; background: var(--stage-2); font: 600 14px var(--mono); }
-.keys-touch { display: none; }
-@media (pointer: coarse) { .keys-pointer { display: none; } .keys-touch { display: block; } }
+@media (pointer: coarse) { .keys { display: none; } }
 .level[data-mode="human"] .caption { display: none; }
 .rules-line { color: var(--stage-ink); }
 .rule-item { white-space: nowrap; }
