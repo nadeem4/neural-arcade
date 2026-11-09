@@ -244,6 +244,20 @@ describe('game page specifics', () => {
     expect(html.match(/data-preset="/g)).toHaveLength(3);
     expect(html.match(/data-rate="/g)).toHaveLength(3);
   });
+  it('runner: play it yourself, touch pad and fullscreen controls', () => {
+    const html = read('games/runner/index.html');
+    expect(html).toMatch(/<button[^>]*id="playSelf"[^>]*aria-pressed="false"/);
+    expect(html).toMatch(/aria-controls="infoPlay"/);
+    expect(html).toMatch(/id="infoPlay"[^>]*class="info-text"|class="info-text"[^>]*id="infoPlay"/);
+    const level = html.split('<div class="level">')[1].split('</div>')[0];
+    for (const k of ['left', 'right', 'jump']) expect(level, k).toContain(`data-hold="${k}"`);
+    expect(html).toMatch(/<button[^>]*id="fullscreen"[^>]*hidden/);
+    expect(read('games/runner/runner.css')).toContain(':fullscreen');
+  });
+  it('runner main.js wires play mode and fullscreen', () => {
+    const js = read('games/runner/main.js');
+    for (const w of ['actionFor', 'tickHuman', 'KEY_MAP', 'compareNote', 'playSelf', 'fullscreen', 'fullscreenchange']) expect(js, w).toContain(w);
+  });
   it('racer: speed and population buttons, family tree, last round card', () => {
     const html = read('games/racer/index.html');
     expect(html.match(/data-speed="/g)).toHaveLength(3);
