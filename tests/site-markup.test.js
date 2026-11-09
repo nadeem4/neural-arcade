@@ -282,6 +282,8 @@ describe('game page specifics', () => {
     const js = read('games/runner/main.js');
     expect(js).toContain("'pointerup'"); expect(js).not.toMatch(/'pointerdown', 'keydown'/); expect(js).toContain('running()');
     expect(js).not.toContain('Sound on');
+    expect(js).toContain('soundsFor'); expect(js).toContain('./sfx.js'); expect(js).not.toContain('music');
+    expect(html).toContain('Sound effects made in your browser'); expect(html).not.toMatch(/chiptune/i);
     expect(read("games/runner/runner.css")).toContain("@media not (prefers-color-scheme: light)");
   });
   it('runner main.js wires play mode and fullscreen', () => {

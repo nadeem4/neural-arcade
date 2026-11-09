@@ -7,7 +7,7 @@ import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
 import { timeLeft, RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
 import { loadArt, createFx, react, settle, follow, drawLevel, drawOutcomes } from './render.js';
-import { createPlayer, readSound, saveSound } from './music.js';
+import { createSfx, soundsFor, readSound, saveSound } from './sfx.js';
 import { tryNote, endWords, compareNote, whyNote, rulesItems, pausedNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
 
 const $ = id => document.getElementById(id);
@@ -32,6 +32,9 @@ const RULE_INFO = {
 };
 
 // `rate`: unseen tries a second, run in the background while one try plays on screen (0: only the tries you see).
+// Sound effects play only for the try on screen: full volume for your own, quieter for the AI's.
+const sfx = createSfx(), AI_VOLUME = 0.4;
+const cue = (ev, volume) => { for (const n of soundsFor(ev)) sfx.play(n, volume); };
 const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '', mode: 'ai', phase: null, count: 0, down: new Set(), guard: new Set(), held: new Set() };
 function freshBrain() {
   s.trainer = createTrainer(s.rules, (Math.random() * 2 ** 32) >>> 0);
@@ -151,7 +154,7 @@ function stepHuman() {
   if (s.phase !== 'play') return;
   const flags = { left: s.held.has('left'), right: s.held.has('right'), jump: s.held.has('jump') };
   const ev = tickHuman(s.run, actionFor(flags));
-  react(s.fx, s.run.g, ev, { reduceMotion });
+  react(s.fx, s.run.g, ev, { reduceMotion }); cue(ev, 1);
   if (!s.run.outcome) return;
   s.held.clear(); s.guard = new Set(s.down); s.phase = 'end';
   const best = bestOf(s.trainer.history);
@@ -161,7 +164,7 @@ function stepHuman() {
 function stepShown() {
   if (s.hold > 0) { if (--s.hold === 0) startShown(); return; } // the finished try stays up with its result
   const ev = tick(s.run);
-  react(s.fx, s.run.g, ev, { reduceMotion });
+  react(s.fx, s.run.g, ev, { reduceMotion }); cue(ev, AI_VOLUME);
   if (!s.run.outcome) return;
   s.trainer.learnFrom(s.run);
   caption(tryNote(s.run, s.trainer.tries));
@@ -227,10 +230,10 @@ document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', 
 }));
 wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); }); // the level repaints every frame, so night follows the lamp
 
-// ---------- Sound: muted until asked, remembered, and quiet while the tab is hidden ----------
+// ---------- Sound switch: muted until asked, remembered, and silent while the tab is hidden ----------
 // Browsers only allow audio after a gesture, so a remembered "on" starts with the first click or key.
 if (window.AudioContext || window.webkitAudioContext) {
-  const btn = $('sound'), player = createPlayer();
+  const btn = $('sound'), player = sfx;
   let store = null; try { store = localStorage; } catch { /* storage blocked */ }
   let on = readSound(store), hidden = document.hidden, gestured = false;
   const sync = () => { btn.setAttribute('aria-pressed', String(on)); };
