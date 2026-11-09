@@ -5,9 +5,9 @@ import { drawBrain } from '../../engine/brain-panel.js';
 import { makeTicker } from '../../engine/ticker.js';
 import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
-import { RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
+import { timeLeft, RULES, PRESETS, RUNNER_SIZES, IN_LABELS, ACTIONS, describeInput, createTrainer, tick, startTry, tickHuman, actionFor, KEY_MAP } from './sim.js';
 import { loadArt, createFx, react, settle, follow, drawLevel, drawOutcomes } from './render.js';
-import { tryNote, endWords, compareNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
+import { tryNote, endWords, compareNote, whyNote, bestOf, ruleValue, matchPreset, loopholeNote } from './words.js';
 
 const $ = id => document.getElementById(id);
 const levelCanvas = $('level'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -31,7 +31,7 @@ const RULE_INFO = {
 };
 
 // `rate`: unseen tries a second, run in the background while one try plays on screen (0: only the tries you see).
-const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '', mode: 'ai', held: new Set() };
+const s = { rules: { ...PRESETS.balanced.rules }, trainer: null, run: null, fx: createFx(), rate: 30, owed: 0, hold: 0, note: '', mode: 'ai', phase: null, count: 0, held: new Set() };
 function freshBrain() {
   s.trainer = createTrainer(s.rules, (Math.random() * 2 ** 32) >>> 0);
   endHuman(); s.owed = 0; s.hold = 0; startShown(); drawChart();
@@ -42,22 +42,43 @@ function startShown() {
 }
 
 // ---------- Play it yourself ----------
-// One try by hand on the same level and physics. It never reaches the trainer, and the AI's learning pauses meanwhile.
+// One try by hand on the same level and physics. It never reaches the trainer, and the AI's learning pauses until "Back to the AI".
+// Phases: intro (start card), count (3-2-1, counted in 60 Hz steps), play, end (end card).
 const levelEl = document.querySelector('.level');
-function startHuman() {
-  s.mode = 'human'; s.held.clear(); s.hold = 0;
-  s.run = startTry(null, s.rules, null); s.fx = createFx(); follow(s.fx, s.run.g, true);
-  caption('Your try: arrows, WASD or Space');
-  $('playSelf').setAttribute('aria-pressed', 'true'); levelEl.dataset.mode = 'human'; $('playSelf').blur();
+const COUNT_STEP = 30;
+const show = id => { for (const c of ['cardIntro', 'cardCount', 'cardEnd']) $(c).hidden = c !== id; $('playCard').hidden = !id; $('hud').hidden = s.phase !== 'play'; };
+function newHumanTry() {
+  s.held.clear(); s.run = startTry(null, s.rules, null); s.fx = createFx(); follow(s.fx, s.run.g, true);
 }
+function startHuman() {
+  s.mode = 'human'; s.phase = 'intro'; newHumanTry();
+  $('playSelf').setAttribute('aria-pressed', 'true'); levelEl.dataset.mode = 'human';
+  show('cardIntro'); $('playStart').focus();
+  levelEl.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+function beginCount() { s.phase = 'count'; s.count = 3 * COUNT_STEP; $('countNum').textContent = '3'; show('cardCount'); }
+function playAgain() { newHumanTry(); beginCount(); }
 function endHuman() {
   if (s.mode !== 'human') return;
-  s.mode = 'ai'; s.held.clear();
+  s.mode = 'ai'; s.phase = null; s.held.clear(); show(null);
   $('playSelf').setAttribute('aria-pressed', 'false'); delete levelEl.dataset.mode;
 }
-$('playSelf').addEventListener('click', () => { if (s.mode === 'human') { endHuman(); s.hold = 0; startShown(); } else startHuman(); });
-const heldKey = e => (s.mode === 'human' && !e.ctrlKey && !e.metaKey && !e.altKey ? KEY_MAP[e.code] : undefined);
-window.addEventListener('keydown', e => { const k = heldKey(e); if (k) { e.preventDefault(); s.held.add(k); } });
+function backToAi() {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  endHuman(); s.hold = 0; startShown();
+}
+$('playSelf').addEventListener('click', () => { if (s.mode === 'human') backToAi(); else startHuman(); });
+$('playStart').addEventListener('click', () => { if (s.phase === 'intro') beginCount(); });
+$('playAgain').addEventListener('click', playAgain);
+$('playBack').addEventListener('click', backToAi);
+const heldKey = e => (s.phase === 'play' && !e.ctrlKey && !e.metaKey && !e.altKey ? KEY_MAP[e.code] : undefined);
+window.addEventListener('keydown', e => {
+  if (s.mode !== 'human') return;
+  if (e.key === 'Escape') { backToAi(); return; }
+  if (s.phase === 'intro' && !e.repeat && (e.code === 'Enter' || KEY_MAP[e.code]) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); beginCount(); return; }
+  const k = heldKey(e);
+  if (k) { e.preventDefault(); s.held.add(k); }
+});
 window.addEventListener('keyup', e => { const k = heldKey(e); if (k) { e.preventDefault(); s.held.delete(k); } });
 window.addEventListener('blur', () => s.held.clear());
 document.querySelectorAll('[data-hold]').forEach(b => {
@@ -115,16 +136,21 @@ $('fresh').addEventListener('click', () => { freshBrain(); say('A fresh random b
 
 // ---------- Running ----------
 function stepHuman() {
-  if (s.hold > 0) { if (--s.hold === 0) { endHuman(); startShown(); } return; } // the result stays up, then the AI carries on
+  if (s.phase === 'count') {
+    s.count--;
+    $('countNum').textContent = Math.ceil(s.count / COUNT_STEP);
+    if (s.count <= 0) { s.phase = 'play'; show(null); }
+    return;
+  }
+  if (s.phase !== 'play') return;
   const flags = { left: s.held.has('left'), right: s.held.has('right'), jump: s.held.has('jump') };
   const ev = tickHuman(s.run, actionFor(flags));
   react(s.fx, s.run.g, ev, { reduceMotion });
   if (!s.run.outcome) return;
-  s.held.clear();
-  say(compareNote(s.run, bestOf(s.trainer.history)));
-  caption(`Your try: ${endWords({ outcome: s.run.outcome, coins: s.run.coins, maxX: s.run.g.maxX })}. Score ${s.run.score.toFixed(1)}`);
-  s.hold = HOLD;
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); // the Play button is outside the level, so leave full screen to play again
+  s.held.clear(); s.phase = 'end';
+  const best = bestOf(s.trainer.history);
+  $('endNote').textContent = compareNote(s.run, best); $('endWhy').textContent = whyNote(s.run, best);
+  show('cardEnd'); $('playAgain').focus();
 }
 function stepShown() {
   if (s.hold > 0) { if (--s.hold === 0) startShown(); return; } // the finished try stays up with its result
@@ -182,6 +208,7 @@ function frame(now) {
   if (art) drawLevel(lctx, s.run.g, s.fx, art, { width: view.level.w, dpr: view.level.dpr });
   drawBrainPanel();
   $('tries').textContent = s.trainer.tries; $('triesPlate').textContent = s.mode === 'human' ? '(you)' : s.trainer.tries + 1;
+  $('hudScore').textContent = s.run.score.toFixed(1); $('hudCoins').textContent = s.run.coins; $('hudTime').textContent = timeLeft(s.run);
   $('score').textContent = s.run.score.toFixed(1); $('coins').textContent = s.run.coins;
   requestAnimationFrame(frame);
 }

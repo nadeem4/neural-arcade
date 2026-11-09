@@ -4,7 +4,7 @@ import { genomeLength, biasIndex, createActs } from '../engine/tinynet.js';
 import { createLearner } from '../engine/reinforce.js';
 import {
   newGame, step, sense, isPit, N_IN, RUNNER_SIZES, LIMIT, DECIDE, PITS, BLOCK, ENEMY, FLAG_X, PRESETS,
-  scoreFrame, playTry, createTrainer, startTry, actionFor, tickHuman, tick, KEY_MAP,
+  scoreFrame, playTry, createTrainer, startTry, timeLeft, actionFor, tickHuman, tick, KEY_MAP,
 } from '../games/runner/sim.js';
 
 // Plays a fixed strategy (a function of the game state) until the try ends.
@@ -170,6 +170,12 @@ describe('playing it yourself', () => {
     for (let i = 0; i < 100; i++) { tick(ai); tickHuman(human, 2); }
     expect(ai.g).toEqual(human.g);
     expect(ai.score).toBeCloseTo(human.score, 9);
+  });
+  it('timeLeft counts whole seconds down from 20 and stops at 0', () => {
+    const run = startTry(null, rules, null);
+    expect(timeLeft(run)).toBe(20);
+    run.g.t = 60; expect(timeLeft(run)).toBe(19);
+    run.g.t = LIMIT + 5; expect(timeLeft(run)).toBe(0);
   });
   it('never touches learning', () => {
     const tr = createTrainer(rules, 9);

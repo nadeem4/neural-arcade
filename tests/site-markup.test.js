@@ -249,10 +249,14 @@ describe('game page specifics', () => {
     expect(html).toMatch(/<button[^>]*id="playSelf"[^>]*aria-pressed="false"/);
     expect(html).toMatch(/aria-controls="infoPlay"/);
     expect(html).toMatch(/id="infoPlay"[^>]*class="info-text"|class="info-text"[^>]*id="infoPlay"/);
-    const level = html.split('<div class="level">')[1].split('</div>')[0];
+    const level = html.split('<div class="level">')[1].split('id="say"')[0].split('id="log"')[0];
     for (const k of ['left', 'right', 'jump']) expect(level, k).toContain(`data-hold="${k}"`);
     expect(html).toMatch(/<button[^>]*id="fullscreen"[^>]*hidden/);
     expect(read('games/runner/runner.css')).toContain(':fullscreen');
+    const card = html.split('<div class="level">')[1];
+    expect(card).toMatch(/id="playCard"[^>]*role="dialog"[^>]*aria-label=[^>]*hidden|id="playCard"[^>]*hidden[^>]*role="dialog"/);
+    for (const i of ['playStart', 'playAgain', 'playBack']) expect(card, i).toContain(`id="${i}"`);
+    expect(card.split('id="playCard"')[1].split('</section>')[0]).not.toContain('<h2');
   });
   it('runner main.js wires play mode and fullscreen', () => {
     const js = read('games/runner/main.js');

@@ -174,6 +174,7 @@ function advance(run, action) {
 // A person plays a try started with startTry(null, rules, null): same level, physics and scoring, and it records no steps, so it can never teach the brain.
 export const KEY_MAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
 export const actionFor = held => (held.right ? (held.jump ? 2 : 1) : held.jump ? 3 : 0); // no walking left: Left is Wait
+export const timeLeft = run => Math.max(0, Math.ceil((LIMIT - run.g.t) / 60));
 export const tickHuman = (run, action) => advance(run, action);
 export function playTry(L, rules, rng) {
   const run = startTry(L, rules, rng);

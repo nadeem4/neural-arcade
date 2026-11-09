@@ -27,6 +27,13 @@ export function compareNote(run, best) {
   return best ? `${mine} The AI's best: ${endWords(best)}, ${best.score.toFixed(1)}.` : `${mine} The AI has not finished a try yet.`;
 }
 
+// One line on why your try and the AI's best differ; nothing before the AI has a best.
+export function whyNote(run, best) {
+  if (!best) return '';
+  return best.score > run.score ? 'Your rules pay more for what the AI did than for what you did.'
+    : 'You beat it. Give it more tries, or check what your rules pay for.';
+}
+
 export function ruleValue(key, v) {
   if (key === 'second') return v < 0 ? `costs ${-v}` : v > 0 ? `earns ${v}` : 'nothing';
   return v === 0 ? 'nothing' : `${v} point${v === 1 ? '' : 's'}`;

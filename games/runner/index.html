@@ -44,9 +44,25 @@
           <button class="info" type="button" aria-expanded="false" aria-controls="infoPlay" aria-label="Explain play it yourself" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
           <button class="btn" type="button" id="fullscreen" hidden>Full screen</button>
         </span></div>
-      <p class="info-text" id="infoPlay" hidden>One try on the same level and physics as the AI, with arrows, WASD or Space, or the buttons on a touch screen. Your moves never teach the AI, and its learning pauses while you play. Your try is scored with the current rules.</p>
+      <p class="info-text" id="infoPlay" hidden>One try on the same level and physics as the AI, with arrows, WASD or Space, or the buttons on a touch screen. Your moves never teach the AI, and its learning pauses until you go back to it. Your try is scored with the current rules.</p>
       <div class="level">
         <canvas id="level" aria-label="The level, and the hero learning to play it"></canvas>
+        <div class="hud" id="hud" hidden aria-hidden="true"><span>Score <b id="hudScore">0.0</b></span><span>Coins <b id="hudCoins">0</b></span><span>Time <b id="hudTime">20</b> s</span></div>
+        <section class="play-card" id="playCard" role="dialog" aria-label="Play it yourself" hidden>
+          <div id="cardIntro">
+            <p class="card-title">Your turn</p>
+            <ul class="keys keys-pointer"><li><kbd>&rarr;</kbd> or <kbd>D</kbd> run</li><li><kbd>&uarr;</kbd>, <kbd>W</kbd> or <kbd>Space</kbd> jump</li><li><kbd>Esc</kbd> quit</li></ul>
+            <p class="keys-touch">Use the buttons on the screen.</p>
+            <button class="btn primary" type="button" id="playStart">Start</button>
+          </div>
+          <div id="cardCount" hidden><p class="count" id="countNum" aria-live="assertive">3</p></div>
+          <div id="cardEnd" hidden>
+            <p class="card-title">Try over</p>
+            <p id="endNote"></p>
+            <p id="endWhy"></p>
+            <div class="row-btns"><button class="btn primary" type="button" id="playAgain">Play again</button><button class="btn" type="button" id="playBack">Back to the AI</button></div>
+          </div>
+        </section>
         <div class="touch" aria-label="Touch controls"><button type="button" data-hold="left" aria-label="Left">&larr;</button><button type="button" data-hold="right" aria-label="Right">&rarr;</button><button type="button" data-hold="jump" aria-label="Jump">Jump</button></div>
         <p class="caption" id="caption"><span id="captionText">Try 1: a brand-new random brain.</span></p>
       </div>

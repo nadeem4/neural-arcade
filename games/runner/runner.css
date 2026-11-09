@@ -28,3 +28,19 @@
 @media (pointer: coarse) { .level[data-mode="human"] .touch { display: flex; } }
 .level:fullscreen { display: grid; place-items: center; background: #000; }
 .level:fullscreen #level { width: min(100vw, 160vh); }
+
+/* Start and end cards, and the score readout, over the level while you play. */
+.hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 14px; padding: 6px 12px; border-radius: 8px; background: var(--stage); border: 1px solid var(--stage-2); color: var(--stage-ink); font: 600 14px var(--sans); }
+.hud[hidden] { display: none; }
+.hud b { font-family: var(--mono); }
+.play-card { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 16px; text-align: center; background: color-mix(in srgb, var(--stage) 88%, transparent); color: var(--stage-ink); font-size: 16px; }
+.play-card[hidden] { display: none; }
+.play-card > div { display: grid; justify-items: center; gap: 14px; max-width: 46ch; }
+.play-card > div[hidden] { display: none; }
+.play-card p, .play-card ul { margin: 0; }
+.card-title { font: 800 28px/1.1 var(--sans); letter-spacing: -.02em; }
+.keys { list-style: none; padding: 0; display: grid; gap: 8px; }
+.keys kbd { display: inline-block; min-width: 2em; padding: 2px 8px; border: 1px solid var(--stage-dim); border-bottom-width: 3px; border-radius: 6px; background: var(--stage-2); font: 600 14px var(--mono); }
+.keys-touch { display: none; }
+@media (pointer: coarse) { .keys-pointer { display: none; } .keys-touch { display: block; } }
+.count { font: 800 72px/1 var(--mono); }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tryNote, endWords, bestOf, compareNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
+import { tryNote, endWords, bestOf, compareNote, whyNote, ruleValue, matchPreset, loopholeNote } from '../games/runner/words.js';
 import { PRESETS } from '../games/runner/sim.js';
 
 const run = (outcome, extra = {}) => ({ outcome, coins: 0, score: 12.4, g: { maxX: 20 }, ...extra });
@@ -61,5 +61,14 @@ describe('comparing your try with the AI', () => {
     const best = { outcome: 'timeout', coins: 30, maxX: 2, score: 9 };
     expect(compareNote(mine, best)).toBe("Your run: reached the flag, score 4.0. The AI's best: farmed the coin block until time ran out (30 coins), 9.0.");
     expect(compareNote(run('died', { score: -3 }), null)).toBe('Your run: died, score -3.0. The AI has not finished a try yet.');
+  });
+});
+
+describe('why the two runs differ', () => {
+  it('says what to look at, or nothing without an AI best', () => {
+    const best = { outcome: 'finished', coins: 0, maxX: 45, score: 9 };
+    expect(whyNote(run('died', { score: 1 }), best)).toMatch(/rules pay more for what the AI did/);
+    expect(whyNote(run('finished', { score: 20 }), best)).toMatch(/You beat it/);
+    expect(whyNote(run('died'), null)).toBe('');
   });
 });
