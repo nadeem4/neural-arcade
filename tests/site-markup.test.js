@@ -246,7 +246,7 @@ describe('game page specifics', () => {
   });
   it('runner: play it yourself, touch pad and fullscreen controls', () => {
     const html = read('games/runner/index.html');
-    expect(html).toMatch(/<button[^>]*id="playSelf"[^>]*aria-pressed="false"/);
+    expect(html).toMatch(/<button[^>]*id="playSelf"[^>]*>Play it yourself</);
     expect(html).toMatch(/aria-controls="infoPlay"/);
     expect(html).toContain('id="plate"');
     expect(html).toContain('id="cardRules"');
