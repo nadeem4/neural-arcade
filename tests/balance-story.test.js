@@ -45,3 +45,24 @@ describe('the recorded run behind the write-up', () => {
     expect(survives(S.ai.fresh)).toBeLessThan(3);
   });
 });
+
+describe('the write-up page', () => {
+  const dir = new URL('../games/balance/how-it-works/', import.meta.url);
+  const html = readFileSync(new URL('index.html', dir), 'utf8');
+  const js = readFileSync(new URL('story.js', dir), 'utf8');
+  it('has six numbered sections', () => {
+    expect(html.match(/class="num-tag"/g)).toHaveLength(6);
+  });
+  it('has every canvas the script looks up', () => {
+    const ids = [...js.matchAll(/\$\('([\w-]+)'\)/g)].map(m => m[1]).filter(id => id !== 'lamp'); // the lamp button comes from the shared header
+    expect(ids.length).toBeGreaterThan(5);
+    for (const id of ids) expect(html, id).toContain(`id="${id}"`);
+  });
+  it('draws from the recording, not from chance', () => {
+    expect(js).toContain("fetch('../story.json')");
+    expect(js).not.toContain('Math.random');
+  });
+  it('states the lesson', () => {
+    expect(html).toContain('Staying upright is constant correction: measure the error, push back. A tiny brain can find that rule on its own.');
+  });
+});
