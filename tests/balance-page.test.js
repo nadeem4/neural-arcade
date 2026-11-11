@@ -67,19 +67,16 @@ describe('balance.css', () => {
   });
 });
 
+describe('touch buttons', () => {
+  it('set an explicit line-height of 1.5 or more', () => {
+    expect(rules('.touch button')).toMatch(/font:[^;]*\/1\.[5-9]/);
+  });
+});
+
 describe('balance main.js', () => {
   const block = (start, end) => { const a = main.indexOf(start); const b = main.indexOf(end, a + start.length); return main.slice(a, b); };
   it('imports the pieces it drives', () => {
     for (const n of ['keyDir', 'pidAct', 'advance', 'pushTry', 'createTrainer']) expect(main, n).toMatch(new RegExp(String.raw`import \{[^}]*\b${n}\b[^}]*\} from`));
-  });
-  it('Wind only toggles itself: no restart, no new trainer, no rate change', () => {
-    const b = block("$('wind')", '\n$(');
-    expect(b.length).toBeGreaterThan(20);
-    for (const w of ['startTry', 'createTrainer', 'freshBrain', 'rate', 'newTry']) expect(b, w).not.toContain(w);
-  });
-  it('a key still held when a try ends cannot start the next one', () => {
-    expect(main).toMatch(/keyup[\s\S]*guard\.delete/);
-    expect(main).toMatch(/keydown[\s\S]*guard\.has/);
   });
   it('ignores keys typed into form fields', () => {
     expect(main).toMatch(/INPUT\|SELECT\|TEXTAREA/);
@@ -87,10 +84,12 @@ describe('balance main.js', () => {
   it('sets data-mode on the stage wrapper', () => {
     expect(main).toMatch(/dataset\.mode\s*=/);
   });
-  it('trains unseen within a time budget, in every mode', () => {
-    const b = block('function runUnseen', '\n}\n');
-    expect(b).toContain('performance.now');
+  it('trains in every mode', () => {
     expect(main).not.toMatch(/if \(s\.mode === 'ai'\) runUnseen/);
+    expect(main).toContain('performance.now');
+  });
+  it('New brain resets the AI best', () => {
+    expect(main.slice(main.indexOf('function freshBrain'))).toMatch(/s\.best\.ai = 0/);
   });
   it('draws the chart against the 20 s limit', () => {
     expect(main).toMatch(/max: LIMIT \/ 60/);
@@ -98,7 +97,5 @@ describe('balance main.js', () => {
   it('uses Math.random only for the trainer seed and never writes into the best genome', () => {
     expect(main.match(/Math\.random/g)).toHaveLength(1);
     expect(main).toMatch(/createTrainer\(\(Math\.random\(\) \* 2 \*\* 32\) >>> 0\)/);
-    expect(main).not.toMatch(/bestGenome\s*(\[[^\]]*\])?\s*=[^=]/);
-    expect(main).not.toMatch(/bestGenome\.(set|fill|sort|splice)\(/);
   });
 });

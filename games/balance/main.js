@@ -9,6 +9,7 @@ import { startTry, advance, pushTry, seconds, keyDir, KEY_MAP, pidAct, PID_RANGE
 import { SIZES, IN_LABELS, OUT_LABELS, aiAct, createTrainer } from './ai.js';
 import { describeInput, describeOutput, tryNote, pidHint, DIAL_INFO, aiNote, modeLine } from './words.js';
 import { layout, drawStage } from './render.js';
+import { createKeys, pressKey, releaseKey, endTryKeys, owedAfter, toggleWind, dialHtml } from './state.js';
 
 const $ = id => document.getElementById(id);
 const stageCanvas = $('stage'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -24,8 +25,9 @@ const PLATE = { you: 'You are balancing', pid: 'PID is balancing', ai: 'AI is ba
 const s = {
   mode: 'ai', trainer: null, run: null, rate: 2, owed: 0, hold: 0, wind: false, started: false, force: 0, pushSide: 1,
   dials: Object.fromEntries(Object.entries(PID_RANGES).map(([k, r]) => [k, r.def])),
-  held: new Set(), down: new Set(), guard: new Set(), best: { you: 0, pid: 0, ai: 0 },
+  best: { you: 0, pid: 0, ai: 0 },
 };
+const keys = createKeys();
 const newTrainer = () => createTrainer((Math.random() * 2 ** 32) >>> 0);
 function caption(t) { $('captionText').textContent = t; }
 function say(t) { $('log').textContent = t; }
@@ -36,13 +38,13 @@ function newTry() {
   caption(s.mode === 'you' ? 'Press ← or → to start' : `${WHO[s.mode]} is balancing`);
 }
 function freshBrain() {
-  s.trainer = newTrainer(); s.owed = 0; newTry(); drawChart();
+  s.trainer = newTrainer(); s.owed = 0; s.best.ai = 0; newTry(); drawChart();
   caption('A fresh random brain. Every brain starts by falling.');
 }
 
 // ---------- Mode ----------
 function setMode(mode) {
-  s.mode = mode; s.held.clear(); s.guard.clear(); newTry();
+  s.mode = mode; keys.held.clear(); keys.guard.clear(); newTry();
   wrap.dataset.mode = mode;
   document.querySelectorAll('[data-mode]').forEach(b => { if (b.tagName === 'BUTTON') b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
   document.querySelectorAll('.dial').forEach(d => { if (mode === 'pid') d.removeAttribute('data-off'); else d.setAttribute('data-off', ''); });
@@ -51,17 +53,13 @@ function setMode(mode) {
 document.querySelectorAll('button[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
 // ---------- PID dials ----------
-const INFO_ICON = '<svg class="ic ic-info" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg>';
 const dialsBox = $('dials');
 for (const [key, r] of Object.entries(PID_RANGES)) {
-  const label = document.createElement('label');
-  label.className = 'dial';
-  label.innerHTML = `<span class="dial-name">${key.toUpperCase()}<button class="info" type="button" aria-expanded="false" aria-controls="info-${key}" aria-label="Explain ${key.toUpperCase()}" title="What is this?">${INFO_ICON}</button></span>
-    <span class="info-text" id="info-${key}" hidden>${DIAL_INFO[key]}</span>
-    <output id="out-${key}">${r.def}</output>
-    <input id="pid-${key}" type="range" min="${r.min}" max="${r.max}" step="${r.step}" value="${r.def}">`;
-  dialsBox.append(label);
-  label.querySelector('input').addEventListener('input', e => { s.dials[key] = Number(e.target.value); $(`out-${key}`).textContent = s.dials[key]; showHint(); }); // the PID try keeps running
+  const label = document.createElement('div');
+  label.innerHTML = dialHtml(key, r, DIAL_INFO[key]);
+  label.firstElementChild.dataset.off = '';
+  dialsBox.append(label.firstElementChild);
+  dialsBox.lastElementChild.querySelector('input').addEventListener('input', e => { s.dials[key] = Number(e.target.value); $(`out-${key}`).textContent = s.dials[key]; showHint(); }); // the PID try keeps running
 }
 function showHint() { $('pidOut').textContent = pidHint(s.dials, s.wind); }
 
@@ -70,7 +68,7 @@ $('push').addEventListener('click', () => {
   if (s.run.outcome) return;
   pushTry(s.run, s.pushSide); s.pushSide *= -1; s.started = true;
 });
-$('wind').addEventListener('click', e => { s.wind = !s.wind; e.currentTarget.setAttribute('aria-pressed', String(s.wind)); showHint(); });
+$('wind').addEventListener('click', e => { Object.assign(s, toggleWind(s)); e.currentTarget.setAttribute('aria-pressed', String(s.wind)); showHint(); });
 $('fresh').addEventListener('click', () => { freshBrain(); say('A fresh random brain. Every brain starts by falling.'); });
 document.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click', () => {
   s.rate = Number(b.dataset.rate); s.owed = 0;
@@ -83,20 +81,18 @@ const heldKey = e => (s.mode === 'you' && !e.ctrlKey && !e.metaKey && !e.altKey 
 const typing = e => /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName);
 window.addEventListener('keydown', e => {
   if (typing(e)) return;
-  if (s.guard.has(e.code)) { if (KEY_MAP[e.code]) e.preventDefault(); return; } // still held when the last try ended
   const k = heldKey(e);
-  if (k) { e.preventDefault(); s.held.add(k); s.down.add(e.code); }
+  if (k) { e.preventDefault(); pressKey(keys, k, e.code); } // a guarded key (held when the last try ended) does nothing
 });
 window.addEventListener('keyup', e => {
-  s.down.delete(e.code); s.guard.delete(e.code);
   const k = heldKey(e);
-  if (k) { e.preventDefault(); s.held.delete(k); }
+  if (k) { e.preventDefault(); releaseKey(keys, k, e.code); } else keys.guard.delete(e.code);
 });
-window.addEventListener('blur', () => s.held.clear());
+window.addEventListener('blur', () => keys.held.clear());
 document.querySelectorAll('[data-hold]').forEach(b => {
-  const k = b.dataset.hold;
-  b.addEventListener('pointerdown', e => { e.preventDefault(); s.held.add(k); });
-  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => s.held.delete(k));
+  const k = b.dataset.hold, code = 'touch-' + k;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); pressKey(keys, k, code); });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => releaseKey(keys, k, code));
 });
 
 // ---------- Running ----------
@@ -104,7 +100,7 @@ const stepActs = createActs(SIZES), stepInput = new Float32Array(4);
 function finish() {
   s.best[s.mode] = Math.max(s.best[s.mode], seconds(s.run));
   caption(tryNote(WHO[s.mode], s.run));
-  if (s.mode === 'you') { s.guard = new Set(s.down); s.held.clear(); } // a key still held must not start the next try
+  if (s.mode === 'you') endTryKeys(keys); // a key still held must not start the next try
   s.hold = HOLD; s.force = 0;
 }
 function stepOnce() {
@@ -113,8 +109,8 @@ function stepOnce() {
   if (run.outcome) return;
   let u = 0;
   if (s.mode === 'you') {
-    if (!s.started) { if (!s.held.size) return; s.started = true; caption('You are balancing'); }
-    u = keyDir({ left: s.held.has('left'), right: s.held.has('right') }) * HUMAN_POWER;
+    if (!s.started) { if (!keys.held.size) return; s.started = true; caption('You are balancing'); }
+    u = keyDir({ left: keys.held.has('left'), right: keys.held.has('right') }) * HUMAN_POWER;
   } else if (s.mode === 'pid') u = pidAct(run.pid, run.g, s.dials);
   else u = aiAct(s.trainer.bestGenome, run.g, stepActs, stepInput); // reads the live best brain, never writes it
   s.force = u;
@@ -123,7 +119,7 @@ function stepOnce() {
 }
 // Training runs in every mode, a few milliseconds per frame at most, so the page stays smooth on a phone.
 function runUnseen(steps) {
-  s.owed = Math.min(s.owed + (s.rate * steps) / 60, 10);
+  s.owed = owedAfter(s.owed, s.rate, steps);
   const t0 = performance.now();
   let ran = false;
   while (s.owed >= 1 && performance.now() - t0 < BUDGET) { s.trainer.runGeneration(); s.owed--; ran = true; }
