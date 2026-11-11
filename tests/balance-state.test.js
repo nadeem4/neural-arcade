@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createKeys, pressKey, releaseKey, endTryKeys, owedAfter, toggleWind, dialHtml } from '../games/balance/state.js';
+import { createKeys, pressKey, releaseKey, endTryKeys, clearKeys, keyUp, owedAfter, toggleWind, dialHtml } from '../games/balance/state.js';
 import { startTry } from '../games/balance/sim.js';
 import { createTrainer } from '../games/balance/ai.js';
 
@@ -34,6 +34,24 @@ describe('keys', () => {
     pressKey(k, 'left', 'KeyA'); releaseKey(k, 'left', 'KeyA');
     endTryKeys(k);
     expect(k.guard.size).toBe(0);
+  });
+});
+
+describe('clearing keys', () => {
+  it('clearKeys empties held, down and guard', () => {
+    const k = createKeys();
+    pressKey(k, 'left', 'KeyA'); endTryKeys(k); pressKey(k, 'right', 'KeyD');
+    clearKeys(k);
+    expect([k.held.size, k.down.size, k.guard.size]).toEqual([0, 0, 0]);
+  });
+  it('keyUp always forgets the code, even for a key that maps to no direction', () => {
+    const k = createKeys();
+    pressKey(k, 'left', 'KeyA');
+    keyUp(k, undefined, 'KeyA');
+    expect(k.down.has('KeyA')).toBe(false);
+    expect(k.held.has('left')).toBe(true); // no direction given: held untouched
+    keyUp(k, 'left', 'KeyA');
+    expect(k.held.size).toBe(0);
   });
 });
 

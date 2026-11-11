@@ -14,6 +14,15 @@ export function releaseKey(k, dir, code) {
   k.down.delete(code); k.guard.delete(code); k.held.delete(dir);
 }
 
+export function clearKeys(k) {
+  k.held.clear(); k.down.clear(); k.guard.clear();
+}
+
+// A key came up: always forget its code; release its direction when it has one.
+export function keyUp(k, dir, code) {
+  if (dir) releaseKey(k, dir, code); else { k.down.delete(code); k.guard.delete(code); }
+}
+
 export function endTryKeys(k) {
   k.guard = new Set(k.down); k.held.clear();
 }

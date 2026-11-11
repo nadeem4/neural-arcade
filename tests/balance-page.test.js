@@ -62,7 +62,8 @@ describe('balance.css', () => {
     expect(css).not.toMatch(/border-(left|right):\s*\d+px solid/);
   });
   it('dims dials and colours Wind', () => {
-    expect(css).toMatch(/\.dial\[data-off\]\s*\{\s*opacity:\s*\.55/);
+    expect(rules('.dial[data-off]')).not.toMatch(/opacity/); // label text stays full colour for contrast
+    expect(rules('.dial[data-off] input')).toMatch(/opacity:\s*\.55/); // only the slider dims
     expect(css).toMatch(/#wind\[aria-pressed="true"\][^}]*var\(--amber\)/);
   });
 });
@@ -87,6 +88,22 @@ describe('balance main.js', () => {
   it('trains in every mode', () => {
     expect(main).not.toMatch(/if \(s\.mode === 'ai'\) runUnseen/);
     expect(main).toContain('performance.now');
+  });
+  it('Wind only toggles Wind: no restart, no new brain, no rate change', () => {
+    const b = block("$('wind').addEventListener", "$('fresh')");
+    expect(b).toContain('toggleWind');
+    for (const n of ['startTry', 'createTrainer', 'freshBrain', 's.rate', 'newTry']) expect(b, n).not.toContain(n);
+  });
+  it('switching mode starts a new try', () => {
+    expect(block('function setMode', '// ---------- PID dials')).toContain('newTry()');
+  });
+  it('keys are cleared on mode change and blur, and keyup always forgets the code', () => {
+    expect(block('function setMode', '// ---------- PID dials')).toContain('clearKeys(keys)');
+    expect(main).toMatch(/'blur', \(\) => clearKeys\(keys\)/);
+    expect(block("addEventListener('keyup'", "addEventListener('blur'")).toContain('keyUp(keys');
+  });
+  it('New brain only restarts the try in AI mode', () => {
+    expect(block('function freshBrain', '// ---------- Mode')).toMatch(/if \(s\.mode === 'ai'\) \{ newTry\(\)/);
   });
   it('New brain resets the AI best', () => {
     expect(main.slice(main.indexOf('function freshBrain'))).toMatch(/s\.best\.ai = 0/);

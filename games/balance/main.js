@@ -9,7 +9,7 @@ import { startTry, advance, pushTry, seconds, keyDir, KEY_MAP, pidAct, PID_RANGE
 import { SIZES, IN_LABELS, OUT_LABELS, aiAct, createTrainer } from './ai.js';
 import { describeInput, describeOutput, tryNote, pidHint, DIAL_INFO, aiNote, modeLine } from './words.js';
 import { layout, drawStage } from './render.js';
-import { createKeys, pressKey, releaseKey, endTryKeys, owedAfter, toggleWind, dialHtml } from './state.js';
+import { createKeys, pressKey, releaseKey, endTryKeys, clearKeys, keyUp, owedAfter, toggleWind, dialHtml } from './state.js';
 
 const $ = id => document.getElementById(id);
 const stageCanvas = $('stage'), brainCanvas = $('brain'), chartCanvas = $('chart');
@@ -38,13 +38,13 @@ function newTry() {
   caption(s.mode === 'you' ? 'Press ← or → to start' : `${WHO[s.mode]} is balancing`);
 }
 function freshBrain() {
-  s.trainer = newTrainer(); s.owed = 0; s.best.ai = 0; newTry(); drawChart();
-  caption('A fresh random brain. Every brain starts by falling.');
+  s.trainer = newTrainer(); s.owed = 0; s.best.ai = 0; drawChart();
+  if (s.mode === 'ai') { newTry(); caption('A fresh random brain. Every brain starts by falling.'); }
 }
 
 // ---------- Mode ----------
 function setMode(mode) {
-  s.mode = mode; keys.held.clear(); keys.guard.clear(); newTry();
+  s.mode = mode; clearKeys(keys); newTry();
   wrap.dataset.mode = mode;
   document.querySelectorAll('[data-mode]').forEach(b => { if (b.tagName === 'BUTTON') b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
   document.querySelectorAll('.dial').forEach(d => { if (mode === 'pid') d.removeAttribute('data-off'); else d.setAttribute('data-off', ''); });
@@ -86,9 +86,10 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => {
   const k = heldKey(e);
-  if (k) { e.preventDefault(); releaseKey(keys, k, e.code); } else keys.guard.delete(e.code);
+  if (k) e.preventDefault();
+  keyUp(keys, k, e.code);
 });
-window.addEventListener('blur', () => keys.held.clear());
+window.addEventListener('blur', () => clearKeys(keys));
 document.querySelectorAll('[data-hold]').forEach(b => {
   const k = b.dataset.hold, code = 'touch-' + k;
   b.addEventListener('pointerdown', e => { e.preventDefault(); pressKey(keys, k, code); });
@@ -171,7 +172,6 @@ function frame(now) {
 }
 
 document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', e => {
-  e.preventDefault(); // inside a <label>, a click would otherwise also focus the slider
   const open = btn.getAttribute('aria-expanded') !== 'true';
   btn.setAttribute('aria-expanded', String(open));
   $(btn.getAttribute('aria-controls')).hidden = !open;

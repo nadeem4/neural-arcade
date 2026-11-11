@@ -7,7 +7,7 @@
 @media (max-width: 520px) { #brain { height: 260px; } }
 
 /* The PID dials dim unless PID is in control. */
-.dial[data-off] { opacity: .55; }
+.dial[data-off] input { opacity: .55; } /* dim only the slider; label text keeps full contrast */
 .dial-name { font-size: 15px; }
 
 /* Wind, when on. */
