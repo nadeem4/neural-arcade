@@ -21,7 +21,7 @@
 .stage-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .fs-btn { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 8px; border: 1px solid var(--stage-2); background: var(--stage); color: var(--stage-ink); cursor: pointer; }
 .fs-btn[hidden], .level:not([data-mode="human"]) .fs-btn { display: none; }
-.stage-tools .btn[aria-pressed="true"] { background: var(--amber); color: #000; }
+#playSelf[data-on] { background: var(--amber); color: #000; }
 .stage > .info-text { margin: 0 18px 12px; }
 .touch { display: none; align-items: center; gap: 8px; padding: 10px 12px; background: var(--stage); touch-action: none; }
 .touch button { min-width: 64px; min-height: 64px; border-radius: 50%; border: 2px solid var(--stage-ink); background: transparent; color: var(--stage-ink); font: 700 22px var(--sans); touch-action: none; user-select: none; }

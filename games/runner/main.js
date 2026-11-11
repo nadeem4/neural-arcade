@@ -57,7 +57,7 @@ function newHumanTry() {
 }
 function startHuman() {
   s.mode = 'human'; s.phase = 'intro'; newHumanTry();
-  $('playSelf').setAttribute('aria-pressed', 'true'); levelEl.dataset.mode = 'human';
+  $('playSelf').textContent = 'Back to the AI'; $('playSelf').dataset.on = ''; levelEl.dataset.mode = 'human';
   s.said = $('log').textContent; say(pausedNote(s.trainer.tries)); $('cardRules').innerHTML = rulesItems(s.rules).map(t => `<span class="rule-item">${t}</span>`).join(' \u00b7 ');
   show('cardIntro'); $('playStart').focus();
   levelEl.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -68,7 +68,7 @@ function endHuman() {
   if (s.mode !== 'human') return;
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); // full screen is for playing only
   s.mode = 'ai'; s.phase = null; s.held.clear(); show(null); say(s.said);
-  $('playSelf').setAttribute('aria-pressed', 'false'); delete levelEl.dataset.mode;
+  $('playSelf').textContent = 'Play it yourself'; delete $('playSelf').dataset.on; delete levelEl.dataset.mode;
 }
 function backToAi() {
   endHuman(); s.hold = 0; startShown(); $('playSelf').focus();
