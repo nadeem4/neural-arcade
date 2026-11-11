@@ -24,7 +24,14 @@ function arrow(ctx, x, y, len, color, head) {
   ctx.beginPath(); ctx.moveTo(x + len, y); ctx.lineTo(x + len - d * head, y - head / 2); ctx.lineTo(x + len - d * head, y + head / 2); ctx.closePath(); ctx.fill();
 }
 
+// Three small arrows above the upright pole's tip, pointing the way the wind blows.
+export function windArrows(lay, wind) {
+  const d = Math.sign(wind), len = lay.scale * 0.5, tipY = lay.railY - lay.cartH - lay.poleLen;
+  return [0, 1, 2].map(i => ({ x: lay.cx - d * len / 2, y: tipY - lay.scale * 0.2 - i * lay.scale * 0.15, len: d * len }));
+}
+
 export function drawStage(ctx, g, { lay, theme, wind = 0, force = 0, fell = false }) {
+  ctx.save();
   const half = X_LIMIT * lay.scale + lay.cartW / 2;
   // the rail and its two end stops
   ctx.strokeStyle = theme.edge; ctx.fillStyle = theme.edge; ctx.lineWidth = 2;
@@ -38,10 +45,9 @@ export function drawStage(ctx, g, { lay, theme, wind = 0, force = 0, fell = fals
   ctx.fillStyle = theme.amber; ctx.beginPath(); ctx.arc(p.x0, p.y0, Math.max(3, lay.scale * 0.06), 0, Math.PI * 2); ctx.fill();
   // the push, under the cart
   const head = lay.scale * 0.12;
-  if (force) arrow(ctx, r.x + r.w / 2, lay.railY + lay.scale * 0.2, force * lay.scale * 0.6, theme.amber, head);
-  // wind: three small arrows up high, pointing the way it blows
-  if (wind) {
-    const d = Math.sign(wind), len = lay.scale * 0.5;
-    for (let i = 0; i < 3; i++) arrow(ctx, lay.cx - d * len / 2, lay.railY - lay.poleLen - lay.scale * 0.3 + i * lay.scale * 0.15, d * len, theme.edge, head);
-  }
+  const f = Math.max(-1, Math.min(1, force));
+  if (Math.abs(f) >= 0.05) arrow(ctx, r.x + r.w / 2, lay.railY + lay.scale * 0.2, f * lay.scale * 0.6, theme.amber, head);
+  // wind: small arrows above the pole tip, pointing the way it blows
+  if (wind) for (const a of windArrows(lay, wind)) arrow(ctx, a.x, a.y, a.len, theme.edge, head);
+  ctx.restore();
 }

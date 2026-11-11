@@ -1,6 +1,6 @@
 // The AI for Balance: a tiny network that senses the cart and pole and pushes. No DOM.
 // It trains with small random pushes, never with wind, so switching wind on never retrains it.
-import { forward, createActs } from '../../engine/tinynet.js';
+import { forward, createActs, genomeLength } from '../../engine/tinynet.js';
 import { mulberry32 } from '../../engine/rng.js';
 import { randomGenome, nextGeneration } from '../../engine/evolve.js';
 import { newGame, step, X_LIMIT, FAIL_ANGLE, LIMIT, START_TILT, PUSH_DV } from './sim.js';
@@ -52,7 +52,7 @@ export function evaluate(genome, rng) {
 }
 
 export const POP = 20, ELITE = 3, FRESH = 3, POOL = 10, MUT_RATE = 0.15, MUT_SCALE = 0.3, TRIES = 2;
-const GENOME = 37;
+const GENOME = genomeLength(SIZES);
 // The seed whose run starts by falling in under 3 s and first holds a full 20 s around generation 12-22.
 // Chosen by scanning seeds 1-60. The How it works story (B4) reuses it as STORY_SEED.
 export const AI_STORY_SEED = 6;

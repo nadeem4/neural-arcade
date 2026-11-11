@@ -4,7 +4,7 @@ import { mulberry32 } from '../engine/rng.js';
 import { firstFullGeneration } from '../games/balance/words.js';
 import { genomeLength, createActs } from '../engine/tinynet.js';
 import { randomGenome } from '../engine/evolve.js';
-import { X_LIMIT, FAIL_ANGLE, LIMIT, PUSH_DV } from '../games/balance/sim.js';
+import { X_LIMIT, FAIL_ANGLE, LIMIT, PUSH_DV, newGame, step, START_TILT } from '../games/balance/sim.js';
 import {
   POP, ELITE, FRESH, createTrainer, AI_STORY_SEED,
   SIZES, IN_LABELS, OUT_LABELS, sense, aiAct, TRAIN_PUSHES, makePushes, evaluate,
@@ -68,6 +68,20 @@ describe('how the AI is tested', () => {
   it('evaluate never applies wind', () => {
     expect(readFileSync(new URL('../games/balance/ai.js', import.meta.url), 'utf8')).not.toContain('WIND_FORCE');
   });
+
+  it('evaluate matches a by-hand replay with step(g, u, 0)', () => {
+    for (const seed of [1, 2, 3]) {
+      const genome = randomGenome(37, mulberry32(seed + 20));
+      const rng = mulberry32(seed);
+      const g = newGame((rng() * 2 - 1) * START_TILT);
+      const pushes = makePushes(rng), acts = createActs(SIZES), input = new Float32Array(4);
+      while (g.t < LIMIT) {
+        for (const p of pushes) if (p.t === g.t) g.v += p.dir * p.dv;
+        if (step(g, aiAct(genome, g, acts, input), 0)) break;
+      }
+      expect(evaluate(genome, mulberry32(seed))).toBe(g.t);
+    }
+  });
 });
 
 describe('the evolution trainer', () => {
@@ -92,6 +106,13 @@ describe('the evolution trainer', () => {
     const a = createTrainer(4), b = createTrainer(4);
     for (let i = 0; i < 5; i++) { a.runGeneration(); b.runGeneration(); }
     expect(a.history).toEqual(b.history);
+  });
+
+  it('bestGenome is the newest generation winner, the first kept elite', () => {
+    const t = createTrainer(3), r = t.runGeneration();
+    const firstKept = t.pop.find(p => p.kind === 'kept');
+    expect(Array.from(t.bestGenome)).toEqual(Array.from(firstKept.genome));
+    expect(Array.from(r.genome)).toEqual(Array.from(t.bestGenome));
   });
 
   it('does not mutate the shown brain', () => {
