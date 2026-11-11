@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
 import {
   startTry, advance, pushTry, seconds, keyDir, KEY_MAP, pidAct,
-  newGame, step, push, LIMIT, DT, FAIL_ANGLE, X_LIMIT, F_MAX, WIND_FORCE, PUSH_DV,
+  newGame, step, push, LIMIT, DT, FAIL_ANGLE, X_LIMIT, F_MAX, WIND_FORCE, PUSH_DV, HUMAN_POWER,
 } from '../games/balance/sim.js';
 
 describe('balance sim', () => {
@@ -59,6 +59,22 @@ describe('balance sim', () => {
       expect(r === 'tilt' || r === 'rail').toBe(true);
       expect(n).toBeLessThan(180);
       expect(n).toBeGreaterThanOrEqual(6);
+    }
+  });
+
+  it('a key-masher with the human power still falls within 3 s', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const rnd = mulberry32(seed);
+      const g = newGame();
+      let u = 0, hold = 0, r = null, n = 0;
+      while (!r && n < 600) {
+        if (hold === 0) { u = rnd() < 0.5 ? -1 : 1; hold = 5 + Math.floor(rnd() * 20); }
+        hold--;
+        r = step(g, u * HUMAN_POWER);
+        n++;
+      }
+      expect(r === 'tilt' || r === 'rail').toBe(true);
+      expect(n).toBeLessThan(180);
     }
   });
 
