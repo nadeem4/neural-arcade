@@ -1,6 +1,8 @@
 // The AI for Balance: a tiny network that senses the cart and pole and pushes. No DOM.
 // It trains with small random pushes, never with wind, so switching wind on never retrains it.
 import { forward, createActs } from '../../engine/tinynet.js';
+import { mulberry32 } from '../../engine/rng.js';
+import { randomGenome, nextGeneration } from '../../engine/evolve.js';
 import { newGame, step, X_LIMIT, FAIL_ANGLE, LIMIT, START_TILT, PUSH_DV } from './sim.js';
 
 export const SIZES = [4, 6, 1];               // 37 weights
@@ -47,4 +49,40 @@ export function evaluate(genome, rng) {
     if (step(g, aiAct(genome, g, acts, input))) break;
   }
   return g.t;
+}
+
+export const POP = 20, ELITE = 3, FRESH = 3, POOL = 10, MUT_RATE = 0.15, MUT_SCALE = 0.3, TRIES = 2;
+const GENOME = 37;
+// The seed whose run starts by falling in under 3 s and first holds a full 20 s around generation 12-22.
+// Chosen by scanning seeds 1-60. The How it works story (B4) reuses it as STORY_SEED.
+export const AI_STORY_SEED = 6;
+
+// Evolution that runs unseen: each generation tests every brain, then breeds the next from the best.
+export function createTrainer(seed) {
+  const rng = mulberry32(seed);
+  let nextId = 0;
+  const newId = () => nextId++;
+  const t = {
+    rng, gen: 0, history: [],
+    pop: Array.from({ length: POP }, () => ({ id: newId(), genome: randomGenome(GENOME, rng), kind: 'new', parents: [] })),
+  };
+  t.bestGenome = t.pop[0].genome.slice();
+  t.runGeneration = () => {
+    const scored = t.pop.map(ind => {
+      let sum = 0;
+      for (let k = 0; k < TRIES; k++) sum += evaluate(ind.genome, rng);
+      return { ...ind, steps: sum / TRIES };
+    });
+    const ranked = scored.sort((a, b) => b.steps - a.steps);
+    const seconds = ranked[0].steps / 60;
+    t.gen++;
+    t.history.push(seconds);
+    t.bestGenome = ranked[0].genome.slice();
+    t.pop = nextGeneration(ranked, {
+      popSize: POP, elite: ELITE, fresh: FRESH, poolSize: POOL, mutRate: MUT_RATE, mutScale: MUT_SCALE,
+      genomeLength: GENOME, rng, newId,
+    });
+    return { gen: t.gen, seconds, genome: t.bestGenome };
+  };
+  return t;
 }
