@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
 import {
+  startTry, advance, pushTry, seconds, keyDir, KEY_MAP, pidAct,
   newGame, step, push, LIMIT, DT, FAIL_ANGLE, X_LIMIT, F_MAX, WIND_FORCE, PUSH_DV,
 } from '../games/balance/sim.js';
 
@@ -110,5 +111,76 @@ describe('balance sim', () => {
     const g = newGame(0.5);
     g.x = 3;
     expect(step(g, 0)).toBe('tilt');
+  });
+});
+
+describe('balance tries and keys', () => {
+  const dials = { p: 25, i: 0, d: 4 };
+
+  it('startTry gives a fresh PID memory every time', () => {
+    const run = startTry();
+    for (let k = 0; k < 300; k++) advance(run, pidAct(run.pid, run.g, { p: 25, i: 12, d: 4 }));
+    expect(run.pid.sum).not.toBe(0);
+    const next = startTry();
+    expect(next.pid.sum).toBe(0);
+    expect(next.pid.prev).toBe(null);
+    expect(next.g.t).toBe(0);
+    expect(next.outcome).toBe(null);
+    expect(next.reason).toBe(null);
+  });
+
+  it("advance ends with 'fell' and the reason", () => {
+    const tilt = startTry();
+    let r = null;
+    while (!r) r = advance(tilt, 0);
+    expect(r).toBe('fell');
+    expect(tilt.outcome).toBe('fell');
+    expect(tilt.reason).toBe('tilt');
+    const rail = startTry(0);
+    rail.g.x = 2.39; rail.g.v = 2;
+    r = advance(rail, 0);
+    expect(r).toBe('fell');
+    expect(rail.outcome).toBe('fell');
+    expect(rail.reason).toBe('rail');
+  });
+
+  it("a pole that is held up reaches 'limit' at exactly 1200 steps", () => {
+    const run = startTry();
+    let r = null;
+    while (!r) r = advance(run, pidAct(run.pid, run.g, dials));
+    expect(r).toBe('limit');
+    expect(run.outcome).toBe('limit');
+    expect(run.g.t).toBe(1200);
+  });
+
+  it('advance and pushTry do nothing after the end', () => {
+    const run = startTry();
+    while (!advance(run, 0));
+    const before = structuredClone(run.g);
+    expect(advance(run, 1)).toBe('fell');
+    pushTry(run, 1);
+    expect(run.g).toEqual(before);
+  });
+
+  it('pushTry spam keeps state finite', () => {
+    const run = startTry();
+    for (let k = 0; k < 1000; k++) pushTry(run, k % 2 ? 1 : -1);
+    for (const v of Object.values(run.g)) expect(Number.isFinite(v)).toBe(true);
+  });
+
+  it('seconds is steps over 60', () => {
+    const run = startTry();
+    for (let k = 0; k < 90; k++) advance(run, pidAct(run.pid, run.g, dials));
+    expect(seconds(run)).toBe(1.5);
+  });
+
+  it('keyDir reads held keys; both cancel', () => {
+    expect(keyDir({ left: true })).toBe(-1);
+    expect(keyDir({ right: true })).toBe(1);
+    expect(keyDir({ left: true, right: true })).toBe(0);
+    expect(keyDir({})).toBe(0);
+    expect(Object.keys(KEY_MAP).sort()).toEqual(['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD']);
+    expect(KEY_MAP.KeyA).toBe('left');
+    expect(KEY_MAP.ArrowRight).toBe('right');
   });
 });

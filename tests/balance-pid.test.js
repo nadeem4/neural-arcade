@@ -80,11 +80,10 @@ describe('balance pid', () => {
   it('no dial means no help', () => {
     const none = runPid({ p: 0, i: 0, d: 0 });
     expect(none.outcome).toBe('tilt');
-    const g = newGame(), n = newGame();
+    const n = newGame();
     let r = null, k = 0;
     while (!r) { r = step(n, 0); k++; }
     expect(none.steps).toBe(k);
-    void g;
   });
 
   it('force always clamped and finite', () => {
