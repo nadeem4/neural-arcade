@@ -1,0 +1,20 @@
+// Placeholder until the page logic lands: looks up the elements the page must have.
+const $ = id => document.getElementById(id);
+$('stage');
+$('plate');
+$('push');
+$('wind');
+$('touchLeft');
+$('touchRight');
+$('captionText');
+$('log');
+$('upFor');
+$('bestUp');
+$('gens');
+$('modeOut');
+$('pidOut');
+$('speedOut');
+$('fresh');
+$('brain');
+$('chart');
+$('chartNote');

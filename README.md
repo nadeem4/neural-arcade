@@ -64,7 +64,7 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 ## Layout
 
 ```
-index.html              arcade home, rendered from assets/games.js: hero, recorded Coin Runner demo, categories, chips
+index.html              arcade home, rendered from assets/games.js: hero (newest game with a video), recorded Coin Runner demo, categories, chips
 about/                  the About page
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
@@ -86,7 +86,7 @@ games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's tra
   how-it-works/         its write-up
 games/runner/           Coin Runner: sim.js (no DOM; also `actionFor`, `tickHuman` and `timeLeft` for playing by hand), render.js (incl. `skyFor`, the night recolour), words.js (incl. `compareNote`, `whyNote`), sfx.js (`SOUNDS` data, `soundsFor`, `readSound`/`saveSound`, the Web Audio player), main.js, story-data.js + story.json, art/ (Kenney, CC0)
   how-it-works/         its write-up
-games/balance/          Balance: sim.js (no DOM: cart-pole, PID, tries), words.js, ai.js (4-6-1 net, evolution trainer, AI_STORY_SEED) and render.js (stage layout and drawing); the page follows in a later slice
+games/balance/          Balance: sim.js (no DOM: cart-pole, PID, tries), words.js, ai.js (4-6-1 net, evolution trainer, AI_STORY_SEED) and render.js (stage layout and drawing), index.html + balance.css + main.js (the playable page: You / PID / AI, Push, Wind) and a placeholder how-it-works/ shell (the write-up follows)
 tests/                  Vitest tests for engine/ and each game's simulation and write-up data
 ```
 
