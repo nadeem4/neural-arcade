@@ -50,7 +50,8 @@ function startShown() {
 // Phases: intro (start card), count (3-2-1, counted in 60 Hz steps), play, end (end card).
 const levelEl = document.querySelector('.level');
 const COUNT_STEP = 30;
-const show = id => { for (const c of ['cardIntro', 'cardCount', 'cardEnd']) $(c).hidden = c !== id; $('playCard').hidden = !id; $('hud').hidden = s.phase !== 'play'; };
+const show = id => { for (const c of ['cardIntro', 'cardCount', 'cardEnd']) $(c).hidden = c !== id; $('playCard').hidden = !id; $('hud').hidden = s.phase !== 'play';
+  if (s.phase) levelEl.dataset.phase = s.phase; else delete levelEl.dataset.phase; }; // CSS shows the touch pad only while phase is play
 function newHumanTry() {
   s.held.clear(); s.run = startTry(null, s.rules, null); s.fx = createFx(); follow(s.fx, s.run.g, true);
 }
