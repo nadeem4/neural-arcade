@@ -18,9 +18,9 @@ function pidTrace(dials, wind = 0, steps = TRACE_STEPS) {
   const run = startTry(), th = [], x = [];
   while (run.g.t < steps && !run.outcome) {
     advance(run, pidAct(run.pid, run.g, dials), wind);
-    if (run.g.t % EVERY === 0) { th.push(r4(run.g.th)); x.push(r4(run.g.x)); }
+    if (run.g.t % EVERY === 0 || run.outcome) { th.push(r4(run.g.th)); x.push(r4(run.g.x)); }   // a try's last step is always sampled
   }
-  return { th, x, fell: run.reason };
+  return { th, x, fell: run.reason, steps: run.g.t };
 }
 
 // A push-free replay of one brain from the standard small tilt: its trace and how long it lasted.
@@ -28,7 +28,7 @@ function replay(genome) {
   const g = newGame(), acts = createActs(SIZES), input = new Float32Array(4), th = [], x = [];
   while (g.t < LIMIT) {
     const fell = step(g, aiAct(genome, g, acts, input));
-    if (g.t <= TRACE_STEPS && g.t % EVERY === 0) { th.push(r4(g.th)); x.push(r4(g.x)); }
+    if (g.t <= TRACE_STEPS && (g.t % EVERY === 0 || fell)) { th.push(r4(g.th)); x.push(r4(g.x)); }
     if (fell) break;
   }
   return { genome: genome.map(r6), th, x, seconds: g.t / 60 };

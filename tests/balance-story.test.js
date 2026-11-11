@@ -46,6 +46,13 @@ describe('the recorded run behind the write-up', () => {
   });
 });
 
+describe('trace sampling', () => {
+  it('ends a fallen try on its real last step', () => {
+    expect(S.pid.pOnly.th.length).toBe(Math.ceil(S.pid.pOnly.steps / S.every));
+    expect(S.ai.early.th.length).toBe(Math.ceil(S.ai.early.seconds * 60 / S.every));
+  });
+});
+
 describe('the write-up page', () => {
   const dir = new URL('../games/balance/how-it-works/', import.meta.url);
   const html = readFileSync(new URL('index.html', dir), 'utf8');
@@ -55,12 +62,16 @@ describe('the write-up page', () => {
   });
   it('has every canvas the script looks up', () => {
     const ids = [...js.matchAll(/\$\('([\w-]+)'\)/g)].map(m => m[1]).filter(id => id !== 'lamp'); // the lamp button comes from the shared header
+    ids.push('brainEarly', 'brainLate', 'traceEarly', 'traceLate'); // looked up through template literals
     expect(ids.length).toBeGreaterThan(5);
     for (const id of ids) expect(html, id).toContain(`id="${id}"`);
   });
   it('draws from the recording, not from chance', () => {
     expect(js).toContain("fetch('../story.json')");
     expect(js).not.toContain('Math.random');
+  });
+  it('gives every figure canvas a role and a label', () => {
+    for (const c of html.match(/<canvas[^>]*>/g)) expect(c).toMatch(/role="img"[^>]*aria-label=/);
   });
   it('states the lesson', () => {
     expect(html).toContain('Staying upright is constant correction: measure the error, push back. A tiny brain can find that rule on its own.');

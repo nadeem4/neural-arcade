@@ -8,7 +8,6 @@ import { readTheme, wireLamp } from '../../../assets/theme.js';
 import { sizeCanvas } from '../../racer/track-view.js';
 import { newGame, step, LIMIT, FAIL_ANGLE } from '../sim.js';
 import { SIZES, IN_LABELS, OUT_LABELS, aiAct } from '../ai.js';
-import { describeInput, describeOutput } from '../words.js';
 import { layout, drawStage } from '../render.js';
 
 const $ = id => document.getElementById(id);
@@ -37,10 +36,10 @@ function still(canvas, draw, ratio) {
 
 // A line chart over time. The time axis comes from the data (samples x S.every steps at 60 per second), so traces of
 // different lengths sit on one chart. `limit` draws dashed lines at +/- that value; `end` marks where a try ended.
-function lineChart(ctx, w, h, series, { unit, max, limit, every = S.every }) {
+function lineChart(ctx, w, h, series, { unit, max, limit, span, every = S.every }) {
   ctx.clearRect(0, 0, w, h);
   const left = 44, top = 10, bottom = h - 22, right = w - 6;
-  const tmax = Math.max(...series.map(s => s.v.length)) * every / 60;
+  const tmax = span ?? Math.max(...series.map(s => s.v.length)) * every / 60;
   const x = t => left + (t / tmax) * (right - left), y = v => (top + bottom) / 2 - (v / max) * (bottom - top) / 2;
   ctx.font = `400 13px ${theme.body}`; ctx.textBaseline = 'middle';
   ctx.strokeStyle = theme.rule; ctx.lineWidth = 1;
@@ -64,7 +63,10 @@ function lineChart(ctx, w, h, series, { unit, max, limit, every = S.every }) {
 }
 const deg = v => v.map(a => a * DEG);
 const LIMIT_DEG = Math.round(FAIL_ANGLE * DEG * 10) / 10;
-const angle = (canvas, lines) => addFigure(still(canvas, (ctx, w, h) => lineChart(ctx, w, h, lines(), { unit: 'degrees', max: 25, limit: LIMIT_DEG })));
+const angle = (canvas, lines, span) => addFigure(still(canvas, (ctx, w, h) => lineChart(ctx, w, h, lines(), { unit: 'degrees', max: 25, limit: LIMIT_DEG, span })));
+const SECS = LIMIT / 60, TRACE_SECS = 10;   // a try lasts SECS; the angle traces are recorded for TRACE_SECS
+document.querySelectorAll('.n-limit').forEach(el => { el.textContent = SECS; });
+$('limDeg').textContent = Math.round(LIMIT_DEG);
 
 // ---------- Fig. 1: the trained brain, live ----------
 {
@@ -92,17 +94,17 @@ const angle = (canvas, lines) => addFigure(still(canvas, (ctx, w, h) => lineChar
 
 // ---------- Figs. 2-4: the PID traces ----------
 const ink = () => theme.ink, amber = () => theme.amber;
-angle($('figP'), () => [{ v: deg(S.pid.pOnly.th), color: ink(), fell: S.pid.pOnly.fell }]);
-angle($('figD'), () => [{ v: deg(S.pid.pOnly.th), color: ink(), fell: S.pid.pOnly.fell }, { v: deg(S.pid.pd.th), color: amber() }]);
+angle($('figP'), () => [{ v: deg(S.pid.pOnly.th), color: ink(), fell: S.pid.pOnly.fell }], TRACE_SECS);
+angle($('figD'), () => [{ v: deg(S.pid.pOnly.th), color: ink(), fell: S.pid.pOnly.fell }, { v: deg(S.pid.pd.th), color: amber() }], TRACE_SECS);
 addFigure(still($('figI'), (ctx, w, h) => lineChart(ctx, w, h,
   [{ v: S.pid.windNoI.x, color: ink() }, { v: S.pid.windI.x, color: amber() }], { unit: 'metres', max: 1.5 })));
 $('xNoI').textContent = Math.abs(S.pid.windNoI.x.at(-1)).toFixed(1);
 $('xI').textContent = Math.abs(S.pid.windI.x.at(-1)).toFixed(2);
 
 // ---------- Fig. 5: generations ----------
-addFigure(still($('figGens'), (ctx, w, h) => drawBars(ctx, S.ai.history, { width: w, height: h, max: LIMIT / 60, maxLabel: '20 s', theme, slots: S.ai.history.length })));
-for (const id of ['nFull', 'nFull2']) $(id).textContent = S.ai.firstFull;
-$('nLast').textContent = S.ai.history.length;
+addFigure(still($('figGens'), (ctx, w, h) => drawBars(ctx, S.ai.history, { width: w, height: h, max: LIMIT / 60, maxLabel: `${SECS} s`, theme, slots: S.ai.history.length })));
+$('nFull2').textContent = S.ai.firstFull;
+for (const id of ['nLast', 'nLast0']) $(id).textContent = S.ai.history.length;
 
 // ---------- Fig. 6: first versus last best brain ----------
 for (const [name, rec] of [['Early', S.ai.early], ['Late', S.ai.late]]) {
@@ -110,9 +112,12 @@ for (const [name, rec] of [['Early', S.ai.early], ['Late', S.ai.late]]) {
   aiAct(rec.genome, g, acts, input);   // the network is drawn thinking about a clear lean to the right
   addFigure(still($(`brain${name}`), (ctx, w, h) => drawBrain(ctx, {
     sizes: SIZES, genome: rec.genome, acts, inLabels: IN_LABELS, outLabels: OUT_LABELS,
-    heads: ['Senses', '6 hidden', 'Push'], inWords: describeInput, outWords: describeOutput, theme, width: w, height: h,
+    heads: ['Senses', '6 hidden', 'Push'], theme, width: w, height: h,
   })));
-  angle($(`trace${name}`), () => [{ v: deg(rec.th), color: ink(), fell: rec.seconds < LIMIT / 60 }]);
+  const fell = rec.seconds < SECS;
+  $(`brain${name}`).setAttribute('aria-label', `The network of the best brain after generation ${name === 'Early' ? 1 : S.ai.history.length}`);
+  $(`trace${name}`).setAttribute('aria-label', `Line chart: its pole angle over time. ${fell ? `It falls after ${rec.seconds.toFixed(1)} seconds.` : 'It stays upright.'}`);
+  angle($(`trace${name}`), () => [{ v: deg(rec.th), color: ink(), fell }], TRACE_SECS);
 }
 $('seed').textContent = S.seed;
 
