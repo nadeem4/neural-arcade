@@ -68,7 +68,7 @@ index.html              arcade home, rendered from assets/games.js: hero, record
 about/                  the About page
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
-assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; all three games use them), story-page.js (header and footer for the How it works pages)
+assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon, share.png (default share banner); games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; all three games use them), story-page.js (header and footer for the How it works pages)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing
@@ -108,7 +108,8 @@ Custom domain: add `arcade.codewithnk.com` under the Vercel project's Domains.
 2. Add one entry to `GAMES` in `assets/games.js`: id, title, category, lesson, `learnsBy`, `goesWrongWhen`, `shot`, `path`, `writeup`, `added`, `youtube`. The home page, browse page, category page and More from lists all render from it.
 3. Copy the page skeleton from `games/runner/index.html` (and `assets/game.css`), keep `<body data-game="<name>">`, and add a game-only CSS file. Give it an experiment brief (setup, rule, watch for) and an (i) button on every readout, panel and control. `assets/game-page.js` fills the header, footer, crumb, video, write-up link and More from.
 4. Add a `how-it-works/` folder (copy one, link `assets/story.css`) whose figures are drawn from a seeded, tested run, and a `shot.jpg` for the tiles.
+5. Add share tags: copy the `<link rel="canonical">`, `og:*` and `twitter:*` lines from another game page into the game page and its write-up, changing the URLs, title and description, and put a 1280x720 `share.png` in `games/<name>/`. `tests/share-meta.test.js` checks it.
 
-Add a video: set `youtube` to the YouTube id in `assets/games.js`. Nothing else.
+Add a video: set `youtube` to the YouTube id in `assets/games.js`, and copy the video thumbnail to `games/<name>/share.png` for the share banner. A game without a video may use its `shot.jpg` as the banner instead.
 
 Add a category: one entry in `CATEGORIES`. Empty categories stay hidden.
