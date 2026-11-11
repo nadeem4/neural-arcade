@@ -1,6 +1,7 @@
 // The one list of games and categories. Pages render from this; adding a game means adding one entry here.
 export const CATEGORIES = [
   { id: 'how-ai-learns', title: 'How AI learns', lead: 'The ways a brain gets better: by evolution, by copying examples, and by trial and error.' },
+  { id: 'physical-ai', title: 'Physical AI', lead: 'How robots learn to move, sense and act in the physical world.' },
 ];
 
 export const GAMES = [
@@ -25,6 +26,13 @@ export const GAMES = [
     goesWrongWhen: 'It learns what you reward, not what you meant',
     added: '2026-10-24', shot: 'games/runner/shot.jpg', path: 'games/runner/', writeup: 'games/runner/how-it-works/', youtube: 'K1I7QxfrgIk',
   },
+  {
+    id: 'balance', title: 'Balance', category: 'physical-ai',
+    lesson: 'A cart must keep a pole upright. You, a PID controller with three dials and a tiny evolving network all try, and you can shove it with Push and Wind. Teaches feedback control, PID, evolution and disturbances.',
+    learnsBy: 'Feedback, PID, evolution',
+    goesWrongWhen: 'A steady push it never practised',
+    added: '2026-11-11', shot: 'games/balance/shot.jpg', path: 'games/balance/', writeup: 'games/balance/how-it-works/', youtube: null,
+  },
 ];
 
 export const gameById = id => GAMES.find(g => g.id === id);
@@ -40,6 +48,8 @@ const byTitle = (a, b) => a.title.localeCompare(b.title);
 export const moreFrom = (game, games, max = 3) =>
   games.filter(g => g.category === game.category && g.id !== game.id).sort(byNewest).slice(0, max);
 export const newest = games => [...games].sort(byNewest)[0];
+// the home hero: the newest game with an explainer video, or the newest game if none has one.
+const heroOf = games => newest(games.filter(g => g.youtube)) ?? newest(games);
 
 export const categoriesWithGames = (categories, games) => categories.filter(c => games.some(g => g.category === c.id));
 
@@ -49,9 +59,9 @@ export const groupCategories = (categories, games, max = 4) =>
     games: games.filter(g => g.category === category.id).sort(byNewest).slice(0, max),
   }));
 
-// What the home page shows: the newest game as the hero, then each category's newest as its big tile and the rest beside it.
+// What the home page shows: the newest game with a video as the hero, then each category's newest as its big tile and the rest beside it.
 export function homeModel(categories, games) {
-  const hero = newest(games);
+  const hero = heroOf(games);
   const groups = categoriesWithGames(categories, games).map(category => {
     const [big, ...rest] = games.filter(g => g.category === category.id).sort(byNewest);
     return { category, big, rest, bigIsNew: big === hero };

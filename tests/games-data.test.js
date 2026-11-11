@@ -100,6 +100,22 @@ describe('browse', () => {
   });
 });
 
+describe('physical-ai and balance', () => {
+  it('physical-ai category exists with a lead', () => {
+    const c = CATEGORIES.find(c => c.id === 'physical-ai');
+    expect(c.title).toBe('Physical AI');
+    expect(c.lead).toBe('How robots learn to move, sense and act in the physical world.');
+  });
+  it('balance entry', () => {
+    const g = gameById('balance');
+    expect(g).toMatchObject({ title: 'Balance', category: 'physical-ai', youtube: null, path: 'games/balance/', writeup: 'games/balance/how-it-works/', shot: 'games/balance/shot.jpg' });
+    expect(g.lesson).toMatch(/Teaches feedback control, PID, evolution and disturbances\.$/);
+  });
+  it('the real hero is Coin Runner, the newest game with a video', () => {
+    expect(homeModel(CATEGORIES, GAMES).hero.id).toBe('runner');
+  });
+});
+
 describe('homeModel', () => {
   const cats = [{ id: 'x', title: 'X' }, { id: 'y', title: 'Y' }, { id: 'empty', title: 'Empty' }];
   const games = [
@@ -110,6 +126,10 @@ describe('homeModel', () => {
   ];
   const m = homeModel(cats, games);
   it('hero is the newest game overall', () => expect(m.hero.id).toBe('b'));
+  it('hero is the newest game that has a youtube id', () => {
+    const withVideo = [...games, fake('e', { added: '2026-04-01' }), fake('f', { added: '2026-05-01', youtube: 'abcdefghijk' }), fake('g', { added: '2026-06-01', youtube: null })];
+    expect(homeModel(cats, withVideo).hero.id).toBe('f');
+  });
   it('a category has its newest as big and the others newest-first in rest', () => {
     expect(m.categories[0].big.id).toBe('b');
     expect(m.categories[0].rest.map(g => g.id)).toEqual(['c', 'a']);
