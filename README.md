@@ -62,7 +62,7 @@ A cart on a rail with a pole hinged on top; the pole falls unless the cart moves
 - **Panels:** up-for time, best time and AI generation readouts; the best brain's network drawn live with what each input and the output say right now; a bar chart with one bar per generation (seconds the best brain stayed up, dashed line at 20 s) and a line under it that says when it first held 20 s. Every one has an (i) explanation.
 - **Touch bar:** left and right buttons under the stage, shown only on a coarse pointer and only in You mode.
 - **Tested promises:** `tests/balance-pid.test.js` (P alone wobbles, D calms it, Wind leaves a steady error that I removes) and `tests/balance-ai.test.js` (a random brain falls, evolution learns to balance within a few dozen generations from several seeds).
-- **How it works** (`games/balance/how-it-works/`): a placeholder shell until slice B4.
+- **How it works** (`games/balance/how-it-works/`): the write-up, with figures from a seeded run recorded by `story-data.js` (regenerate with `node games/balance/story-data.js`).
 
 ## Run locally
 
