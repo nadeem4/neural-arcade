@@ -2,15 +2,15 @@
 
 Small browser games where tiny neural networks learn in front of you, and the player is part of the training loop. Each game teaches one machine learning idea, and each comes with an illustrated "How it works" write-up.
 
-**Live: https://neuralarcade.vercel.app**
+**Live: https://arcade.codewithnk.com**
 
 ## Experiments
 
 | Experiment | Play it | Read how it works | What it teaches |
 |---|---|---|---|
-| **Neural Racer** | [Play](https://neuralarcade.vercel.app/games/racer/) | [How it works](https://neuralarcade.vercel.app/games/racer/how-it-works/) | Learning from a score: fitness, selection, crossover, mutation, overfitting |
-| **Teach by Driving** | [Play](https://neuralarcade.vercel.app/games/teach/) | [How it works](https://neuralarcade.vercel.app/games/teach/how-it-works/) | Learning from examples: training data, loss, gradient descent, learning rate, distribution shift |
-| **Coin Runner** | [Play](https://neuralarcade.vercel.app/games/runner/) | [How it works](https://neuralarcade.vercel.app/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
+| **Neural Racer** | [Play](https://arcade.codewithnk.com/games/racer/) | [How it works](https://arcade.codewithnk.com/games/racer/how-it-works/) | Learning from a score: fitness, selection, crossover, mutation, overfitting |
+| **Teach by Driving** | [Play](https://arcade.codewithnk.com/games/teach/) | [How it works](https://arcade.codewithnk.com/games/teach/how-it-works/) | Learning from examples: training data, loss, gradient descent, learning rate, distribution shift |
+| **Coin Runner** | [Play](https://arcade.codewithnk.com/games/runner/) | [How it works](https://arcade.codewithnk.com/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
 
 The home page shows the newest game as a recorded demo, then groups games into categories. **How AI learns** holds all three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways.
 
@@ -68,7 +68,7 @@ index.html              arcade home, rendered from assets/games.js: hero, record
 about/                  the About page
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
-assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon; games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; all three games use them), story-page.js (header and footer for the How it works pages)
+assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon, share.png (default share banner); games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; all three games use them), story-page.js (header and footer for the How it works pages)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing
@@ -93,14 +93,14 @@ Each game's `sim.js` has no DOM code, so the simulations run under test. Every a
 
 ## Deploy
 
-Hosted as its own Vercel project, `neural_arcade` (live at https://neuralarcade.vercel.app). `vercel.json` skips install and build and serves the repo root as static files. `.vercelignore` keeps tests, design notes and tooling folders out of the deployment.
+Hosted as its own Vercel project, `neural_arcade` (live at https://arcade.codewithnk.com, also https://neuralarcade.vercel.app). `vercel.json` skips install and build and serves the repo root as static files. `.vercelignore` keeps tests, design notes and tooling folders out of the deployment.
 
 ```
 vercel          # preview
 vercel --prod   # production
 ```
 
-Custom domain: add `arcade.codewithnk.com` under the Vercel project's Domains.
+Custom domain: `arcade.codewithnk.com`, set under the Vercel project's Domains. Share tags use this domain for absolute URLs.
 
 ## Adding a game
 
@@ -108,7 +108,8 @@ Custom domain: add `arcade.codewithnk.com` under the Vercel project's Domains.
 2. Add one entry to `GAMES` in `assets/games.js`: id, title, category, lesson, `learnsBy`, `goesWrongWhen`, `shot`, `path`, `writeup`, `added`, `youtube`. The home page, browse page, category page and More from lists all render from it.
 3. Copy the page skeleton from `games/runner/index.html` (and `assets/game.css`), keep `<body data-game="<name>">`, and add a game-only CSS file. Give it an experiment brief (setup, rule, watch for) and an (i) button on every readout, panel and control. `assets/game-page.js` fills the header, footer, crumb, video, write-up link and More from.
 4. Add a `how-it-works/` folder (copy one, link `assets/story.css`) whose figures are drawn from a seeded, tested run, and a `shot.jpg` for the tiles.
+5. Add share tags: copy the `<link rel="canonical">`, `og:*` and `twitter:*` lines from another game page into the game page and its write-up, changing the URLs, title and description, and put a 1280x720 `share.png` in `games/<name>/`. `tests/share-meta.test.js` checks it.
 
-Add a video: set `youtube` to the YouTube id in `assets/games.js`. Nothing else.
+Add a video: set `youtube` to the YouTube id in `assets/games.js`, and copy the video thumbnail to `games/<name>/share.png` for the share banner. A game without a video may use its `shot.jpg` as the banner instead.
 
 Add a category: one entry in `CATEGORIES`. Empty categories stay hidden.

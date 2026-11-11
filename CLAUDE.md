@@ -9,16 +9,17 @@ Small browser games where tiny neural networks learn in front of you; each game 
 
 ## Layout
 - assets/games.js: the one config: every game (page, write-up, category, optional youtube id) and category
-- assets/: shared code and styles: studio.css (tokens), site.js (header/footer), game.css + game-page.js (game page), home.js, browse.js, category.js, story-page.js, video.js, theme.js, fonts/
+- assets/: shared code and styles (share.png is the default share banner): studio.css (tokens), site.js (header/footer), game.css + game-page.js (game page), home.js, browse.js, category.js, story-page.js, video.js, theme.js, fonts/
 - index.html, about/, games/index.html, category/: home, About, browse and category pages
-- games/<name>/: one game each (index.html, sim.js, main.js, words.js, story-data.js, how-it-works/)
+- games/<name>/: one game each (index.html, share.png, sim.js, main.js, words.js, story-data.js, how-it-works/)
 - engine/: shared learning code (tinynet, evolve, reinforce, train, brain-panel, curve)
 - videos/<game>/: git-ignored upload pack per explainer video (mp4, captions, description, thumbnail)
 - tests/: Vitest tests for the engine, each game's sim, words and story, the games config and page markup
 
 ## Conventions
+- Every page carries share/SEO tags (canonical, og:*, twitter:*) hard-coded in its HTML; a game banner is games/<name>/share.png (1280x720), copied from its video thumbnail, or its shot.jpg if it has no video; assets/share.png is the site default
 - No build step: plain HTML, CSS and ES modules; deployed as static files to Vercel
-- Every page links assets/studio.css; game pages add game.css and a game-only file, How it works pages add assets/story.css (and a story.css of their own if they need one). Adding a youtube id to assets/games.js is all a video needs
+- Every page links assets/studio.css; game pages add game.css and a game-only file, How it works pages add assets/story.css (and a story.css of their own if they need one). Adding a youtube id to assets/games.js, and copying its thumbnail to games/<name>/share.png, is all a video needs
 - Every game has a brief, (i) buttons, an illustrated How it works write-up and one stated lesson; no tours or quizzes; one optional narrated explainer video per game, hosted on YouTube, shown as a click-to-play facade (assets/video.js)
 - How it works figures come from a seeded run recorded by story-data.js; regenerate it when the sim changes
 - Plans and design docs go in Notion, never git (docs/ is ignored)
