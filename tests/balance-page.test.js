@@ -53,6 +53,10 @@ describe('balance.css', () => {
     expect(rules('.touch')).toMatch(/touch-action:\s*none/);
     expect(rules('.touch')).not.toMatch(/position:\s*absolute/);
   });
+  it('stacks the stage over the touch bar and lifts the caption off it', () => {
+    expect(rules('.stage-body')).toMatch(/display:\s*block/); // studio.css makes .stage-body a two-column grid
+    expect(css).toMatch(/\[data-mode="you"\] \.caption\s*\{\s*bottom:/);
+  });
   it('names no other game and has no side stripes', () => {
     expect(css).not.toMatch(/racer|runner/i);
     expect(css).not.toMatch(/border-(left|right):\s*\d+px solid/);

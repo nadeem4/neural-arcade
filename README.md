@@ -11,8 +11,9 @@ Small browser games where tiny neural networks learn in front of you, and the pl
 | **Neural Racer** | [Play](https://arcade.codewithnk.com/games/racer/) | [How it works](https://arcade.codewithnk.com/games/racer/how-it-works/) | Learning from a score: fitness, selection, crossover, mutation, overfitting |
 | **Teach by Driving** | [Play](https://arcade.codewithnk.com/games/teach/) | [How it works](https://arcade.codewithnk.com/games/teach/how-it-works/) | Learning from examples: training data, loss, gradient descent, learning rate, distribution shift |
 | **Coin Runner** | [Play](https://arcade.codewithnk.com/games/runner/) | [How it works](https://arcade.codewithnk.com/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
+| **Balance** | [Play](https://arcade.codewithnk.com/games/balance/) | [How it works](https://arcade.codewithnk.com/games/balance/how-it-works/) | Physical AI: feedback control, PID, evolution, disturbances |
 
-The home page shows the newest game as a recorded demo, then groups games into categories. **How AI learns** holds all three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways.
+The home page shows the newest game as a recorded demo, then groups games into categories. **How AI learns** holds the first three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways. **Physical AI** holds Balance, a cart-pole kept upright by feedback: a person, a PID controller or a small net that evolves. There are two categories, so far. The hero is the newest game that has a YouTube explainer (today Coin Runner), or the newest game if none has one, so a new game without a video never replaces it.
 
 ### Neural Racer (`games/racer/`)
 10 cars, each driven by a 6→8→2 network (74 weights), learn to lap a track by neuroevolution. Cars start on a grid, in rows of five behind the start line, and every car's distance is measured from the line itself. With the default 10 cars, each round the best car is kept, 8 children are bred from the top 3 and 1 random newcomer joins.
@@ -51,6 +52,18 @@ A hero that has never played learns a short side-scrolling level (two pits, a st
 - **Tested promise:** `tests/runner-presets.test.js` trains 20 random brains per rule set (about 90 s): Balanced finishes on at least 18, both loopholes appear on all 20.
 - **How it works** (`games/runner/how-it-works/`): the third way to learn, senses and moves, rolling the dice, credit for points, watching it learn, three rule sets side by side, real reward-hacking cases, honest notes. Its figures come from `story.json`: three seeded runs (seed 1000) recorded by `node games/runner/story-data.js`; a test re-records them and checks the file still matches.
 
+### Balance (`games/balance/`)
+A cart on a rail with a pole hinged on top; the pole falls unless the cart moves under it. Three controllers try to keep it up for 20 s, and you can shove the cart with Push and Wind.
+- **Cart-pole:** the classic equations in `sim.js` (no DOM): gravity 9.8, cart 1 kg, pole 0.1 kg, half-pole 1 m, force up to 10 N, 60 steps a second, a try ends when the pole tips past 0.4 rad, the cart leaves the 2.4 m rail, or 20 s pass. Everything else (PID, AI, tries) is built on it.
+- **Three controllers:** **You** (arrow keys or A and D, a held key pushes 40% of full force via `HUMAN_POWER`; the pole is frozen until your first key; a fall ends the try and it waits for the next key), **PID** (three dials: P 0-60 default 25, I 0-30 default 0, D 0-10 default 0) and **AI** (a 4-6-1 tanh net, 37 weights, reads cart position, speed, pole angle and spin, and outputs one push).
+- **PID with cart centring:** the pole is asked to hold a small lean, set from the cart's position and speed (`K_X`, `K_V`, capped at `CENTER_MAX`), so the cart does not wander off. With P alone it wobbles; D calms it; with Wind on and I at 0 it parks off-centre; raising I returns it (the I memory is capped by `I_MAX`). Each try starts a fresh PID memory.
+- **Push and Wind:** Push kicks the cart's speed by 0.8 m/s, right then left on each press, in every mode. Wind is a steady 0.6 N sideways force; turning it on resets nothing. The AI never practises with Wind.
+- **AI:** evolution (`ai.js`): 20 brains a generation, the best 3 kept, 3 fresh random newcomers, the rest bred and mutated, each scored on 2 tries with random pushes. Training runs unseen in the background at 2 or 10 generations a second (or paused) in every mode, never with Wind; the stage shows the best brain so far. A fresh random brain falls at once, and the best brain first holds the full 20 s within about 10-30 generations. New brain starts again.
+- **Panels:** up-for time, best time and AI generation readouts; the best brain's network drawn live with what each input and the output say right now; a bar chart with one bar per generation (seconds the best brain stayed up, dashed line at 20 s) and a line under it that says when it first held 20 s. Every one has an (i) explanation.
+- **Touch bar:** left and right buttons under the stage, shown only on a coarse pointer and only in You mode.
+- **Tested promises:** `tests/balance-pid.test.js` (P alone wobbles, D calms it, Wind leaves a steady error that I removes) and `tests/balance-ai.test.js` (a random brain falls, evolution learns to balance within a few dozen generations from several seeds).
+- **How it works** (`games/balance/how-it-works/`): a placeholder shell until slice B4.
+
 ## Run locally
 
 ```
@@ -68,7 +81,7 @@ index.html              arcade home, rendered from assets/games.js: hero (newest
 about/                  the About page
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
-assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon, share.png (default share banner); games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; all three games use them), story-page.js (header and footer for the How it works pages)
+assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon, share.png (default share banner); games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; every game uses them), story-page.js (header and footer for the How it works pages)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing
