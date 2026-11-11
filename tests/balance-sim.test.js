@@ -94,4 +94,21 @@ describe('balance sim', () => {
     }
     for (const k of ['x', 'v', 'th', 'w', 't']) expect(Number.isFinite(g[k])).toBe(true);
   });
+
+  it('step clamps u to [-1, 1]', () => {
+    const a = newGame(), b = newGame();
+    step(a, 5);
+    step(b, 1);
+    expect(a).toEqual(b);
+    const c = newGame(), d = newGame();
+    step(c, -5);
+    step(d, -1);
+    expect(c).toEqual(d);
+  });
+
+  it('tilt wins when tilt and rail fail on the same step', () => {
+    const g = newGame(0.5);
+    g.x = 3;
+    expect(step(g, 0)).toBe('tilt');
+  });
 });

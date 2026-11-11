@@ -32,3 +32,29 @@ export function step(g, u, wind = 0) {
 export function push(g, dir) {
   g.v += dir * PUSH_DV;
 }
+
+// PID: three dials. Cart centring turns "stay near the middle" into a small lean the pole is asked to hold.
+export const K_X = 0.03, K_V = 0.01;          // centring: how hard position and speed lean the target angle
+export const CENTER_MAX = 0.1;                // the target angle never exceeds this, radians
+export const I_MAX = 3;                       // the I memory is capped, so it cannot wind up forever
+export const PID_RANGES = {
+  p: { min: 0, max: 60, step: 1, def: 25 },
+  i: { min: 0, max: 30, step: 1, def: 0 },
+  d: { min: 0, max: 10, step: 0.5, def: 0 },
+};
+
+const clamp = (v, m) => Math.max(-m, Math.min(m, v));
+
+export function createPid() {
+  return { sum: 0, prev: null };
+}
+
+// Returns a normalized force in [-1, 1]. Keeps its memory in pid, so make a fresh one for each try.
+export function pidAct(pid, g, { p, i, d }) {
+  const ref = -clamp(K_X * g.x + K_V * g.v, CENTER_MAX);
+  const e = g.th - ref;
+  pid.sum = clamp(pid.sum + e * DT, I_MAX);
+  const de = pid.prev === null ? 0 : (e - pid.prev) / DT;
+  pid.prev = e;
+  return clamp((p * e + i * pid.sum + d * de) / F_MAX, 1);
+}
