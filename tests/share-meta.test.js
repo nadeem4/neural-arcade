@@ -6,14 +6,15 @@ const SITE = 'https://arcade.codewithnk.com/';
 const root = new URL('../', import.meta.url);
 
 const pages = [
-  ['index.html', 'assets/share.png'],
-  ['about/index.html', 'assets/share.png'],
-  ['games/index.html', 'assets/share.png'],
-  ['category/index.html', 'assets/share.png'],
-  ...GAMES.flatMap(g => [
-    [`${g.path}index.html`, `games/${g.id}/share.png`],
-    [`${g.writeup}index.html`, `games/${g.id}/share.png`],
-  ]),
+  ['index.html', ['assets/share.png']],
+  ['about/index.html', ['assets/share.png']],
+  ['games/index.html', ['assets/share.png']],
+  ['category/index.html', ['assets/share.png']],
+  ...GAMES.flatMap(g => {
+    // a game with a video uses share.png; one without may use its shot.jpg
+    const banners = g.youtube ? [`games/${g.id}/share.png`] : [`games/${g.id}/share.png`, `games/${g.id}/shot.jpg`];
+    return [[`${g.path}index.html`, banners], [`${g.writeup}index.html`, banners]];
+  }),
 ];
 
 const attr = (html, tag, key, name) =>
@@ -25,9 +26,10 @@ describe('share and SEO tags', () => {
     expect(pages.length).toBe(4 + GAMES.length * 2);
   });
 
-  for (const [file, defaultImage] of pages) {
+  for (const [file, allowed] of pages) {
     describe(file, () => {
-      const html = readFileSync(new URL(file, root), 'utf8');
+      // only the static <head> counts: crawlers read it without running JS
+      const html = readFileSync(new URL(file, root), 'utf8').split('</head>')[0];
       const url = SITE + file.replace(/index\.html$/, '');
       const desc = meta(html, 'name', 'description');
 
@@ -55,9 +57,6 @@ describe('share and SEO tags', () => {
         expect(meta(html, 'property', 'og:image:height')).toBe('720');
         expect(meta(html, 'property', 'og:image:alt')).toBeTruthy();
         const path = img.slice(SITE.length);
-        const gameDir = defaultImage.startsWith('games/') ? defaultImage.replace(/share\.png$/, '') : null;
-        // a game without a video may use its shot.jpg instead of share.png
-        const allowed = gameDir ? [defaultImage, gameDir + 'shot.jpg'] : [defaultImage];
         expect(allowed).toContain(path);
         expect(existsSync(new URL(path, root)), path).toBe(true);
       });

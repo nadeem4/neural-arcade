@@ -2,15 +2,15 @@
 
 Small browser games where tiny neural networks learn in front of you, and the player is part of the training loop. Each game teaches one machine learning idea, and each comes with an illustrated "How it works" write-up.
 
-**Live: https://neuralarcade.vercel.app**
+**Live: https://arcade.codewithnk.com**
 
 ## Experiments
 
 | Experiment | Play it | Read how it works | What it teaches |
 |---|---|---|---|
-| **Neural Racer** | [Play](https://neuralarcade.vercel.app/games/racer/) | [How it works](https://neuralarcade.vercel.app/games/racer/how-it-works/) | Learning from a score: fitness, selection, crossover, mutation, overfitting |
-| **Teach by Driving** | [Play](https://neuralarcade.vercel.app/games/teach/) | [How it works](https://neuralarcade.vercel.app/games/teach/how-it-works/) | Learning from examples: training data, loss, gradient descent, learning rate, distribution shift |
-| **Coin Runner** | [Play](https://neuralarcade.vercel.app/games/runner/) | [How it works](https://neuralarcade.vercel.app/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
+| **Neural Racer** | [Play](https://arcade.codewithnk.com/games/racer/) | [How it works](https://arcade.codewithnk.com/games/racer/how-it-works/) | Learning from a score: fitness, selection, crossover, mutation, overfitting |
+| **Teach by Driving** | [Play](https://arcade.codewithnk.com/games/teach/) | [How it works](https://arcade.codewithnk.com/games/teach/how-it-works/) | Learning from examples: training data, loss, gradient descent, learning rate, distribution shift |
+| **Coin Runner** | [Play](https://arcade.codewithnk.com/games/runner/) | [How it works](https://arcade.codewithnk.com/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
 
 The home page shows the newest game as a recorded demo, then groups games into categories. **How AI learns** holds all three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways.
 
@@ -93,14 +93,14 @@ Each game's `sim.js` has no DOM code, so the simulations run under test. Every a
 
 ## Deploy
 
-Hosted as its own Vercel project, `neural_arcade` (live at https://neuralarcade.vercel.app). `vercel.json` skips install and build and serves the repo root as static files. `.vercelignore` keeps tests, design notes and tooling folders out of the deployment.
+Hosted as its own Vercel project, `neural_arcade` (live at https://arcade.codewithnk.com, also https://neuralarcade.vercel.app). `vercel.json` skips install and build and serves the repo root as static files. `.vercelignore` keeps tests, design notes and tooling folders out of the deployment.
 
 ```
 vercel          # preview
 vercel --prod   # production
 ```
 
-Custom domain: add `arcade.codewithnk.com` under the Vercel project's Domains.
+Custom domain: `arcade.codewithnk.com`, set under the Vercel project's Domains. Share tags use this domain for absolute URLs.
 
 ## Adding a game
 
