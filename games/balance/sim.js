@@ -1,0 +1,34 @@
+// Balance: a cart with a pole on top. Keep the pole up by pushing the cart left or right.
+// No DOM, so it runs in tests and in the page alike. Positive x, v, force and th mean right; th = 0 is upright.
+// A rightward force makes th fall (the top tips left relative to the cart).
+
+export const G = 9.8, M_CART = 1.0, M_POLE = 0.1, HALF_POLE = 1.0;
+export const DT = 1 / 60, F_MAX = 10, X_LIMIT = 2.4, FAIL_ANGLE = 0.4;
+export const LIMIT = 20 * 60;                 // a try lasts at most 20 seconds
+export const START_TILT = 0.05;
+export const PUSH_DV = 0.8;                   // Push: an instant kick to the cart's speed, m/s
+export const WIND_FORCE = 0.6;                // Wind: a steady sideways force, newtons
+export const HUMAN_POWER = 0.6;               // fraction of F_MAX a held key applies (tuning knob)
+
+export function newGame(tilt = START_TILT) {
+  return { x: 0, v: 0, th: tilt, w: 0, t: 0 };
+}
+
+// One step of the classic cart-pole equations, velocities first, then positions.
+// u is the push in [-1, 1]; wind is extra newtons. Returns null, 'tilt' or 'rail'.
+export function step(g, u, wind = 0) {
+  const F = Math.max(-1, Math.min(1, u)) * F_MAX + wind;
+  const tot = M_CART + M_POLE, s = Math.sin(g.th), c = Math.cos(g.th);
+  const tmp = (F + M_POLE * HALF_POLE * g.w * g.w * s) / tot;
+  const thAcc = (G * s - c * tmp) / (HALF_POLE * (4 / 3 - (M_POLE * c * c) / tot));
+  const xAcc = tmp - (M_POLE * HALF_POLE * thAcc * c) / tot;
+  g.v += xAcc * DT; g.w += thAcc * DT; g.x += g.v * DT; g.th += g.w * DT; g.t++;
+  if (Math.abs(g.th) > FAIL_ANGLE) return 'tilt';
+  if (Math.abs(g.x) > X_LIMIT) return 'rail';
+  return null;
+}
+
+// Push: kick the cart's speed by PUSH_DV, to the right (dir 1) or the left (dir -1).
+export function push(g, dir) {
+  g.v += dir * PUSH_DV;
+}
