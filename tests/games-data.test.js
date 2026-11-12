@@ -29,7 +29,7 @@ describe('games data', () => {
   });
   it('each game links its explainer video', () => {
     const ids = Object.fromEntries(GAMES.map(g => [g.id, g.youtube]));
-    expect(ids).toMatchObject({ racer: 'tG00TxTB8ns', teach: 'qfzRiq3DoJo', runner: 'K1I7QxfrgIk' });
+    expect(ids).toMatchObject({ racer: 'tG00TxTB8ns', teach: 'qfzRiq3DoJo', runner: 'K1I7QxfrgIk', balance: 'ui3l3xSUZ4U' });
   });
   it('ids are unique and added parses as a date', () => {
     expect(new Set(GAMES.map(g => g.id)).size).toBe(GAMES.length);
@@ -108,11 +108,11 @@ describe('physical-ai and balance', () => {
   });
   it('balance entry', () => {
     const g = gameById('balance');
-    expect(g).toMatchObject({ title: 'Balance', category: 'physical-ai', youtube: null, path: 'games/balance/', writeup: 'games/balance/how-it-works/', shot: 'games/balance/shot.jpg' });
+    expect(g).toMatchObject({ title: 'Balance', category: 'physical-ai', youtube: 'ui3l3xSUZ4U', path: 'games/balance/', writeup: 'games/balance/how-it-works/', shot: 'games/balance/shot.jpg' });
     expect(g.lesson).toMatch(/Teaches feedback control, PID, evolution and disturbances\.$/);
   });
-  it('the real hero is Coin Runner, the newest game with a video', () => {
-    expect(homeModel(CATEGORIES, GAMES).hero.id).toBe('runner');
+  it('the real hero is Balance, the newest game with a video', () => {
+    expect(homeModel(CATEGORIES, GAMES).hero.id).toBe('balance');
   });
 });
 

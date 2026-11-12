@@ -41,8 +41,8 @@ describe('balance page markup', () => {
     expect(html).toContain('data-hold="left"');
     expect(html).toContain('data-hold="right"');
   });
-  it('shares its shot.jpg banner', () => {
-    expect(html).toContain('<meta property="og:image" content="https://arcade.codewithnk.com/games/balance/shot.jpg">');
+  it('shares its video thumbnail banner', () => {
+    expect(html).toContain('<meta property="og:image" content="https://arcade.codewithnk.com/games/balance/share.png">');
     expect(html).toContain('<link rel="canonical" href="https://arcade.codewithnk.com/games/balance/">');
   });
 });

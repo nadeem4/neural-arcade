@@ -31,7 +31,7 @@ export const GAMES = [
     lesson: 'A cart must keep a pole upright. You, a PID controller with three dials, a PID whose dials evolution tunes and a tiny evolving network all try, and you can shove it with Push and Wind. Teaches feedback control, PID, evolution and disturbances.',
     learnsBy: 'Feedback, PID, evolution',
     goesWrongWhen: 'A steady push it never practised',
-    added: '2026-11-11', shot: 'games/balance/shot.jpg', path: 'games/balance/', writeup: 'games/balance/how-it-works/', youtube: null,
+    added: '2026-11-11', shot: 'games/balance/shot.jpg', path: 'games/balance/', writeup: 'games/balance/how-it-works/', youtube: 'ui3l3xSUZ4U',
   },
 ];
 
