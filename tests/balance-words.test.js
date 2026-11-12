@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  describeInput, describeOutput, fallNote, tryNote, pidHint, DIAL_INFO, firstFullGeneration, aiNote, modeLine,
+  describeInput, describeOutput, fallNote, tryNote, pidHint, DIAL_INFO, firstFullGeneration, aiNote, modeLine, formulaLine, formulaLive, tunedHint, tunedNote,
 } from '../games/balance/words.js';
 
 const run = (outcome, reason = null, t = 150) => ({ outcome, reason, g: { t } });
@@ -71,5 +71,30 @@ describe('the AI in words', () => {
     expect(modeLine('you')).toMatch(/arrow keys/);
     expect(modeLine('pid')).toMatch(/three dials/);
     expect(modeLine('ai')).toMatch(/evolution/);
+  });
+});
+
+describe('tuned PID words', () => {
+  it('writes the dials as a formula', () => {
+    expect(formulaLine({ p: 21, i: 9, d: 4 })).toBe('push = 21 × lean + 9 × lean over time + 4 × spin');
+    expect(formulaLine({ p: 21, i: 0, d: 4 })).toBe('push = 21 × lean + 4 × spin');
+    expect(formulaLine({ p: 0, i: 0, d: 0 })).toBe('push = nothing');
+    expect(formulaLine({ p: 7, i: 1, d: 0.5 })).toBe('push = 7 × lean + 1 × lean over time + 0.5 × spin');
+  });
+  it('shows what each term pushes right now, signed with one decimal', () => {
+    expect(formulaLive({ p: 3.14, i: 0.42, d: -1.24 })).toBe('now: +3.1 N from lean, +0.4 N from lean over time, -1.2 N from spin');
+  });
+  it('hints at what evolution has found, first matching rule wins', () => {
+    expect(tunedHint({ p: 20, i: 1, d: 2 }, true)).toMatch(/not found I yet/);
+    expect(tunedHint({ p: 20, i: 9, d: 2 }, true)).toMatch(/tested in wind/);
+    expect(tunedHint({ p: 20, i: 9, d: 2 }, false)).toMatch(/still adjusting/);
+  });
+  it('says a first guess before any generation, then the best of the latest', () => {
+    expect(tunedNote([])).toBe('No generation yet: these dials are a first guess, untuned.');
+    expect(tunedNote([3.2, 18])).toBe('Generation 2: its best dials stayed up 18.0 s across shoves and wind.');
+  });
+  it('has a line for the tuned and AI modes', () => {
+    expect(modeLine('tuned')).toMatch(/set by evolution/);
+    expect(modeLine('ai')).toBe('AI: no formula, a tiny network whose 37 weights evolution sets.');
   });
 });

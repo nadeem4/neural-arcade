@@ -55,9 +55,31 @@ export function aiNote(history) {
   return g === -1 ? base : `${base} It first held the full ${LIMIT / 60} s in generation ${g}.`;
 }
 
+// The dials as a rule a person could read. A zero dial drops out of the rule.
+export function formulaLine({ p, i, d }) {
+  const terms = [[p, 'lean'], [i, 'lean over time'], [d, 'spin']].filter(([g]) => g > 0).map(([g, w]) => `${g} × ${w}`);
+  return `push = ${terms.length ? terms.join(' + ') : 'nothing'}`;
+}
+
+const signed = v => `${v < 0 ? '-' : '+'}${Math.abs(v).toFixed(1)}`;
+export const formulaLive = ({ p, i, d }) => `now: ${signed(p)} N from lean, ${signed(i)} N from lean over time, ${signed(d)} N from spin`;
+
+// A hint under the tuned dials; the first rule that matches wins.
+export function tunedHint({ i }, wind) {
+  if (wind && i < 3) return 'Evolution has not found I yet: in wind the cart is still drifting off-centre.';
+  if (wind) return 'Evolution found I because its dials were tested in wind, where I pays off.';
+  return 'Evolution is still adjusting the dials, scored on shoves and on wind.';
+}
+
+export function tunedNote(history) {
+  if (!history.length) return 'No generation yet: these dials are a first guess, untuned.';
+  return `Generation ${history.length}: its best dials stayed up ${history[history.length - 1].toFixed(1)} s across shoves and wind.`;
+}
+
 const MODES = {
   you: 'You: arrow keys or A and D, or the buttons on a touch screen.',
-  pid: 'PID: three dials drive the cart.',
-  ai: 'AI: a tiny network that learns by evolution.',
+  pid: 'PID: you write the formula and set the three dials.',
+  tuned: 'Tuned PID: the same three dials, set by evolution instead of by you.',
+  ai: 'AI: no formula, a tiny network whose 37 weights evolution sets.',
 };
 export const modeLine = mode => MODES[mode];

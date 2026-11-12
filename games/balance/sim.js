@@ -49,14 +49,15 @@ export function createPid() {
   return { sum: 0, prev: null };
 }
 
-// Returns a normalized force in [-1, 1]. Keeps its memory in pid, so make a fresh one for each try.
+// Returns a normalized force in [-1, 1]. Keeps its memory (and the last three terms) in pid, so make a fresh one for each try.
 export function pidAct(pid, g, { p, i, d }) {
   const ref = -clamp(K_X * g.x + K_V * g.v, CENTER_MAX);
   const e = g.th - ref;
   pid.sum = clamp(pid.sum + e * DT, I_MAX);
   const de = pid.prev === null ? 0 : (e - pid.prev) / DT;
   pid.prev = e;
-  return clamp((p * e + i * pid.sum + d * de) / F_MAX, 1);
+  pid.terms = { p: p * e, i: i * pid.sum, d: d * de }; // newtons each term asks for, kept for the formula panel
+  return clamp((pid.terms.p + pid.terms.i + pid.terms.d) / F_MAX, 1);
 }
 
 // A try: one game plus one fresh PID memory. outcome is null while it runs, then 'fell' or 'limit'.
