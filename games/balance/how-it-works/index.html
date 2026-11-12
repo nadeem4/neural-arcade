@@ -22,6 +22,7 @@
 <link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../../assets/studio.css">
 <link rel="stylesheet" href="../../../assets/story.css">
+<link rel="stylesheet" href="story.css">
 <script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
 <body>
@@ -31,13 +32,96 @@
   <header class="intro">
     <p class="kicker">Balance · How it works</p>
     <h1>How a tiny brain keeps a pole up</h1>
-    <p class="lede">The full write-up is being written. Until it lands, try it live.</p>
-    <a class="btn primary go" href="../">Try it live</a>
+    <p class="lede">A pole on a cart wants to fall over. Staying up is not one clever move but a steady habit: look at the lean, push the cart the right way, look again. A simple rule can do it, and so can a tiny brain that finds the rule by itself.</p>
+    <p class="meta"><span>6 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
   </header>
+
+  <section class="step">
+    <p class="num-tag">01</p>
+    <h2>Staying up is constant correction</h2>
+    <p>Balance a broom on your hand and you never stop moving. The broom leans, you slide your hand under it, it leans the other way, you slide back. Nothing holds it up except those small, endless corrections. The real term is <em>feedback control</em>: measure how wrong things are, act against it, measure again.</p>
+    <p>Here a tiny brain does it to a cart and pole, sixty times a second. It was only ever told to keep the pole up, never how.</p>
+    <figure class="fig">
+      <canvas id="figPlay" class="play" role="img" aria-label="A cart balancing a pole, played by the trained brain"></canvas>
+      <figcaption><b>Fig. 1</b> The best brain after <span id="nLast0"></span> generations of evolution, on a loop. It holds the pole for the full <span class="n-limit"></span> seconds.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">02</p>
+    <h2>Measure the error, push back: P</h2>
+    <p>The simplest rule: push the cart toward the lean, as hard as the lean is big. The lean is the <em>error</em>, and pushing in proportion to it is the <em>P</em> in PID, for <em>proportional</em>.</p>
+    <p>It almost works. But it reacts to where the pole is, not where it is heading, so it pushes too late and too hard. Each correction overshoots, and each overshoot is a little bigger than the last.</p>
+    <figure class="fig">
+      <canvas id="figP" class="chart" role="img" aria-label="Line chart: the pole angle over time with P alone, swinging wider until it falls"></canvas>
+      <figcaption><b>Fig. 2</b> Pole angle with P alone, from a small starting tilt. The swing grows until it crosses the dashed line, about <span id="limDeg"></span> degrees, where the pole counts as fallen.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">03</p>
+    <h2>Calm the swing: D</h2>
+    <p>The fix is to also watch how fast the pole is moving. If it is already swinging back, ease off. If it is falling fast, push harder. This is the <em>D</em>, for <em>derivative</em>: the rate of change of the error. It acts like a brake on the wobble.</p>
+    <figure class="fig">
+      <canvas id="figD" class="chart" role="img" aria-label="Line chart: the pole angle with P alone, and with P and D, which settles to upright"></canvas>
+      <p class="key"><span><i class="l-ink"></i>P alone</span><span><i class="l-amber"></i>P and D</span></p>
+      <figcaption><b>Fig. 3</b> The same start, with and without D. With D the pole settles to upright and stays there.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">04</p>
+    <h2>The slow drift: I</h2>
+    <p>Now add a steady wind. P and D keep the pole up, but the wind keeps pushing, so the cart ends up parked off to one side. A small error that never goes away is easy for P and D to live with.</p>
+    <p>The <em>I</em>, for <em>integral</em>, keeps a running total of the error over time. A small error that lasts keeps adding up until the controller finally does something about it, and the cart returns to the middle.</p>
+    <figure class="fig">
+      <canvas id="figI" class="chart" role="img" aria-label="Line chart: the cart position in steady wind, parked off-centre without I, returning to the middle with I"></canvas>
+      <p class="key"><span><i class="l-ink"></i>P and D only</span><span><i class="l-amber"></i>P, I and D</span></p>
+      <figcaption><b>Fig. 4</b> Cart position in steady wind, over <span class="n-limit"></span> seconds. Without I it ends <span id="xNoI"></span> metres off centre. With I it ends <span id="xI"></span> metres from the middle.</figcaption>
+    </figure>
+    <p>One honest detail: in this game the controller also gets a fixed, gentle pull toward the middle of the rail, so the cart does not wander off the end while it balances. Without it, even a good pole-balancer would slowly drift away. That pull is built into the P and D here, it is not what I adds.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">05</p>
+    <h2>A brain finds the rule by evolution</h2>
+    <p>The AI has no rule written in. Its brain is a tiny network: four numbers in (cart position, cart speed, pole angle, pole spin), six hidden neurons, one number out, the push. That is 37 weights. A brand-new brain has random weights, so it pushes at random and the pole falls within a few seconds.</p>
+    <p>Then it is <em>evolved</em>, as in <a href="../../racer/how-it-works/">Neural Racer</a>. Twenty brains each try to balance, with small random shoves thrown in. The ones that last longest have children with slightly changed weights, and the rest are dropped. Repeat.</p>
+    <figure class="fig">
+      <canvas id="figGens" class="chart" role="img" aria-label="Bar chart: how many seconds the best brain lasted in each generation"></canvas>
+      <figcaption><b>Fig. 5</b> How long the best brain of each generation kept the pole up, out of <span class="n-limit"></span> seconds. It first lasted the full <span class="n-limit"></span> seconds in generation <span id="nFull2"></span>.</figcaption>
+    </figure>
+    <figure class="fig wide">
+      <div class="duo">
+        <div><p class="duo-label">After generation 1</p><canvas id="brainEarly" class="brain" role="img" aria-label="The network of the best brain after generation 1"></canvas><canvas id="traceEarly" class="chart small" role="img" aria-label=""></canvas></div>
+        <div><p class="duo-label">After generation <span id="nLast"></span></p><canvas id="brainLate" class="brain" role="img" aria-label="The network of the best brain at the end"></canvas><canvas id="traceLate" class="chart small" role="img" aria-label=""></canvas></div>
+      </div>
+      <figcaption><b>Fig. 6</b> The best brain early and late, and what each does from the same small tilt. In the networks, a solid line pushes the next neuron up, a dashed line pushes it down. Below each, the pole angle, on the same scale as Fig. 2.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">06</p>
+    <h2>What it has and has not learned</h2>
+    <ul class="notes">
+      <li><b>It learned to balance, not to cope with wind.</b> It trained with small pushes but never with wind. Switch Wind on in the game and it does what it can, because correcting the lean is a rule it already has.</li>
+      <li><b>It lives in a simulation.</b> There is no delay, no friction in the wheels and no noise in what it senses. A real cart has all three, which is why real balancing robots are harder. A later game, The real world, is about exactly that gap.</li>
+      <li><b>It looks a lot like PD.</b> The rule it found is roughly: push toward the lean, and push harder the faster the pole is turning. That is a P and a D on the angle and the spin, found by evolution instead of written by a person.</li>
+      <li><b>The figures come from one recorded run</b> (seed <span id="seed"></span>), so they are the same on every visit. The PID traces are sampled 20 times a second.</li>
+    </ul>
+  </section>
+
+  <section class="step finale">
+    <h2>Your turn</h2>
+    <p>Staying upright is constant correction: measure the error, push back. A tiny brain can find that rule on its own.</p>
+    <p>On the live page, balance it yourself with the arrow keys, then hand it to the PID and turn the dials, then to the AI. Push it, and switch the wind on.</p>
+    <a class="btn primary go" href="../"><span>Try it live</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+  </section>
 </main>
 
 <footer data-site></footer>
 
 <script type="module" src="../../../assets/story-page.js"></script>
+<script type="module" src="story.js"></script>
 </body>
 </html>

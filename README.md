@@ -62,7 +62,8 @@ A cart on a rail with a pole hinged on top; the pole falls unless the cart moves
 - **Panels:** up-for time, best time and AI generation readouts; the best brain's network drawn live with what each input and the output say right now; a bar chart with one bar per generation (seconds the best brain stayed up, dashed line at 20 s) and a line under it that says when it first held 20 s. Every one has an (i) explanation.
 - **Touch bar:** left and right buttons under the stage, shown only on a coarse pointer and only in You mode.
 - **Tested promises:** `tests/balance-pid.test.js` (P alone wobbles, D calms it, Wind leaves a steady error that I removes) and `tests/balance-ai.test.js` (a random brain falls, evolution learns to balance within a few dozen generations from several seeds).
-- **How it works** (`games/balance/how-it-works/`): a placeholder shell until slice B4.
+- **How it works** (`games/balance/how-it-works/`): six short sections (constant correction, P, D, I, evolution, what it has and has not learned) with six figures. All but the live replay in Fig. 1 are drawn from `games/balance/story.json`: seed `STORY_SEED`, recorded by `node games/balance/story-data.js`; a test re-records it and compares. Traces are sampled every 3 steps (`every`); the P and D traces cover 10 s but the wind traces cover 20 s, so the charts size their time axis from the data. The AI history runs to the first full-20 s generation plus 5 more, and the fresh, early and late genomes are stored. Fig. 1 replays the late genome on the real sim.
+- **Share banner:** Balance has no video yet, so its banner is `shot.jpg`. When its video ships, copy the thumbnail to `games/balance/share.png`, point `og:image` and `twitter:image` on both pages at it, and set `youtube` in `assets/games.js`.
 
 ## Run locally
 
@@ -99,7 +100,7 @@ games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's tra
   how-it-works/         its write-up
 games/runner/           Coin Runner: sim.js (no DOM; also `actionFor`, `tickHuman` and `timeLeft` for playing by hand), render.js (incl. `skyFor`, the night recolour), words.js (incl. `compareNote`, `whyNote`), sfx.js (`SOUNDS` data, `soundsFor`, `readSound`/`saveSound`, the Web Audio player), main.js, story-data.js + story.json, art/ (Kenney, CC0)
   how-it-works/         its write-up
-games/balance/          Balance: sim.js (no DOM: cart-pole, PID, tries), words.js, state.js (pure page helpers: keys, training allowance, Wind, dial markup), ai.js (4-6-1 net, evolution trainer, AI_STORY_SEED) and render.js (stage layout and drawing), index.html + balance.css + main.js (the playable page: You / PID / AI, Push, Wind; training runs in every mode) and a placeholder how-it-works/ shell (the write-up follows)
+games/balance/          Balance: sim.js (no DOM: cart-pole, PID, tries), words.js, state.js (pure page helpers: keys, training allowance, Wind, dial markup), ai.js (4-6-1 net, evolution trainer, AI_STORY_SEED) and render.js (stage layout and drawing), story-data.js + story.json (the recorded run behind the write-up), index.html + balance.css + main.js (the playable page: You / PID / AI, Push, Wind; training runs in every mode) and how-it-works/ (the write-up)
 tests/                  Vitest tests for engine/ and each game's simulation and write-up data
 ```
 

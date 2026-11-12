@@ -1,0 +1,13 @@
+/* Balance write-up: the shared write-up styles (assets/story.css) plus this page's figures. */
+
+.fig .play { display: block; width: 100%; aspect-ratio: 8 / 5; }
+.fig .chart { display: block; width: 100%; height: 220px; }
+.fig .chart.small { height: 150px; margin-top: 10px; }
+
+.key .l-ink { background: var(--ink); }
+.key .l-amber { background: var(--amber); }
+
+/* Fig. 6: the early and the late brain side by side. */
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.duo-label { margin: 0 0 8px !important; font-family: var(--sans); font-weight: 600; font-size: 16px !important; letter-spacing: normal; }
+@media (max-width: 640px) { .duo { grid-template-columns: minmax(0, 1fr); } }
