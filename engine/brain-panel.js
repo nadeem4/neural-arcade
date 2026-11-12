@@ -9,10 +9,12 @@ export function drawBrain(ctx, { sizes, genome, acts, inLabels = [], outLabels =
   if (!genome) return;
   // Narrow panels (phones) move the output text under the network, so nothing runs off the edge.
   const below = !!outWords && width < 380, foot = below ? 62 : 0;
-  // The left column grows to the longest label (up to half the panel); a label still too long is squeezed to fit.
+  // The left column is sized from the label names plus a fixed allowance for the words, never the live words,
+  // so the network does not shift as the words change. A label still too long is squeezed to fit.
   ctx.font = `500 ${below ? 12 : 13}px ${theme.body}`;
   const inText = (t, i) => (inWords ? `${t} · ${inWords(i, acts[0][i])}` : t);
-  const widest = Math.max(0, ...inLabels.map((t, i) => ctx.measureText(inText(t, i)).width + 14));
+  const allow = inWords ? ctx.measureText(' · right of centre').width : 0;
+  const widest = Math.max(0, ...inLabels.map(t => ctx.measureText(t).width + allow + 14));
   const left = inLabels.length ? Math.min(Math.max(inWords ? 128 : 96, widest), width * 0.5) : 16;
   const right = outLabels.length && !below ? Math.min(inWords ? 136 : 92, width * 0.3) : 16;
   const top = heads.length ? 22 : 0, mid = top + (height - top - foot) / 2;
