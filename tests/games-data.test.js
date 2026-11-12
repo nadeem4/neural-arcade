@@ -125,7 +125,7 @@ describe('home demo config', () => {
   it('every game with a demo has games/<id>/demo.js and all its words', () => {
     for (const g of GAMES.filter(g => g.demo)) {
       expect(existsSync(new URL(`../games/${g.id}/demo.js`, import.meta.url)), g.id).toBe(true);
-      for (const f of FIELDS) expect(typeof g.demo[f], `${g.id}.${f}`).toBe('string');
+      for (const f of FIELDS) expect(g.demo[f], `${g.id}.${f}`).toMatch(/\S/);
     }
   });
   it('Coin Runner and Balance have demos; Racer and Teach do not yet', () => {
@@ -155,6 +155,11 @@ describe('homeModel', () => {
     const demo = { net: '', learns: '', panel: '', alt: '' };
     const g = [fake('old', { added: '2026-01-01', youtube: 'abcdefghijk', demo }), fake('new', { added: '2026-05-01', youtube: 'abcdefghijk', demo: null })];
     expect(homeModel(cats, g).hero.id).toBe('old');
+  });
+  it('with no video game, the hero is the newest game that has a demo', () => {
+    const demo = { net: 'n', learns: 'l', panel: 'p', alt: 'a' };
+    const g = [fake('withDemo', { added: '2026-01-01', demo }), fake('newer', { added: '2026-05-01', demo: null })];
+    expect(homeModel(cats, g).hero.id).toBe('withDemo');
   });
   it('a category has its newest as big and the others newest-first in rest', () => {
     expect(m.categories[0].big.id).toBe('b');

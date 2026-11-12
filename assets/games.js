@@ -50,8 +50,8 @@ const byTitle = (a, b) => a.title.localeCompare(b.title);
 export const moreFrom = (game, games, max = 3) =>
   games.filter(g => g.category === game.category && g.id !== game.id).sort(byNewest).slice(0, max);
 export const newest = games => [...games].sort(byNewest)[0];
-// the home hero: the newest game with an explainer video and a demo (its `demo` words and games/<id>/demo.js), or the newest game if none has both.
-const heroOf = games => newest(games.filter(g => g.youtube && g.demo)) ?? newest(games);
+// the home hero: the newest game with an explainer video and a demo (its `demo` words and games/<id>/demo.js), else the newest game with a demo, else the newest game (then the home shows no recorded run).
+const heroOf = games => newest(games.filter(g => g.youtube && g.demo)) ?? newest(games.filter(g => g.demo)) ?? newest(games);
 
 export const categoriesWithGames = (categories, games) => categories.filter(c => games.some(g => g.category === c.id));
 
