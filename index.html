@@ -35,11 +35,11 @@
     </div>
 
     <div class="stage">
-      <div class="stage-head"><span class="live"><i></i><b>Recorded run</b></span><span id="stage-title">Coin Runner</span><span>12 inputs, 8 hidden, 4 moves</span><span class="sp">Learning from points only</span></div>
+      <div class="stage-head" id="stage-head"><span class="live"><i></i><b>Recorded run</b></span></div>
       <div class="stage-body">
-        <div class="scene"><canvas id="demo" class="pixel" role="img" aria-label="A trained hero playing the Coin Runner level on a loop"></canvas></div>
+        <div class="scene"><canvas id="demo" class="pixel" role="img" aria-label="A recorded run of the newest game"></canvas></div>
         <aside class="brain" aria-label="What the brain decides right now">
-          <h2>Its four moves, right now</h2>
+          <h2 id="panel-title">Right now</h2>
           <ul class="acts-list" id="moves"></ul>
         </aside>
       </div>

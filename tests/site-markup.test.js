@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { headerHtml, footerHtml } from '../assets/site.js';
 import { GAMES } from '../assets/games.js';
 import { videoHtml, crumbHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
-import { heroActionsHtml, categoryHtml, chipsHtml } from '../assets/home-view.js';
+import { heroActionsHtml, stageHeadHtml, categoryHtml, chipsHtml } from '../assets/home-view.js';
 
 const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
 const themeJs = readFileSync(new URL('../assets/theme.js', import.meta.url), 'utf8');
@@ -133,9 +133,16 @@ describe('review fixes', () => {
   it('category blocks are sections', () => {
     expect(categoryHtml({ category: cat, big: game(), rest: [], bigIsNew: false })).toMatch(/^<section class="category"/);
   });
-  it('demo canvas stays pixelated and the stage title is static', () => {
+  it('demo canvas stays pixelated', () => {
     expect(css).toMatch(/\.scene canvas\s*\{[^}]*image-rendering:\s*pixelated/);
-    expect(read('assets/home.js')).not.toContain('stage-title');
+  });
+  it('the stage head renders from the hero demo config, and index.html holds no game words', () => {
+    const h = stageHeadHtml(game({ title: 'Gee', demo: { net: '2 in, 3 out', learns: 'Learning by x', panel: 'P', alt: 'A' } }));
+    expect(h).toContain('Recorded run');
+    expect(h).toContain('Gee');
+    expect(h).toContain('2 in, 3 out');
+    expect(h).toContain('Learning by x');
+    expect(read('index.html')).not.toMatch(/Coin Runner|Balance|hidden|four moves/);
   });
 });
 
