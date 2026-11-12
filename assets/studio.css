@@ -90,6 +90,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   .top nav { gap: 16px; }
   .row { grid-template-columns: 88px minmax(0, 1fr); }
 }
+@media (max-width: 400px) {
+  .top { gap: 8px; }
+  .top nav { gap: 10px; }
+  .logo { gap: 8px; font-size: 16px; }
+  .btn.lamp { width: 36px; height: 36px; }
+}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 /* home */
