@@ -39,8 +39,10 @@ export function evaluate(dials, rng) {
   return Math.round((shove + wind) / 2);
 }
 
-export const TUNE_POP = 20, TUNE_ELITE = 3, TUNE_FRESH = 3, TUNE_POOL = 10, TUNE_MUT_RATE = 0.4, TUNE_MUT_SCALE = 0.5, TUNE_TRIES = 2;
-export const TUNER_STORY_SEED = 59; // scanned seeds 1-60: starts at 18.3 s with I 17, reaches a full 20 s with I 30 around generation 13
+export const TUNE_POP = 20, TUNE_ELITE = 3, TUNE_FRESH = 0, TUNE_POOL = 10, TUNE_MUT_RATE = 0.4, TUNE_MUT_SCALE = 0.5, TUNE_TRIES = 2;
+// The first population starts at this gene offset (sigmoid about 0.05), so the dials begin near zero, untuned.
+export const INIT_OFFSET = -3;
+export const TUNER_STORY_SEED = 59; // scanned seeds 1-60: starts at 2.5 s with P7 I1 D0.5, first holds 18 s at generation 15 and 20 s at 23, ends P59 I29 D2
 
 // Evolution that runs unseen: each generation scores every set of dials, then breeds the next from the best.
 export function createTuner(seed) {
@@ -49,7 +51,7 @@ export function createTuner(seed) {
   const newId = () => nextId++;
   const t = {
     gen: 0, history: [], dialsHistory: [],
-    pop: Array.from({ length: TUNE_POP }, () => ({ id: newId(), genome: randomGenome(GENES, rng), kind: 'new', parents: [] })),
+    pop: Array.from({ length: TUNE_POP }, () => ({ id: newId(), genome: randomGenome(GENES, rng).map(g => g + INIT_OFFSET), kind: 'new', parents: [] })),
   };
   t.bestGenome = t.pop[0].genome.slice();
   t.bestDials = dialsFromGenome(t.bestGenome);

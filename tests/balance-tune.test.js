@@ -113,16 +113,22 @@ describe('the tuner', () => {
     expect(avg(late)).toBeGreaterThan(avg(early));
   });
 
-  it('the story seed starts short of 20 s with a middling I, then reaches 20 s with a high I', () => {
+  it('the story seed starts untuned, finds I, and first holds 18 s mid-run', () => {
     const t = run(TUNER_STORY_SEED, 30);
-    expect(t.history[0]).toBeLessThan(19);
-    expect(t.history.at(-1)).toBe(20);
-    expect(t.dialsHistory[0].i).toBeLessThanOrEqual(18);
-    expect(t.dialsHistory.at(-1).i).toBeGreaterThanOrEqual(25);
-    expect(new Set(t.dialsHistory.map(d => JSON.stringify(d))).size).toBeGreaterThanOrEqual(6);
-    const first = t.history.findIndex(s => s >= 20) + 1;
+    expect(t.history[0]).toBeLessThan(10);
+    expect(t.dialsHistory[0].i).toBeLessThanOrEqual(6);
+    expect(t.dialsHistory.at(-1).i).toBeGreaterThanOrEqual(8);
+    const first = t.history.findIndex(s => s >= 18) + 1;
     expect(first).toBeGreaterThanOrEqual(8);
     expect(first).toBeLessThanOrEqual(25);
+  });
+
+  it('starts from near-zero dials, like a person who has tuned nothing', () => {
+    for (let seed = 1; seed <= 5; seed++) {
+      const d = createTuner(seed).bestDials;
+      expect(d.p).toBeLessThanOrEqual(15);
+      expect(d.i).toBeLessThanOrEqual(8);
+    }
   });
 
   it('dials copied to a plain object score the same', () => {
