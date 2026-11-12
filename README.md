@@ -86,6 +86,7 @@ games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's tra
   how-it-works/         its write-up
 games/runner/           Coin Runner: sim.js (no DOM; also `actionFor`, `tickHuman` and `timeLeft` for playing by hand), render.js (incl. `skyFor`, the night recolour), words.js (incl. `compareNote`, `whyNote`), sfx.js (`SOUNDS` data, `soundsFor`, `readSound`/`saveSound`, the Web Audio player), main.js, story-data.js + story.json, art/ (Kenney, CC0)
   how-it-works/         its write-up
+games/balance/          Balance: sim.js (no DOM: cart-pole, PID, tries) and words.js; the AI, drawing and page follow in later slices
 tests/                  Vitest tests for engine/ and each game's simulation and write-up data
 ```
 
