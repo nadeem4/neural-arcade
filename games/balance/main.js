@@ -57,6 +57,7 @@ function setMode(mode) {
   $('useDials').hidden = mode !== 'tuned';
   $('modeOut').textContent = modeLine(mode);
   showDials(); showHint(); drawChart();
+  if (mode === 'tuned') say('Evolution sets the three dials. Watch them climb as the generations pass; the chart shows each generation's best.');
 }
 document.querySelectorAll('button[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
