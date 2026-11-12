@@ -1,0 +1,25 @@
+/* Balance only: the rest of the page comes from studio.css and assets/game.css. */
+
+.stage-body { display: block; } /* studio.css makes it a two-column grid; here the stage and touch bar stack */
+#stage { display: block; width: 100%; aspect-ratio: 8 / 5; }
+#brain { height: 220px; }
+#chart { height: 150px; }
+@media (max-width: 520px) { #brain { height: 260px; } }
+
+/* The PID dials dim unless PID is in control. */
+.dial[data-off] input { opacity: .55; } /* dim only the slider; label text keeps full contrast */
+.dial-name { font-size: 15px; }
+
+/* Wind, when on. */
+#wind[aria-pressed="true"] { background: var(--amber); color: #000; }
+
+/* The AI note under the chart. */
+.loophole { font-weight: 600; max-width: 60ch; }
+.loophole:empty { display: none; }
+.loophole:not(:empty) { padding: 8px 12px; border-radius: 8px; background: var(--track); }
+
+/* Touch bar under the stage, only while you are in control on a touch screen. */
+.touch { display: none; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--stage); touch-action: none; }
+.touch button { min-width: 56px; min-height: 56px; flex: 1; border-radius: 12px; border: 2px solid var(--stage-ink); background: transparent; color: var(--stage-ink); font: 700 22px/1.5 var(--sans); touch-action: none; user-select: none; }
+.touch button:active { background: color-mix(in srgb, var(--stage-ink) 18%, transparent); }
+@media (pointer: coarse) { .stage-body[data-mode="you"] .touch { display: flex; } .stage-body[data-mode="you"] .caption { bottom: 88px; } } /* lift the caption off the touch bar */

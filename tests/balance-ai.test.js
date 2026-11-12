@@ -145,3 +145,13 @@ describe('learning proof', () => {
     expect(sorted[9]).toBeLessThanOrEqual(30);
   });
 });
+
+describe('the shown brain is only read', () => {
+  it('aiAct never changes trainer.bestGenome', () => {
+    const t = createTrainer(4); t.runGeneration();
+    const before = Array.from(t.bestGenome), acts = createActs(SIZES), input = new Float32Array(4);
+    const g = newGame(0.03);
+    for (let i = 0; i < 300; i++) { aiAct(t.bestGenome, g, acts, input); step(g, 0); }
+    expect(Array.from(t.bestGenome)).toEqual(before);
+  });
+});
