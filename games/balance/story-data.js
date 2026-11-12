@@ -1,13 +1,15 @@
-// The write-up's figures come from real, seeded runs: four PID tries and one AI training run. Training takes a
+// The write-up's figures come from real, seeded runs: four PID tries, one AI training run and one tuned-PID run. Training takes a
 // moment, too long for a phone to redo on every visit, so they are recorded once into story.json:
 //   node games/balance/story-data.js
 // A test re-records them and checks story.json still matches, so the pictures can't drift from the code.
 import { createActs } from '../../engine/tinynet.js';
 import { startTry, advance, pidAct, newGame, step, WIND_FORCE, LIMIT } from './sim.js';
 import { AI_STORY_SEED, SIZES, createTrainer, aiAct } from './ai.js';
+import { createTuner, TUNER_STORY_SEED } from './tune.js';
 
 export const STORY_SEED = AI_STORY_SEED;
 const EVERY = 3;                       // sample every 3 steps: 20 per second
+const TUNER_GENS = 30;                 // tuned-PID generations recorded
 const TRACE_STEPS = 600;               // up to 10 seconds
 const WIND_STEPS = LIMIT;              // wind tries run the full 20 s: the cart drifts slowly, so 10 s is too short to see it settle
 const r4 = v => Math.round(v * 1e4) / 1e4 + 0;   // + 0 turns -0 into 0, which JSON would lose
@@ -54,7 +56,10 @@ export function recordStory(seed = STORY_SEED) {
     history: tr.history.map(r4), firstFull,
     fresh: fresh.map(r6), early: replay(early), late: replay([...tr.bestGenome]),
   };
-  return { seed, every: EVERY, pid, ai };
+  const tu = createTuner(TUNER_STORY_SEED);
+  for (let k = 0; k < TUNER_GENS; k++) tu.runGeneration();
+  const tuner = { seed: TUNER_STORY_SEED, dials: tu.dialsHistory.map(d => [d.p, d.i, d.d]), seconds: tu.history.map(r4) };
+  return { seed, every: EVERY, pid, ai, tuner };
 }
 
 if (typeof process !== 'undefined' && import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/').replace(/^(?!\/)/, '/')}`) {
