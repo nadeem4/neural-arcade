@@ -68,8 +68,18 @@ export const formulaLive = ({ p, i, d }) => `now: ${signed(p)} N from lean, ${si
 export function tunedHint({ i }, wind) {
   if (wind && i < 3) return 'Evolution has not found I yet: in wind the cart is still drifting off-centre.';
   if (wind) return 'Evolution found I because its dials were tested in wind, where I pays off.';
-  return 'Evolution is still adjusting the dials, scored on shoves and on wind.';
+  return 'Evolution sets these dials, scored on shoves and on wind. Turn Wind on to see why it wants I.';
 }
+
+// The line under the stage: what is going on in each mode, and after Restart training.
+const SAY = {
+  you: 'Press an arrow key to start. Push and Wind shake things up.',
+  pid: 'Drag the dials: P pushes against the lean, D calms the swing, I removes a steady drift.',
+  tuned: "Evolution sets the three dials. Watch them climb as the generations pass; the chart shows each generation's best.",
+  ai: 'Every brain starts random, so the first tries fall at once. Watch the chart: each bar is one generation.',
+};
+export const modeSay = mode => SAY[mode];
+export const freshSay = mode => (mode === 'tuned' ? 'Fresh dials, close to zero. Watch evolution turn them up.' : 'A fresh random brain. Every brain starts by falling.');
 
 export function tunedNote(history) {
   if (!history.length) return 'No generation yet: these dials are a first guess, untuned.';

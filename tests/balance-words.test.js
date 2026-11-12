@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  describeInput, describeOutput, fallNote, tryNote, pidHint, DIAL_INFO, firstFullGeneration, aiNote, modeLine, formulaLine, formulaLive, tunedHint, tunedNote,
+  describeInput, describeOutput, fallNote, tryNote, pidHint, DIAL_INFO, firstFullGeneration, aiNote, modeLine, modeSay, freshSay, formulaLine, formulaLive, tunedHint, tunedNote,
 } from '../games/balance/words.js';
 
 const run = (outcome, reason = null, t = 150) => ({ outcome, reason, g: { t } });
@@ -87,11 +87,18 @@ describe('tuned PID words', () => {
   it('hints at what evolution has found, first matching rule wins', () => {
     expect(tunedHint({ p: 20, i: 1, d: 2 }, true)).toMatch(/not found I yet/);
     expect(tunedHint({ p: 20, i: 9, d: 2 }, true)).toMatch(/tested in wind/);
-    expect(tunedHint({ p: 20, i: 9, d: 2 }, false)).toMatch(/still adjusting/);
+    expect(tunedHint({ p: 20, i: 9, d: 2 }, false)).toMatch(/Turn Wind on/);
   });
   it('says a first guess before any generation, then the best of the latest', () => {
     expect(tunedNote([])).toBe('No generation yet: these dials are a first guess, untuned.');
     expect(tunedNote([3.2, 18])).toBe('Generation 2: its best dials stayed up 18.0 s across shoves and wind.');
+  });
+  it('says something for every mode, and the wind-off hint does not claim it is still adjusting', () => {
+    for (const m of ['you', 'pid', 'tuned', 'ai']) expect(modeSay(m)).toBeTruthy();
+    expect(new Set(['you', 'pid', 'tuned', 'ai'].map(modeSay)).size).toBe(4);
+    expect(freshSay('tuned')).toMatch(/dials/);
+    expect(freshSay('ai')).toMatch(/random brain/);
+    expect(tunedHint({ p: 50, i: 20, d: 2 }, false)).not.toMatch(/still adjusting/);
   });
   it('has a line for the tuned and AI modes', () => {
     expect(modeLine('tuned')).toMatch(/set by evolution/);

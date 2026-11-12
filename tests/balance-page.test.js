@@ -123,6 +123,15 @@ describe('balance main.js', () => {
     expect(b).toContain("setMode('pid')");
     for (const n of ['toggleWind', 'startTry(', 'createTuner', 's.wind', 's.rate']) expect(b, n).not.toContain(n);
   });
+  it('every mode writes the line under the stage, and Restart training follows the mode', () => {
+    expect(block('function setMode', '// ---------- PID dials')).toContain('say(modeSay(mode))');
+    expect(block('function freshBrain', '// ---------- Mode')).toContain('say(freshSay(s.mode))');
+    expect(main).toContain("$('fresh').addEventListener('click', freshBrain)");
+  });
+  it('the chart question and label follow the mode', () => {
+    expect(block('function drawChart', 'const brainActs')).toMatch(/chartAsk[\s\S]*best dials/);
+    expect(html).toContain('id="chartAsk"');
+  });
   it('Wind only toggles Wind: no restart, no new brain, no rate change', () => {
     const b = block("$('wind').addEventListener", "$('fresh')");
     expect(b).toContain('toggleWind');

@@ -8,7 +8,7 @@ import { sizeCanvas } from '../racer/track-view.js';
 import { startTry, advance, pushTry, seconds, keyDir, KEY_MAP, pidAct, PID_RANGES, HUMAN_POWER, WIND_FORCE, LIMIT } from './sim.js';
 import { SIZES, IN_LABELS, OUT_LABELS, aiAct, createTrainer } from './ai.js';
 import { createTuner } from './tune.js';
-import { describeInput, describeOutput, tryNote, pidHint, DIAL_INFO, aiNote, modeLine, tunedHint, tunedNote, formulaLine, formulaLive } from './words.js';
+import { describeInput, describeOutput, tryNote, pidHint, DIAL_INFO, aiNote, modeLine, tunedHint, tunedNote, modeSay, freshSay, formulaLine, formulaLive } from './words.js';
 import { layout, drawStage } from './render.js';
 import { createKeys, pressKey, releaseKey, endTryKeys, clearKeys, keyUp, owedAfter, toggleWind, dialHtml } from './state.js';
 
@@ -40,8 +40,8 @@ function newTry() {
   caption(s.mode === 'you' ? 'Press ← or → to start' : `${WHO[s.mode]} is balancing`);
 }
 function freshBrain() {
-  newTrainers(); s.owed = 0; s.best.ai = s.best.tuned = 0; drawChart();
-  if (s.mode === 'ai' || s.mode === 'tuned') { newTry(); caption(s.mode === 'ai' ? 'A fresh random brain. Every brain starts by falling.' : 'Fresh dials, close to zero. Watch evolution turn them up.'); }
+  newTrainers(); s.owed = 0; s.best.ai = s.best.tuned = 0; drawChart(); say(freshSay(s.mode));
+  if (s.mode === 'ai' || s.mode === 'tuned') { newTry(); caption(freshSay(s.mode)); }
 }
 
 // ---------- Mode ----------
@@ -57,7 +57,7 @@ function setMode(mode) {
   $('useDials').hidden = mode !== 'tuned';
   $('modeOut').textContent = modeLine(mode);
   showDials(); showHint(); drawChart();
-  if (mode === 'tuned') say('Evolution sets the three dials. Watch them climb as the generations pass; the chart shows each generation's best.');
+  say(modeSay(mode));
 }
 document.querySelectorAll('button[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
@@ -84,7 +84,7 @@ $('push').addEventListener('click', () => {
   pushTry(s.run, s.pushSide); s.pushSide *= -1; s.started = true;
 });
 $('wind').addEventListener('click', e => { Object.assign(s, toggleWind(s)); e.currentTarget.setAttribute('aria-pressed', String(s.wind)); showHint(); });
-$('fresh').addEventListener('click', () => { freshBrain(); say('A fresh random brain. Every brain starts by falling.'); });
+$('fresh').addEventListener('click', freshBrain);
 document.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click', () => {
   s.rate = Number(b.dataset.rate); s.owed = 0;
   document.querySelectorAll('[data-rate]').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
@@ -154,6 +154,8 @@ function drawChart() {
   if (!view.chart) return;
   const tuned = s.mode === 'tuned', history = tuned ? s.tuner.history : s.trainer.history;
   drawBars(cctx, history, { width: view.chart.w, height: view.chart.h, max: LIMIT / 60, maxLabel: '20 s', empty: 'Bars appear after the first generation.', theme });
+  $('chartAsk').textContent = tuned ? 'How long have the best dials stayed up?' : 'How long has the best brain stayed up?';
+  chartCanvas.setAttribute('aria-label', `Bar chart: seconds the best ${tuned ? 'dials' : 'brain'} of each generation stayed up`);
   $('chartNote').textContent = tuned ? tunedNote(history) : aiNote(history);
 }
 const brainActs = createActs(SIZES), brainInput = new Float32Array(4);
