@@ -111,8 +111,28 @@ describe('physical-ai and balance', () => {
     expect(g).toMatchObject({ title: 'Balance', category: 'physical-ai', youtube: 'ui3l3xSUZ4U', path: 'games/balance/', writeup: 'games/balance/how-it-works/', shot: 'games/balance/shot.jpg' });
     expect(g.lesson).toMatch(/Teaches feedback control, PID, evolution and disturbances\.$/);
   });
-  it('the real hero is Balance, the newest game with a video', () => {
+  it('the real hero is Balance, the newest game with a video and a demo', () => {
     expect(homeModel(CATEGORIES, GAMES).hero.id).toBe('balance');
+  });
+});
+
+describe('home demo config', () => {
+  const FIELDS = ['net', 'learns', 'panel', 'alt'];
+  it('the hero has a demo block of words', () => {
+    const { demo } = homeModel(CATEGORIES, GAMES).hero;
+    for (const f of FIELDS) expect(demo[f].length, f).toBeGreaterThan(0);
+  });
+  it('every game with a demo has games/<id>/demo.js and all its words', () => {
+    for (const g of GAMES.filter(g => g.demo)) {
+      expect(existsSync(new URL(`../games/${g.id}/demo.js`, import.meta.url)), g.id).toBe(true);
+      for (const f of FIELDS) expect(typeof g.demo[f], `${g.id}.${f}`).toBe('string');
+    }
+  });
+  it('Coin Runner and Balance have demos; Racer and Teach do not yet', () => {
+    expect(gameById('runner').demo.panel).toBe('Its four moves, right now');
+    expect(gameById('balance').demo.net).toBe('4 inputs, 6 hidden, 1 push');
+    expect(gameById('racer').demo).toBeNull();
+    expect(gameById('teach').demo).toBeNull();
   });
 });
 
@@ -127,8 +147,14 @@ describe('homeModel', () => {
   const m = homeModel(cats, games);
   it('hero is the newest game overall', () => expect(m.hero.id).toBe('b'));
   it('hero is the newest game that has a youtube id', () => {
-    const withVideo = [...games, fake('e', { added: '2026-04-01' }), fake('f', { added: '2026-05-01', youtube: 'abcdefghijk' }), fake('g', { added: '2026-06-01', youtube: null })];
+    const demo = { net: '', learns: '', panel: '', alt: '' };
+    const withVideo = [...games, fake('e', { added: '2026-04-01' }), fake('f', { added: '2026-05-01', youtube: 'abcdefghijk', demo }), fake('g', { added: '2026-06-01', youtube: null, demo })];
     expect(homeModel(cats, withVideo).hero.id).toBe('f');
+  });
+  it('a game with a video but no demo is never the hero', () => {
+    const demo = { net: '', learns: '', panel: '', alt: '' };
+    const g = [fake('old', { added: '2026-01-01', youtube: 'abcdefghijk', demo }), fake('new', { added: '2026-05-01', youtube: 'abcdefghijk', demo: null })];
+    expect(homeModel(cats, g).hero.id).toBe('old');
   });
   it('a category has its newest as big and the others newest-first in rest', () => {
     expect(m.categories[0].big.id).toBe('b');

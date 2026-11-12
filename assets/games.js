@@ -10,14 +10,14 @@ export const GAMES = [
     lesson: 'Ten cars with random brains learn to lap a track by breeding. Teaches fitness, selection, mutation and overfitting.',
     learnsBy: 'Fitness, selection, mutation',
     goesWrongWhen: 'It overfits the one track it bred on',
-    added: '2026-10-16', shot: 'games/racer/shot.jpg', path: 'games/racer/', writeup: 'games/racer/how-it-works/', youtube: 'tG00TxTB8ns',
+    added: '2026-10-16', shot: 'games/racer/shot.jpg', path: 'games/racer/', writeup: 'games/racer/how-it-works/', youtube: 'tG00TxTB8ns', demo: null,
   },
   {
     id: 'teach', title: 'Teach by Driving', category: 'how-ai-learns',
     lesson: 'You drive one lap and a tiny network learns to steer like you. Teaches training data, loss, gradient descent, learning rate and distribution shift.',
     learnsBy: 'Training data, loss, gradient descent',
     goesWrongWhen: 'The road leaves what it was shown',
-    added: '2026-10-16', shot: 'games/teach/shot.jpg', path: 'games/teach/', writeup: 'games/teach/how-it-works/', youtube: 'qfzRiq3DoJo',
+    added: '2026-10-16', shot: 'games/teach/shot.jpg', path: 'games/teach/', writeup: 'games/teach/how-it-works/', youtube: 'qfzRiq3DoJo', demo: null,
   },
   {
     id: 'runner', title: 'Coin Runner', category: 'how-ai-learns',
@@ -25,6 +25,7 @@ export const GAMES = [
     learnsBy: 'Reward, policy gradients',
     goesWrongWhen: 'It learns what you reward, not what you meant',
     added: '2026-10-24', shot: 'games/runner/shot.jpg', path: 'games/runner/', writeup: 'games/runner/how-it-works/', youtube: 'K1I7QxfrgIk',
+    demo: { net: '12 inputs, 8 hidden, 4 moves', learns: 'Learning from points only', panel: 'Its four moves, right now', alt: 'A trained hero playing the Coin Runner level on a loop' },
   },
   {
     id: 'balance', title: 'Balance', category: 'physical-ai',
@@ -32,6 +33,7 @@ export const GAMES = [
     learnsBy: 'Feedback, PID, evolution',
     goesWrongWhen: 'A steady push it never practised',
     added: '2026-11-11', shot: 'games/balance/shot.jpg', path: 'games/balance/', writeup: 'games/balance/how-it-works/', youtube: 'ui3l3xSUZ4U',
+    demo: { net: '4 inputs, 6 hidden, 1 push', learns: 'Learning by evolution', panel: 'Its push, right now', alt: 'A trained brain keeping a pole upright on a cart' },
   },
 ];
 
@@ -48,8 +50,8 @@ const byTitle = (a, b) => a.title.localeCompare(b.title);
 export const moreFrom = (game, games, max = 3) =>
   games.filter(g => g.category === game.category && g.id !== game.id).sort(byNewest).slice(0, max);
 export const newest = games => [...games].sort(byNewest)[0];
-// the home hero: the newest game with an explainer video, or the newest game if none has one.
-const heroOf = games => newest(games.filter(g => g.youtube)) ?? newest(games);
+// the home hero: the newest game with an explainer video and a demo (its `demo` words and games/<id>/demo.js), or the newest game if none has both.
+const heroOf = games => newest(games.filter(g => g.youtube && g.demo)) ?? newest(games);
 
 export const categoriesWithGames = (categories, games) => categories.filter(c => games.some(g => g.category === c.id));
 

@@ -6,6 +6,10 @@ export const heroActionsHtml = g =>
   `<a class="btn primary" href="${g.path}">Play ${esc(g.title)} ${PLAY}</a>` +
   (g.youtube ? `<a class="btn" href="${g.path}#watch">Watch the explainer</a>` : '');
 
+// The stage head under the hero: the game's title and the demo's words, all from config.
+export const stageHeadHtml = g =>
+  `<span class="live"><i></i><b>Recorded run</b></span><span>${esc(g.title)}</span><span>${esc(g.demo.net)}</span><span class="sp">${esc(g.demo.learns)}</span>`;
+
 const tileHtml = (g, { feature = false, isNew = false } = {}) =>
   `<a class="tile${feature ? ' feature' : ''}" href="${g.path}"><div class="thumb"><img src="${g.shot}" alt="" loading="lazy">${isNew ? '<span class="badge">New</span>' : ''}</div><b>${esc(g.title)}</b><span>${esc(g.learnsBy)}</span></a>`;
 

@@ -13,7 +13,7 @@ Small browser games where tiny neural networks learn in front of you, and the pl
 | **Coin Runner** | [Play](https://arcade.codewithnk.com/games/runner/) | [How it works](https://arcade.codewithnk.com/games/runner/how-it-works/) | Learning from reward: trial and error, exploration, policy gradients, reward hacking |
 | **Balance** | [Play](https://arcade.codewithnk.com/games/balance/) | [How it works](https://arcade.codewithnk.com/games/balance/how-it-works/) | Physical AI: feedback control, PID, evolution, disturbances |
 
-The home page shows the newest game as a recorded demo, then groups games into categories. **How AI learns** holds the first three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways. **Physical AI** holds Balance, a cart-pole kept upright by feedback: a person, a PID controller or a small net that evolves. The home hero is the newest game that has a YouTube explainer (today Coin Runner), or the newest game if none has one, so a new game without a video never replaces it. For now the arcade has two categories.
+The home page shows the newest game as a recorded demo, then groups games into categories. **How AI learns** holds the first three: the three ways a brain gets better (breeding by score, copying examples, trial and error from reward). The first two are a pair: the same car, track and senses, with the brain's numbers set two different ways. **Physical AI** holds Balance, a cart-pole kept upright by feedback: a person, a PID controller or a small net that evolves. The home hero is the newest game that has a YouTube explainer and a `demo` (today Balance), or the newest game if none has both, so a new game without a video never replaces it. The recorded run under the hero follows it: its words come from the game's `demo` block in `assets/games.js` and its drawing from `games/<name>/demo.js`. For now the arcade has two categories.
 
 ### Neural Racer (`games/racer/`)
 10 cars, each driven by a 6→8→2 network (74 weights), learn to lap a track by neuroevolution. Cars start on a grid, in rows of five behind the start line, and every car's distance is measured from the line itself. With the default 10 cars, each round the best car is kept, 8 children are bred from the top 3 and 1 random newcomer joins.
@@ -79,7 +79,7 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 ## Layout
 
 ```
-index.html              arcade home, rendered from assets/games.js: hero (newest game with a video), recorded Coin Runner demo, categories, chips
+index.html              arcade home, rendered from assets/games.js: hero (newest game with a video and a demo), that game's recorded run (words from its `demo` config, drawn by its `games/<name>/demo.js`), categories, chips
 about/                  the About page
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
@@ -99,9 +99,9 @@ games/racer/            Neural Racer: sim.js (no DOM), track-view.js, main.js, s
   how-it-works/         the illustrated write-up (story.js draws its figures; the shared styles are assets/story.css)
 games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's track and physics), main.js, story-data.js
   how-it-works/         its write-up
-games/runner/           Coin Runner: sim.js (no DOM; also `actionFor`, `tickHuman` and `timeLeft` for playing by hand), render.js (incl. `skyFor`, the night recolour), words.js (incl. `compareNote`, `whyNote`), sfx.js (`SOUNDS` data, `soundsFor`, `readSound`/`saveSound`, the Web Audio player), main.js, story-data.js + story.json, art/ (Kenney, CC0)
+games/runner/           Coin Runner: sim.js (no DOM; also `actionFor`, `tickHuman` and `timeLeft` for playing by hand), render.js (incl. `skyFor`, the night recolour), words.js (incl. `compareNote`, `whyNote`), sfx.js (`SOUNDS` data, `soundsFor`, `readSound`/`saveSound`, the Web Audio player), main.js, story-data.js + story.json, demo.js (the home page's recorded run, `startDemo(canvas, panelEl)`), art/ (Kenney, CC0)
   how-it-works/         its write-up
-games/balance/          Balance: sim.js (no DOM: cart-pole, PID, tries), tune.js (evolution of the PID dials, TUNER_STORY_SEED), words.js, state.js (pure page helpers: keys, training allowance, Wind, dial markup), ai.js (4-6-1 net, evolution trainer, AI_STORY_SEED) and render.js (stage layout and drawing), story-data.js + story.json (the recorded run behind the write-up), index.html + balance.css + main.js (the playable page: You / PID / Tuned PID / AI, Push, Wind; both trainings run in every mode) and how-it-works/ (the write-up)
+games/balance/          Balance: demo.js (the home page's recorded run: the write-up's trained brain keeping the pole up through shoves, `startDemo(canvas, panelEl)`), sim.js (no DOM: cart-pole, PID, tries), tune.js (evolution of the PID dials, TUNER_STORY_SEED), words.js, state.js (pure page helpers: keys, training allowance, Wind, dial markup), ai.js (4-6-1 net, evolution trainer, AI_STORY_SEED) and render.js (stage layout and drawing), story-data.js + story.json (the recorded run behind the write-up), index.html + balance.css + main.js (the playable page: You / PID / Tuned PID / AI, Push, Wind; both trainings run in every mode) and how-it-works/ (the write-up)
 tests/                  Vitest tests for engine/ and each game's simulation and write-up data
 ```
 
@@ -121,11 +121,13 @@ Custom domain: `arcade.codewithnk.com`, set under the Vercel project's Domains. 
 ## Adding a game
 
 1. Write the simulation as a DOM-free module under `games/<name>/` with tests in `tests/`, reusing `engine/` for the network, training or evolution, brain panel and charts.
-2. Add one entry to `GAMES` in `assets/games.js`: id, title, category, lesson, `learnsBy`, `goesWrongWhen`, `shot`, `path`, `writeup`, `added`, `youtube`. The home page, browse page, category page and More from lists all render from it.
+2. Add one entry to `GAMES` in `assets/games.js`: id, title, category, lesson, `learnsBy`, `goesWrongWhen`, `shot`, `path`, `writeup`, `added`, `youtube`, and `demo` (`null`, or `{ net, learns, panel, alt }`: the home stage words). The home page, browse page, category page and More from lists all render from it.
 3. Copy the page skeleton from `games/runner/index.html` (and `assets/game.css`), keep `<body data-game="<name>">`, and add a game-only CSS file. Give it an experiment brief (setup, rule, watch for) and an (i) button on every readout, panel and control. `assets/game-page.js` fills the header, footer, crumb, video, write-up link and More from.
 4. Add a `how-it-works/` folder (copy one, link `assets/story.css`) whose figures are drawn from a seeded, tested run, and a `shot.jpg` for the tiles.
 5. Add share tags: copy the `<link rel="canonical">`, `og:*` and `twitter:*` lines from another game page into the game page and its write-up, changing the URLs, title and description, and put a 1280x720 `share.png` in `games/<name>/`. `tests/share-meta.test.js` checks it.
 
 Add a video: set `youtube` to the YouTube id in `assets/games.js`, and copy the video thumbnail to `games/<name>/share.png` for the share banner. A game without a video may use its `shot.jpg` as the banner instead.
+
+Be the home hero: give the game a `demo` block in `assets/games.js` (`net`, `learns`, `panel`, `alt`: the words on the stage under the hero) and a `games/<name>/demo.js` that exports `startDemo(canvas, panelEl)`. It plays a recorded or trained run on the canvas on a loop (pausing off screen, still under reduced motion) and fills the side panel list. The home page picks the newest game with both a `youtube` id and a `demo`, so a game with a video but no demo never breaks it.
 
 Add a category: one entry in `CATEGORIES`. Empty categories stay hidden.
