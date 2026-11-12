@@ -138,3 +138,13 @@ describe('the tuner', () => {
     expect(evaluate(parsed, mulberry32(7))).toBe(evaluate(d, mulberry32(7)));
   });
 });
+
+describe('Use these dials', () => {
+  it('copied dials score exactly what the tuner reported (rounding makes the copy exact)', () => {
+    const t = createTuner(5);
+    for (let k = 0; k < 3; k++) t.runGeneration();
+    const copy = Object.assign({}, t.bestDials);
+    expect(evaluate(copy, mulberry32(7))).toBe(evaluate(t.bestDials, mulberry32(7)));
+    expect(copy).toEqual(dialsFromGenome(t.bestGenome));
+  });
+});

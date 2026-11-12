@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
 import {
-  newGame, step, push, LIMIT, WIND_FORCE, START_TILT, I_MAX, PID_RANGES, createPid, pidAct,
+  newGame, step, push, LIMIT, WIND_FORCE, START_TILT, I_MAX, F_MAX, PID_RANGES, createPid, pidAct,
 } from '../games/balance/sim.js';
 
 function runPid(gains, { wind = 0, pushAt = null, pushDir = 1, tilt = START_TILT } = {}) {
@@ -117,5 +117,14 @@ describe('balance pid', () => {
   it('first call has no derivative kick', () => {
     const g = newGame(0.2);
     expect(pidAct(createPid(), g, { p: 0, i: 0, d: 10 })).toBe(0);
+  });
+
+  it('stores its three terms in newtons and leaves the return value alone', () => {
+    const g = newGame(0.2), pid = createPid(), dials = { p: 25, i: 12, d: 4 };
+    const u = pidAct(pid, g, dials);
+    const { p, i, d } = pid.terms;
+    expect([p, i, d].every(Number.isFinite)).toBe(true);
+    expect(p).toBeCloseTo(25 * (0.2 + 0.03 * 0 + 0), 6);
+    expect(u).toBe(Math.max(-1, Math.min(1, (p + i + d) / F_MAX)));
   });
 });

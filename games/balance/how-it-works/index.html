@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Balance · How it works</title>
-<meta name="description" content="A cart must keep a pole upright. See how a PID controller and a tiny evolving network learn feedback control, and what a push or steady wind does to each.">
+<meta name="description" content="A cart must keep a pole upright. See how a PID controller, a PID tuned by evolution and a tiny evolving network learn feedback control, and what a push or steady wind does to each.">
 <link rel="canonical" href="https://arcade.codewithnk.com/games/balance/how-it-works/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
 <meta property="og:title" content="Balance · How it works">
-<meta property="og:description" content="A cart must keep a pole upright. See how a PID controller and a tiny evolving network learn feedback control, and what a push or steady wind does to each.">
+<meta property="og:description" content="A cart must keep a pole upright. See how a PID controller, a PID tuned by evolution and a tiny evolving network learn feedback control, and what a push or steady wind does to each.">
 <meta property="og:url" content="https://arcade.codewithnk.com/games/balance/how-it-works/">
 <meta property="og:image" content="https://arcade.codewithnk.com/games/balance/shot.jpg">
 <meta property="og:image:width" content="1280">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Balance: a cart with a pole balanced on top">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Balance · How it works">
-<meta name="twitter:description" content="A cart must keep a pole upright. See how a PID controller and a tiny evolving network learn feedback control, and what a push or steady wind does to each.">
+<meta name="twitter:description" content="A cart must keep a pole upright. See how a PID controller, a PID tuned by evolution and a tiny evolving network learn feedback control, and what a push or steady wind does to each.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/games/balance/shot.jpg">
 <link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../../assets/studio.css">
@@ -33,7 +33,7 @@
     <p class="kicker">Balance · How it works</p>
     <h1>How a tiny brain keeps a pole up</h1>
     <p class="lede">A pole on a cart wants to fall over. Staying up is not one clever move but a steady habit: look at the lean, push the cart the right way, look again. A simple rule can do it, and so can a tiny brain that finds the rule by itself.</p>
-    <p class="meta"><span>6 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+    <p class="meta"><span>7 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
   </header>
 
   <section class="step">
@@ -102,19 +102,32 @@
 
   <section class="step">
     <p class="num-tag">06</p>
+    <h2>Evolution can tune the dials too</h2>
+    <p>Evolution does not have to write the whole controller. A person can still write the formula (push in proportion to the lean, to the lean added up over time, and to the spin) and let evolution set only the three dials in front. That is <em>Tuned PID</em>. It starts with the dials near zero, and each generation keeps the best set of dials.</p>
+    <p>These dials were scored in wind as well as in shoves, and a cart that drifts off the middle earns nothing. So evolution found a use for I: it started at <span id="tuneI0"></span> and ended at <span id="tuneI"></span>. The AI brain of Section 05 never trained in wind, so it never had a reason to find anything like it.</p>
+    <figure class="fig">
+      <canvas id="figTune" class="chart" role="img" aria-label="Line chart: the P, I and D dials chosen by evolution in each generation, each as a share of its range; I climbs steadily"></canvas>
+      <p class="key"><span><i class="l-muted"></i>P</span><span><i class="l-amber"></i>I</span><span><i class="l-ink"></i>D</span></p>
+      <figcaption><b>Fig. 7</b> The best dials of each generation, each shown as a share of its dial range. The first generation held I at <span id="tuneI0b"></span>. The best dials first kept the pole up the full <span class="n-limit"></span> seconds in generation <span id="tuneFull"></span>, and by generation <span id="tuneLast"></span> the dials were P <span id="tuneP"></span>, I <span id="tuneI2"></span>, D <span id="tuneD"></span>.</figcaption>
+    </figure>
+    <p>So there are three ways to get a controller. With <b>PID</b>, a person writes the formula and sets the dials. With <b>Tuned PID</b>, a person writes the formula and evolution sets the dials. With the <b>AI</b>, there is no formula at all: evolution sets 37 weights.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">07</p>
     <h2>What it has and has not learned</h2>
     <ul class="notes">
-      <li><b>It learned to balance, not to cope with wind.</b> It trained with small pushes but never with wind. Switch Wind on in the game and it does what it can, because correcting the lean is a rule it already has.</li>
+      <li><b>It learned to balance, not to cope with wind.</b> It trained with small pushes but never with wind, unlike Tuned PID in Section 06, which was scored in wind and found I. Switch Wind on in the game and the AI does what it can, because correcting the lean is a rule it already has.</li>
       <li><b>It lives in a simulation.</b> There is no delay, no friction in the wheels and no noise in what it senses. A real cart has all three, which is why real balancing robots are harder. A later game, The real world, is about exactly that gap.</li>
       <li><b>It looks a lot like PD.</b> The rule it found is roughly: push toward the lean, and push harder the faster the pole is turning. That is a P and a D on the angle and the spin, found by evolution instead of written by a person.</li>
-      <li><b>The figures come from one recorded run</b> (seed <span id="seed"></span>), so they are the same on every visit. The PID traces are sampled 20 times a second.</li>
+      <li><b>The figures come from one recorded run</b> (AI seed <span id="seed"></span>, tuner seed <span id="tuneSeed"></span>), so they are the same on every visit. The PID traces are sampled 20 times a second.</li>
     </ul>
   </section>
 
   <section class="step finale">
     <h2>Your turn</h2>
     <p>Staying upright is constant correction: measure the error, push back. A tiny brain can find that rule on its own.</p>
-    <p>On the live page, balance it yourself with the arrow keys, then hand it to the PID and turn the dials, then to the AI. Push it, and switch the wind on.</p>
+    <p>On the live page, balance it yourself with the arrow keys, then hand it to the PID and turn the dials, then to Tuned PID to watch evolution turn them, then to the AI. Push it, and switch the wind on.</p>
     <a class="btn primary go" href="../"><span>Try it live</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
   </section>
 </main>

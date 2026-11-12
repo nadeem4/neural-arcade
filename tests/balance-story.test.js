@@ -4,6 +4,8 @@ import { recordStory } from '../games/balance/story-data.js';
 import { aiAct, SIZES } from '../games/balance/ai.js';
 import { newGame, step, LIMIT } from '../games/balance/sim.js';
 import { createActs } from '../engine/tinynet.js';
+import { PID_RANGES } from '../games/balance/sim.js';
+import { TUNER_STORY_SEED } from '../games/balance/tune.js';
 
 const saved = JSON.parse(readFileSync(new URL('../games/balance/story.json', import.meta.url), 'utf8'));
 const S = recordStory();
@@ -46,6 +48,25 @@ describe('the recorded run behind the write-up', () => {
   });
 });
 
+describe('the recorded tuner run', () => {
+  const T = S.tuner, mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+  it('uses the tuner story seed and records 30 generations of in-range dials', () => {
+    expect(T.seed).toBe(TUNER_STORY_SEED);
+    expect(T.dials).toHaveLength(30);
+    expect(T.seconds).toHaveLength(30);
+    for (const d of T.dials) for (const [k, key] of [[0, 'p'], [1, 'i'], [2, 'd']]) {
+      expect(d[k]).toBeGreaterThanOrEqual(PID_RANGES[key].min);
+      expect(d[k]).toBeLessThanOrEqual(PID_RANGES[key].max);
+    }
+  });
+  it('I rises as evolution finds it', () => {
+    expect(mean(T.dials.slice(-5).map(d => d[1]))).toBeGreaterThanOrEqual(mean(T.dials.slice(0, 3).map(d => d[1])) + 3);
+  });
+  it('the last dials beat the first', () => {
+    expect(T.seconds.at(-1)).toBeGreaterThan(T.seconds[0]);
+  });
+});
+
 describe('trace sampling', () => {
   it('ends a fallen try on its real last step', () => {
     expect(S.pid.pOnly.th.length).toBe(Math.ceil(S.pid.pOnly.steps / S.every));
@@ -57,8 +78,8 @@ describe('the write-up page', () => {
   const dir = new URL('../games/balance/how-it-works/', import.meta.url);
   const html = readFileSync(new URL('index.html', dir), 'utf8');
   const js = readFileSync(new URL('story.js', dir), 'utf8');
-  it('has six numbered sections', () => {
-    expect(html.match(/class="num-tag"/g)).toHaveLength(6);
+  it('has seven numbered sections', () => {
+    expect(html.match(/class="num-tag"/g)).toHaveLength(7);
   });
   it('has every canvas the script looks up', () => {
     const ids = [...js.matchAll(/\$\('([\w-]+)'\)/g)].map(m => m[1]).filter(id => id !== 'lamp'); // the lamp button comes from the shared header
@@ -72,6 +93,12 @@ describe('the write-up page', () => {
   });
   it('gives every figure canvas a role and a label', () => {
     for (const c of html.match(/<canvas[^>]*>/g)) expect(c).toMatch(/role="img"[^>]*aria-label=/);
+  });
+  it('has the tuned PID figure and says what separates the three controllers', () => {
+    expect(html).toMatch(/<canvas id="figTune"[^>]*role="img"[^>]*aria-label="[^"]+"/);
+    expect(html).toContain('Tuned PID');
+    expect(html).toContain('never trained in wind');
+    expect(html).toContain('evolution sets 37 weights');
   });
   it('states the lesson', () => {
     expect(html).toContain('Staying upright is constant correction: measure the error, push back. A tiny brain can find that rule on its own.');

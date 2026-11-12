@@ -6,7 +6,7 @@ import { drawBrain } from '../../../engine/brain-panel.js';
 import { makeTicker } from '../../../engine/ticker.js';
 import { readTheme, wireLamp } from '../../../assets/theme.js';
 import { sizeCanvas } from '../../racer/track-view.js';
-import { newGame, step, LIMIT, FAIL_ANGLE } from '../sim.js';
+import { newGame, step, LIMIT, FAIL_ANGLE, PID_RANGES } from '../sim.js';
 import { SIZES, IN_LABELS, OUT_LABELS, aiAct } from '../ai.js';
 import { layout, drawStage } from '../render.js';
 
@@ -105,6 +105,40 @@ $('xI').textContent = Math.abs(S.pid.windI.x.at(-1)).toFixed(2);
 addFigure(still($('figGens'), (ctx, w, h) => drawBars(ctx, S.ai.history, { width: w, height: h, max: LIMIT / 60, maxLabel: `${SECS} s`, theme, slots: S.ai.history.length })));
 $('nFull2').textContent = S.ai.firstFull;
 for (const id of ['nLast', 'nLast0']) $(id).textContent = S.ai.history.length;
+
+// ---------- Fig. 7: the tuned dials, generation by generation ----------
+// Each dial as a share (0-100%) of its range, one point per generation.
+function genChart(ctx, w, h, series) {
+  ctx.clearRect(0, 0, w, h);
+  const left = 44, top = 10, bottom = h - 22, right = w - 6, n = series[0].v.length;
+  const x = i => left + (i / (n - 1)) * (right - left), y = v => bottom - (v / 100) * (bottom - top);
+  ctx.font = `400 13px ${theme.body}`; ctx.textBaseline = 'middle';
+  ctx.strokeStyle = theme.rule; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(left, y(0) + 0.5); ctx.lineTo(right, y(0) + 0.5); ctx.stroke();
+  ctx.fillStyle = theme.muted; ctx.textAlign = 'right';
+  ctx.fillText('0%', left - 6, y(0) - 6); ctx.fillText('100%', left - 6, top + 6);
+  ctx.textAlign = 'left'; ctx.fillText('Gen 1', left, h - 8);
+  ctx.textAlign = 'right'; ctx.fillText(`Gen ${n}`, right, h - 8);
+  ctx.lineJoin = 'round'; ctx.lineWidth = 2;
+  for (const s of series) {
+    ctx.strokeStyle = s.color; ctx.beginPath();
+    s.v.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(0), y(v))));
+    ctx.stroke();
+  }
+}
+{
+  const { dials, seconds, seed: tuneSeed } = S.tuner, KEYS = ['p', 'i', 'd'];
+  const share = k => dials.map(d => (d[k] - PID_RANGES[KEYS[k]].min) / (PID_RANGES[KEYS[k]].max - PID_RANGES[KEYS[k]].min) * 100);
+  addFigure(still($('figTune'), (ctx, w, h) => genChart(ctx, w, h, [
+    { v: share(0), color: theme.muted }, { v: share(1), color: theme.amber }, { v: share(2), color: theme.ink },
+  ])));
+  for (const id of ['tuneI0', 'tuneI0b']) $(id).textContent = dials[0][1];
+  for (const id of ['tuneI', 'tuneI2']) $(id).textContent = dials.at(-1)[1];
+  $('tuneP').textContent = dials.at(-1)[0]; $('tuneD').textContent = dials.at(-1)[2];
+  $('tuneLast').textContent = dials.length;
+  $('tuneFull').textContent = seconds.findIndex(v => v >= SECS) + 1;
+  $('tuneSeed').textContent = tuneSeed;
+}
 
 // ---------- Fig. 6: first versus last best brain ----------
 for (const [name, rec] of [['Early', S.ai.early], ['Late', S.ai.late]]) {
