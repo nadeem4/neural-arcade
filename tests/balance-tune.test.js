@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
 import { PID_RANGES, LIMIT } from '../games/balance/sim.js';
-import { GENES, dialsFromGenome, evaluate, CENTRE_BAND } from '../games/balance/tune.js';
+import { GENES, dialsFromGenome, evaluate, CENTRE_BAND, createTuner, TUNER_STORY_SEED } from '../games/balance/tune.js';
 
 const KEYS = ['p', 'i', 'd'];
 const onStep = (v, { min, step }) => Math.abs((v - min) / step - Math.round((v - min) / step)) < 1e-9;
@@ -69,5 +69,64 @@ describe('two-test scoring', () => {
     const seeds = [1, 2, 3, 4, 5];
     expect(mean({ p: 25, i: 12, d: 4 }, seeds) - mean({ p: 25, i: 0, d: 4 }, seeds)).toBeGreaterThanOrEqual(60);
     expect(CENTRE_BAND).toBeGreaterThan(0);
+  });
+});
+
+const inRange = d => KEYS.every(k => d[k] >= PID_RANGES[k].min && d[k] <= PID_RANGES[k].max);
+const run = (seed, n) => { const t = createTuner(seed); for (let k = 0; k < n; k++) t.runGeneration(); return t; };
+const avg = a => a.reduce((s, v) => s + v, 0) / a.length;
+
+describe('the tuner', () => {
+  it('same seed repeats, different seeds differ', () => {
+    const a = run(1, 5), b = run(1, 5), c = run(2, 5);
+    expect(a.history).toEqual(b.history);
+    expect(a.dialsHistory).toEqual(b.dialsHistory);
+    expect(c.dialsHistory).not.toEqual(a.dialsHistory);
+  });
+
+  it('advances one generation at a time and returns the latest', () => {
+    const t = createTuner(3);
+    for (let n = 1; n <= 3; n++) {
+      const r = t.runGeneration();
+      expect([t.gen, t.history.length, t.dialsHistory.length]).toEqual([n, n, n]);
+      expect(r).toEqual({ gen: n, seconds: t.history.at(-1), dials: t.dialsHistory.at(-1) });
+    }
+  });
+
+  it('has sane dials before any generation', () => {
+    const t = createTuner(1);
+    expect(t.gen).toBe(0);
+    expect(t.history).toEqual([]);
+    expect(Object.values(t.bestDials).every(Number.isFinite)).toBe(true);
+    expect(inRange(t.bestDials)).toBe(true);
+  });
+
+  it('learns and finds I, for seeds 1-5', () => {
+    const early = [], late = [];
+    for (let seed = 1; seed <= 5; seed++) {
+      const t = run(seed, 30);
+      expect(Math.max(...t.history)).toBeGreaterThanOrEqual(15);
+      early.push(avg(t.dialsHistory.slice(0, 3).map(d => d.i)));
+      late.push(avg(t.dialsHistory.slice(24, 30).map(d => d.i)));
+      expect(t.dialsHistory.every(inRange)).toBe(true);
+    }
+    expect(avg(late)).toBeGreaterThan(avg(early));
+  });
+
+  it('the story seed starts short of 20 s with a middling I, then reaches 20 s with a high I', () => {
+    const t = run(TUNER_STORY_SEED, 30);
+    expect(t.history[0]).toBeLessThan(19);
+    expect(t.history.at(-1)).toBe(20);
+    expect(t.dialsHistory[0].i).toBeLessThanOrEqual(18);
+    expect(t.dialsHistory.at(-1).i).toBeGreaterThanOrEqual(25);
+    expect(new Set(t.dialsHistory.map(d => JSON.stringify(d))).size).toBeGreaterThanOrEqual(6);
+    const first = t.history.findIndex(s => s >= 20) + 1;
+    expect(first).toBeGreaterThanOrEqual(8);
+    expect(first).toBeLessThanOrEqual(25);
+  });
+
+  it('dials copied to a plain object score the same', () => {
+    const t = run(1, 5), copy = { ...t.bestDials };
+    expect(evaluate(copy, mulberry32(7))).toBe(evaluate(t.bestDials, mulberry32(7)));
   });
 });
