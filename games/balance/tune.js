@@ -26,8 +26,9 @@ function runTest(dials, tilt, wind, pushes, inBand) {
   let score = 0;
   while (g.t < LIMIT) {
     for (const p of pushes) if (p.t === g.t) g.v += p.dir * p.dv;
-    if (step(g, pidAct(pid, g, dials), wind)) break;
-    if (!inBand || Math.abs(g.x) <= CENTRE_BAND) score++;
+    const fell = step(g, pidAct(pid, g, dials), wind);
+    if (!inBand || Math.abs(g.x) <= CENTRE_BAND) score++; // the step it falls on counts, as in ai.js
+    if (fell) break;
   }
   return score;
 }
@@ -42,7 +43,7 @@ export function evaluate(dials, rng) {
 export const TUNE_POP = 20, TUNE_ELITE = 3, TUNE_FRESH = 0, TUNE_POOL = 10, TUNE_MUT_RATE = 0.4, TUNE_MUT_SCALE = 0.5, TUNE_TRIES = 2;
 // The first population starts at this gene offset (sigmoid about 0.05), so the dials begin near zero, untuned.
 export const INIT_OFFSET = -3;
-export const TUNER_STORY_SEED = 59; // scanned seeds 1-60: starts at 2.5 s with P7 I1 D0.5, first holds 18 s at generation 15 and 20 s at 23, ends P59 I29 D2
+export const TUNER_STORY_SEED = 59; // scanned seeds 1-60: starts at 2.48 s with P7 I1 D0.5, first holds 18 s at generation 15 and 20 s at 23, ends P59 I29 D2
 
 // Evolution that runs unseen: each generation scores every set of dials, then breeds the next from the best.
 export function createTuner(seed) {

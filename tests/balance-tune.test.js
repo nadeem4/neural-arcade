@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
 import { PID_RANGES, LIMIT } from '../games/balance/sim.js';
-import { GENES, dialsFromGenome, evaluate, CENTRE_BAND, createTuner, TUNER_STORY_SEED } from '../games/balance/tune.js';
+import { GENES, dialsFromGenome, evaluate, createTuner, TUNER_STORY_SEED } from '../games/balance/tune.js';
 
 const KEYS = ['p', 'i', 'd'];
 const onStep = (v, { min, step }) => Math.abs((v - min) / step - Math.round((v - min) / step)) < 1e-9;
@@ -68,7 +68,6 @@ describe('two-test scoring', () => {
   it('I earns its keep: it adds at least 1 s over seeds 1-5', () => {
     const seeds = [1, 2, 3, 4, 5];
     expect(mean({ p: 25, i: 12, d: 4 }, seeds) - mean({ p: 25, i: 0, d: 4 }, seeds)).toBeGreaterThanOrEqual(60);
-    expect(CENTRE_BAND).toBeGreaterThan(0);
   });
 });
 
@@ -113,14 +112,13 @@ describe('the tuner', () => {
     expect(avg(late)).toBeGreaterThan(avg(early));
   });
 
-  it('the story seed starts untuned, finds I, and first holds 18 s mid-run', () => {
-    const t = run(TUNER_STORY_SEED, 30);
-    expect(t.history[0]).toBeLessThan(10);
-    expect(t.dialsHistory[0].i).toBeLessThanOrEqual(6);
-    expect(t.dialsHistory.at(-1).i).toBeGreaterThanOrEqual(8);
-    const first = t.history.findIndex(s => s >= 18) + 1;
-    expect(first).toBeGreaterThanOrEqual(8);
-    expect(first).toBeLessThanOrEqual(25);
+  it('the story seed tells the story the write-up will reuse', () => {
+    const t = run(TUNER_STORY_SEED, 30), h = t.history, d = t.dialsHistory;
+    expect(h[0]).toBeCloseTo(2.48, 2);
+    expect(d[0]).toEqual({ p: 7, i: 1, d: 0.5 });
+    expect(h.findIndex(v => v >= 18) + 1).toBe(15);
+    expect(h.findIndex(v => v >= 20) + 1).toBe(23);
+    expect(d.at(-1)).toEqual({ p: 59, i: 29, d: 2 });
   });
 
   it('starts from near-zero dials, like a person who has tuned nothing', () => {
@@ -131,8 +129,12 @@ describe('the tuner', () => {
     }
   });
 
-  it('dials copied to a plain object score the same', () => {
-    const t = run(1, 5), copy = { ...t.bestDials };
-    expect(evaluate(copy, mulberry32(7))).toBe(evaluate(t.bestDials, mulberry32(7)));
+  it('dials survive a round trip through text, so copying them to PID is exact', () => {
+    const d = run(1, 5).bestDials, parsed = {};
+    for (const k of KEYS) {
+      parsed[k] = Number(String(d[k]));
+      expect(parsed[k]).toBe(d[k]);
+    }
+    expect(evaluate(parsed, mulberry32(7))).toBe(evaluate(d, mulberry32(7)));
   });
 });
