@@ -9,8 +9,12 @@ export function drawBrain(ctx, { sizes, genome, acts, inLabels = [], outLabels =
   if (!genome) return;
   // Narrow panels (phones) move the output text under the network, so nothing runs off the edge.
   const below = !!outWords && width < 380, foot = below ? 62 : 0;
-  const left = inLabels.length ? Math.min(inWords ? 128 : 96, width * (below ? 0.4 : 0.36)) : 16;
-  const right = outLabels.length && !below ? Math.min(inWords ? 112 : 92, width * 0.3) : 16;
+  // The left column grows to the longest label (up to half the panel); a label still too long is squeezed to fit.
+  ctx.font = `500 ${below ? 12 : 13}px ${theme.body}`;
+  const inText = (t, i) => (inWords ? `${t} · ${inWords(i, acts[0][i])}` : t);
+  const widest = Math.max(0, ...inLabels.map((t, i) => ctx.measureText(inText(t, i)).width + 14));
+  const left = inLabels.length ? Math.min(Math.max(inWords ? 128 : 96, widest), width * 0.5) : 16;
+  const right = outLabels.length && !below ? Math.min(inWords ? 136 : 92, width * 0.3) : 16;
   const top = heads.length ? 22 : 0, mid = top + (height - top - foot) / 2;
   const xs = sizes.map((_, l) => left + ((width - left - right) * l) / (sizes.length - 1));
   const ys = sizes.map(n => {
@@ -61,12 +65,13 @@ export function drawBrain(ctx, { sizes, genome, acts, inLabels = [], outLabels =
   }
   ctx.font = `500 ${below ? 12 : 13}px ${theme.body}`;
   ctx.fillStyle = theme.muted; ctx.textAlign = 'right';
-  inLabels.forEach((t, i) => ctx.fillText(inWords ? `${t} · ${inWords(i, acts[0][i])}` : t, xs[0] - 14, ys[0][i]));
+  inLabels.forEach((t, i) => ctx.fillText(inText(t, i), xs[0] - 14, ys[0][i], xs[0] - 14));
   ctx.textAlign = 'left';
   outLabels.forEach((t, k) => {
     const v = acts[last][k], x = below ? (width / outLabels.length) * k : xs[last] + 14, y = below ? height - 30 : ys[last][k];
-    ctx.fillStyle = theme.ink; ctx.fillText(outWords ? `${t} ${num(v)}` : t, x, y - 9);
+    const mw = below ? width / outLabels.length - 4 : width - x;
+    ctx.fillStyle = theme.ink; ctx.fillText(outWords ? `${t} ${num(v)}` : t, x, y - 9, mw);
     ctx.fillStyle = outWords ? theme['amber-ink'] || theme.amber : theme.muted;
-    ctx.fillText(outWords ? outWords(k, v) : num(v), x, y + 9);
+    ctx.fillText(outWords ? outWords(k, v) : num(v), x, y + 9, mw);
   });
 }
