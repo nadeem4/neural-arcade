@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
-import { PID_RANGES } from '../games/balance/sim.js';
-import { GENES, dialsFromGenome } from '../games/balance/tune.js';
+import { PID_RANGES, LIMIT } from '../games/balance/sim.js';
+import { GENES, dialsFromGenome, evaluate, CENTRE_BAND } from '../games/balance/tune.js';
 
 const KEYS = ['p', 'i', 'd'];
 const onStep = (v, { min, step }) => Math.abs((v - min) / step - Math.round((v - min) / step)) < 1e-9;
@@ -43,5 +43,31 @@ describe('genome to dials', () => {
         prev = v;
       }
     });
+  });
+});
+
+const mean = (dials, seeds) => seeds.reduce((s, k) => s + evaluate(dials, mulberry32(k)), 0) / seeds.length;
+
+describe('two-test scoring', () => {
+  it('is deterministic and an integer in 0..LIMIT', () => {
+    const a = evaluate({ p: 25, i: 12, d: 4 }, mulberry32(1)), b = evaluate({ p: 25, i: 12, d: 4 }, mulberry32(1));
+    expect(a).toBe(b);
+    expect(Number.isInteger(a)).toBe(true);
+    expect(a).toBeGreaterThanOrEqual(0);
+    expect(a).toBeLessThanOrEqual(LIMIT);
+  });
+
+  it('no push at all scores under 3 s', () => {
+    expect(evaluate({ p: 0, i: 0, d: 0 }, mulberry32(1))).toBeLessThan(180);
+  });
+
+  it('good dials score at least 18 s', () => {
+    expect(evaluate({ p: 25, i: 12, d: 4 }, mulberry32(1))).toBeGreaterThanOrEqual(1080);
+  });
+
+  it('I earns its keep: it adds at least 1 s over seeds 1-5', () => {
+    const seeds = [1, 2, 3, 4, 5];
+    expect(mean({ p: 25, i: 12, d: 4 }, seeds) - mean({ p: 25, i: 0, d: 4 }, seeds)).toBeGreaterThanOrEqual(60);
+    expect(CENTRE_BAND).toBeGreaterThan(0);
   });
 });
