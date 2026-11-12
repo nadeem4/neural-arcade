@@ -6,7 +6,7 @@
 
 .key .l-ink { background: var(--ink); }
 .key .l-amber { background: var(--amber); }
-.key .l-muted { background: var(--muted); }
+.key .l-muted { background: var(--ink-2); }
 
 /* Fig. 6: the early and the late brain side by side. */
 .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
