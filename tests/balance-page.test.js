@@ -12,19 +12,20 @@ const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1]
 
 describe('balance page markup', () => {
   it('has every id main.js will look up', () => {
-    for (const id of ['stage', 'plate', 'push', 'wind', 'touchLeft', 'touchRight', 'captionText', 'log', 'upFor', 'bestUp', 'gens', 'modeOut', 'pidOut', 'speedOut', 'fresh', 'brain', 'chart', 'chartNote']) {
+    for (const id of ['stage', 'plate', 'push', 'wind', 'touchLeft', 'touchRight', 'captionText', 'log', 'upFor', 'bestUp', 'gens', 'modeOut', 'pidOut', 'speedOut', 'fresh', 'brain', 'chart', 'chartNote', 'useDials', 'formula', 'gensLabel']) {
       expect(html, id).toContain(`id="${id}"`);
     }
     expect(html).toMatch(/id="wind"[^>]*aria-pressed/);
     expect(html).toMatch(/id="log"[^>]*aria-live="polite"/);
   });
   it('has the mode and speed buttons', () => {
-    for (const m of ['you', 'pid', 'ai']) expect(html).toContain(`data-mode="${m}"`);
+    const modes = [...html.matchAll(/<button[^>]*data-mode="(\w+)"/g)].map(m => m[1]);
+    expect(modes).toEqual(['you', 'pid', 'tuned', 'ai']);
     for (const r of ['0', '2', '10']) expect(html).toContain(`data-rate="${r}"`);
     expect(html).toMatch(/data-rate="2" aria-pressed="true"/);
   });
   it('has an (i) button on every control and readout', () => {
-    for (const id of ['infoPush', 'infoWind', 'infoMode', 'infoSpeed', 'infoFresh', 'infoUpFor', 'infoBestUp', 'infoGens', 'infoBrain', 'infoChart']) {
+    for (const id of ['infoPush', 'infoWind', 'infoMode', 'infoSpeed', 'infoFresh', 'infoUpFor', 'infoBestUp', 'infoGens', 'infoBrain', 'infoChart', 'infoUseDials', 'infoFormula']) {
       expect(html, id).toMatch(new RegExp(`class="info"[^>]*aria-controls="${id}"`));
       expect(html, id).toContain(`id="${id}"`);
     }
@@ -66,6 +67,17 @@ describe('balance.css', () => {
     expect(rules('.dial[data-off] input')).toMatch(/opacity:\s*\.55/); // only the slider dims
     expect(css).toMatch(/#wind\[aria-pressed="true"\][^}]*var\(--amber\)/);
   });
+  it('dims the locked Tuned PID sliders but keeps them readable', () => {
+    const op = rules('.dial input:disabled').match(/opacity:\s*([\d.]+)/);
+    expect(op).not.toBeNull();
+    expect(Number(op[1])).toBeGreaterThanOrEqual(0.55);
+  });
+  it('swaps the brain for the formula in Tuned PID', () => {
+    expect(rules('.insides[data-mode="tuned"] #brain')).toMatch(/display:\s*none/);
+    expect(css).toMatch(/\[data-mode="tuned"\][^{]*#formula/);
+    expect(rules('#formula')).toMatch(/white-space:\s*pre-line/);
+    expect(rules('#formula')).toMatch(/overflow-wrap:\s*(anywhere|break-word)/);
+  });
 });
 
 describe('touch buttons', () => {
@@ -77,7 +89,7 @@ describe('touch buttons', () => {
 describe('balance main.js', () => {
   const block = (start, end) => { const a = main.indexOf(start); const b = main.indexOf(end, a + start.length); return main.slice(a, b); };
   it('imports the pieces it drives', () => {
-    for (const n of ['keyDir', 'pidAct', 'advance', 'pushTry', 'createTrainer']) expect(main, n).toMatch(new RegExp(String.raw`import \{[^}]*\b${n}\b[^}]*\} from`));
+    for (const n of ['keyDir', 'pidAct', 'advance', 'pushTry', 'createTrainer', 'createTuner']) expect(main, n).toMatch(new RegExp(String.raw`import \{[^}]*\b${n}\b[^}]*\} from`));
   });
   it('ignores keys typed into form fields', () => {
     expect(main).toMatch(/INPUT\|SELECT\|TEXTAREA/);
@@ -88,6 +100,28 @@ describe('balance main.js', () => {
   it('trains in every mode', () => {
     expect(main).not.toMatch(/if \(s\.mode === 'ai'\) runUnseen/);
     expect(main).toContain('performance.now');
+  });
+  it('Tuned PID reads the live best dials and never writes them', () => {
+    const b = block('function stepOnce', '// Training runs');
+    expect(b).toContain("pidAct(run.pid, run.g, s.tuner.bestDials)");
+    expect(main).not.toMatch(/s\.tuner\.bestDials\s*=[^=]/);
+  });
+  it('trains the AI and the tuner together under one budget', () => {
+    const b = block('function runUnseen', '// ---------- Drawing');
+    expect(b).toContain('s.trainer.runGeneration()');
+    expect(b).toContain('s.tuner.runGeneration()');
+    expect(b).toContain('performance.now');
+  });
+  it('locks the dials outside PID and shows Use these dials only in Tuned PID', () => {
+    const b = block('function setMode', '// ---------- PID dials');
+    expect(b).toMatch(/\.disabled\s*=\s*mode === 'tuned'/);
+    expect(b).toMatch(/useDials'\)\.hidden\s*=\s*mode !== 'tuned'/);
+  });
+  it('Use these dials copies the dials into PID and nothing else', () => {
+    const b = block("$('useDials').addEventListener", '// ---------- Push and Wind');
+    expect(b).toContain('Object.assign(s.dials, s.tuner.bestDials)');
+    expect(b).toContain("setMode('pid')");
+    for (const n of ['toggleWind', 'startTry(', 'createTuner', 's.wind', 's.rate']) expect(b, n).not.toContain(n);
   });
   it('Wind only toggles Wind: no restart, no new brain, no rate change', () => {
     const b = block("$('wind').addEventListener", "$('fresh')");
@@ -102,17 +136,18 @@ describe('balance main.js', () => {
     expect(main).toMatch(/'blur', \(\) => clearKeys\(keys\)/);
     expect(block("addEventListener('keyup'", "addEventListener('blur'")).toContain('keyUp(keys');
   });
-  it('New brain only restarts the try in AI mode', () => {
-    expect(block('function freshBrain', '// ---------- Mode')).toMatch(/if \(s\.mode === 'ai'\) \{ newTry\(\)/);
-  });
-  it('New brain resets the AI best', () => {
-    expect(main.slice(main.indexOf('function freshBrain'))).toMatch(/s\.best\.ai = 0/);
+  it('Restart training restarts the try in AI and Tuned PID, and resets both bests', () => {
+    const b = block('function freshBrain', '// ---------- Mode');
+    expect(b).toMatch(/if \(s\.mode === 'ai' \|\| s\.mode === 'tuned'\) \{ newTry\(\)/);
+    expect(b).toMatch(/s\.best\.ai = s\.best\.tuned = 0/);
   });
   it('draws the chart against the 20 s limit', () => {
     expect(main).toMatch(/max: LIMIT \/ 60/);
   });
-  it('uses Math.random only for the trainer seed and never writes into the best genome', () => {
+  it('uses Math.random only in the one seed helper both trainers share and never writes into the best genome', () => {
     expect(main.match(/Math\.random/g)).toHaveLength(1);
-    expect(main).toMatch(/createTrainer\(\(Math\.random\(\) \* 2 \*\* 32\) >>> 0\)/);
+    expect(main).toMatch(/createTrainer\(seed\(\)\)/);
+    expect(main).toMatch(/createTuner\(seed\(\)\)/);
+    expect(main).toMatch(/seed = \(\) => \(Math\.random\(\) \* 2 \*\* 32\) >>> 0/);
   });
 });

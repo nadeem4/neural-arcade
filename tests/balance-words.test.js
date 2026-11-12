@@ -76,10 +76,10 @@ describe('the AI in words', () => {
 
 describe('tuned PID words', () => {
   it('writes the dials as a formula', () => {
-    expect(formulaLine({ p: 21, i: 9, d: 4 })).toBe('push = 21 × lean + 9 × lean over time + 4 × spin');
-    expect(formulaLine({ p: 21, i: 0, d: 4 })).toBe('push = 21 × lean + 4 × spin');
+    expect(formulaLine({ p: 21, i: 9, d: 4 })).toBe('push = 21 Ã— lean + 9 Ã— lean over time + 4 Ã— spin');
+    expect(formulaLine({ p: 21, i: 0, d: 4 })).toBe('push = 21 Ã— lean + 4 Ã— spin');
     expect(formulaLine({ p: 0, i: 0, d: 0 })).toBe('push = nothing');
-    expect(formulaLine({ p: 7, i: 1, d: 0.5 })).toBe('push = 7 × lean + 1 × lean over time + 0.5 × spin');
+    expect(formulaLine({ p: 7, i: 1, d: 0.5 })).toBe('push = 7 Ã— lean + 1 Ã— lean over time + 0.5 Ã— spin');
   });
   it('shows what each term pushes right now, signed with one decimal', () => {
     expect(formulaLive({ p: 3.14, i: 0.42, d: -1.24 })).toBe('now: +3.1 N from lean, +0.4 N from lean over time, -1.2 N from spin');

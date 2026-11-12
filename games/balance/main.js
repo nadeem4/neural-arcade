@@ -1,4 +1,4 @@
-// Balance page: you, a PID controller or a tiny evolving network keep a pole up; the AI trains unseen in every mode.
+// Balance page: you, a PID controller, a PID tuned by evolution or a tiny evolving network keep a pole up; both evolutions train unseen in every mode.
 import { createActs } from '../../engine/tinynet.js';
 import { drawBrain } from '../../engine/brain-panel.js';
 import { drawBars } from '../../engine/curve.js';
@@ -7,7 +7,8 @@ import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
 import { startTry, advance, pushTry, seconds, keyDir, KEY_MAP, pidAct, PID_RANGES, HUMAN_POWER, WIND_FORCE, LIMIT } from './sim.js';
 import { SIZES, IN_LABELS, OUT_LABELS, aiAct, createTrainer } from './ai.js';
-import { describeInput, describeOutput, tryNote, pidHint, DIAL_INFO, aiNote, modeLine } from './words.js';
+import { createTuner } from './tune.js';
+import { describeInput, describeOutput, tryNote, pidHint, DIAL_INFO, aiNote, modeLine, tunedHint, tunedNote, formulaLine, formulaLive } from './words.js';
 import { layout, drawStage } from './render.js';
 import { createKeys, pressKey, releaseKey, endTryKeys, clearKeys, keyUp, owedAfter, toggleWind, dialHtml } from './state.js';
 
@@ -19,16 +20,17 @@ let theme = readTheme(), view = {};
 
 // HOLD: how long (60 Hz steps) a finished try stays up with its result. BUDGET: most ms per frame for unseen training.
 const HOLD = 60, BUDGET = 6;
-const WHO = { you: 'You', pid: 'PID', ai: 'AI' };
-const PLATE = { you: 'You are balancing', pid: 'PID is balancing', ai: 'AI is balancing' };
+const WHO = { you: 'You', pid: 'PID', tuned: 'Tuned PID', ai: 'AI' };
+const PLATE = { you: 'You are balancing', pid: 'PID is balancing', tuned: 'Tuned PID is balancing', ai: 'AI is balancing' };
 
 const s = {
-  mode: 'ai', trainer: null, run: null, rate: 2, owed: 0, hold: 0, wind: false, started: false, force: 0, pushSide: 1,
+  mode: 'ai', trainer: null, tuner: null, run: null, rate: 2, owed: 0, hold: 0, wind: false, started: false, force: 0, pushSide: 1,
   dials: Object.fromEntries(Object.entries(PID_RANGES).map(([k, r]) => [k, r.def])),
-  best: { you: 0, pid: 0, ai: 0 },
+  best: { you: 0, pid: 0, tuned: 0, ai: 0 },
 };
 const keys = createKeys();
-const newTrainer = () => createTrainer((Math.random() * 2 ** 32) >>> 0);
+const seed = () => (Math.random() * 2 ** 32) >>> 0;
+function newTrainers() { s.trainer = createTrainer(seed()); s.tuner = createTuner(seed()); }
 function caption(t) { $('captionText').textContent = t; }
 function say(t) { $('log').textContent = t; }
 
@@ -38,8 +40,8 @@ function newTry() {
   caption(s.mode === 'you' ? 'Press ← or → to start' : `${WHO[s.mode]} is balancing`);
 }
 function freshBrain() {
-  s.trainer = newTrainer(); s.owed = 0; s.best.ai = 0; drawChart();
-  if (s.mode === 'ai') { newTry(); caption('A fresh random brain. Every brain starts by falling.'); }
+  newTrainers(); s.owed = 0; s.best.ai = s.best.tuned = 0; drawChart();
+  if (s.mode === 'ai' || s.mode === 'tuned') { newTry(); caption(s.mode === 'ai' ? 'A fresh random brain. Every brain starts by falling.' : 'Fresh dials, close to zero. Watch evolution turn them up.'); }
 }
 
 // ---------- Mode ----------
@@ -47,8 +49,14 @@ function setMode(mode) {
   s.mode = mode; clearKeys(keys); newTry();
   wrap.dataset.mode = mode;
   document.querySelectorAll('[data-mode]').forEach(b => { if (b.tagName === 'BUTTON') b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
-  document.querySelectorAll('.dial').forEach(d => { if (mode === 'pid') d.removeAttribute('data-off'); else d.setAttribute('data-off', ''); });
+  document.querySelector('.insides').dataset.mode = mode;
+  document.querySelectorAll('.dial').forEach(d => { // dials are yours in PID, evolution's in Tuned PID, and dim otherwise
+    if (mode === 'pid' || mode === 'tuned') d.removeAttribute('data-off'); else d.setAttribute('data-off', '');
+    d.querySelector('input').disabled = mode === 'tuned';
+  });
+  $('useDials').hidden = mode !== 'tuned';
   $('modeOut').textContent = modeLine(mode);
+  showDials(); showHint(); drawChart();
 }
 document.querySelectorAll('button[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
@@ -61,7 +69,13 @@ for (const [key, r] of Object.entries(PID_RANGES)) {
   dialsBox.append(label.firstElementChild);
   dialsBox.lastElementChild.querySelector('input').addEventListener('input', e => { s.dials[key] = Number(e.target.value); $(`out-${key}`).textContent = s.dials[key]; showHint(); }); // the PID try keeps running
 }
-function showHint() { $('pidOut').textContent = pidHint(s.dials, s.wind); }
+// The sliders show your dials in PID and evolution's best dials in Tuned PID.
+function showDials() {
+  const d = s.mode === 'tuned' ? s.tuner.bestDials : s.dials;
+  for (const k of Object.keys(PID_RANGES)) { $(`pid-${k}`).value = d[k]; $(`out-${k}`).textContent = d[k]; }
+}
+function showHint() { $('pidOut').textContent = s.mode === 'tuned' ? tunedHint(s.tuner.bestDials, s.wind) : pidHint(s.dials, s.wind); }
+$('useDials').addEventListener('click', () => { Object.assign(s.dials, s.tuner.bestDials); setMode('pid'); });
 
 // ---------- Push and Wind ----------
 $('push').addEventListener('click', () => {
@@ -113,6 +127,7 @@ function stepOnce() {
     if (!s.started) { if (!keys.held.size) return; s.started = true; caption('You are balancing'); }
     u = keyDir({ left: keys.held.has('left'), right: keys.held.has('right') }) * HUMAN_POWER;
   } else if (s.mode === 'pid') u = pidAct(run.pid, run.g, s.dials);
+  else if (s.mode === 'tuned') u = pidAct(run.pid, run.g, s.tuner.bestDials); // reads the live best dials, never writes them
   else u = aiAct(s.trainer.bestGenome, run.g, stepActs, stepInput); // reads the live best brain, never writes it
   s.force = u;
   advance(run, u, s.wind ? WIND_FORCE : 0);
@@ -123,7 +138,7 @@ function runUnseen(steps) {
   s.owed = owedAfter(s.owed, s.rate, steps);
   const t0 = performance.now();
   let ran = false;
-  while (s.owed >= 1 && performance.now() - t0 < BUDGET) { s.trainer.runGeneration(); s.owed--; ran = true; }
+  while (s.owed >= 1 && performance.now() - t0 < BUDGET) { s.trainer.runGeneration(); s.tuner.runGeneration(); s.owed--; ran = true; }
   if (ran) drawChart();
 }
 
@@ -136,8 +151,9 @@ function resize() {
 }
 function drawChart() {
   if (!view.chart) return;
-  drawBars(cctx, s.trainer.history, { width: view.chart.w, height: view.chart.h, max: LIMIT / 60, maxLabel: '20 s', empty: 'Bars appear after the first generation.', theme });
-  $('chartNote').textContent = aiNote(s.trainer.history);
+  const tuned = s.mode === 'tuned', history = tuned ? s.tuner.history : s.trainer.history;
+  drawBars(cctx, history, { width: view.chart.w, height: view.chart.h, max: LIMIT / 60, maxLabel: '20 s', empty: 'Bars appear after the first generation.', theme });
+  $('chartNote').textContent = tuned ? tunedNote(history) : aiNote(history);
 }
 const brainActs = createActs(SIZES), brainInput = new Float32Array(4);
 function drawBrainPanel() {
@@ -163,11 +179,18 @@ function frame(now) {
   for (let k = steps; k > 0; k--) stepOnce();
   runUnseen(steps);
   drawStageNow();
-  drawBrainPanel();
+  if (s.mode !== 'tuned') drawBrainPanel();
   $('plate').textContent = PLATE[s.mode];
   $('upFor').textContent = seconds(s.run).toFixed(1);
   $('bestUp').textContent = s.best[s.mode].toFixed(1);
-  $('gens').textContent = s.trainer.gen;
+  const tuned = s.mode === 'tuned';
+  $('gens').textContent = tuned ? s.tuner.gen : s.trainer.gen;
+  $('gensLabel').textContent = tuned ? 'Tuner generation' : 'AI generation';
+  if (tuned) {
+    showDials(); showHint();
+    $('formula').textContent = `${formulaLine(s.tuner.bestDials)}
+${formulaLive(s.run.pid.terms ?? { p: 0, i: 0, d: 0 })}`;
+  }
   requestAnimationFrame(frame);
 }
 
@@ -179,8 +202,7 @@ document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', 
 wireLamp($('lamp'), () => { theme = readTheme(); drawChart(); });
 new ResizeObserver(resize).observe(document.body);
 
-s.trainer = newTrainer();
+newTrainers();
 setMode('ai');
-showHint();
 resize();
 requestAnimationFrame(frame);

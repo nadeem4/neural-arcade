@@ -23,3 +23,14 @@
 .touch button { min-width: 56px; min-height: 56px; flex: 1; border-radius: 12px; border: 2px solid var(--stage-ink); background: transparent; color: var(--stage-ink); font: 700 22px/1.5 var(--sans); touch-action: none; user-select: none; }
 .touch button:active { background: color-mix(in srgb, var(--stage-ink) 18%, transparent); }
 @media (pointer: coarse) { .stage-body[data-mode="you"] .touch { display: flex; } .stage-body[data-mode="you"] .caption { bottom: 88px; } } /* lift the caption off the touch bar */
+
+/* Tuned PID: evolution moves the dials, so they are locked; dim a little but keep the numbers readable. */
+.dial input:disabled { opacity: .6; cursor: not-allowed; }
+
+/* The brain card shows the brain, or in Tuned PID the formula. */
+.formula-only, #formula { display: none; }
+.insides[data-mode="tuned"] #brain { display: none; }
+.insides[data-mode="tuned"] .brain-only { display: none; }
+.insides[data-mode="tuned"] .formula-only { display: block; }
+.insides[data-mode="tuned"] #formula { display: block; }
+#formula { margin: 0; padding: 12px; border-radius: 8px; background: var(--track); font: 600 15px/1.6 var(--sans); white-space: pre-line; overflow-wrap: anywhere; }

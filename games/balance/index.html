@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Balance · Neural Arcade</title>
-<meta name="description" content="Keep a pole upright on a cart by hand, with a three-dial PID controller, or with a tiny network that learns by evolution, then shove it with Push and Wind.">
+<meta name="description" content="Keep a pole upright on a cart by hand, with a three-dial PID controller, with a PID whose dials evolution tunes, or with a tiny network that learns by evolution, then shove it with Push and Wind.">
 <link rel="canonical" href="https://arcade.codewithnk.com/games/balance/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
 <meta property="og:title" content="Balance · Neural Arcade">
-<meta property="og:description" content="Keep a pole upright on a cart by hand, with a three-dial PID controller, or with a tiny network that learns by evolution, then shove it with Push and Wind.">
+<meta property="og:description" content="Keep a pole upright on a cart by hand, with a three-dial PID controller, with a PID whose dials evolution tunes, or with a tiny network that learns by evolution, then shove it with Push and Wind.">
 <meta property="og:url" content="https://arcade.codewithnk.com/games/balance/">
 <meta property="og:image" content="https://arcade.codewithnk.com/games/balance/shot.jpg">
 <meta property="og:image:width" content="1280">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Balance: a cart with a pole balanced on top">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Balance · Neural Arcade">
-<meta name="twitter:description" content="Keep a pole upright on a cart by hand, with a three-dial PID controller, or with a tiny network that learns by evolution, then shove it with Push and Wind.">
+<meta name="twitter:description" content="Keep a pole upright on a cart by hand, with a three-dial PID controller, with a PID whose dials evolution tunes, or with a tiny network that learns by evolution, then shove it with Push and Wind.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/games/balance/shot.jpg">
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../assets/studio.css">
@@ -35,7 +35,7 @@
     <div>
       <div class="crumb" id="crumb"></div>
       <h1>Balance</h1>
-      <p class="lead lesson">A cart must keep a pole upright. You, a PID controller with three dials and a tiny evolving network all try, and you can shove it with Push and Wind. Teaches feedback control, PID, evolution and disturbances.</p>
+      <p class="lead lesson">A cart must keep a pole upright. You, a PID controller with three dials, a PID whose dials evolution tunes and a tiny evolving network all try, and you can shove it with Push and Wind. Teaches feedback control, PID, evolution and disturbances.</p>
     </div>
     <nav class="switch" aria-label="On this page">
       <a href="#play" aria-current="true">Play</a>
@@ -46,8 +46,8 @@
 
   <dl class="brief" aria-label="The experiment">
     <div><dt>The setup</dt><dd>A cart on a rail with a pole hinged on top. The pole falls unless the cart moves under it.</dd></div>
-    <div><dt>The rule</dt><dd>Whoever is in control reads the lean and pushes the cart under it: you with the arrow keys, a PID controller with three dials, or a tiny network that learns by evolution.</dd></div>
-    <div><dt>Watch for</dt><dd>P alone wobbles, D calms it, and Wind leaves a steady error that I removes. Then the AI going from instant falls to balancing.</dd></div>
+    <div><dt>The rule</dt><dd>Whoever is in control reads the lean and pushes the cart under it: you with the arrow keys, a PID controller with three dials, a PID whose dials evolution tunes, or a tiny network that learns by evolution.</dd></div>
+    <div><dt>Watch for</dt><dd>P alone wobbles, D calms it, and Wind leaves a steady error that I removes. Then Tuned PID: evolution finds I on its own. Then the AI going from instant falls to balancing.</dd></div>
   </dl>
 
   <section class="play" id="play" aria-label="The game">
@@ -70,17 +70,18 @@
       <dl class="readouts">
         <div><dt>Up for <button class="info" type="button" aria-expanded="false" aria-controls="infoUpFor" aria-label="Explain up for" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></dt><dd class="num" id="upFor">0.0</dd><dd class="info-text" id="infoUpFor" hidden>Seconds the pole has stayed up in the try on screen. A try ends at 20 s.</dd></div>
         <div><dt>Best <button class="info" type="button" aria-expanded="false" aria-controls="infoBestUp" aria-label="Explain best" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></dt><dd class="num" id="bestUp">0.0</dd><dd class="info-text" id="infoBestUp" hidden>The longest the pole has stayed up for whoever is in control, in seconds.</dd></div>
-        <div><dt>AI generation <button class="info" type="button" aria-expanded="false" aria-controls="infoGens" aria-label="Explain AI generation" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></dt><dd class="num" id="gens">0</dd><dd class="info-text" id="infoGens" hidden>How many rounds of evolution the AI has been through. Each round tests 20 brains, keeps the best and breeds the next.</dd></div>
+        <div><dt><span id="gensLabel">AI generation</span> <button class="info" type="button" aria-expanded="false" aria-controls="infoGens" aria-label="Explain generation" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></dt><dd class="num" id="gens">0</dd><dd class="info-text" id="infoGens" hidden>How many rounds of evolution have run. Each round tests 20 candidates (brains, or sets of dials), keeps the best and breeds the next.</dd></div>
       </dl>
     </div>
 
     <aside class="panel" aria-label="Controls">
       <section aria-labelledby="mh">
         <h2><span id="mh">Who is in control</span> <button class="info" type="button" aria-expanded="false" aria-controls="infoMode" aria-label="Explain who is in control" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
-        <p class="info-text" id="infoMode" hidden>You use the arrow keys or A and D, or the buttons on a touch screen. PID uses the three dials below. AI uses the best brain evolution has found so far.</p>
+        <p class="info-text" id="infoMode" hidden>You use the arrow keys or A and D, or the buttons on a touch screen. PID uses the three dials below, which you set. Tuned PID is the same PID, but evolution sets the dials. AI has no formula: it uses the best brain evolution has found so far.</p>
         <div class="seg" role="group" aria-labelledby="mh">
           <button type="button" data-mode="you" aria-pressed="false">You</button>
           <button type="button" data-mode="pid" aria-pressed="false">PID</button>
+          <button type="button" data-mode="tuned" aria-pressed="false">Tuned PID</button>
           <button type="button" data-mode="ai" aria-pressed="true">AI</button>
         </div>
         <output class="hint" id="modeOut"></output>
@@ -89,32 +90,38 @@
         <h2><span id="dh">PID dials</span></h2>
         <div class="dials" id="dials"></div>
         <output class="hint" id="pidOut"></output>
+        <div class="row-btns"><button class="btn" type="button" id="useDials" hidden>Use these dials</button> <button class="info" type="button" aria-expanded="false" aria-controls="infoUseDials" aria-label="Explain use these dials" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></div>
+        <p class="info-text" id="infoUseDials" hidden>Copies the dials evolution has found right now into PID, where you can drag them yourself. Nothing else changes.</p>
       </section>
       <section aria-labelledby="sh">
         <h2><span id="sh">Training speed</span> <button class="info" type="button" aria-expanded="false" aria-controls="infoSpeed" aria-label="Explain training speed" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
-        <p class="info-text" id="infoSpeed" hidden>The AI trains unseen in the background, in every mode. The stage replays the latest generation's best brain. Paused keeps the brain as it is.</p>
+        <p class="info-text" id="infoSpeed" hidden>The AI and the dials' tuner both train unseen in the background, in every mode. The stage replays the latest generation's best. Paused keeps both as they are.</p>
         <div class="seg" role="group" aria-labelledby="sh">
           <button type="button" data-rate="0" aria-pressed="false">Paused</button>
           <button type="button" data-rate="2" aria-pressed="true">2 a second</button>
           <button type="button" data-rate="10" aria-pressed="false">10 a second</button>
         </div>
         <output class="hint" id="speedOut">2 generations a second</output>
-        <div class="row-btns"><button class="btn" type="button" id="fresh">New brain</button> <button class="info" type="button" aria-expanded="false" aria-controls="infoFresh" aria-label="Explain new brain" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></div>
-        <p class="info-text" id="infoFresh" hidden>Throws the AI's brain away and starts evolution again from random brains.</p>
+        <div class="row-btns"><button class="btn" type="button" id="fresh">Restart training</button> <button class="info" type="button" aria-expanded="false" aria-controls="infoFresh" aria-label="Explain restart training" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></div>
+        <p class="info-text" id="infoFresh" hidden>Throws away the AI's brain and the tuned dials, and starts both evolutions again from scratch.</p>
       </section>
     </aside>
   </section>
 
-  <section class="insides" aria-label="Inside the brain">
+  <section class="insides" aria-label="Inside the controller" data-mode="ai">
     <div class="card">
-      <h2>Its brain <button class="info" type="button" aria-expanded="false" aria-controls="infoBrain" aria-label="Explain the brain" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+      <h2 class="brain-only">Its brain <button class="info" type="button" aria-expanded="false" aria-controls="infoBrain" aria-label="Explain the brain" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+      <h2 class="formula-only">Its formula <button class="info" type="button" aria-expanded="false" aria-controls="infoFormula" aria-label="Explain the formula" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
       <p class="info-text" id="infoBrain" hidden>Four numbers in (cart position, cart speed, pole angle, pole spin), 6 hidden neurons, 1 out: 37 weights in all. The output is how hard to push, left or right.</p>
-      <p class="ask">What it senses, and how hard it pushes right now.</p>
+      <p class="info-text" id="infoFormula" hidden>A person wrote this formula: push in proportion to the lean, to the lean added up over time, and to the spin. Evolution only chose the three numbers in front.</p>
+      <p class="ask brain-only">What it senses, and how hard it pushes right now.</p>
+      <p class="ask formula-only">The three dials turned into a rule, with the numbers it is using now.</p>
       <canvas id="brain" aria-label="The AI's neural network"></canvas>
+      <p id="formula" aria-live="off"></p>
     </div>
     <div class="card">
       <h2>Generations <button class="info" type="button" aria-expanded="false" aria-controls="infoChart" aria-label="Explain the chart" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
-      <p class="info-text" id="infoChart" hidden>One bar per generation: seconds the best brain of that generation stayed up, with random pushes thrown at it. The dashed line is the 20 s limit.</p>
+      <p class="info-text" id="infoChart" hidden>One bar per generation: seconds the best brain of that generation stayed up, with random pushes thrown at it. In Tuned PID the bars are the best dials of each generation, scored over shoves and over wind. The dashed line is the 20 s limit.</p>
       <p class="ask">How long has the best brain stayed up?</p>
       <canvas id="chart" aria-label="Bar chart: seconds the best brain of each generation stayed up"></canvas>
       <p class="loophole" id="chartNote" aria-live="polite"></p>

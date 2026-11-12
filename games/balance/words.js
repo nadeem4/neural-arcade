@@ -57,7 +57,7 @@ export function aiNote(history) {
 
 // The dials as a rule a person could read. A zero dial drops out of the rule.
 export function formulaLine({ p, i, d }) {
-  const terms = [[p, 'lean'], [i, 'lean over time'], [d, 'spin']].filter(([g]) => g > 0).map(([g, w]) => `${g} × ${w}`);
+  const terms = [[p, 'lean'], [i, 'lean over time'], [d, 'spin']].filter(([g]) => g > 0).map(([g, w]) => `${g} Ã— ${w}`);
   return `push = ${terms.length ? terms.join(' + ') : 'nothing'}`;
 }
 
