@@ -37,6 +37,7 @@ describe('value spreads backward', () => {
     const v = valueGrid(a);
     // up the left column: 6 is beside the treasure, 30 is the start
     for (const s of [6, 12, 18, 24]) expect(v[s]).toBeGreaterThan(v[s + 6]);
+    expect(v[30]).toBeGreaterThan(0); // the +10 reached the start through the step costs
     a.map.cells.forEach((c, s) => { if (c === '#' || 'TNP'.includes(c)) expect(v[s]).toBe(0); });
   });
 });
@@ -74,6 +75,8 @@ describe('epsilon edges', () => {
       const a = trainEpisodes(createAgent('near-or-far', 1), 20, P(0.9, epsilon));
       expect(a.episodes).toBe(20);
       expect(a.history.length).toBe(20);
+      // a capped episode costs at most STEP_CAP steps plus one pit
+      for (const r of a.history) expect(r).toBeGreaterThanOrEqual(-0.1 * STEP_CAP - 10.1);
       expect(greedyWalk(a).path.length).toBeLessThanOrEqual(STEP_CAP + 1);
     }
   });

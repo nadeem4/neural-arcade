@@ -96,7 +96,7 @@ describe('episodes', () => {
     const ep = runEpisode(a, { alpha: 0, gamma: 0.9, epsilon: 0 });
     expect(ep.outcome).toBe('cap');
     expect(ep.steps).toBe(STEP_CAP);
-  });
+  }, 1000);
   it('a finished episode does not change', () => {
     const a = createAgent('near-or-far', 1);
     const ep = runEpisode(a, params);
