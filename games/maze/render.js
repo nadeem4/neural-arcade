@@ -22,7 +22,6 @@ export function smooth(values, window = 20) {
   });
 }
 
-// The stage is dark in both themes, so everything on it uses the stage's own colours: car (light) and tray (dark).
 // The last `shown` points of the 20-episode average, smoothed over the whole history so the tail matches the full curve.
 export function curvePoints(history, shown = 500, window = 20) {
   const start = Math.max(0, history.length - shown);
@@ -33,6 +32,7 @@ export function curvePoints(history, shown = 500, window = 20) {
 const LABEL = { big: '+10', small: '+3', pit: '-10' };
 
 // showFour and q are for the four-values view (M4); ignored for now.
+// The stage is dark in both themes, so everything on it uses the stage's own colours: car (light) and tray (dark).
 export function drawMaze(ctx, theme, { map, values, policy, robot, trail = [], w, h }) {
   ctx.save();
   const size = tileRect(map, 0, w, h).size;

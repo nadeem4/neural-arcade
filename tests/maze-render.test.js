@@ -89,9 +89,6 @@ describe('drawMaze on the always-dark stage', () => {
     for (const c of calls) {
       if (['fillRect', 'fillText', 'stroke', 'fill'].includes(c[0])) {
         const style = c[0] === 'stroke' ? c[c.length - 2] : c[c.length - 3];
-        if (c[0] === 'fillText') {
-          
-        }
         expect([theme.ground, theme.ink], c.join()).not.toContain(style);
       }
     }

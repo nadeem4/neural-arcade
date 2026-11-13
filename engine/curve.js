@@ -27,7 +27,7 @@ export function drawBars(ctx, values, { width, height, max, maxLabel, empty, the
   ctx.textAlign = 'right'; ctx.fillText(`Gen ${values.length}`, width, height - 8);
 }
 
-// Line chart for a value per step (Teach by Driving's loss per epoch). The scale starts at zero, so a falling line means real progress.
+// Line chart for a value per step (Teach by Driving's loss per epoch). The scale starts at zero (or at `min` when passed), so a falling line means real progress.
 export function drawLine(ctx, values, { width, height, empty, theme, first = 'Start', last = n => `${n}`, format = v => v.toFixed(3), max: top0, min = 0 }) {
   ctx.clearRect(0, 0, width, height);
   ctx.font = `400 13px ${theme.body}`;
