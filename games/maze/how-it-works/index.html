@@ -50,12 +50,12 @@
   <section class="step">
     <p class="num-tag">02</p>
     <h2>Value spreads backward</h2>
-    <p>The robot keeps a number for every tile: its <em>value</em>, how much reward it expects from there on. At first every value is zero. Then it stumbles onto the big treasure, and the tile next to the treasure learns that it is worth something.</p>
+    <p>The robot keeps a number for every tile: its <em>value</em>, how much reward it expects from there on. At first every value is zero. Then it stumbles onto a treasure, and the tile next to that treasure learns that it is worth something.</p>
     <p>The next time, the tile one step further back learns from that tile, and so on. Each tile only ever looks one step ahead, but the news keeps travelling. Value spreads backward from the reward, one step at a time.</p>
     <figure class="fig wide" id="fig2">
       <div class="minis" id="spreadGrids"></div>
       <p class="stepper"><button class="btn" type="button" id="stepThrough">Step through</button><span id="stepNote" aria-live="polite"></span></p>
-      <figcaption><b>Fig. 2</b> The robot's value for each tile after 1, 5, 20, 100 and 3,000 episodes. A deeper amber means more value, and the outlined grid is the one being described. The values appear first beside the big treasure, then creep back toward the start.</figcaption>
+      <figcaption><b>Fig. 2</b> The robot's value for each tile after 1, 5, 20, 100 and 3,000 episodes. A deeper amber means more value, and the outlined grid is the one being described. Values appear first beside a treasure the robot happened to reach, then spread back tile by tile. By 3,000 episodes they fall steadily from the big treasure down to the start.</figcaption>
     </figure>
   </section>
 
