@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { qValue } from '../engine/qlearn.js';
 import {
-  ACTIONS, REWARD, STEP_CAP, DEFAULTS, MAPS, MAP_IDS, loadMap, stepEnv, createAgent,
-  startEpisode, stepEpisode, runEpisode, tileKind,
+  ACTIONS, REWARD, STEP_CAP, DEFAULTS, MAPS, MAP_IDS, loadMap, stepEnv, tileKind,
+  createAgent, startEpisode, stepEpisode, runEpisode,
 } from '../games/maze/sim.js';
 
-const UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3;
+const [UP, , LEFT, RIGHT] = [0, 1, 2, 3];
 
 describe('constants', () => {
   it('match the plan', () => {
@@ -13,94 +12,102 @@ describe('constants', () => {
     expect(STEP_CAP).toBe(100);
     expect(DEFAULTS).toEqual({ alpha: 0.5, gamma: 0.9, epsilon: 0.5 });
     expect(MAP_IDS).toEqual(['near-or-far', 'cliff-edge']);
-    expect(ACTIONS.length).toBe(4);
-    expect(ACTIONS.map(a => a.name)).toEqual(['up', 'right', 'down', 'left']);
+    expect(ACTIONS.map(a => a.name)).toEqual(['up', 'down', 'left', 'right']);
   });
 });
 
 describe('maps', () => {
-  it('are 6x6 with one start', () => {
+  it('are 6x6 with exactly one S', () => {
     for (const id of MAP_IDS) {
       expect(MAPS[id].rows.length).toBe(6);
       expect(MAPS[id].rows.every(r => r.length === 6)).toBe(true);
-      const m = loadMap(id);
-      expect(m.w).toBe(6);
-      expect(m.h).toBe(6);
-      expect(m.nStates).toBe(36);
-      expect(m.rows.join('').split('S').length - 1).toBe(1);
+      expect(MAPS[id].rows.join('').split('S').length - 1).toBe(1);
     }
   });
-  it('near-or-far has a far +10, a near +3 and the start bottom left', () => {
+  it('near-or-far: start 30, big at 0, small at 32', () => {
     const m = loadMap('near-or-far');
-    expect(m.start).toBe(5 * 6 + 0);
+    expect(m.start).toBe(30);
+    expect(m.nStates).toBe(36);
+    expect(m.cells.indexOf('T')).toBe(0);
+    expect(m.cells.filter(c => c === 'T').length).toBe(1);
+    expect(m.cells.indexOf('N')).toBe(32);
+    expect(m.cells[30]).toBe('.');
+    expect(tileKind(m, 7)).toBe('wall');
     expect(tileKind(m, 0)).toBe('big');
-    expect(tileKind(m, 5 * 6 + 2)).toBe('small');
-    expect(tileKind(m, 1 * 6 + 1)).toBe('wall');
-    expect(tileKind(m, m.start)).toBe('start');
-    expect(tileKind(m, 2 * 6 + 2)).toBe('floor');
+    expect(tileKind(m, 32)).toBe('small');
+    expect(tileKind(m, 14)).toBe('floor');
   });
-  it('cliff-edge has a pit row between start and goal', () => {
+  it('cliff-edge: start 30, pits 31..34, big at 35', () => {
     const m = loadMap('cliff-edge');
-    expect(tileKind(m, 5 * 6 + 1)).toBe('pit');
-    expect(tileKind(m, 5 * 6 + 4)).toBe('pit');
-    expect(tileKind(m, 5 * 6 + 5)).toBe('big');
+    expect(m.start).toBe(30);
+    for (let s = 31; s <= 34; s++) expect(tileKind(m, s)).toBe('pit');
+    expect(tileKind(m, 35)).toBe('big');
+  });
+  it('an unknown id throws', () => {
+    expect(() => loadMap('nope')).toThrow();
   });
 });
 
 describe('stepEnv', () => {
   const m = loadMap('near-or-far');
-  it('a plain move costs the step penalty', () => {
-    const r = stepEnv(m, m.start, UP);
-    expect(r).toEqual({ s2: 4 * 6, r: REWARD.step, done: false, outcome: null });
+  it('stays put at the edge and costs a step', () => {
+    expect(stepEnv(m, 2, UP)).toEqual({ s2: 2, r: -0.1, done: false, outcome: null });
   });
-  it('bumping a wall or the edge stays put and still costs a step', () => {
-    expect(stepEnv(m, m.start, LEFT).s2).toBe(m.start);
-    expect(stepEnv(m, m.start, DOWN).s2).toBe(m.start);
-    // (0,1) is floor and (1,1) is a wall
-    expect(stepEnv(m, 1 * 6 + 0, RIGHT)).toMatchObject({ s2: 1 * 6 + 0, r: REWARD.step, done: false });
+  it('stays put against a wall', () => {
+    expect(stepEnv(m, 6, RIGHT).s2).toBe(6); // 7 is a wall
   });
-  it('terminals pay their reward and end the episode', () => {
-    expect(stepEnv(m, 5 * 6 + 1, RIGHT)).toEqual({ s2: 5 * 6 + 2, r: REWARD.small, done: true, outcome: 'small' });
-    expect(stepEnv(m, 1, LEFT)).toEqual({ s2: 0, r: REWARD.big, done: true, outcome: 'big' });
-    const c = loadMap('cliff-edge');
-    expect(stepEnv(c, 5 * 6, RIGHT)).toEqual({ s2: 5 * 6 + 1, r: REWARD.pit, done: true, outcome: 'pit' });
+  it('treasure and pit end the episode', () => {
+    const small = stepEnv(m, 31, RIGHT);
+    expect(small.s2).toBe(32);
+    expect(small.r).toBeCloseTo(2.9, 10);
+    expect(small).toMatchObject({ done: true, outcome: 'small' });
+    const big = stepEnv(m, 1, LEFT);
+    expect(big.r).toBeCloseTo(9.9, 10);
+    expect(big).toMatchObject({ done: true, outcome: 'big' });
+    const pit = stepEnv(loadMap('cliff-edge'), 30, RIGHT);
+    expect(pit.r).toBeCloseTo(-10.1, 10);
+    expect(pit).toMatchObject({ done: true, outcome: 'pit' });
   });
 });
 
 describe('episodes', () => {
-  it('are deterministic by seed', () => {
-    const a = createAgent({ mapId: 'near-or-far', seed: 4 });
-    const b = createAgent({ mapId: 'near-or-far', seed: 4 });
-    const ra = [], rb = [];
-    for (let i = 0; i < 20; i++) { ra.push(runEpisode(a)); rb.push(runEpisode(b)); }
-    expect(ra).toEqual(rb);
-    expect(Array.from(a.q.v)).toEqual(Array.from(b.q.v));
+  const params = { alpha: 0.5, gamma: 0.9, epsilon: 0.5 };
+  const run = seed => {
+    const a = createAgent('near-or-far', seed);
+    for (let i = 0; i < 50; i++) runEpisode(a, params);
+    return a.history;
+  };
+  it('same seed, same history; different seed, different history', () => {
+    expect(run(1)).toEqual(run(1));
+    expect(run(1)).not.toEqual(run(2));
   });
-  it('learning writes into the table; learn:false does not', () => {
-    const a = createAgent({ mapId: 'cliff-edge', seed: 1 });
-    const ep = startEpisode(a);
-    stepEpisode(a, ep, { learn: false });
-    expect(Array.from(a.q.v).every(v => v === 0)).toBe(true);
-    stepEpisode(a, ep);
-    expect(Array.from(a.q.v).some(v => v !== 0)).toBe(true);
-  });
-  it('ends at the step cap with outcome cap when the policy loops', () => {
-    const a = createAgent({ mapId: 'near-or-far', seed: 1, epsilon: 0 });
-    // loop up/down between start and the tile above it
-    a.q.v[a.map.start * 4 + UP] = 1;
-    a.q.v[(a.map.start - 6) * 4 + DOWN] = 1;
-    a.params.alpha = 0; // keep the loop intact
-    const res = runEpisode(a);
-    expect(res.outcome).toBe('cap');
-    expect(res.steps).toBe(STEP_CAP);
-    expect(qValue(a.q, a.map.start, UP)).toBe(1);
-  });
-  it('reports outcome, steps and return', () => {
-    const a = createAgent({ mapId: 'cliff-edge', seed: 2 });
-    const res = runEpisode(a);
-    expect(['big', 'small', 'pit', 'cap']).toContain(res.outcome);
-    expect(res.steps).toBeGreaterThan(0);
-    expect(Number.isFinite(res.ret)).toBe(true);
+  it('count episodes and end within the cap', () => {
+    const a = createAgent('cliff-edge', 1);
+    const ep = runEpisode(a, params);
     expect(a.episodes).toBe(1);
+    expect(a.history.length).toBe(1);
+    expect(['big', 'small', 'pit', 'cap']).toContain(ep.outcome);
+    expect(ep.steps).toBeLessThanOrEqual(STEP_CAP);
+  });
+  it('ends at the step cap when the policy loops', () => {
+    const a = createAgent('near-or-far', 1);
+    a.q.v[30 * 4 + RIGHT] = 1; // start: go right
+    a.q.v[31 * 4 + LEFT] = 1;  // next tile: go back
+    const ep = runEpisode(a, { alpha: 0, gamma: 0.9, epsilon: 0 });
+    expect(ep.outcome).toBe('cap');
+    expect(ep.steps).toBe(STEP_CAP);
+  });
+  it('a finished episode does not change', () => {
+    const a = createAgent('near-or-far', 1);
+    const ep = runEpisode(a, params);
+    const before = { ...ep }, n = a.episodes, q = Array.from(a.q.v);
+    stepEpisode(a, ep, params);
+    expect(ep).toEqual(before);
+    expect(a.episodes).toBe(n);
+    expect(Array.from(a.q.v)).toEqual(q);
+  });
+  it('startEpisode begins at the start tile', () => {
+    const a = createAgent('near-or-far', 1);
+    expect(startEpisode(a)).toEqual({ s: 30, steps: 0, reward: 0, outcome: null });
   });
 });

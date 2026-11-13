@@ -95,9 +95,11 @@ engine/                 reusable pieces for every game
   brain-panel.js        draws any small network live
   curve.js              per-generation bar chart and loss line chart
   reinforce.js          learning from reward: policy, sampling, REINFORCE with a value baseline
+  qlearn.js             tabular Q-learning: value table, epsilon-greedy choice, one-step update
 games/racer/            Neural Racer: sim.js (no DOM), track-view.js, main.js, story-data.js
   how-it-works/         the illustrated write-up (story.js draws its figures; the shared styles are assets/story.css)
 games/teach/            Teach by Driving: sim.js (no DOM, reuses the racer's track and physics), main.js, story-data.js
+games/maze/             Treasure Maze (in progress): sim.js (no DOM; maps, rewards, Q-learning episodes, value and policy grids)
   how-it-works/         its write-up
 games/runner/           Coin Runner: sim.js (no DOM; also `actionFor`, `tickHuman` and `timeLeft` for playing by hand), render.js (incl. `skyFor`, the night recolour), words.js (incl. `compareNote`, `whyNote`), sfx.js (`SOUNDS` data, `soundsFor`, `readSound`/`saveSound`, the Web Audio player), main.js, story-data.js + story.json, demo.js (the home page's recorded run, `startDemo(canvas, panelEl)`), art/ (Kenney, CC0)
   how-it-works/         its write-up
