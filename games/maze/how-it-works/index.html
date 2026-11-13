@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treasure Maze · How it works</title>
+<meta name="description" content="A robot learns to find treasure in a small grid by trial and error. See how value spreads backward from the reward, how the discount decides which treasure it walks to, and what exploring costs beside a cliff.">
+<link rel="canonical" href="https://arcade.codewithnk.com/games/maze/how-it-works/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Treasure Maze · How it works">
+<meta property="og:description" content="A robot learns to find treasure in a small grid by trial and error. See how value spreads backward from the reward, how the discount decides which treasure it walks to, and what exploring costs beside a cliff.">
+<meta property="og:url" content="https://arcade.codewithnk.com/games/maze/how-it-works/">
+<meta property="og:image" content="https://arcade.codewithnk.com/games/maze/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Treasure Maze how it works: a robot in a grid with two treasures">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Treasure Maze · How it works">
+<meta name="twitter:description" content="A robot learns to find treasure in a small grid by trial and error. See how value spreads backward from the reward, how the discount decides which treasure it walks to, and what exploring costs beside a cliff.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/games/maze/share.png">
+<link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../../assets/studio.css">
+<link rel="stylesheet" href="../../../assets/story.css">
+<link rel="stylesheet" href="story.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="games"></header>
+
+<main class="wrap story">
+  <header class="intro">
+    <p class="kicker">Treasure Maze · How it works</p>
+    <h1>How a robot learns where the treasure is</h1>
+    <p class="lede">A robot stands in a grid and knows nothing. It gets a reward only when it reaches a treasure, and a small cost for every step. From that alone it works out the best way to walk. The trick is that the news of a reward travels backward, one step at a time.</p>
+    <p class="meta"><span>5 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+  </header>
+
+  <section class="step">
+    <p class="num-tag">01</p>
+    <h2>The world is a small grid</h2>
+    <p>The robot starts in the bottom-left corner and moves up, down, left or right. Walls block it. There is a small treasure close by and a big one far away. Every step costs a little, so wandering is not free.</p>
+    <p>One run from the start until the robot reaches a treasure, or runs out of steps, is called an <em>episode</em>. It learns by playing many of them.</p>
+    <figure class="fig" id="fig1">
+      <canvas id="canvasWorld" class="grid" role="img" aria-label="The Near or far map: the robot starts bottom-left, a small treasure is close by and a big treasure is in the top-left corner"></canvas>
+      <figcaption><b>Fig. 1</b> The Near or far map. Rewards: <b>+10</b> big treasure, <b>+3</b> small treasure, <b>-10</b> for a pit (on the other map), <b>-0.1</b> for every step. The dark tiles are walls.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">02</p>
+    <h2>Value spreads backward</h2>
+    <p>The robot keeps a number for every tile: its <em>value</em>, how much reward it expects from there on. At first every value is zero. Then it stumbles onto a treasure, and the tile next to that treasure learns that it is worth something.</p>
+    <p>The next time, the tile one step further back learns from that tile, and so on. Each tile only ever looks one step ahead, but the news keeps travelling. Value spreads backward from the reward, one step at a time.</p>
+    <figure class="fig wide" id="fig2">
+      <div class="minis" id="spreadGrids"></div>
+      <p class="stepper"><button class="btn" type="button" id="stepThrough">Step through</button><span id="stepNote" aria-live="polite"></span></p>
+      <figcaption><b>Fig. 2</b> The robot's value for each tile after 1, 5, 20, 100 and 3,000 episodes. A deeper amber means more value, and the outlined grid is the one being described. Values appear first beside a treasure the robot happened to reach, then spread back tile by tile. By 3,000 episodes they fall steadily from the big treasure down to the start.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">03</p>
+    <h2>The discount decides which treasure</h2>
+    <p>A reward far away is worth a little less than the same reward close by. The <em>discount</em> says how much less: at each step the robot multiplies what is ahead by a number between 0 and 1. A low discount makes it short-sighted. A high one makes it patient.</p>
+    <p>On this map that choice flips the answer. The small treasure is near, the big one is far.</p>
+    <figure class="fig wide" id="fig3">
+      <div class="duo">
+        <div><p class="duo-label">Discount <span id="gLow"></span></p><canvas id="policyLow" class="grid" role="img" aria-label=""></canvas></div>
+        <div><p class="duo-label">Discount <span id="gHigh"></span></p><canvas id="policyHigh" class="grid" role="img" aria-label=""></canvas></div>
+      </div>
+      <figcaption><b>Fig. 3</b> The move the robot prefers on each tile after 3,000 episodes, with its walk from the start outlined. A low discount grabs the small treasure. A high discount walks all the way to the big one.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">04</p>
+    <h2>Exploring costs near a cliff</h2>
+    <p>If the robot only repeated its best-known move it would never find anything new. So some of the time it tries a random move instead. That is <em>exploring</em>, and it is how the first treasure gets found at all.</p>
+    <p>But exploring is not free. On this map the short way to the treasure runs beside a pit, and a random step to the side is a fall.</p>
+    <figure class="fig" id="fig4">
+      <canvas id="canvasCliff" class="grid" role="img" aria-label="The Cliff edge map: the robot starts bottom-left, four pits run along the bottom, the treasure is bottom-right"></canvas>
+      <ul class="tallies">
+        <li><b id="cLowE"></b> of its moves random: <span id="cLowP"></span> falls in <span class="n-eps"></span> episodes, average reward <span id="cLowR"></span>.</li>
+        <li><b id="cHighE"></b> of its moves random: <span id="cHighP"></span> falls in <span class="n-eps"></span> episodes, average reward <span id="cHighR"></span>.</li>
+      </ul>
+      <figcaption><b>Fig. 4</b> The Cliff edge map, and what two amounts of exploring cost while the robot learns. More exploring means more falls and a lower average reward.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">05</p>
+    <h2>What it has and has not learned</h2>
+    <ul class="notes">
+      <li><b>It is a table, not a brain.</b> The robot keeps one number for each tile and move, and nudges it a little after every step. There is no network here, only a lookup.</li>
+      <li><b>It only knows this map.</b> Change the walls and it has to start again.</li>
+      <li><b>The figures come from one recorded run</b> (seed <span id="seed"></span>), so they are the same on every visit.</li>
+    </ul>
+  </section>
+
+  <section class="step finale">
+    <h2>Your turn</h2>
+    <p>Value spreads backward from the reward, one step at a time.</p>
+    <p>On the live page, slide the discount and watch which treasure the robot goes for.</p>
+    <a class="btn primary go" href="../"><span>Try it live</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+  </section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="../../../assets/story-page.js"></script>
+<script type="module" src="story.js"></script>
+</body>
+</html>
