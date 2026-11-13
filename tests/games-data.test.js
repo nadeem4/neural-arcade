@@ -209,3 +209,24 @@ describe('moreFrom', () => {
     expect(moreFrom(a, [a, other])).toEqual([]);
   });
 });
+
+describe('reinforcement learning and the maze', () => {
+  it('the category exists with a lead', () => {
+    const c = CATEGORIES.find(c => c.id === 'reinforcement-learning');
+    expect(c.title).toBe('Reinforcement learning');
+    expect(c.lead.length).toBeGreaterThan(0);
+  });
+  it('maze entry has every field, no video yet, and its category exists', () => {
+    const g = gameById('maze');
+    expect(g).toMatchObject({ title: 'Treasure Maze', category: 'reinforcement-learning', path: 'games/maze/', writeup: 'games/maze/how-it-works/', shot: 'games/maze/shot.jpg', youtube: null, demo: null });
+    for (const f of FIELDS) expect(g[f].length, f).toBeGreaterThan(0);
+    expect(g.lesson).toMatch(/Teaches reward, value, the discount and exploring\.$/);
+    expect(CATEGORIES.map(c => c.id)).toContain(g.category);
+  });
+  it('its category page model lists the maze, and the home hero stays Balance', () => {
+    const m = categoryModel(CATEGORIES, GAMES, 'reinforcement-learning');
+    expect(m).not.toBeNull();
+    expect(m.games.map(g => g.id)).toContain('maze');
+    expect(homeModel(CATEGORIES, GAMES).hero.id).toBe('balance');
+  });
+});
