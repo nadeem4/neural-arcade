@@ -1,0 +1,14 @@
+/* Treasure Maze only: the rest of the page comes from studio.css and assets/game.css. */
+
+.stage-body { display: block; } /* studio.css makes it a two-column grid; here the grid canvas fills it */
+#stage { display: block; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 1; }
+#chart { height: 150px; }
+
+/* The readout under the stage that says where the robot would go is a sentence, not a number. */
+.readouts .txt { margin: 0; font: 600 14px/1.4 var(--sans); letter-spacing: 0; overflow-wrap: anywhere; }
+
+/* One card under the stage, not two. */
+.insides { grid-template-columns: minmax(0, 1fr); }
+
+/* Sliders fill their section. */
+.panel input[type="range"] { width: 100%; }

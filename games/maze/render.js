@@ -39,7 +39,7 @@ export function drawMaze(ctx, theme, { map, values, policy, robot, trail = [], w
     else if (values) { ctx.globalAlpha = shade(values[s]); ctx.fillStyle = theme.amber; ctx.fillRect(x, y, size, size); ctx.globalAlpha = 1; }
     ctx.strokeStyle = theme.rule; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
     if (LABEL[kind]) { ctx.fillStyle = kind === 'pit' ? theme.ground : theme['amber-ink']; ctx.fillText(LABEL[kind], x + size / 2, y + size / 2); }
-    if (policy?.[s] != null) { ctx.fillStyle = theme.ink; ctx.fillText(arrowFor(policy[s]), x + size / 2, y + size / 2); }
+    if (policy?.[s] != null) { ctx.fillStyle = shade(values?.[s] ?? 0) > 0.3 ? theme.ink : theme.ground; ctx.fillText(arrowFor(policy[s]), x + size / 2, y + size / 2); }
   }
   if (trail.length > 1) {
     ctx.strokeStyle = theme.ink; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath();

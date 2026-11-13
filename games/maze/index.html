@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treasure Maze · Neural Arcade</title>
+<meta name="description" content="A robot learns a small grid by trial and error. Set the discount and the exploring, and watch value spread back from the treasure and decide which one it walks to.">
+<link rel="canonical" href="https://arcade.codewithnk.com/games/maze/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Treasure Maze · Neural Arcade">
+<meta property="og:description" content="A robot learns a small grid by trial and error. Set the discount and the exploring, and watch value spread back from the treasure and decide which one it walks to.">
+<meta property="og:url" content="https://arcade.codewithnk.com/games/maze/">
+<meta property="og:image" content="https://arcade.codewithnk.com/games/maze/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Treasure Maze: a robot in a grid with two treasures">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Treasure Maze · Neural Arcade">
+<meta name="twitter:description" content="A robot learns a small grid by trial and error. Set the discount and the exploring, and watch value spread back from the treasure and decide which one it walks to.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/games/maze/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/game.css">
+<link rel="stylesheet" href="maze.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body data-game="maze">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i" viewBox="0 0 256 256"><path fill="currentColor" d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol></svg>
+
+<header data-site="games"></header>
+
+<main class="wrap game">
+  <div class="head">
+    <div>
+      <div class="crumb" id="crumb"></div>
+      <h1>Treasure Maze</h1>
+      <p class="lead lesson">A robot learns a small grid by trial and error, and you set how much far-off reward counts. Teaches reward, value, the discount and exploring.</p>
+    </div>
+    <nav class="switch" aria-label="On this page">
+      <a href="#play" aria-current="true">Play</a>
+      <a href="#watch" id="switchWatch" hidden>Watch</a>
+      <a href="#how">How it works</a>
+    </nav>
+  </div>
+
+  <dl class="brief" aria-label="The experiment">
+    <div><dt>The setup</dt><dd>A robot on a six-by-six grid. One tile holds a big treasure worth +10, another a small one worth +3, and some tiles are pits worth -10. Every step costs a little.</dd></div>
+    <div><dt>The rule</dt><dd>It knows nothing at first. After each move it updates a table of how good that move was, given the best it expects next. You set the discount, how much far-off reward counts, and the exploring, how often it tries a random move.</dd></div>
+    <div><dt>Watch for</dt><dd>On Near or far, a low discount sends it to the small treasure and a high one to the big treasure. On Cliff edge, the more it explores, the more often it falls in the pit.</dd></div>
+  </dl>
+
+  <section class="play" id="play" aria-label="The game">
+    <div class="stage">
+      <div class="stage-head"><span class="live"><i></i><b>Shade is value, arrows are its best move</b></span>
+        <span class="stage-tools"><button class="info" type="button" aria-expanded="false" aria-controls="info-values" aria-label="Explain the tiles" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></span></div>
+      <p class="info-text" id="info-values" data-info="values" hidden></p>
+      <div class="stage-body">
+        <canvas id="stage" aria-label="The maze: tiles shaded by value, arrows for the best move, the robot"></canvas>
+      </div>
+      <p class="say" id="log" aria-live="polite">Every tile starts at zero, so the first tries are random wandering. Watch the shade spread back from the treasure.</p>
+      <dl class="readouts">
+        <div><dt>Episodes</dt><dd class="num" id="episodes">0</dd></div>
+        <div><dt>Last reward</dt><dd class="num" id="lastReward">–</dd></div>
+        <div><dt>Where it would go</dt><dd class="txt" id="bestPath">No episode yet.</dd></div>
+      </dl>
+    </div>
+
+    <aside class="panel" aria-label="Controls">
+      <section aria-labelledby="gh">
+        <h2><label for="gamma" id="gh">Discount</label> <button class="info" type="button" aria-expanded="false" aria-controls="info-discount" aria-label="Explain discount" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-discount" data-info="discount" hidden></p>
+        <input id="gamma" type="range" min="0" max="0.99" step="0.01" value="0.9" aria-describedby="gammaOut">
+        <output class="hint" id="gammaOut" for="gamma"></output>
+      </section>
+      <section aria-labelledby="eh">
+        <h2><label for="epsilon" id="eh">Exploration</label> <button class="info" type="button" aria-expanded="false" aria-controls="info-exploration" aria-label="Explain exploration" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-exploration" data-info="exploration" hidden></p>
+        <input id="epsilon" type="range" min="0" max="1" step="0.01" value="0.5" aria-describedby="epsilonOut">
+        <output class="hint" id="epsilonOut" for="epsilon"></output>
+      </section>
+      <section aria-labelledby="sh">
+        <h2><span id="sh">Speed</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-speed" aria-label="Explain speed" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-speed" data-info="speed" hidden></p>
+        <div class="seg" role="group" aria-labelledby="sh">
+          <button type="button" data-rate="step" aria-pressed="false">Step</button>
+          <button type="button" data-rate="1" aria-pressed="true">Play</button>
+          <button type="button" data-rate="fast" aria-pressed="false">Fast</button>
+          <button type="button" data-rate="0" aria-pressed="false">Pause</button>
+        </div>
+      </section>
+      <section aria-labelledby="mh">
+        <h2><span id="mh">Map</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-map" aria-label="Explain map" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-map" data-info="map" hidden></p>
+        <div class="seg" role="group" aria-labelledby="mh">
+          <button type="button" data-map="near-or-far" aria-pressed="true">Near or far</button>
+          <button type="button" data-map="cliff-edge" aria-pressed="false">Cliff edge</button>
+        </div>
+        <div class="row-btns"><button class="btn" type="button" id="reset">Reset brain</button> <button class="info" type="button" aria-expanded="false" aria-controls="info-reset" aria-label="Explain reset" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></div>
+        <p class="info-text" id="info-reset" data-info="reset" hidden></p>
+      </section>
+    </aside>
+  </section>
+
+  <section class="insides" aria-label="The learning curve">
+    <div class="card">
+      <h2>Reward per episode <button class="info" type="button" aria-expanded="false" aria-controls="info-curve" aria-label="Explain the curve" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+      <p class="info-text" id="info-curve" data-info="curve" hidden></p>
+      <p class="ask">How much reward is it earning, on average, over its last 20 episodes?</p>
+      <canvas id="chart" aria-label="Line chart: average reward over the last 20 episodes"></canvas>
+    </div>
+  </section>
+
+  <div class="moral">
+    <div><small>The lesson</small><p>Value spreads backward from the reward, one step at a time.</p></div>
+    <a class="btn" href="#how">Why it works</a>
+  </div>
+
+  <section class="more" aria-label="Watch and read">
+    <div class="watch" id="watchCol" hidden>
+      <h2>Watch it learn</h2>
+      <p>A short narrated explainer of how this robot learns, step by step.</p>
+      <div id="watchBox"></div>
+    </div>
+    <div class="read" id="how">
+      <h2>How it works</h2>
+      <p>The illustrated write-up of this game.</p>
+      <a class="btn primary" id="writeup" href="how-it-works/">Read How it works</a>
+    </div>
+  </section>
+
+  <section class="more-from" id="moreFrom" aria-labelledby="moreTitle" hidden>
+    <h2 id="moreTitle">More from the arcade</h2>
+    <div class="tiles" id="moreTiles"></div>
+  </section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="../../assets/game-page.js"></script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
