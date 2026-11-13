@@ -5,23 +5,23 @@ import { readTheme, wireLamp } from '../../assets/theme.js';
 import { sizeCanvas } from '../racer/track-view.js';
 import { createAgent, startEpisode, stepEpisode, runEpisode, valueGrid, policyGrid, DEFAULTS } from './sim.js';
 import { gammaHint, epsilonHint, episodeNote, learnedNote, INFO } from './words.js';
-import { drawMaze, smooth } from './render.js';
+import { drawMaze, curvePoints } from './render.js';
 
 const $ = id => document.getElementById(id);
 const stageCanvas = $('stage'), chartCanvas = $('chart');
 const sctx = stageCanvas.getContext('2d'), cctx = chartCanvas.getContext('2d');
 let theme = readTheme(), view = {};
 
-// BUDGET: most ms per frame spent on fast training. BEAT: 60 Hz steps between moves (step) or episodes (play), about 4 a second.
-const BUDGET = 6, BEAT = 15;
+// FAST: episodes per frame in Fast (about 900 a second). BEAT: 60 Hz steps between moves (step) or episodes (play), about 4 a second.
+const FAST = 15, BEAT = 15, SHOWN = 500;
 const seed = () => (Math.random() * 2 ** 32) >>> 0;
-const s = { agent: null, ep: null, trail: [], mapId: 'near-or-far', gamma: DEFAULTS.gamma, epsilon: DEFAULTS.epsilon, rate: '1', wait: 0, hold: 0 };
+const s = { agent: null, ep: null, trail: [], mapId: 'near-or-far', gamma: DEFAULTS.gamma, epsilon: DEFAULTS.epsilon, rate: '1', wait: 0 };
 const params = () => ({ alpha: DEFAULTS.alpha, gamma: s.gamma, epsilon: s.epsilon });
 const say = t => { $('log').textContent = t; };
 
 function newBrain() {
   s.agent = createAgent(s.mapId, seed());
-  s.ep = startEpisode(s.agent); s.trail = [s.ep.s]; s.wait = 0; s.hold = 0;
+  s.ep = startEpisode(s.agent); s.trail = [s.ep.s]; s.wait = 0;
   say('A new robot, knowing nothing. Every tile starts at zero, so the first tries are random wandering.');
   drawChart();
 }
@@ -42,6 +42,7 @@ document.querySelectorAll('[data-map]').forEach(b => b.addEventListener('click',
 }));
 document.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click', () => {
   s.rate = b.dataset.rate; s.wait = 0; press('rate', s.rate);
+  $('log').setAttribute('aria-live', s.rate === 'step' ? 'polite' : 'off'); // only Step is slow enough to read aloud
   if (s.ep.outcome) nextEpisode();
 }));
 
@@ -50,10 +51,8 @@ document.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click'
 function advance(steps) {
   if (s.rate === '0') return;
   if (s.rate === 'fast') {
-    const t0 = performance.now();
-    let n = 0;
-    while (performance.now() - t0 < BUDGET) { s.ep = runEpisode(s.agent, params()); n++; }
-    if (n) finished();
+    for (let i = 0; i < FAST; i++) s.ep = runEpisode(s.agent, params());
+    finished();
     nextEpisode();
     return;
   }
@@ -75,9 +74,9 @@ function resize() {
 }
 function drawChart() {
   if (!view.chart) return;
-  // Averages below zero (falling in the pit) sit on the axis; the scale is fixed at the big treasure.
-  const values = smooth(s.agent.history).map(v => Math.max(0, v));
-  drawLine(cctx, values, { width: view.chart.w, height: view.chart.h, max: 10, empty: 'No episode yet.', first: 'Episode 1', last: i => `Episode ${i + 1}`, format: v => v.toFixed(0), theme });
+  // The last SHOWN points of the 20-episode average; the scale runs from -10 (every try ends in the pit) to 10 (the big treasure).
+  const { values, start } = curvePoints(s.agent.history, SHOWN);
+  drawLine(cctx, values.map(v => Math.max(v, -10)), { width: view.chart.w, height: view.chart.h, min: -10, max: 10, empty: 'No episode yet.', first: `Episode ${start + 1}`, last: i => `Episode ${start + i + 1}`, format: v => v.toFixed(0), theme });
 }
 function drawStageNow() {
   const { dpr, w, h } = view.stage;

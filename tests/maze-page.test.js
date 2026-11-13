@@ -18,7 +18,7 @@ describe('maze page markup', () => {
       expect(html, id).toContain(`id="${id}"`);
       expect(main, id).toContain(`$('${id}')`);
     }
-    expect(tag('log')).toContain('aria-live="polite"');
+    expect(tag('log')).toContain('aria-live="off"');
   });
   it('lets both sliders reach their ends, starting at the sim defaults', () => {
     expect(tag('gamma')).toMatch(/type="range"/);
@@ -42,6 +42,9 @@ describe('maze page markup', () => {
     for (const k of used) expect(INFO, k).toHaveProperty(k);
     for (const k of Object.keys(INFO)) if (k !== 'fourValues') expect(used, k).toContain(k); // fourValues arrives with its toggle in M4
     expect(main).toMatch(/INFO\[/);
+  });
+  it('tells you to leave exploring on for the discount lesson', () => {
+    expect(html).toMatch(/exploring[^<]*0\.5/);
   });
   it('shows the lesson in the lead and the stated lesson in the moral band', () => {
     expect(html.match(/class="lead lesson">([^<]*)</)[1]).toBe(entry.lesson);
@@ -82,12 +85,21 @@ describe('maze main.js', () => {
   it('drives the sim, the words and the curve', () => {
     for (const n of ['createAgent', 'runEpisode', 'stepEpisode', 'startEpisode', 'valueGrid', 'policyGrid', 'DEFAULTS']) expect(main, n).toMatch(new RegExp(String.raw`import \{[^}]*\b${n}\b[^}]*\} from`));
     expect(main).toMatch(/import \{[^}]*drawLine[^}]*\} from '..\/..\/engine\/curve\.js'/);
-    expect(main).toMatch(/import \{[^}]*\bsmooth\b[^}]*\} from '.\/render\.js'/);
-    expect(main).toContain("first: 'Episode 1'");
+    expect(main).toMatch(/import \{[^}]*\bcurvePoints\b[^}]*\} from '.\/render\.js'/);
+    expect(main).toContain('first: `Episode ${');
     expect(main).toContain('No episode yet.');
   });
-  it('trains fast within a frame budget and uses Math.random only for the seed', () => {
-    expect(main).toContain('performance.now');
+  it('fast trains a fixed number of episodes a frame, not whatever fits in a time budget', () => {
+    expect(main).toMatch(new RegExp('FAST = [0-9]+'));
+    expect(main).not.toContain('performance.now');
+    expect(main).toContain('curvePoints(');
+    expect(main).not.toContain('Math.max(0');
+  });
+  it('announces the log only in Step mode, and has no leftover hold state', () => {
+    expect(main).toContain("setAttribute('aria-live'");
+    expect(main).not.toMatch(/hold/);
+  });
+  it('uses Math.random only for the seed', () => {
     expect(main.match(/Math\.random/g)).toHaveLength(1);
     expect(main).toMatch(/seed = \(\) => \(Math\.random\(\) \* 2 \*\* 32\) >>> 0/);
   });

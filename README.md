@@ -55,8 +55,8 @@ A hero that has never played learns a short side-scrolling level (two pits, a st
 
 ### Treasure Maze (`games/maze/`)
 A robot learns a 6 by 6 grid by Q-learning; you set how much far-off reward counts.
-- **Controls:** Discount slider 0 to 0.99, Exploration slider 0 to 1 (both change learning live, no reset), Speed (Step: one move every quarter second; Play: about 4 episodes a second; Fast: as many as fit in 6 ms a frame; Pause), a Map picker (Near or far, Cliff edge) and Reset brain. Switching map or Reset starts a new brain.
-- **Panels:** the grid shaded by value with an arrow for the best move, readouts for episodes, last reward and where it would go without exploring, a live line for the last episode, and a curve of average reward over the last 20 episodes. Every control has an (i) explanation.
+- **Controls:** Discount slider 0 to 0.99, Exploration slider 0 to 1 (both change learning live, no reset), Speed (Step: one move every quarter second; Play: about 4 episodes a second; Fast: 15 episodes a frame, about 900 a second; Pause), a Map picker (Near or far, Cliff edge) and Reset brain. Switching map or Reset starts a new brain.
+- **Panels:** the grid shaded by value with an arrow for the best move, readouts for episodes, last reward and where it would go without exploring, a live line for the last episode, and a curve of the average reward over the last 20 episodes (the latest 500 points, and it can go below zero beside the pit). The live line is only announced to screen readers in Step. Every control has an (i) explanation.
 - **Share banner:** no video yet, so `share.png` and `shot.jpg` are screenshots of the page.
 
 ### Balance (`games/balance/`)

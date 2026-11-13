@@ -28,7 +28,7 @@ export function drawBars(ctx, values, { width, height, max, maxLabel, empty, the
 }
 
 // Line chart for a value per step (Teach by Driving's loss per epoch). The scale starts at zero, so a falling line means real progress.
-export function drawLine(ctx, values, { width, height, empty, theme, first = 'Start', last = n => `${n}`, format = v => v.toFixed(3), max: top0 }) {
+export function drawLine(ctx, values, { width, height, empty, theme, first = 'Start', last = n => `${n}`, format = v => v.toFixed(3), max: top0, min = 0 }) {
   ctx.clearRect(0, 0, width, height);
   ctx.font = `400 13px ${theme.body}`;
   ctx.textBaseline = 'middle';
@@ -39,9 +39,13 @@ export function drawLine(ctx, values, { width, height, empty, theme, first = 'St
   }
   const max = top0 ?? (Math.max(...values) || 1), top = 14, bottom = height - 22; // pass `max` to share a scale across charts
   const x = i => (values.length === 1 ? 0 : (i / (values.length - 1)) * width);
-  const y = v => bottom - (v / max) * (bottom - top);
+  const y = v => bottom - ((v - min) / (max - min)) * (bottom - top); // `min` below zero puts the axis there and a dashed line at zero
   ctx.strokeStyle = theme.rule; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(0, bottom + 0.5); ctx.lineTo(width, bottom + 0.5); ctx.stroke();
+  if (min < 0) {
+    ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(0, y(0)); ctx.lineTo(width, y(0)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = theme.muted; ctx.textAlign = 'right'; ctx.fillText('0', width, y(0) - 8);
+  }
   ctx.fillStyle = theme.muted; ctx.textAlign = 'left';
   ctx.fillText(format(max), 0, top - 6);
 

@@ -4,6 +4,11 @@ import { loadMap, createAgent, trainEpisodes } from '../games/maze/sim.js';
 
 const map = loadMap('near-or-far');
 
+it('curve (i) says average of the last 20 and that it can go below zero', () => {
+  expect(INFO.curve).toMatch(/last 20/);
+  expect(INFO.curve).toMatch(/below zero/);
+});
+
 describe('maze words', () => {
   it('states the lesson verbatim', () => {
     expect(LESSON).toBe('Value spreads backward from the reward, one step at a time.');

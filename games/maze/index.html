@@ -47,7 +47,7 @@
   <dl class="brief" aria-label="The experiment">
     <div><dt>The setup</dt><dd>A robot on a six-by-six grid. One tile holds a big treasure worth +10, another a small one worth +3, and some tiles are pits worth -10. Every step costs a little.</dd></div>
     <div><dt>The rule</dt><dd>It knows nothing at first. After each move it updates a table of how good that move was, given the best it expects next. You set the discount, how much far-off reward counts, and the exploring, how often it tries a random move.</dd></div>
-    <div><dt>Watch for</dt><dd>On Near or far, a low discount sends it to the small treasure and a high one to the big treasure. On Cliff edge, the more it explores, the more often it falls in the pit.</dd></div>
+    <div><dt>Watch for</dt><dd>On Near or far, a low discount sends it to the small treasure and a high one to the big treasure; keep exploring around 0.5, because with almost none (0.05 to 0.2) it settles on the small treasure even at 0.9. On Cliff edge, the more it explores, the more often it falls in the pit.</dd></div>
   </dl>
 
   <section class="play" id="play" aria-label="The game">
@@ -58,7 +58,7 @@
       <div class="stage-body">
         <canvas id="stage" aria-label="The maze: tiles shaded by value, arrows for the best move, the robot"></canvas>
       </div>
-      <p class="say" id="log" aria-live="polite">Every tile starts at zero, so the first tries are random wandering. Watch the shade spread back from the treasure.</p>
+      <p class="say" id="log" aria-live="off">Every tile starts at zero, so the first tries are random wandering. Watch the shade spread back from the treasure.</p>
       <dl class="readouts">
         <div><dt>Episodes</dt><dd class="num" id="episodes">0</dd></div>
         <div><dt>Last reward</dt><dd class="num" id="lastReward">–</dd></div>
