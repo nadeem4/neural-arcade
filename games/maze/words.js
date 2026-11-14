@@ -15,7 +15,7 @@ export function describeTile(map, s, value, action) {
 }
 
 export function gammaHint(gamma) {
-  if (gamma < 0.3) return 'Almost only the next step counts: the robot grabs whatever is closest.';
+  if (gamma < 0.3) return 'Almost only the next step counts: the explorer grabs whatever is closest.';
   if (gamma < 0.7) return 'Near rewards count much more than far ones.';
   if (gamma < 0.9) return 'Far rewards still count, a little less for each step.';
   return 'Far rewards count almost as much as near ones: worth the walk.';
@@ -41,12 +41,12 @@ export function learnedNote(agent) {
 }
 
 export const INFO = {
-  discount: 'Discount is how much far-off reward counts: low, and the robot only cares about what is close; high, and a big treasure far away is worth the walk.',
+  discount: 'Discount is how much far-off reward counts: low, and the explorer only cares about what is close; high, and a big treasure far away is worth the walk.',
   exploration: 'Exploring means trying a random move instead of the best one it knows; more of it finds new things but costs mistakes.',
-  speed: 'Speed is how many episodes the robot learns from each second.',
-  map: 'The map is the world the robot learns in: Near or far has two treasures, Cliff edge has a pit beside the short path.',
-  reset: 'Reset wipes what the robot has learned, so it starts again knowing nothing.',
-  values: 'Each tile is lit by its value, how much reward the robot expects from there on: dark at zero, brighter as it grows. The arrow is the move it thinks is best.',
-  curve: 'The curve shows the average reward over the last 20 episodes: it climbs as the robot learns, and it can go below zero when the robot keeps falling in the pit.',
-  fourValues: 'Four values shows what the robot thinks each move is worth on every tile: up, down, left and right.',
+  speed: 'Speed is how many episodes the explorer learns from each second.',
+  map: 'The map is the world the explorer learns in: Near or far has two treasures, Cliff edge has a pit beside the short path.',
+  reset: 'Reset wipes what the explorer has learned, so it starts again knowing nothing.',
+  values: 'Each tile is lit by its value, how much reward the explorer expects from there on: dark at zero, brighter as it grows. The arrow is the move it thinks is best.',
+  curve: 'The curve shows the average reward over the last 20 episodes: it climbs as the explorer learns, and it can go below zero when the explorer keeps falling in the pit.',
+  fourValues: 'Four values shows what the explorer thinks each move is worth on every tile: up, down, left and right.',
 };

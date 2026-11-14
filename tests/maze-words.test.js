@@ -17,7 +17,7 @@ describe('maze words', () => {
   it('gammaHint has four rules and never goes empty', () => {
     const hints = [0.1, 0.5, 0.8, 0.95].map(gammaHint);
     expect(hints).toEqual([
-      'Almost only the next step counts: the robot grabs whatever is closest.',
+      'Almost only the next step counts: the explorer grabs whatever is closest.',
       'Near rewards count much more than far ones.',
       'Far rewards still count, a little less for each step.',
       'Far rewards count almost as much as near ones: worth the walk.',

@@ -38,7 +38,7 @@ export const GAMES = [
   },
   {
     id: 'maze', title: 'Treasure Maze', category: 'reinforcement-learning',
-    lesson: 'A robot learns a small grid by trial and error, and you set how much far-off reward counts. Teaches reward, value, the discount and exploring.',
+    lesson: 'An explorer learns a small grid by trial and error, and you set how much far-off reward counts. Teaches reward, value, the discount and exploring.',
     learnsBy: 'Reward, value, discount',
     goesWrongWhen: 'Exploring near a cliff costs it',
     added: '2026-11-13', shot: 'games/maze/shot.jpg', path: 'games/maze/', writeup: 'games/maze/how-it-works/', youtube: null, demo: null,
