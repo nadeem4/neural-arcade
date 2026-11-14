@@ -2,13 +2,12 @@
 // the pictures match the words on every visit. The figures are still, so they only redraw on resize and theme change.
 import { readTheme, wireLamp } from '../../../assets/theme.js';
 import { sizeCanvas } from '../../racer/track-view.js';
+import { shade } from '../render.js';
 
 const $ = id => document.getElementById(id);
 let theme = readTheme();
 const S = await (await fetch('../story.json')).json();
 
-// A value from 0 to 10 as a share of amber. M3 moves this into render.js.
-const shade = v => Math.min(1, Math.max(0, v / 10));
 const LABEL = { T: '+10', N: '+3', P: '-10' };
 
 // Draw a square grid: shaded values, arrows for a policy, an outlined path, the robot on the start tile.

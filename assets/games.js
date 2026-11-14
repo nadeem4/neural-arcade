@@ -2,6 +2,7 @@
 export const CATEGORIES = [
   { id: 'how-ai-learns', title: 'How AI learns', lead: 'The ways a brain gets better: by evolution, by copying examples, and by trial and error.' },
   { id: 'physical-ai', title: 'Physical AI', lead: 'How robots learn to move, sense and act in the physical world.' },
+  { id: 'reinforcement-learning', title: 'Reinforcement learning', lead: 'An agent tries things, gets a number back for each try, and learns what to do. The words, then the methods.' },
 ];
 
 export const GAMES = [
@@ -34,6 +35,13 @@ export const GAMES = [
     goesWrongWhen: 'A steady push it never practised',
     added: '2026-11-11', shot: 'games/balance/shot.jpg', path: 'games/balance/', writeup: 'games/balance/how-it-works/', youtube: 'ui3l3xSUZ4U',
     demo: { net: '4 inputs, 6 hidden, 1 push', learns: 'Learning by evolution', panel: 'Its push, right now', alt: 'A trained brain keeping a pole upright on a cart' },
+  },
+  {
+    id: 'maze', title: 'Treasure Maze', category: 'reinforcement-learning',
+    lesson: 'A robot learns a small grid by trial and error, and you set how much far-off reward counts. Teaches reward, value, the discount and exploring.',
+    learnsBy: 'Reward, value, discount',
+    goesWrongWhen: 'Exploring near a cliff costs it',
+    added: '2026-11-13', shot: 'games/maze/shot.jpg', path: 'games/maze/', writeup: 'games/maze/how-it-works/', youtube: null, demo: null,
   },
 ];
 
