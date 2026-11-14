@@ -92,7 +92,7 @@ about/                  the About page
 concepts/               the Concepts page: the shared words (agent, reward, policy, PID...), rendered from CONCEPTS in assets/games.js by assets/concepts.js
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
-assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon, share.png (default share banner); games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; every game uses them), story-page.js (header and footer for the How it works pages)
+assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon, share.png (default share banner); games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles, including the video facade), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; every game uses them), story-page.js (header and footer for the How it works pages)
 engine/                 reusable pieces for every game
   rng.js                seedable random numbers
   tinynet.js            dense tanh network: forward pass, weight indexing

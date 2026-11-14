@@ -65,6 +65,13 @@ describe('concept page rendering', () => {
   it('shows the click-to-play facade with a youtube id', () => {
     expect(conceptHtml({ ...c, youtube: 'abcdef12345' }, [], '../')).toContain('data-youtube="abcdef12345"');
   });
+  it('renders the full facade (box, play button, thumbnail) for a stubbed id, with its styles in studio.css', () => {
+    const h = conceptHtml({ ...c, id: 'pid', youtube: 'abcdef12345' }, [], '../');
+    expect(h).toMatch(/<div class="video" data-youtube="abcdef12345"[^>]*><button class="video-play"/);
+    expect(h).toContain('abcdef12345/hqdefault.jpg');
+    const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
+    for (const sel of ['.video {', '.video-play {', '.video-label {', '.video iframe {']) expect(css).toContain(sel);
+  });
   it('lists the games that use it', () => {
     const h = conceptHtml(c, [{ title: 'Gee', path: 'games/g/' }], '../');
     expect(h).toContain('Used in');

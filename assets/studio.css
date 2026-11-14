@@ -207,3 +207,17 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   .step:nth-child(even) .shot { order: 0; }
   .sort { margin-left: 0; }
 }
+
+/* click-to-play video facade (assets/video.js), shared by game pages and the Concepts page */
+.video { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 16px; background: var(--stage); }
+.video-play { position: relative; display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+.video-play img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.video-play::before { content: ""; position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; border-radius: 50%; background: var(--signal);
+  transform: translate(-50%, -50%); box-shadow: 0 12px 30px -8px rgba(255, 90, 31, .6); transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
+.video-play::after { content: ""; position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; background: #fff;
+  transform: translate(-38%, -50%); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.video-play:hover::before { transform: translate(-50%, -50%) scale(1.06); }
+.video-label { position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px;
+  background: rgba(13, 16, 21, .88); color: #fff; font: 600 14px/1 var(--sans); }
+.video-label .ic { width: 14px; height: 14px; color: var(--signal); }
+.video iframe { display: block; width: 100%; height: 100%; border: 0; }
