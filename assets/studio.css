@@ -79,6 +79,7 @@ h1 { margin: 0; font-weight: 800; font-size: clamp(2.4rem, 5vw, 4.2rem); line-he
 /* footer */
 footer { border-top: 1px solid var(--line); padding-block: 28px; font-size: 14px; color: var(--ink-2); }
 footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+footer .foot-links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 
 @media (max-width: 900px) {
   .row { grid-template-columns: 110px minmax(0, 1fr); gap: 8px 16px; }

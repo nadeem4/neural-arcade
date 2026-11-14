@@ -16,7 +16,7 @@ export function headerHtml(base, current) {
 }
 
 export function footerHtml(base = '') {
-  return `<div class="wrap"><span>Built by Nadeem.</span><a href="${base}concepts/">Concepts</a><a href="https://www.codewithnk.com">codewithnk.com</a></div>`;
+  return `<div class="wrap"><span>Built by Nadeem.</span><span class="foot-links"><a href="${base}concepts/">Concepts</a><a href="https://www.codewithnk.com">codewithnk.com</a></span></div>`;
 }
 
 export function mountSite(base) {

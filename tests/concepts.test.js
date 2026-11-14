@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { GAMES, CONCEPTS, conceptById, usesHtml } from '../assets/games.js';
 import { conceptHtml } from '../assets/concepts.js';
@@ -88,7 +88,7 @@ describe('concept page rendering', () => {
 describe('concepts page file', () => {
   const html = readFileSync(new URL('../concepts/index.html', import.meta.url), 'utf8');
   it('uses the shared styles, header, footer and its script', () => {
-    expect(html).toContain('<header data-site="concepts">');
+    expect(html).toContain('<header data-site>');
     expect(html).toContain('<footer data-site>');
     expect(html).toContain('../assets/studio.css');
     expect(html).toContain('concepts.js');
@@ -96,11 +96,39 @@ describe('concepts page file', () => {
 });
 
 describe('game pages', () => {
-  for (const id of ['maze', 'runner']) {
-    it(`${id} has the words container`, () => {
-      const html = readFileSync(new URL(`../games/${id}/index.html`, import.meta.url), 'utf8');
+  for (const g of GAMES.filter(g => g.uses?.length)) {
+    it(`${g.id} has the words container`, () => {
+      const html = readFileSync(new URL(`../${g.path}index.html`, import.meta.url), 'utf8');
       expect(html).toContain('id="uses"');
+      expect(html).toContain('id="usesChips"');
       expect(html).toContain('Words this game uses');
     });
   }
+});
+
+describe('mountGamePage words row', () => {
+  // no jsdom in this repo: a tiny stand-in document with just the elements the script touches
+  const mount = async (ids) => {
+    const els = Object.fromEntries([...ids, 'moreFrom', 'moreTitle', 'moreTiles', 'writeup'].map(id => [id, { innerHTML: '', hidden: true, dataset: {}, addEventListener() {} }]));
+    vi.stubGlobal('document', {
+      body: { dataset: { game: 'maze' } },
+      getElementById: id => els[id] ?? null,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+    });
+    vi.resetModules();
+    await import('../assets/game-page.js');
+    return els;
+  };
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('un-hides #uses and fills #usesChips with links to the concept anchors', async () => {
+    const els = await mount(['uses', 'usesChips']);
+    expect(els.uses.hidden).toBe(false);
+    for (const id of GAMES.find(g => g.id === 'maze').uses) expect(els.usesChips.innerHTML).toContain(`href="../../concepts/#${id}"`);
+  });
+  it('a page without the #uses section still sets up the rest', async () => {
+    const els = await mount(['crumb']);
+    expect(els.crumb.innerHTML).toContain('Treasure Maze');
+  });
 });

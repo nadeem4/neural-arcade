@@ -37,7 +37,8 @@ export function mountGamePage(base = '../../') {
   const uses = usesHtml(game, base);
   if (uses) {
     set('usesChips', uses);
-    document.getElementById('uses').hidden = false;
+    const section = document.getElementById('uses');
+    if (section) section.hidden = false;
   }
 
   const video = videoHtml(game);
