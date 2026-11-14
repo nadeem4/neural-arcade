@@ -48,5 +48,5 @@ export const INFO = {
   reset: 'Reset wipes what the explorer has learned, so it starts again knowing nothing.',
   values: 'Each tile is lit by its value, how much reward the explorer expects from there on: dark at zero, brighter as it grows. The arrow is the move it thinks is best.',
   curve: 'The curve shows the average reward over the last 20 episodes: it climbs as the explorer learns, and it can go below zero when the explorer keeps falling in the pit.',
-  fourValues: 'Four values shows, on every tile, one number toward each side: what the explorer expects to earn by moving that way.',
+  fourValues: 'Four values shows the tile the explorer stands on: one number toward each side, what it expects to earn by moving that way. The arrow on each tile points to the biggest one.',
 };

@@ -125,7 +125,7 @@ function glow(g, x, y, rad, inner, outer = 'rgba(0,0,0,0)') {
   g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
 }
 
-// showFour: with q (the Q-table), draw each floor tile's four values, one toward each edge, up, down, left and right.
+// showFour: with q (the Q-table), draw the four values of the explorer's tile (robot), one toward each edge.
 // light: an offscreen canvas for the darkness layer (drawn in the same pixel units as the stage); without one the room stays lit.
 // now: seconds, for the lantern flicker; null means no flicker. explorer: { from, action, outcome, k, e } for explorerPose.
 // The stage is dark in both themes, so every colour here is the dungeon's own.
@@ -200,7 +200,7 @@ export function drawMaze(ctx, theme, { map, values, policy, showFour = false, q 
   // Arrows for the best move on each tile, cream with a dark outline, stronger where it is brighter.
   ctx.lineJoin = 'round'; ctx.lineWidth = 3;
   for (let st = 0; st < map.nStates; st++) {
-    const a = showFour ? null : policy?.[st]; // the four values take the tile's room
+    const a = showFour && st === robot ? null : policy?.[st]; // the explorer's tile shows the four values instead
     if (a == null) continue;
     const { r, c } = turnCell(map, st), [dr, dc] = screenDir(a), pr = -dc, pc = dr; // a perpendicular in grid space
     ctx.beginPath();
@@ -213,17 +213,14 @@ export function drawMaze(ctx, theme, { map, values, policy, showFour = false, q 
     ctx.globalAlpha = 1;
   }
 
-  // The four values: small cream numbers with a dark outline, like the arrows (the stage is dark in both themes).
-  if (showFour && q) {
-    ctx.font = `700 ${Math.max(8, tw * 0.1)}px ${theme.body}`;
+  // The four values: large cream numbers with a dark outline on the explorer's tile only (where he stands or is heading).
+  if (showFour && q && robot != null && tileKind(map, robot) === 'floor') {
+    ctx.font = `700 ${Math.max(10, tw * 0.16)}px ${theme.body}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,12,4,.85)'; ctx.fillStyle = '#fff0d2';
-    for (let st = 0; st < map.nStates; st++) {
-      if (tileKind(map, st) !== 'floor') continue;
-      const { r, c } = turnCell(map, st);
-      for (let a = 0; a < ACTIONS.length; a++) {
-        const [dr, dc] = screenDir(a), [x, y] = P(r + 0.5 + dr * 0.38, c + 0.5 + dc * 0.38), v = q.v[st * q.nActions + a], text = (Math.abs(v) < 0.05 ? 0 : v).toFixed(tw < 80 ? 0 : 1);
-        ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
-      }
+    const { r, c } = turnCell(map, robot);
+    for (let a = 0; a < ACTIONS.length; a++) {
+      const [dr, dc] = screenDir(a), [x, y] = P(r + 0.5 + dr * 0.36, c + 0.5 + dc * 0.36), text = q.v[robot * q.nActions + a].toFixed(1).replace(/^-0\.0$/, '0.0'); // no "-0.0" once rounded
+      ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
     }
   }
 
