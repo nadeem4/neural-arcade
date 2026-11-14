@@ -14,7 +14,7 @@
 <meta property="og:image" content="https://arcade.codewithnk.com/games/maze/share.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="Treasure Maze: a robot in a grid with two treasures">
+<meta property="og:image:alt" content="Treasure Maze: an explorer in a dark stone dungeon with two treasures">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Treasure Maze · Neural Arcade">
 <meta name="twitter:description" content="A robot learns a small grid by trial and error. Set the discount and the exploring, and watch value spread back from the treasure and decide which one it walks to.">
@@ -52,13 +52,13 @@
 
   <section class="play" id="play" aria-label="The game">
     <div class="stage">
-      <div class="stage-head"><span class="live"><i></i><b>Shade is value, arrows are its best move</b></span>
+      <div class="stage-head"><span class="live"><i></i><b>Light is value, arrows are its best move</b></span>
         <span class="stage-tools"><button class="info" type="button" aria-expanded="false" aria-controls="info-values" aria-label="Explain the tiles" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></span></div>
       <p class="info-text" id="info-values" data-info="values" hidden></p>
       <div class="stage-body">
-        <canvas id="stage" aria-label="The maze: tiles shaded by value, arrows for the best move, the robot"></canvas>
+        <canvas id="stage" role="img" aria-label="An isometric stone dungeon, dark at first. Tiles light up by value, arrows show the best move, and the explorer walks from Start to a treasure or a pit."></canvas>
       </div>
-      <p class="say" id="log" aria-live="off">Every tile starts at zero, so the first tries are random wandering. Watch the shade spread back from the treasure.</p>
+      <p class="say" id="log" aria-live="off">Every tile starts at zero, so the first tries are random wandering. Watch the light spread back from the treasure.</p>
       <dl class="readouts">
         <div><dt>Episodes</dt><dd class="num" id="episodes">0</dd></div>
         <div><dt>Last reward</dt><dd class="num" id="lastReward">–</dd></div>
@@ -133,6 +133,8 @@
     <h2 id="moreTitle">More from the arcade</h2>
     <div class="tiles" id="moreTiles"></div>
   </section>
+
+  <p class="credit">Art: Isometric Miniature Dungeon by Kenney (CC0). <a href="https://kenney.nl">kenney.nl</a></p>
 </main>
 
 <footer data-site></footer>
