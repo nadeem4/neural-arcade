@@ -1,6 +1,6 @@
 // Draws Treasure Maze as an isometric stone dungeon (Kenney's Isometric Miniature Dungeon, CC0): the room is dark and
 // each tile is lit by its value. Pure helpers are exported for tests.
-import { ACTIONS } from './sim.js';
+import { ACTIONS, tileKind } from './sim.js';
 
 // A value as opacity: 0 at or below zero, 1 at vmax.
 export const shade = (v, vmax = 10) => Math.min(1, Math.max(0, v / vmax));
@@ -125,11 +125,11 @@ function glow(g, x, y, rad, inner, outer = 'rgba(0,0,0,0)') {
   g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
 }
 
-// showFour and q are for the four-values view (M4); ignored for now.
+// showFour: with q (the Q-table), draw each floor tile's four values, one toward each edge, up, down, left and right.
 // light: an offscreen canvas for the darkness layer (drawn in the same pixel units as the stage); without one the room stays lit.
 // now: seconds, for the lantern flicker; null means no flicker. explorer: { from, action, outcome, k, e } for explorerPose.
 // The stage is dark in both themes, so every colour here is the dungeon's own.
-export function drawMaze(ctx, theme, { map, values, policy, robot, explorer = {}, art, light, now = null, w, h }) {
+export function drawMaze(ctx, theme, { map, values, policy, showFour = false, q = null, robot, explorer = {}, art, light, now = null, w, h }) {
   ctx.save();
   ctx.fillStyle = theme.tray; ctx.fillRect(0, 0, w, h);
   const { tw, th, rows, cols, P, centre } = isoLayout(map, w, h), s = tw / TW;
@@ -211,6 +211,20 @@ export function drawMaze(ctx, theme, { map, values, policy, robot, explorer = {}
     ctx.strokeStyle = 'rgba(20,12,4,.75)'; ctx.stroke();
     ctx.fillStyle = '#fff0d2'; ctx.fill();
     ctx.globalAlpha = 1;
+  }
+
+  // The four values: small cream numbers with a dark outline, like the arrows (the stage is dark in both themes).
+  if (showFour && q) {
+    ctx.font = `700 ${Math.max(9, tw * 0.105)}px ${theme.body}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,12,4,.85)'; ctx.fillStyle = '#fff0d2';
+    for (let st = 0; st < map.nStates; st++) {
+      if (tileKind(map, st) !== 'floor') continue;
+      const { r, c } = turnCell(map, st);
+      for (let a = 0; a < ACTIONS.length; a++) {
+        const [dr, dc] = screenDir(a), [x, y] = P(r + 0.5 + dr * 0.3, c + 0.5 + dc * 0.3), text = q.v[st * q.nActions + a].toFixed(1);
+        ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
+      }
+    }
   }
 
   // Badges last, so nothing covers them.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { shade, arrowFor, lightOf, turnCell, isoLayout, screenDir, facingFor, actionBetween, floorTile, paintOrder, explorerPose, walkAt, drawMaze, smooth, curvePoints } from '../games/maze/render.js';
-import { loadMap, ACTIONS } from '../games/maze/sim.js';
+import { loadMap, ACTIONS, tileKind } from '../games/maze/sim.js';
 
 const theme = { tray: '#111', ink: '#ink', red: '#f00', amber: '#fa0', 'amber-ink': '#320', rule: '#555', ground: '#ground', car: '#car', body: 'sans-serif' };
 const recorder = () => {
@@ -204,6 +204,17 @@ describe('drawMaze', () => {
     const sprites = calls.filter(c => c[0] === 'drawImage');
     expect(sprites.filter(c => c[1] === art.tiles).length).toBeGreaterThanOrEqual(map.nStates);
     expect(sprites.filter(c => c[1] === art.explorer)).toHaveLength(1);
+  });
+  it('draws four small values on each floor tile only when showFour is on', () => {
+    const q = { nStates: map.nStates, nActions: 4, v: new Float64Array(map.nStates * 4).fill(2.5) };
+    const floors = Array.from({ length: map.nStates }, (_, s) => s).filter(s => tileKind(map, s) === 'floor').length;
+    const on = recorder(), off = recorder();
+    drawMaze(on.ctx, theme, { map, values, policy, robot: map.start, art, showFour: true, q, w: 600, h: 400 });
+    drawMaze(off.ctx, theme, { map, values, policy, robot: map.start, art, showFour: false, q, w: 600, h: 400 });
+    expect(texts(on.calls).filter(t => t === '2.5')).toHaveLength(floors * 4);
+    expect(texts(off.calls)).not.toContain('2.5');
+    const spots = new Set(on.calls.filter(c => c[0] === 'fillText' && c[1] === '2.5').map(c => c[2] + ',' + c[3]));
+    expect(spots.size).toBe(floors * 4); // each at its own spot toward the tile's edges, not stacked in the middle
   });
   it('draws one arrow per non-null policy entry, and none without a policy', () => {
     const { ctx, calls } = recorder();

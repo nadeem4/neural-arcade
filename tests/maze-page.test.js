@@ -40,8 +40,20 @@ describe('maze page markup', () => {
     for (const id of controls) expect(html, id).toMatch(new RegExp(`class="info-text"[^>]*id="${id}"[^>]*hidden|id="${id}"[^>]*class="info-text"[^>]*hidden`));
     const used = [...html.matchAll(/data-info="(\w+)"/g)].map(m => m[1]);
     for (const k of used) expect(INFO, k).toHaveProperty(k);
-    for (const k of Object.keys(INFO)) if (k !== 'fourValues') expect(used, k).toContain(k); // fourValues arrives with its toggle in M4
+    for (const k of Object.keys(INFO)) expect(used, k).toContain(k);
     expect(main).toMatch(/INFO\[/);
+  });
+  it('has the four-values toggle, off to begin with, with its (i) button, wired in main.js', () => {
+    expect(tag('four')).toContain('aria-pressed="false"');
+    expect(html).toMatch(/aria-controls="info-four"/);
+    expect(html).toMatch(/id="info-four"[^>]*data-info="fourValues"|data-info="fourValues"[^>]*id="info-four"/);
+    expect(main).toMatch(/showFour/);
+    expect(main).toMatch(/q: s\.agent\.q/);
+  });
+  it('calls the learner the explorer everywhere a player reads it', () => {
+    expect(html).not.toMatch(/robot/i);
+    expect(main).not.toMatch(/say\('[^']*robot/i);
+    expect(entry.lesson).not.toMatch(/robot/i);
   });
   it('tells you to leave exploring on for the discount lesson', () => {
     expect(html).toMatch(/exploring[^<]*0\.5/);
