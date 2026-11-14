@@ -100,6 +100,9 @@
 .video-label .ic { width: 14px; height: 14px; color: var(--signal); }
 .video iframe { display: block; width: 100%; height: 100%; border: 0; }
 
+.uses { padding-block: 8px 32px; }
+.uses h2 { margin: 0 0 14px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.uses .chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .more-from { padding-block: 8px 48px; }
 .more-from h2 { margin: 0 0 18px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
 .more-from .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }

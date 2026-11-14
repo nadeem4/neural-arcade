@@ -25,6 +25,7 @@ export const GAMES = [
     lesson: 'A hero learns a platformer level from points alone, and finds loopholes when the points are wrong. Teaches reward, exploration, policy gradients and reward hacking.',
     learnsBy: 'Reward, policy gradients',
     goesWrongWhen: 'It learns what you reward, not what you meant',
+    uses: ['agent', 'state-action-reward', 'policy'],
     added: '2026-10-24', shot: 'games/runner/shot.jpg', path: 'games/runner/', writeup: 'games/runner/how-it-works/', youtube: 'K1I7QxfrgIk',
     demo: { net: '12 inputs, 8 hidden, 4 moves', learns: 'Learning from points only', panel: 'Its four moves, right now', alt: 'A trained hero playing the Coin Runner level on a loop' },
   },
@@ -41,11 +42,30 @@ export const GAMES = [
     lesson: 'An explorer learns a small grid by trial and error, and you set how much far-off reward counts. Teaches reward, value, the discount and exploring.',
     learnsBy: 'Reward, value, discount',
     goesWrongWhen: 'Exploring near a cliff costs it',
+    uses: ['agent', 'state-action-reward', 'return', 'policy', 'value'],
     added: '2026-11-13', shot: 'games/maze/shot.jpg', path: 'games/maze/', writeup: 'games/maze/how-it-works/', youtube: null, demo: null,
   },
 ];
 
 export const gameById = id => GAMES.find(g => g.id === id);
+
+// The words the games share. A game lists the ones it uses in `uses`; a concept may get a `youtube` id for a short explainer.
+export const CONCEPTS = [
+  { id: 'agent', title: 'Agent and environment', youtube: null, definition: 'The agent is the learner that acts; the environment is everything it acts on, and it answers each move with a new situation and a reward.' },
+  { id: 'state-action-reward', title: 'State, action, reward', youtube: null, definition: 'A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.' },
+  { id: 'return', title: 'Return and discount', youtube: null, definition: 'The return is all the reward still to come, with far-off reward counted for less by the discount.' },
+  { id: 'policy', title: 'Policy', youtube: null, definition: "A policy is the agent's rulebook: in each state, which action to take." },
+  { id: 'value', title: 'Value', youtube: null, definition: "A state's value is how much reward the agent can expect from there on, if it keeps following its policy." },
+  { id: 'mdp', title: 'Markov decision process', youtube: null, definition: 'An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.' },
+  { id: 'pid', title: 'PID control', youtube: null, definition: 'A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.' },
+];
+
+export const conceptById = id => CONCEPTS.find(c => c.id === id);
+
+// A game page's "Words this game uses": one chip per concept in game.uses, each linking to concepts/#<id>. Empty when there are none.
+export const usesHtml = (game, base) =>
+  (game.uses ?? []).map(conceptById).filter(Boolean)
+    .map(c => `<a class="chip" href="${base}concepts/#${c.id}">${c.title}</a>`).join('');
 
 export function videoOf(game) {
   return game.youtube ? { id: game.youtube, thumb: `https://i.ytimg.com/vi/${game.youtube}/hqdefault.jpg` } : null;

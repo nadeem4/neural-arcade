@@ -422,3 +422,9 @@ describe('old styles and fonts are gone', () => {
     }
   });
 });
+describe("concepts links", () => {
+  it("footer links Concepts, prefixed by base", () => {
+    expect(footerHtml()).toContain('<a href="concepts/">Concepts</a>');
+    expect(footerHtml("../../")).toContain('<a href="../../concepts/">Concepts</a>');
+  });
+});

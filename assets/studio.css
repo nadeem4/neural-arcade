@@ -143,6 +143,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 .tile .badge { position: absolute; left: 10px; top: 10px; z-index: 1; font: 600 11px/1 var(--sans); letter-spacing: .05em; text-transform: uppercase; padding: 6px 9px; border-radius: 999px; background: var(--signal-fill); color: var(--signal-ink); margin: 0; }
 .cats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); align-items: center; }
 .cats .lbl { font-weight: 700; margin-right: 8px; }
+.concepts { padding-block: 40px 96px; max-width: 680px; }
+.concepts h1 { margin: 0 0 8px; }
+.concept { padding-block: 28px; border-top: 1px solid var(--line); margin-top: 28px; scroll-margin-top: 16px; }
+.concept h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.concept p { margin: 0 0 12px; color: var(--ink-2); font-size: 18px; }
+.concept .used { font-size: 15px; }
 .about { padding-block: 40px 96px; display: grid; gap: 20px; max-width: 680px; }
 .about p { margin: 0; color: var(--ink-2); font-size: 18px; }
 @media (max-width: 900px) {

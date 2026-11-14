@@ -89,6 +89,7 @@ There is no build step. Pages are plain HTML, CSS and JavaScript ES modules.
 ```
 index.html              arcade home, rendered from assets/games.js: hero (newest game with a video and a demo), that game's recorded run (words from its `demo` config, drawn by its `games/<name>/demo.js`), categories, chips
 about/                  the About page
+concepts/               the Concepts page: the shared words (agent, reward, policy, PID...), rendered from CONCEPTS in assets/games.js by assets/concepts.js
 games/index.html        browse every game: search, category chips, sort, pager (assets/browse.js)
 category/index.html     one category page, /category/?c=<id> (assets/category.js)
 assets/                 shared styles (studio.css, game.css), theme helper, self-hosted fonts (Schibsted Grotesk, JetBrains Mono), icon, share.png (default share banner); games.js (the list of games and categories), home.js and home-view.js (the home page), studio.css (site tokens and shared styles), site.js (shared header and footer), game.css and game-page.js (the shared game page layout and the script that fills its video, write-up link and More from; every game uses them), story-page.js (header and footer for the How it works pages)
@@ -135,6 +136,8 @@ Custom domain: `arcade.codewithnk.com`, set under the Vercel project's Domains. 
 3. Copy the page skeleton from `games/runner/index.html` (and `assets/game.css`), keep `<body data-game="<name>">`, and add a game-only CSS file. Give it an experiment brief (setup, rule, watch for) and an (i) button on every readout, panel and control. `assets/game-page.js` fills the header, footer, crumb, video, write-up link and More from.
 4. Add a `how-it-works/` folder (copy one, link `assets/story.css`) whose figures are drawn from a seeded, tested run, and a `shot.jpg` for the tiles.
 5. Add share tags: copy the `<link rel="canonical">`, `og:*` and `twitter:*` lines from another game page into the game page and its write-up, changing the URLs, title and description, and put a 1280x720 `share.png` in `games/<name>/`. `tests/share-meta.test.js` checks it.
+
+Add words: list concept ids in a game's `uses` in `assets/games.js` and the game page shows them as "Words this game uses" chips linking to `concepts/#<id>` (the page needs the `#uses` section from `games/maze/index.html`). A new concept is one entry in `CONCEPTS`; an optional `youtube` id on it shows a click-to-play video on the Concepts page. The footer links Concepts on every page.
 
 Add a video: set `youtube` to the YouTube id in `assets/games.js`, and copy the video thumbnail to `games/<name>/share.png` for the share banner. A game without a video may use its `shot.jpg` as the banner instead.
 
