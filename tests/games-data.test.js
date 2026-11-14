@@ -234,3 +234,9 @@ describe('reinforcement learning and the maze', () => {
     expect(homeModel(CATEGORIES, GAMES).hero.id).toBe('balance');
   });
 });
+
+describe("uses field", () => {
+  it("is optional, and when present is a list of strings", () => {
+    for (const g of GAMES) if ("uses" in g) for (const id of g.uses) expect(typeof id, g.id).toBe("string");
+  });
+});

@@ -223,7 +223,7 @@ Every control is a pill (999px): buttons, chips, the switch, search, sort select
 ## Components
 
 ### Header and footer
-Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. The header is the logo mark (ink rounded square, two ground-coloured input dots, one orange output dot) with "Neural Arcade" at 800, then Games and About links (`ink-2`; current page `ink` 700) and a 40px round sun/moon lamp button. The footer is a hairline-topped row: "Built by Nadeem." and a codewithnk.com link.
+Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. The header is the logo mark (ink rounded square, two ground-coloured input dots, one orange output dot) with "Neural Arcade" at 800, then Games and About links (`ink-2`; current page `ink` 700) and a 40px round sun/moon lamp button. The footer is a hairline-topped row: "Built by Nadeem." on the left, and on the right a Concepts link beside the codewithnk.com link.
 
 ### Buttons
 - **Shape:** pill, 46px tall, 0 20px, 600 15px; 52px tall on the home hero.

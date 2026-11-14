@@ -15,15 +15,15 @@ export function headerHtml(base, current) {
 </div>`;
 }
 
-export function footerHtml() {
-  return '<div class="wrap"><span>Built by Nadeem.</span><a href="https://www.codewithnk.com">codewithnk.com</a></div>';
+export function footerHtml(base = '') {
+  return `<div class="wrap"><span>Built by Nadeem.</span><span class="foot-links"><a href="${base}concepts/">Concepts</a><a href="https://www.codewithnk.com">codewithnk.com</a></span></div>`;
 }
 
 export function mountSite(base) {
   const header = document.querySelector('header[data-site]');
   const footer = document.querySelector('footer[data-site]');
   if (header) header.innerHTML = headerHtml(base, header.dataset.site);
-  if (footer) footer.innerHTML = footerHtml();
+  if (footer) footer.innerHTML = footerHtml(base);
   const lamp = document.getElementById('lamp');
   if (lamp) wireLamp(lamp, () => {});
 }

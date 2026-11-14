@@ -4,4 +4,4 @@ import { headerHtml, footerHtml } from './site.js';
 const base = '../../../';
 const header = document.querySelector('header[data-site]'), footer = document.querySelector('footer[data-site]');
 if (header) header.innerHTML = headerHtml(base, header.dataset.site);
-if (footer) footer.innerHTML = footerHtml();
+if (footer) footer.innerHTML = footerHtml(base);

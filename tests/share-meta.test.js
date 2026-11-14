@@ -8,6 +8,8 @@ const root = new URL('../', import.meta.url);
 const pages = [
   ['index.html', ['assets/share.png']],
   ['about/index.html', ['assets/share.png']],
+
+  ['concepts/index.html', ['assets/share.png']],
   ['games/index.html', ['assets/share.png']],
   ['category/index.html', ['assets/share.png']],
   ...GAMES.flatMap(g => {
@@ -23,7 +25,7 @@ const meta = (html, key, name) => attr(html, 'meta', key, name)?.match(/content=
 
 describe('share and SEO tags', () => {
   it('covers every page, including each game and its write-up', () => {
-    expect(pages.length).toBe(4 + GAMES.length * 2);
+    expect(pages.length).toBe(5 + GAMES.length * 2);
   });
 
   for (const [file, allowed] of pages) {

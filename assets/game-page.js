@@ -1,6 +1,6 @@
 // Shared by every game page: reads <body data-game="id"> and fills the header, footer, crumb, video, write-up link and "More from".
 // Adding a youtube id to the game in games.js is all it takes for the video (and the Watch tab) to appear.
-import { CATEGORIES, GAMES, gameById, videoOf, moreFrom } from './games.js';
+import { CATEGORIES, GAMES, gameById, videoOf, moreFrom, usesHtml } from './games.js';
 import { headerHtml, footerHtml } from './site.js';
 import { initVideos } from './video.js';
 
@@ -31,9 +31,15 @@ export function mountGamePage(base = '../../') {
   // The page's own script (main.js) wires the theme button, so only the markup is mounted here.
   const header = document.querySelector('header[data-site]'), footer = document.querySelector('footer[data-site]');
   if (header) header.innerHTML = headerHtml(base, header.dataset.site);
-  if (footer) footer.innerHTML = footerHtml();
+  if (footer) footer.innerHTML = footerHtml(base);
   const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
   set('crumb', crumbHtml(game, CATEGORIES, base));
+  const uses = usesHtml(game, base);
+  if (uses) {
+    set('usesChips', uses);
+    const section = document.getElementById('uses');
+    if (section) section.hidden = false;
+  }
 
   const video = videoHtml(game);
   if (video) {
