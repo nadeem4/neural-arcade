@@ -238,6 +238,18 @@ describe('drawMaze', () => {
       expect(Math.sign(at(a)[3] - cy)).toBe(Math.sign(dc + dr));
     }
   });
+  it('spreads the four numbers wide enough for "-10.1" side by side, even on a phone-sized cliff stage', () => {
+    const cliff = loadMap('cliff-edge');
+    const q = { nStates: cliff.nStates, nActions: 4, v: new Float64Array(cliff.nStates * 4).fill(-10.1) };
+    const { ctx, calls } = recorder();
+    drawMaze(ctx, theme, { map: cliff, values: Array(cliff.nStates).fill(0), policy: null, robot: cliff.start, art, showFour: true, q, w: 328, h: 219 });
+    const xs = calls.filter(c => c[0] === 'fillText' && c[1] === '-10.1').map(c => c[2]);
+    expect(xs).toHaveLength(4);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThanOrEqual(28);
+    const order = texts(calls);
+    expect(order.indexOf('-10.1')).toBeGreaterThan(order.lastIndexOf('-10')); // on top of the pit badges, never under them
+    expect(order.indexOf('-10.1')).toBeGreaterThan(order.indexOf('Start'));
+  });
   it('keeps the arrows on the other tiles while the four values show', () => {
     const q = { nStates: map.nStates, nActions: 4, v: new Float64Array(map.nStates * 4).fill(2.5) };
     const { ctx, calls } = recorder();

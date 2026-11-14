@@ -213,18 +213,7 @@ export function drawMaze(ctx, theme, { map, values, policy, showFour = false, q 
     ctx.globalAlpha = 1;
   }
 
-  // The four values: large cream numbers with a dark outline on the explorer's tile only (where he stands or is heading).
-  if (showFour && q && robot != null && tileKind(map, robot) === 'floor') {
-    ctx.font = `700 ${Math.max(10, tw * 0.16)}px ${theme.body}`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,12,4,.85)'; ctx.fillStyle = '#fff0d2';
-    const { r, c } = turnCell(map, robot);
-    for (let a = 0; a < ACTIONS.length; a++) {
-      const [dr, dc] = screenDir(a), [x, y] = P(r + 0.5 + dr * 0.36, c + 0.5 + dc * 0.36), text = q.v[robot * q.nActions + a].toFixed(1).replace(/^-0\.0$/, '0.0'); // no "-0.0" once rounded
-      ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
-    }
-  }
-
-  // Badges last, so nothing covers them.
+  // Badges next, so nothing but the four values covers them.
   const fs = Math.max(11, tw * 0.15);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const badge = (x, y, text, bg, fg, size) => {
@@ -237,6 +226,18 @@ export function drawMaze(ctx, theme, { map, values, policy, showFour = false, q 
     const [x, y] = centre(st), kind = LABEL[map.cells[st]];
     if (kind) badge(x, y - (map.cells[st] === 'T' ? tw * 0.62 : map.cells[st] === 'N' ? tw * 0.5 : th * 0.05), kind[0], kind[1], kind[2], map.cells[st] === 'P' ? fs * 0.9 : fs);
     if (st === map.start) badge(x, y + th * 0.62, 'Start', 'rgba(255,255,255,.88)', '#11141a', fs * 0.85);
+  }
+
+  // The four values last, on top of the badges: large cream numbers with a dark outline on the explorer's tile only (where he stands or is heading).
+  if (showFour && q && robot != null && tileKind(map, robot) === 'floor') {
+    const fs4 = Math.max(10, tw * 0.16), off = Math.max(0.36, (3.2 * fs4) / tw); // far enough apart for "-10.1" side by side
+    ctx.font = `700 ${fs4}px ${theme.body}`;
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,12,4,.85)'; ctx.fillStyle = '#fff0d2';
+    const { r, c } = turnCell(map, robot);
+    for (let a = 0; a < ACTIONS.length; a++) {
+      const [dr, dc] = screenDir(a), [x, y] = P(r + 0.5 + dr * off, c + 0.5 + dc * off), text = q.v[robot * q.nActions + a].toFixed(1).replace(/^-0\.0$/, '0.0'); // no "-0.0" once rounded
+      ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
+    }
   }
   ctx.restore();
 }
