@@ -17,7 +17,7 @@ describe('maze words', () => {
   it('gammaHint has four rules and never goes empty', () => {
     const hints = [0.1, 0.5, 0.8, 0.95].map(gammaHint);
     expect(hints).toEqual([
-      'Almost only the next step counts: the robot grabs whatever is closest.',
+      'Almost only the next step counts: the explorer grabs whatever is closest.',
       'Near rewards count much more than far ones.',
       'Far rewards still count, a little less for each step.',
       'Far rewards count almost as much as near ones: worth the walk.',
@@ -56,6 +56,10 @@ describe('maze words', () => {
     expect(learnedNote(agent)).toMatch(/^0 episodes/);
     trainEpisodes(agent, 3000, { alpha: 0.5, gamma: 0.95, epsilon: 0.5 });
     expect(learnedNote(agent)).toBe('3000 episodes so far. Without exploring it now walks to the big treasure.');
+  });
+
+  it('fourValues does not name screen directions, since the map is turned', () => {
+    expect(INFO.fourValues).not.toMatch(/(up|down|left|right)/i);
   });
 
   it('INFO has the eight keys, each one sentence ending in a period', () => {

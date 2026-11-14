@@ -19,14 +19,14 @@ const FAST = 15, BEAT = 15, END = 75, SHOWN = 500, WALK_MAX = 25; // WALK_MAX: l
 const seed = () => (Math.random() * 2 ** 32) >>> 0;
 // from and action: the last move, for the explorer's walk in Step. wait: steps since that move.
 // walk: in Play, the explorer shows the best path it knows now, { path, outcome, t }, one tile a beat; training goes on unseen.
-const s = { agent: null, ep: null, from: null, action: null, walk: null, mapId: 'near-or-far', gamma: DEFAULTS.gamma, epsilon: DEFAULTS.epsilon, rate: '1', wait: 0 };
+const s = { agent: null, ep: null, from: null, action: null, walk: null, mapId: 'near-or-far', gamma: DEFAULTS.gamma, epsilon: DEFAULTS.epsilon, rate: '1', wait: 0, four: false };
 const params = () => ({ alpha: DEFAULTS.alpha, gamma: s.gamma, epsilon: s.epsilon });
 const say = t => { $('log').textContent = t; };
 
 function newBrain() {
   s.agent = createAgent(s.mapId, seed());
   s.ep = startEpisode(s.agent); s.from = s.action = s.walk = null; s.wait = 0;
-  say('A new robot, knowing nothing. Every tile starts at zero, so the first tries are random wandering.');
+  say('A new explorer, knowing nothing. Every tile starts at zero, so the first tries are random wandering.');
   drawChart();
 }
 function nextEpisode() { s.ep = startEpisode(s.agent); s.from = s.action = null; }
@@ -40,6 +40,7 @@ function showSliders() {
 $('gamma').addEventListener('input', e => { s.gamma = Number(e.target.value); showSliders(); }); // learning goes on, no reset
 $('epsilon').addEventListener('input', e => { s.epsilon = Number(e.target.value); showSliders(); });
 $('reset').addEventListener('click', newBrain);
+$('four').addEventListener('click', e => { s.four = !s.four; e.currentTarget.setAttribute('aria-pressed', String(s.four)); e.currentTarget.textContent = s.four ? 'Hide the four values' : 'Show the four values'; });
 const press = (attr, current) => document.querySelectorAll(`[data-${attr}]`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === current)));
 document.querySelectorAll('[data-map]').forEach(b => b.addEventListener('click', () => {
   s.mapId = b.dataset.map; press('map', s.mapId); newBrain();
@@ -97,7 +98,7 @@ function drawStageNow() {
   const walks = s.rate === 'step' && !reduceMotion.matches;
   const play = s.rate === '1' && !reduceMotion.matches && s.walk, leg = play && walkAt(s.agent.map, s.walk.path, s.walk.outcome, s.walk.t);
   const explorer = leg ? { from: leg.from, action: leg.action, outcome: leg.outcome, k: leg.k, e: leg.e } : walks ? { from: s.from, action: s.action, outcome: s.ep.outcome, k: s.wait / BEAT, e: (s.wait - BEAT) / 60 } : { action: s.action };
-  drawMaze(sctx, theme, { map: s.agent.map, values: valueGrid(s.agent), policy: policyGrid(s.agent), robot: leg ? leg.to : s.ep.s, explorer, art, light, now: reduceMotion.matches || s.rate === 'fast' ? null : clock, w, h });
+  drawMaze(sctx, theme, { map: s.agent.map, values: valueGrid(s.agent), policy: policyGrid(s.agent), showFour: s.four, q: s.agent.q, robot: leg ? leg.to : s.ep.s, explorer, art, light, now: reduceMotion.matches || s.rate === 'fast' ? null : clock, w, h });
 }
 
 let shown = -1;

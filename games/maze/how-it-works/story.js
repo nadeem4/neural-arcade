@@ -10,7 +10,7 @@ const S = await (await fetch('../story.json')).json();
 
 const LABEL = { T: '+10', N: '+3', P: '-10' };
 
-// Draw a square grid: shaded values, arrows for a policy, an outlined path, the robot on the start tile.
+// Draw a square grid: shaded values, arrows for a policy, an outlined path, the explorer on the start tile.
 function drawGrid(canvas, rows, { values, policy, path } = {}) {
   const { dpr, w } = sizeCanvas(canvas, 1), ctx = canvas.getContext('2d');
   const n = rows.length, cols = rows[0].length, t = w / cols;
@@ -64,7 +64,7 @@ $('stepThrough').addEventListener('click', () => {
 for (const [key, id, gid] of [['low', 'policyLow', 'gLow'], ['high', 'policyHigh', 'gHigh']]) {
   const d = S.discount[key];
   $(gid).textContent = d.gamma;
-  $(id).setAttribute('aria-label', `Arrows for each tile at discount ${d.gamma}. The robot ends at the ${d.outcome} treasure.`);
+  $(id).setAttribute('aria-label', `Arrows for each tile at discount ${d.gamma}. The explorer ends at the ${d.outcome} treasure.`);
   add(() => drawGrid($(id), near, { policy: d.policy, path: d.path }));
 }
 

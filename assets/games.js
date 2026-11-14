@@ -1,6 +1,6 @@
 // The one list of games and categories. Pages render from this; adding a game means adding one entry here.
 export const CATEGORIES = [
-  { id: 'how-ai-learns', title: 'How AI learns', lead: 'The ways a brain gets better: by evolution, by copying examples, and by trial and error.' },
+  { id: 'how-ai-learns', title: 'How AI learns', lead: 'Two ways a brain gets better: by evolution, and by copying examples.' },
   { id: 'physical-ai', title: 'Physical AI', lead: 'How robots learn to move, sense and act in the physical world.' },
   { id: 'reinforcement-learning', title: 'Reinforcement learning', lead: 'An agent tries things, gets a number back for each try, and learns what to do. The words, then the methods.' },
 ];
@@ -21,7 +21,7 @@ export const GAMES = [
     added: '2026-10-16', shot: 'games/teach/shot.jpg', path: 'games/teach/', writeup: 'games/teach/how-it-works/', youtube: 'qfzRiq3DoJo', demo: null,
   },
   {
-    id: 'runner', title: 'Coin Runner', category: 'how-ai-learns',
+    id: 'runner', title: 'Coin Runner', category: 'reinforcement-learning',
     lesson: 'A hero learns a platformer level from points alone, and finds loopholes when the points are wrong. Teaches reward, exploration, policy gradients and reward hacking.',
     learnsBy: 'Reward, policy gradients',
     goesWrongWhen: 'It learns what you reward, not what you meant',
@@ -38,7 +38,7 @@ export const GAMES = [
   },
   {
     id: 'maze', title: 'Treasure Maze', category: 'reinforcement-learning',
-    lesson: 'A robot learns a small grid by trial and error, and you set how much far-off reward counts. Teaches reward, value, the discount and exploring.',
+    lesson: 'An explorer learns a small grid by trial and error, and you set how much far-off reward counts. Teaches reward, value, the discount and exploring.',
     learnsBy: 'Reward, value, discount',
     goesWrongWhen: 'Exploring near a cliff costs it',
     added: '2026-11-13', shot: 'games/maze/shot.jpg', path: 'games/maze/', writeup: 'games/maze/how-it-works/', youtube: null, demo: null,

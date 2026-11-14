@@ -4,7 +4,7 @@
 #stage { display: block; width: 100%; max-width: 720px; margin: 0 auto; aspect-ratio: 3 / 2; }
 #chart { height: 150px; }
 
-/* The readout under the stage that says where the robot would go is a sentence, not a number. */
+/* The readout under the stage that says where the explorer would go is a sentence, not a number. */
 .readouts .txt { margin: 0; font: 600 14px/1.4 var(--sans); letter-spacing: 0; overflow-wrap: anywhere; }
 
 /* One card under the stage, not two. */
@@ -12,3 +12,4 @@
 
 /* Sliders fill their section. */
 .panel input[type="range"] { width: 100%; }
+#four[aria-pressed="true"] { background: var(--surface); box-shadow: inset 0 0 0 2px var(--ink); }

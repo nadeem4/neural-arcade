@@ -211,6 +211,10 @@ describe('moreFrom', () => {
 });
 
 describe('reinforcement learning and the maze', () => {
+  it('Coin Runner is in reinforcement learning; the first two stay in How AI learns', () => {
+    expect(gameById('runner').category).toBe('reinforcement-learning');
+    expect(GAMES.filter(g => g.category === 'how-ai-learns').map(g => g.id)).toEqual(['racer', 'teach']);
+  });
   it('the category exists with a lead', () => {
     const c = CATEGORIES.find(c => c.id === 'reinforcement-learning');
     expect(c.title).toBe('Reinforcement learning');
