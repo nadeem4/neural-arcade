@@ -46,7 +46,7 @@ export const INFO = {
   speed: 'Speed is how many episodes the robot learns from each second.',
   map: 'The map is the world the robot learns in: Near or far has two treasures, Cliff edge has a pit beside the short path.',
   reset: 'Reset wipes what the robot has learned, so it starts again knowing nothing.',
-  values: 'Each tile is shaded by its value, how much reward the robot expects from there on; the arrow is the move it thinks is best.',
+  values: 'Each tile is lit by its value, how much reward the robot expects from there on: dark at zero, brighter as it grows. The arrow is the move it thinks is best.',
   curve: 'The curve shows the average reward over the last 20 episodes: it climbs as the robot learns, and it can go below zero when the robot keeps falling in the pit.',
   fourValues: 'Four values shows what the robot thinks each move is worth on every tile: up, down, left and right.',
 };
