@@ -216,6 +216,39 @@ describe('drawMaze', () => {
     const spots = new Set(on.calls.filter(c => c[0] === 'fillText' && c[1] === '2.5').map(c => c[2] + ',' + c[3]));
     expect(spots.size).toBe(floors * 4); // each at its own spot toward the tile's edges, not stacked in the middle
   });
+  it('puts each action\'s number on the side of the tile that action moves toward', () => {
+    const q = { nStates: map.nStates, nActions: 4, v: Float64Array.from({ length: map.nStates * 4 }, (_, i) => (i % 4) + 1) };
+    const { ctx, calls } = recorder();
+    drawMaze(ctx, theme, { map, values, policy: null, robot: map.start, art, showFour: true, q, w: 600, h: 400 });
+    const four = calls.filter(c => c[0] === 'fillText' && /^[1-4]\.0$/.test(c[1])).slice(0, 4);
+    const at = a => four.find(c => c[1] === `${a + 1}.0`);
+    const cx = four.reduce((t, c) => t + c[2], 0) / 4, cy = four.reduce((t, c) => t + c[3], 0) / 4;
+    for (let a = 0; a < 4; a++) {
+      const [dr, dc] = screenDir(a); // on screen: x grows with dc - dr, y with dc + dr
+      expect(Math.sign(at(a)[2] - cx)).toBe(Math.sign(dc - dr));
+      expect(Math.sign(at(a)[3] - cy)).toBe(Math.sign(dc + dr));
+    }
+  });
+  it('leaves the arrows out while the four values show', () => {
+    const q = { nStates: map.nStates, nActions: 4, v: new Float64Array(map.nStates * 4).fill(2.5) };
+    const { ctx, calls } = recorder();
+    drawMaze(ctx, theme, { map, values, policy, robot: map.start, art, showFour: true, q, w: 600, h: 400 });
+    expect(calls.filter(c => c[0] === 'closePath')).toHaveLength(0);
+  });
+  it('shows whole numbers on small tiles, and never a negative zero', () => {
+    const q = { nStates: map.nStates, nActions: 4, v: Float64Array.from({ length: map.nStates * 4 }, (_, i) => (i % 4 === 0 ? -0.02 : 2.5)) };
+    expect(isoLayout(map, 200, 150).tw).toBeLessThan(80);
+    const { ctx, calls } = recorder();
+    drawMaze(ctx, theme, { map, values, policy: null, robot: map.start, art, showFour: true, q, w: 200, h: 150 });
+    expect(texts(calls)).toContain('3');
+    expect(texts(calls)).toContain('0');
+    expect(texts(calls)).not.toContain('2.5');
+    expect(texts(calls)).not.toContain('-0');
+    const big = recorder();
+    drawMaze(big.ctx, theme, { map, values, policy: null, robot: map.start, art, showFour: true, q, w: 600, h: 400 });
+    expect(texts(big.calls)).toContain('0.0');
+    expect(texts(big.calls)).not.toContain('-0.0');
+  });
   it('draws one arrow per non-null policy entry, and none without a policy', () => {
     const { ctx, calls } = recorder();
     drawMaze(ctx, theme, { map, values, policy, robot: map.start, art, w: 600, h: 400 });

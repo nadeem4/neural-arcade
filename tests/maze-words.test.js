@@ -58,6 +58,10 @@ describe('maze words', () => {
     expect(learnedNote(agent)).toBe('3000 episodes so far. Without exploring it now walks to the big treasure.');
   });
 
+  it('fourValues does not name screen directions, since the map is turned', () => {
+    expect(INFO.fourValues).not.toMatch(/(up|down|left|right)/i);
+  });
+
   it('INFO has the eight keys, each one sentence ending in a period', () => {
     expect(Object.keys(INFO).sort()).toEqual(['curve', 'discount', 'exploration', 'fourValues', 'map', 'reset', 'speed', 'values']);
     for (const v of Object.values(INFO)) { expect(typeof v).toBe('string'); expect(v.length).toBeGreaterThan(0); expect(v).toMatch(/\.$/); }

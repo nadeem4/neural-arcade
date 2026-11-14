@@ -200,7 +200,7 @@ export function drawMaze(ctx, theme, { map, values, policy, showFour = false, q 
   // Arrows for the best move on each tile, cream with a dark outline, stronger where it is brighter.
   ctx.lineJoin = 'round'; ctx.lineWidth = 3;
   for (let st = 0; st < map.nStates; st++) {
-    const a = policy?.[st];
+    const a = showFour ? null : policy?.[st]; // the four values take the tile's room
     if (a == null) continue;
     const { r, c } = turnCell(map, st), [dr, dc] = screenDir(a), pr = -dc, pc = dr; // a perpendicular in grid space
     ctx.beginPath();
@@ -215,13 +215,13 @@ export function drawMaze(ctx, theme, { map, values, policy, showFour = false, q 
 
   // The four values: small cream numbers with a dark outline, like the arrows (the stage is dark in both themes).
   if (showFour && q) {
-    ctx.font = `700 ${Math.max(9, tw * 0.105)}px ${theme.body}`;
+    ctx.font = `700 ${Math.max(8, tw * 0.1)}px ${theme.body}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,12,4,.85)'; ctx.fillStyle = '#fff0d2';
     for (let st = 0; st < map.nStates; st++) {
       if (tileKind(map, st) !== 'floor') continue;
       const { r, c } = turnCell(map, st);
       for (let a = 0; a < ACTIONS.length; a++) {
-        const [dr, dc] = screenDir(a), [x, y] = P(r + 0.5 + dr * 0.3, c + 0.5 + dc * 0.3), text = q.v[st * q.nActions + a].toFixed(1);
+        const [dr, dc] = screenDir(a), [x, y] = P(r + 0.5 + dr * 0.38, c + 0.5 + dc * 0.38), v = q.v[st * q.nActions + a], text = (Math.abs(v) < 0.05 ? 0 : v).toFixed(tw < 80 ? 0 : 1);
         ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
       }
     }
