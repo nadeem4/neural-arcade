@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
+import { conceptById } from '../assets/games.js';
 import { videoHtml, gamesHtml, relatedHtml, triesHtml, mountConceptPage, wireTries } from '../assets/concept-page.js';
 
 const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['policy'] };
@@ -108,4 +109,26 @@ describe('concept.css', () => {
   it('uses tokens only, no raw hex colours', () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
+});
+
+describe('pid page file', () => {
+  const html = readFileSync(new URL('../concepts/pid/index.html', import.meta.url), 'utf8');
+
+  it('has the shared header, footer and styles', () => {
+    for (const s of ['<header data-site', '<footer data-site', '../../assets/studio.css', '../../assets/concept.css']) expect(html).toContain(s);
+  });
+  it('has the section ids', () => {
+    for (const id of ['playground', 'tries', 'writeup', 'video', 'games', 'related']) expect(html).toContain(`id="${id}"`);
+  });
+  it('leads with the definition from the config', () => {
+    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('pid').definition);
+  });
+  for (const f of ['fig-hill', 'fig-overshoot', 'fig-settle']) {
+    it(`${f}.webp exists, is under 150 KB and is an img with alt, width and height`, () => {
+      expect(statSync(new URL(`../concepts/pid/${f}.webp`, import.meta.url)).size).toBeLessThan(150000);
+      const img = html.match(new RegExp(`<img[^>]*src="${f}\.webp"[^>]*>`))?.[0];
+      expect(img, f).toBeTruthy();
+      for (const a of ['alt', 'width', 'height']) expect(img).toMatch(new RegExp(` ${a}="[^"]+"`));
+    });
+  }
 });

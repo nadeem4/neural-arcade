@@ -4,12 +4,15 @@ import { GAMES } from '../assets/games.js';
 
 const SITE = 'https://arcade.codewithnk.com/';
 const root = new URL('../', import.meta.url);
+// concept pages with their own page, extended each slice
+const CONCEPT_PAGES = [['concepts/pid/index.html', ['concepts/pid/share.png']]];
 
 const pages = [
   ['index.html', ['assets/share.png']],
   ['about/index.html', ['assets/share.png']],
 
   ['concepts/index.html', ['assets/share.png']],
+  ...CONCEPT_PAGES,
   ['games/index.html', ['assets/share.png']],
   ['category/index.html', ['assets/share.png']],
   ...GAMES.flatMap(g => {
@@ -25,7 +28,7 @@ const meta = (html, key, name) => attr(html, 'meta', key, name)?.match(/content=
 
 describe('share and SEO tags', () => {
   it('covers every page, including each game and its write-up', () => {
-    expect(pages.length).toBe(5 + GAMES.length * 2);
+    expect(pages.length).toBe(5 + GAMES.length * 2 + CONCEPT_PAGES.length);
   });
 
   for (const [file, allowed] of pages) {

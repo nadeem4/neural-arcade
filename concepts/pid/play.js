@@ -60,7 +60,8 @@ export function mountPlayground(root) {
   const tok = (n, fb) => getComputedStyle(root).getPropertyValue(n).trim() || fb;
   function fit(c) {
     const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
-    if (c.width !== Math.round(r.width * d)) { c.width = Math.round(r.width * d); c.height = Math.round(r.height * d); }
+    const w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
     const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0);
     return [x, r.width, r.height];
   }
