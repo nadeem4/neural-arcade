@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { videoHtml, gamesHtml, relatedHtml, triesHtml, mountConceptPage, wireTries } from '../assets/concept-page.js';
 
 const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['policy'] };
@@ -90,5 +91,21 @@ describe('DOM helpers', () => {
     expect(apply).toHaveBeenCalledWith({ p: 2 });
     handler({ target: { closest: () => null } });
     expect(apply).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('concept.css', () => {
+  const css = readFileSync(new URL('../assets/concept.css', import.meta.url), 'utf8');
+
+  it('defines the classes the builders emit', () => {
+    for (const sel of ['.stage', '.tries', '.part', '.fig', '.game', '.where', '.chip', '.crumb']) {
+      expect(css).toContain(sel);
+    }
+    expect(css).toContain('@media (max-width: 760px)');
+    expect(css).toContain('prefers-reduced-motion');
+  });
+
+  it('uses tokens only, no raw hex colours', () => {
+    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 });
