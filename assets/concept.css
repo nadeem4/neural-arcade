@@ -41,7 +41,7 @@
 .fig figcaption { font-size: 12px; color: var(--stage-dim); padding: 8px 12px; border-top: 1px solid var(--stage-2); }
 
 /* games */
-.games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.concept-page .games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0; }
 .game { display: grid; gap: 4px; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; color: var(--ink); text-decoration: none; }
 .game h3 { font-size: 18px; }
 .game p { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
@@ -57,7 +57,7 @@
   .views { grid-template-columns: 1fr; }
   .views canvas { height: 220px; }
   .views canvas + canvas { border-left: 0; border-top: 1px solid var(--stage-2); }
-  .dials, .tries, .games { grid-template-columns: 1fr; }
+  .dials, .tries, .concept-page .games { grid-template-columns: 1fr; }
   .part { grid-template-columns: 40px minmax(0, 1fr); }
   .part .fig { grid-column: 1 / -1; }
   .letter { font-size: 34px; }
