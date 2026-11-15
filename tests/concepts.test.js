@@ -72,6 +72,14 @@ describe('concept page rendering', () => {
     const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
     for (const sel of ['.video {', '.video-play {', '.video-label {', '.video iframe {']) expect(css).toContain(sel);
   });
+  it('links the title to its own page only when it has one', () => {
+    expect(conceptHtml({ ...c, id: 'pid', page: true }, [], '../')).toContain('<h2><a href="../concepts/pid/">Policy</a></h2>');
+    expect(conceptHtml(c, [], '../')).not.toContain('<h2><a');
+    expect(conceptHtml({ ...c, page: true }, [], '../')).toContain('id="policy"');
+  });
+  it('escapes the title of a concept with a page', () => {
+    expect(conceptHtml({ ...c, page: true, title: 'A<b>' }, [], '../')).toContain('>A&lt;b&gt;</a></h2>');
+  });
   it('lists the games that use it', () => {
     const h = conceptHtml(c, [{ title: 'Gee', path: 'games/g/' }], '../');
     expect(h).toContain('Used in');

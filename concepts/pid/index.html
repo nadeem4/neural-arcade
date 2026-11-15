@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PID control · Neural Arcade</title>
+<meta name="description" content="A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/pid/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="PID control · Neural Arcade">
+<meta property="og:description" content="A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/pid/">
+<meta property="og:image" content="https://arcade.codewithnk.com/concepts/pid/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="PID, explained: a car's speed on a hill, P alone against P plus I">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PID control · Neural Arcade">
+<meta name="twitter:description" content="A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/concepts/pid/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/concept.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="concepts"></header>
+
+<main class="wrap concept-page">
+  <section>
+    <div class="crumb"><a href="../">Concepts</a> / PID control</div>
+    <h1>PID control</h1>
+    <p class="lead">A PID controller steers by mixing three looks at the error: <em>how big it is now</em>, <em>how long it has lasted</em>, and <em>how fast it is changing</em>.</p>
+  </section>
+
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>Three looks at one number</h2>
+    <p>Every PID controller watches a single number, the error: how far you are from where you want to be. It then asks three questions about it and adds up the answers.</p>
+    <div class="parts">
+      <div class="part">
+        <div class="letter">P</div>
+        <div><h3>How big is it now?</h3><p>Push in proportion to the error. Far away, push hard; close, push gently. On its own it overshoots and swings, and against a steady pull like gravity it settles a little short.</p></div>
+        <figure class="fig"><img src="fig-hill.webp" width="960" height="540" loading="lazy" alt="Speed chart: with P alone the car climbs a hill and settles at 94, short of the target of 100."><figcaption>A frame from the video: P alone settles at 94, short of 100</figcaption></figure>
+      </div>
+      <div class="part">
+        <div class="letter">I</div>
+        <div><h3>How long has it lasted?</h3><p>Keep a running total of the error. A small error that never goes away grows into a big push, which is what finally closes the last gap. Too much memory, though, and it keeps pushing after it arrives.</p></div>
+        <figure class="fig"><img src="fig-overshoot.webp" width="960" height="540" loading="lazy" alt="Speed chart: with I added the car closes the gap but shoots past the target to 114 before swinging back."><figcaption>A frame from the video: I closes the gap, but overshoots to 114</figcaption></figure>
+      </div>
+      <div class="part">
+        <div class="letter">D</div>
+        <div><h3>How fast is it changing?</h3><p>Look at how quickly the error shrinks. Rushing towards the target? Ease off early, so you arrive without overshooting.</p></div>
+        <figure class="fig"><img src="fig-settle.webp" width="960" height="540" loading="lazy" alt="Speed chart: with D added the overshoot drops from 114 to 106 and the speed settles on the target."><figcaption>A frame from the video: with D the overshoot drops from 14 to 6</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="video" hidden></section>
+  <section id="games" hidden></section>
+  <section id="related" hidden></section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../../assets/site.js';
+  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
+  import { presets, mountPlayground } from './play.js';
+  mountSite('../../');
+  mountConceptPage('pid', '../../');
+  document.getElementById('tries').innerHTML = triesHtml(presets);
+  const { apply } = mountPlayground(document.getElementById('playground'));
+  wireTries(document.getElementById('tries'), presets, apply);
+</script>
+</body>
+</html>

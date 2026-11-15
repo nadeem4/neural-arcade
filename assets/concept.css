@@ -1,0 +1,66 @@
+/* Concept pages: playground stage, tries, write-up parts, games, related chips. Tokens come from studio.css. */
+.concept-page { display: grid; gap: 64px; padding-block: 24px 80px; }
+.concept-page > section { display: grid; gap: 20px; min-width: 0; }
+.concept-page h1 { margin: 0; font-weight: 800; font-size: clamp(2.6rem, 6vw, 4.4rem); line-height: 1; letter-spacing: -.04em; }
+.concept-page h2 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.03em; text-wrap: balance; }
+.concept-page h3 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+.concept-page p { margin: 0; max-width: 64ch; }
+.concept-page .lead { max-width: 46ch; font-size: 21px; line-height: 1.45; }
+.concept-page .lead em { font-style: normal; color: var(--signal-text); font-weight: 600; }
+
+/* playground stage */
+.stage-head { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--stage-2); font-size: 14px; color: var(--stage-dim); }
+.stage-head b { color: var(--stage-ink); font-weight: 600; }
+.views { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); }
+.views canvas { width: 100%; height: 300px; display: block; }
+.views canvas + canvas { border-left: 1px solid var(--stage-2); }
+.dials { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--stage-2); border-top: 1px solid var(--stage-2); }
+.dial { background: var(--stage); padding: 16px 20px; display: grid; gap: 8px; }
+.dial label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; color: var(--stage-dim); }
+.dial label b { color: var(--stage-ink); font-size: 16px; }
+.dial .say { font-size: 13px; color: var(--stage-dim); }
+.dial .term { color: var(--stage-ink); }
+.dial input[type=range] { width: 100%; accent-color: var(--signal); }
+.stage-foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 20px; border-top: 1px solid var(--stage-2); }
+.sbtn { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--stage-dim); background: transparent; color: var(--stage-ink); font: 600 14px var(--sans); cursor: pointer; }
+.sbtn.primary { background: var(--signal-fill); border-color: var(--signal-fill); color: var(--signal-ink); }
+.stage-foot .hint { margin-left: auto; font-size: 13px; color: var(--stage-dim); }
+
+/* things to try */
+.tries { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; counter-reset: t; }
+.tries li { counter-increment: t; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 15px; display: grid; gap: 6px; align-content: start; }
+.tries li::before { content: "Try " counter(t); font: 700 12px var(--mono); color: var(--signal-text); letter-spacing: .04em; text-transform: uppercase; }
+.tries button { justify-self: start; margin-top: 4px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
+
+/* write-up */
+.part { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 300px); gap: 20px; align-items: start; padding-top: 24px; border-top: 1px solid var(--line); }
+.letter { font: 800 44px/1 var(--sans); color: var(--signal-text); letter-spacing: -.04em; }
+.part p { font-size: 16px; color: var(--ink-2); margin-top: 6px; }
+.fig { margin: 0; background: var(--stage); border-radius: 12px; overflow: hidden; }
+.fig img, .fig svg { display: block; width: 100%; height: auto; }
+.fig figcaption { font-size: 12px; color: var(--stage-dim); padding: 8px 12px; border-top: 1px solid var(--stage-2); }
+
+/* games */
+.concept-page .games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0; }
+.game { display: grid; gap: 4px; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; color: var(--ink); text-decoration: none; }
+.game h3 { font-size: 18px; }
+.game p { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.game .where { font-size: 13px; margin-top: 8px; color: var(--ink); }
+.game .where b { color: var(--signal-text); }
+
+/* related */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px var(--sans); text-decoration: none; }
+
+@media (max-width: 760px) {
+  .concept-page { gap: 48px; }
+  .views { grid-template-columns: 1fr; }
+  .views canvas { height: 220px; }
+  .views canvas + canvas { border-left: 0; border-top: 1px solid var(--stage-2); }
+  .dials, .tries, .concept-page .games { grid-template-columns: 1fr; }
+  .part { grid-template-columns: 40px minmax(0, 1fr); }
+  .part .fig { grid-column: 1 / -1; }
+  .letter { font-size: 34px; }
+  .stage-foot .hint { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; transition: none; animation: none; } }
