@@ -7,11 +7,8 @@
 .concept-page p { margin: 0; max-width: 64ch; }
 .concept-page .lead { max-width: 46ch; font-size: 21px; line-height: 1.45; }
 .concept-page .lead em { font-style: normal; color: var(--signal-text); font-weight: 600; }
-.crumb { font-size: 14px; color: var(--ink-2); }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 /* playground stage */
-.stage { background: var(--stage); color: var(--stage-ink); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .45); }
 .stage-head { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--stage-2); font-size: 14px; color: var(--stage-dim); }
 .stage-head b { color: var(--stage-ink); font-weight: 600; }
 .views { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); }
@@ -52,6 +49,7 @@
 .game .where b { color: var(--signal-text); }
 
 /* related */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px var(--sans); text-decoration: none; }
 
 @media (max-width: 760px) {

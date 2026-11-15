@@ -2,7 +2,7 @@
 import { GAMES, conceptById, conceptHref } from './games.js';
 import { initVideos } from './video.js';
 
-const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+export const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const PLAY = '<svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>';
 
@@ -11,14 +11,14 @@ export const videoHtml = concept => concept.youtube
   : '';
 
 export const gamesHtml = (concept, games, base) => games.length
-  ? '<h2>See it in the games</h2>' + games.map(g =>
-    `<a class="game" href="${base}${g.path}"><h3>${esc(g.title)}</h3><p>${esc(g.lesson ?? '')}</p>${g.where?.[concept.id] ? `<p class="where">${esc(g.where[concept.id])}</p>` : ''}</a>`).join('')
+  ? '<h2>See it in the games</h2><div class="games">' + games.map(g =>
+    `<a class="game" href="${base}${g.path}"><h3>${esc(g.title)}</h3><p>${esc(g.lesson ?? '')}</p>${g.where?.[concept.id] ? `<p class="where">${esc(g.where[concept.id])}</p>` : ''}</a>`).join('') + '</div>'
   : '';
 
 export const relatedHtml = (concept, base) => {
   const chips = (concept.related ?? []).map(conceptById).filter(Boolean)
     .map(c => `<a class="chip" href="${conceptHref(c, base)}">${esc(c.title)}</a>`).join('');
-  return chips ? `<h2>Where it fits</h2>${chips}` : '';
+  return chips ? `<h2>Where it fits</h2><div class="chips">${chips}</div>` : '';
 };
 
 export const triesHtml = presets => presets.map((p, i) =>
@@ -34,7 +34,8 @@ export function mountConceptPage(id, base, doc = document) {
     el.innerHTML = html;
     el.hidden = !html;
   };
-  fill('video', videoHtml(concept));
+  const video0 = videoHtml(concept);
+  fill('video', video0 && `<h2>Watch it explained</h2>${video0}`);
   fill('games', gamesHtml(concept, games, base));
   fill('related', relatedHtml(concept, base));
   const video = doc.getElementById('video');

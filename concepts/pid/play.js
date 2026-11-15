@@ -18,8 +18,8 @@ export function mountPlayground(root) {
   root.innerHTML = `
     <div class="stage-head"><span><b>Hold the drone on the line</b></span><span>Height <b class="num" data-r="h">0.0</b> m</span><span>Target <b class="num" data-r="t">5.0</b> m</span><span>Error <b class="num" data-r="e">0.0</b> m</span></div>
     <div class="views">
-      <canvas data-r="world" aria-label="Drone hovering, with a dashed target line"></canvas>
-      <canvas data-r="trace" aria-label="Error over the last eight seconds"></canvas>
+      <canvas role="img" data-r="world" aria-label="Drone hovering, with a dashed target line"></canvas>
+      <canvas role="img" data-r="trace" aria-label="Error over the last eight seconds"></canvas>
     </div>
     <div class="dials">${DIALS.map(d => `
       <div class="dial"><label for="pid-${d.key}">${d.name} <b class="num" data-r="${d.key}V">0.0</b></label>

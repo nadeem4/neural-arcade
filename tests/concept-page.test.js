@@ -23,7 +23,10 @@ describe('gamesHtml', () => {
     expect(h).toContain('href="../../games/balance/"');
     expect(h).toContain('Steer by error.');
     expect(h).toContain('<p class="where">The pole is the error.</p>');
-    expect(h.match(/class="game/g)).toHaveLength(1);
+    expect(h.match(/class="game"/g)).toHaveLength(1);
+  });
+  it('wraps the cards in the .games grid after the heading', () => {
+    expect(gamesHtml(pid, [g], '')).toMatch(/^<h2>See it in the games<\/h2><div class="games">.*<\/div>$/);
   });
   it('has no where paragraph when missing', () => {
     expect(gamesHtml(pid, [{ ...g, where: {} }], '')).not.toContain('class="where"');
@@ -39,6 +42,9 @@ describe('relatedHtml', () => {
     expect(h).toContain('Where it fits');
     expect(h).toContain('class="chip"');
     expect(h).toContain('href="../../concepts/#policy"');
+  });
+  it('wraps the chips in a .chips row', () => {
+    expect(relatedHtml(pid, '')).toMatch(/<h2>Where it fits<\/h2><div class="chips"><a class="chip".*<\/a><\/div>$/);
   });
   it('is empty when no related id is known', () => {
     expect(relatedHtml({ related: ['nope'] }, '')).toBe('');
@@ -69,6 +75,7 @@ describe('DOM helpers', () => {
     mountConceptPage('pid', '../../', doc);
     expect(els.video.hidden).toBe(false);
     expect(els.video.innerHTML).toContain('data-youtube');
+    expect(els.video.innerHTML).toContain('<h2>Watch it explained</h2>');
     expect(els.games.hidden).toBe(false);
     expect(els.games.innerHTML).toContain('href="../../games/balance/"');
     expect(els.games.innerHTML).toContain('class="where"');
@@ -78,6 +85,7 @@ describe('DOM helpers', () => {
   it('keeps an empty section hidden', () => {
     const els = { video: el(), games: el(), related: el() };
     mountConceptPage('mdp', '../../', { getElementById: id => els[id] ?? null });
+    expect(els.video.innerHTML).toBe('');
     expect(els.games.hidden).toBe(true);
     expect(els.games.innerHTML).toBe('');
   });
@@ -99,7 +107,7 @@ describe('concept.css', () => {
   const css = readFileSync(new URL('../assets/concept.css', import.meta.url), 'utf8');
 
   it('defines the classes the builders emit', () => {
-    for (const sel of ['.stage', '.tries', '.part', '.fig', '.game', '.where', '.chip', '.crumb']) {
+    for (const sel of ['.stage', '.tries', '.part', '.fig', '.game', '.where', '.chip', '.chips']) {
       expect(css).toContain(sel);
     }
     expect(css).toContain('@media (max-width: 760px)');

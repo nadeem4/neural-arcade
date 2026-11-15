@@ -77,6 +77,9 @@ describe('concept page rendering', () => {
     expect(conceptHtml(c, [], '../')).not.toContain('<h2><a');
     expect(conceptHtml({ ...c, page: true }, [], '../')).toContain('id="policy"');
   });
+  it('escapes the title of a concept with a page', () => {
+    expect(conceptHtml({ ...c, page: true, title: 'A<b>' }, [], '../')).toContain('>A&lt;b&gt;</a></h2>');
+  });
   it('lists the games that use it', () => {
     const h = conceptHtml(c, [{ title: 'Gee', path: 'games/g/' }], '../');
     expect(h).toContain('Used in');
