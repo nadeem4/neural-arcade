@@ -44,3 +44,19 @@ export function heatColour(count, max) {
   const t = max > 0 && count > 0 ? Math.min(1, count / max) : 0;
   return [t, 0.55 * t, 0.1 * t];
 }
+
+export const TICK_MS = 400;
+
+// The taxi at `ms` into the drive: linear between frames, turning to the new heading in the first third of each move.
+// `tick` is the frame it is leaving, so lights match the step being taken; `done` once the last frame is reached.
+export function frameAt(frames, ms, tickMs = TICK_MS) {
+  const last = frames.length - 1;
+  const t = Math.max(0, ms) / tickMs;
+  if (last <= 0 || t >= last) return { ...frames[last], done: true };
+  const i = Math.floor(t), u = t - i, a = frames[i], b = frames[i + 1];
+  const turn = Math.atan2(Math.sin(b.heading - a.heading), Math.cos(b.heading - a.heading));
+  return {
+    x: a.x + (b.x - a.x) * u, z: a.z + (b.z - a.z) * u,
+    heading: a.heading + turn * Math.min(1, u * 3), tick: a.tick, done: false,
+  };
+}

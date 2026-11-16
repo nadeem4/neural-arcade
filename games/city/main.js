@@ -8,6 +8,7 @@ import { buildReceipt, verdictOf } from './receipt.js';
 import { INFO, goalReached, shareLine } from './words.js';
 import { FIELDS, cardMatching, createSession, recordTry } from './payslip.js';
 import { webglAvailable, chooseStage } from './stage.js';
+import { motionAllowed } from './playback.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
@@ -168,6 +169,20 @@ function build() {
 const controls = () => [...$('cards').children, ...FIELDS.map(f => $(f.key)), $('train'), $('reset')];
 const enable = on => controls().forEach(c => { c.disabled = !on; });
 
+function setupChase() {
+  const btn = $('chase');
+  if (!stage.ready || !motionAllowed()) {
+    btn.disabled = true;
+    btn.title = stage.ready ? 'Off because your device asks for reduced motion.' : 'Needs the 3D view.';
+    return;
+  }
+  btn.addEventListener('click', () => {
+    const on = btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', String(on));
+    stage.setChase(on);
+  });
+}
+
 async function start() {
   mountSite('../../');
   $('crumb').innerHTML = '<a href="../">Games</a> / Reward City';
@@ -180,13 +195,14 @@ async function start() {
     // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
     const webgl = webglAvailable();
     const scene = webgl ? await import('./scene.js').catch(() => null) : null;
-    const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone() }) : null;
+    const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone(), labels: $('labels') }) : null;
     stage = chooseStage($('stage'), city, { webgl, make3d });
   } catch {
     say('The map did not load. Reload the page to try again.');
     return;
   }
   enable(true);
+  setupChase();
   pick(PRESETS[0].id);
 }
 start();

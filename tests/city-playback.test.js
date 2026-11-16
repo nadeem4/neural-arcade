@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { motionAllowed, routeFrames, lightPhase, chaseCamera, heatColour } from '../games/city/playback.js';
+import { motionAllowed, routeFrames, lightPhase, chaseCamera, heatColour, frameAt, TICK_MS } from '../games/city/playback.js';
 import { loadWorld, lightRed, analyzeRoute, rewardsOf } from '../games/city/sim.js';
 import { cellCentre } from '../games/city/geometry.js';
 import { STEP_CAP } from '../games/city/presets.js';
@@ -109,5 +109,36 @@ describe('heatColour', () => {
     expect(heatColour(0, 10)).toEqual([0, 0, 0]);
     for (const v of heatColour(5, 0)) expect(Number.isFinite(v)).toBe(true);
     expect(heatColour(0, 0)).toEqual([0, 0, 0]);
+  });
+});
+
+describe('frameAt', () => {
+  const frames = [
+    { x: 0, z: 0, heading: Math.PI, tick: 0 },
+    { x: 10, z: 0, heading: Math.PI / 2, tick: 1 },
+    { x: 10, z: 0, heading: Math.PI / 2, tick: 2 },
+  ];
+  it('ticks at 400 ms', () => { expect(TICK_MS).toBe(400); });
+  it('starts at the first frame and is not done', () => {
+    const f = frameAt(frames, 0, 400);
+    expect([f.x, f.z, f.tick, f.done]).toEqual([0, 0, 0, false]);
+  });
+  it('moves linearly between frames and reports the tick it is leaving', () => {
+    const f = frameAt(frames, 200, 400);
+    expect(f.x).toBeCloseTo(5); expect(f.tick).toBe(0);
+    expect(frameAt(frames, 400, 400).tick).toBe(1);
+  });
+  it('turns the short way and has finished turning by the end of the segment', () => {
+    expect(frameAt(frames, 399, 400).heading).toBeCloseTo(Math.PI / 2, 1);
+    const wrap = [{ x: 0, z: 0, heading: 0.1, tick: 0 }, { x: 1, z: 0, heading: 2 * Math.PI - 0.1, tick: 1 }];
+    const h = frameAt(wrap, 20, 400).heading; // 5 % in: still near 0.1, never swinging through pi
+    expect(Math.abs(Math.sin(h))).toBeLessThan(0.5);
+  });
+  it('is done and clamped on the last frame once the time has passed', () => {
+    const f = frameAt(frames, 99999, 400);
+    expect(f.done).toBe(true); expect(f.x).toBe(10); expect(f.tick).toBe(2);
+  });
+  it('a single frame is done at once', () => {
+    expect(frameAt([frames[0]], 0, 400).done).toBe(true);
   });
 });
