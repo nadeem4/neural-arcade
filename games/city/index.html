@@ -39,7 +39,7 @@
     </div>
     <nav class="switch" aria-label="On this page">
       <a href="#play" aria-current="true">Play</a>
-      <a href="#how" id="howTab" hidden>How it works</a>
+      <a href="#how" id="howTab">How it works</a>
     </nav>
   </div>
 
@@ -103,12 +103,11 @@
 
   <div class="moral">
     <div><small>The lesson</small><p>The reward is the only thing the taxi wants: it does what you pay it for, not what you meant.</p></div>
-    <a class="btn" href="#how" id="whyLink" hidden>Why it works</a>
+    <a class="btn" href="#how" id="whyLink">Why it works</a>
   </div>
 
   <section class="more" aria-label="Read">
-    <!-- RC6 un-hides the How it works links (howTab, whyLink and this section) once the write-up exists. -->
-    <div class="read" id="how" hidden>
+    <div class="read" id="how">
       <h2>How it works</h2>
       <p>The illustrated write-up of this game.</p>
       <a class="btn primary" id="writeup" href="how-it-works/">Read How it works</a>
@@ -120,11 +119,17 @@
     <div class="chips" id="usesChips"></div>
   </section>
 
+  <section class="more-from" id="moreFrom" aria-labelledby="moreTitle" hidden>
+    <h2 id="moreTitle">More from the arcade</h2>
+    <div class="tiles" id="moreTiles"></div>
+  </section>
+
   <p class="credit">Map data: <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a></p>
 </main>
 
 <footer data-site></footer>
 
+<script type="module" src="../../assets/game-page.js"></script>
 <script type="module" src="main.js"></script>
 </body>
 </html>
