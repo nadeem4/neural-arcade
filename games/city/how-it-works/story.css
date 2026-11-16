@@ -1,0 +1,28 @@
+/* Reward City write-up: the shared write-up styles (assets/story.css) plus this page's map figures. */
+
+.fig .map { display: block; width: 100%; max-width: 360px; margin: 0 auto; border: 1px solid var(--rule); }
+.minis .map, .trio .map, .duo .map { max-width: 280px; }
+.minis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 16px; }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+.mini-cap { margin: 8px 0 0 !important; font-size: 14px !important; line-height: 1.4; color: var(--ink-2); }
+.mini-cap b { color: var(--ink); }
+@media (max-width: 640px) {
+  .minis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trio { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) { .duo { grid-template-columns: minmax(0, 1fr); } }
+
+.key i { border: 1px solid var(--rule); }
+.k-road { background: var(--road); }
+.k-walk { background: var(--muted); }
+.k-park { background: #2E5E3E; }
+.k-bld { background: var(--edge); }
+.k-water { background: #2F5E8A; }
+.k-light { background: var(--red); }
+.k-pick { background: var(--ink); border-radius: 50%; }
+.k-drop { background: var(--red); border-radius: 50%; }
+
+.credit { font-size: 14px !important; color: var(--ink-2) !important; margin: 0 !important; }
+.credit a { color: var(--ink); }
+.lesson { padding: 14px 16px; border-left: 4px solid var(--signal-text); background: var(--surface); }

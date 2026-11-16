@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reward City · How it works</title>
+<meta name="description" content="A taxi learns by trial and error to cross the real Chicago Loop. See how it learns, and how every gap in the pay slip you write becomes a shortcut it finds.">
+<link rel="canonical" href="https://arcade.codewithnk.com/games/city/how-it-works/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Reward City · How it works">
+<meta property="og:description" content="A taxi learns by trial and error to cross the real Chicago Loop. See how it learns, and how every gap in the pay slip you write becomes a shortcut it finds.">
+<meta property="og:url" content="https://arcade.codewithnk.com/games/city/how-it-works/">
+<meta property="og:image" content="https://arcade.codewithnk.com/games/city/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Reward City how it works: a taxi route across a map of the Chicago Loop">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reward City · How it works">
+<meta name="twitter:description" content="A taxi learns by trial and error to cross the real Chicago Loop. See how it learns, and how every gap in the pay slip you write becomes a shortcut it finds.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/games/city/share.png">
+<link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../../assets/studio.css">
+<link rel="stylesheet" href="../../../assets/story.css">
+<link rel="stylesheet" href="story.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="games"></header>
+
+<main class="wrap story">
+  <header class="intro">
+    <p class="kicker">Reward City · How it works</p>
+    <h1>How a taxi learns to cheat the pay slip</h1>
+    <p class="lede">A taxi has to get a passenger across a few blocks of Chicago. It is never told the rules of the road. It is only told what each trip pays, and it finds every gap in that.</p>
+    <p class="meta"><span>5 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+  </header>
+
+  <section class="step">
+    <p class="num-tag">01</p>
+    <h2>The map is real</h2>
+    <p>The streets are a few blocks of the Chicago Loop, taken from OpenStreetMap and turned into a grid of small squares. Each square is a road, a footpath, a park, a building, water or a fence. Buildings, water and fences are solid. Parks and footpaths are open, so a taxi can drive on them.</p>
+    <p>Some roads are one-way, and some corners have traffic lights. The taxi picks the passenger up at one marked square and has to reach another.</p>
+    <figure class="fig" id="fig1">
+      <canvas id="canvasMap" class="map" role="img" aria-label="Map of the Chicago Loop as a grid: roads, footpaths, parks, buildings, water and fences, with one-way arrows, traffic lights, the pickup square and the drop-off square"></canvas>
+      <p class="key"><span><i class="k-road"></i>Road</span><span><i class="k-walk"></i>Footpath</span><span><i class="k-park"></i>Park</span><span><i class="k-bld"></i>Building</span><span><i class="k-water"></i>Water</span><span><i class="k-light"></i>Traffic light</span><span><i class="k-pick"></i>Pickup</span><span><i class="k-drop"></i>Drop-off</span></p>
+      <figcaption><b>Fig. 1</b> The grid the taxi learns on. Small arrows show the direction of one-way streets.</figcaption>
+    </figure>
+    <p class="credit">Map data: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>. The page never calls OpenStreetMap while you play.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">02</p>
+    <h2>The pay slip</h2>
+    <p>You write the taxi's pay slip. It has six lines: a <em>fare</em> for arriving, a cost for every second on the clock, a fine for each park or footpath square, a fine for each red light run, a fine for each wrong-way move on a one-way street, and pay for every square driven.</p>
+    <p>A new game starts with only the fare and the clock. Every fine is zero. The taxi cares about the total on that slip, and nothing else.</p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">03</p>
+    <h2>Learning by trial and error</h2>
+    <p>The taxi starts knowing nothing. It tries a trip from the pickup, mostly by moving at random, and gets the total pay for it. It keeps a score for each square and move, and nudges that score up when a move led to good pay and down when it did not. This is Q-learning, the same idea as in Treasure Maze.</p>
+    <p>It also looks at the traffic light, because a move that is fine on green can be a fine on red. After thousands of trips, the squares it visits most are the ones on its best route.</p>
+    <figure class="fig wide" id="fig2">
+      <div class="minis" id="learnGrids"></div>
+      <figcaption><b>Fig. 2</b> Where the taxi has been, after 1, 10, 100 and 20,000 trips on the first pay slip. Brighter squares were visited more. Early on it wanders. By the end it keeps to one route.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">04</p>
+    <h2>Each loophole, in order</h2>
+    <p>The game gives you five pay slips to try, each one fixing the last. The taxi is trained live on each, so what you see is what it learned.</p>
+    <p><b>Pay it for speed.</b> Only the clock costs money, so the shortest path wins, and that path goes straight across the park. <b>Fine the park and footpaths.</b> Now it stays on the road, but it runs red lights, because waiting costs more than the fine for nothing. <b>Fine red lights too.</b> It stops at lights, then goes the wrong way down a one-way street to save time.</p>
+    <figure class="fig wide" id="fig3">
+      <div class="trio" id="loopholes"></div>
+      <figcaption><b>Fig. 3</b> The route the taxi drives after each of the first three pay slips, from the pickup to the drop-off. Each slip closes one loophole and the taxi finds the next.</figcaption>
+    </figure>
+    <p><b>Fine everything.</b> With a fine on every one of those, the taxi finally drives legally. It takes longer, and that is the right trade. The last slip is a trap of your own making: <b>pay it by the mile</b> pays for every square driven. The taxi earns more by driving around than by arriving, so it never drops the passenger off.</p>
+    <figure class="fig wide" id="fig4">
+      <div class="duo" id="endings"></div>
+      <figcaption><b>Fig. 4</b> The legal route on the left, and the route when the taxi is paid per square on the right. It circles until the clock runs out.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">05</p>
+    <h2>Why the reward is the hard part</h2>
+    <p>Nothing about the taxi was broken in any of those trips. It did exactly what the pay slip asked, as well as it could. What was wrong was the slip: it left out something we cared about, so the taxi never cared either.</p>
+    <p class="lesson"><b>The lesson:</b> The reward is the only thing the taxi wants: it does what you pay it for, not what you meant.</p>
+    <ul class="notes">
+      <li><b>It is a table, not a brain.</b> The taxi keeps one score per square, light phase and move. It only knows this map, and a new pay slip means training again.</li>
+      <li><b>The figures come from one recorded run</b> (seed <span id="seed"></span>), so they are the same on every visit.</li>
+    </ul>
+  </section>
+
+  <section class="step">
+    <h2>Your turn</h2>
+    <p>Write a pay slip that gets a legal trip, fast. Every fine you leave out is a shortcut the taxi will find.</p>
+    <a class="btn primary go" href="../"><span>Try it live</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+  </section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="../../../assets/story-page.js"></script>
+<script type="module" src="story.js"></script>
+</body>
+</html>
