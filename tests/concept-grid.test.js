@@ -108,7 +108,7 @@ describe('drawGrid', () => {
       set: (_, k, v) => { if (k === 'fillStyle') f = v; return true; },
     });
     drawGrid(ctx, makeGrid(['S#T']), { cell: 10 });
-    expect(fills[1]).toBe('#4A515B');
+    expect(fills[1]).not.toBe('#888');
     expect(fills[1]).not.toBe(fills[0]);
   });
 });

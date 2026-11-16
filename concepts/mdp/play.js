@@ -42,7 +42,7 @@ function nodes(at) {
 export function mountPlayground(root) {
   root.innerHTML = `
     <div class="stage-head"><span><b>Press Step and watch the weather move</b></span><span>Steps <b class="num" data-r="n">0</b></span><span>Reward <b class="num" data-r="tot">0</b></span></div>
-    <svg viewBox="0 0 400 270" role="img" data-r="map" style="display:block;width:100%;height:auto;max-height:340px" aria-label="Three weather states, sunny, cloudy and rainy, with the odds of moving between them on the arrows."></svg>
+    <svg viewBox="0 -16 400 286" role="img" data-r="map" style="display:block;width:100%;height:auto;max-height:340px" aria-label="Three weather states, sunny, cloudy and rainy, with the odds of moving between them on the arrows."></svg>
     <div class="readout" style="border-left:0;border-top:1px solid var(--stage-2)" aria-live="polite">
       <div><span class="who">Now</span><p data-r="now"></p><p data-r="path"></p></div>
       <div><span class="who">Odds from here</span><p data-r="odds"></p><p>Next state depends only on <b data-r="cur"></b>, not how it got here.</p></div>

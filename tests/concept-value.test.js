@@ -62,7 +62,7 @@ describe('moveTreasure', () => {
 
 describe('presets', () => {
   it('are near-sighted, far-sighted and move treasure', () => {
-    expect(presets.map(p => p.label)).toEqual(['Near-sighted', 'Far-sighted', 'Move treasure']);
+    expect(presets.map(p => p.label)).toEqual(['Near-sighted', 'Far-sighted', 'Move the treasure']);
     for (const p of presets) expect(p.text.length).toBeGreaterThan(10);
   });
   it('every preset yields finite values on a valid grid', () => {
@@ -73,8 +73,8 @@ describe('presets', () => {
   });
   it('the stated claims are true', () => {
     const near = valuesFor(GRID, stateOf(0).gamma), far = valuesFor(GRID, stateOf(1).gamma);
-    expect(near[0]).toBeLessThan(0.5);
-    expect(far[0]).toBeGreaterThan(5);
+    expect(near[0]).toBeLessThan(0);
+    expect(far[0]).toBeGreaterThan(7);
     const s = stateOf(2), g = gridOf(s);
     expect(g.cells[s.treasure[1]][s.treasure[0]]).toBe('T');
     expect(valuesFor(g, s.gamma)[at(g, 0, 2)]).toBeGreaterThan(valuesFor(GRID, s.gamma)[at(g, 0, 2)]);

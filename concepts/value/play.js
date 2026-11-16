@@ -5,7 +5,7 @@ import { valuesFor, shadeOf, moveTreasure } from './sim.js';
 export const presets = [
   { label: 'Near-sighted', text: 'Discount 0.3: only cells right beside the treasure look worth anything. The start cell is worth about nothing.', state: { gamma: 0.3 } },
   { label: 'Far-sighted', text: 'Discount 0.95: the treasure glows from far away, so even the start cell is worth over 7.', state: { gamma: 0.95 } },
-  { label: 'Move treasure', text: 'The treasure is now bottom-left: the glow moves with it, and the cells beside it gain value.', state: { gamma: 0.9, treasure: [0, 3] } },
+  { label: 'Move the treasure', text: 'The treasure is now bottom-left: the glow moves with it, and the cells beside it gain value.', state: { gamma: 0.9, treasure: [0, 3] } },
 ];
 
 const isFloor = (g, x, y) => !'TX#'.includes(g.cells[y][x]);
@@ -49,7 +49,7 @@ export function mountPlayground(root) {
     x.fillStyle = css('--signal', '#ff5a1f');
     for (let j = 0; j < grid.h; j++) for (let i = 0; i < grid.w; i++) {
       if (!isFloor(grid, i, j)) continue;
-      x.globalAlpha = 0.45 * shadeOf(v[j * grid.w + i], lo, hi);
+      x.globalAlpha = 0.3 * shadeOf(v[j * grid.w + i], lo, hi);
       x.fillRect(i * cell + 1, j * cell + 1, cell - 2, cell - 2);
     }
     x.globalAlpha = 1;
