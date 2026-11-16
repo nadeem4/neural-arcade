@@ -100,4 +100,15 @@ describe('drawGrid', () => {
     expect(() => drawGrid(ctx, GRID, { cell: 50 })).not.toThrow();
     expect(calls.length).toBeGreaterThan(0);
   });
+  it('fills walls with a dark token, not the pale line colour', () => {
+    const fills = [];
+    let f;
+    const ctx = new Proxy({}, {
+      get: (_, k) => (...a) => { if (k === 'fillRect') fills.push(f); },
+      set: (_, k, v) => { if (k === 'fillStyle') f = v; return true; },
+    });
+    drawGrid(ctx, makeGrid(['S#T']), { cell: 10 });
+    expect(fills[1]).toBe('#4A515B');
+    expect(fills[1]).not.toBe(fills[0]);
+  });
 });
