@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { convert, project, rasterise } from '../scripts/city/convert.js';
 
 const config = JSON.parse(
@@ -114,9 +114,14 @@ describe('convert', () => {
     const again = convert(osm, miniConfig());
     expect(JSON.stringify(again)).toBe(JSON.stringify(city));
     expect(Object.keys(city)).toEqual([
-      'id', 'name', 'bbox', 'cellM', 'cols', 'rows', 'kind', 'oneway', 'signals', 'pickup',
+      'id', 'name', 'bbox', 'cellM', 'lightPeriod', 'cols', 'rows', 'kind', 'oneway', 'signals', 'pickup',
       'dropoff', 'buildings', 'roads', 'parks', 'paths', 'water', 'landmarks', 'size',
     ]);
+  });
+
+  it('carries the config light period into the city', () => {
+    expect(city.lightPeriod).toBe(8);
+    expect(convert(osm, miniConfig({ lightPeriod: 6 })).lightPeriod).toBe(6);
   });
 
   it('sizes the grid from the bbox, one string of cols chars per row', () => {
@@ -264,13 +269,10 @@ describe('convert', () => {
 
 describe('committed chicago.json', () => {
   const file = new URL('../games/city/chicago.json', import.meta.url);
-  // Skipped (not failed) until RC0.5 generates games/city/chicago.json.
-  it.skipIf(!existsSync(file))(
-    'chicago.json is under 300 KB and parses (skipped until RC0.5 generates it)',
-    () => {
-      expect(statSync(file).size).toBeLessThan(300 * 1024);
-      const city = JSON.parse(readFileSync(file, 'utf8'));
-      expect(city.kind).toHaveLength(city.rows);
-    },
-  );
+  it('chicago.json is under 300 KB, parses and keeps the config light period', () => {
+    expect(statSync(file).size).toBeLessThan(300 * 1024);
+    const city = JSON.parse(readFileSync(file, 'utf8'));
+    expect(city.kind).toHaveLength(city.rows);
+    expect(city.lightPeriod).toBe(config.lightPeriod);
+  });
 });
