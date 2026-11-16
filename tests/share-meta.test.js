@@ -9,6 +9,7 @@ const CONCEPT_PAGES = [
   ['concepts/pid/index.html', ['concepts/pid/share.png']],
   ['concepts/agent/index.html', ['assets/share.png']],
   ['concepts/state-action-reward/index.html', ['assets/share.png']],
+  ['concepts/return/index.html', ['assets/share.png']],
 ];
 
 const pages = [
