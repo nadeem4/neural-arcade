@@ -29,7 +29,7 @@ describe('games data', () => {
   });
   it('each game links its explainer video', () => {
     const ids = Object.fromEntries(GAMES.map(g => [g.id, g.youtube]));
-    expect(ids).toMatchObject({ racer: 'tG00TxTB8ns', teach: 'qfzRiq3DoJo', runner: 'K1I7QxfrgIk', balance: 'ui3l3xSUZ4U' });
+    expect(ids).toMatchObject({ racer: 'tG00TxTB8ns', teach: 'qfzRiq3DoJo', runner: 'K1I7QxfrgIk', balance: 'ui3l3xSUZ4U', maze: '74Q8P1r7xeo' });
   });
   it('ids are unique and added parses as a date', () => {
     expect(new Set(GAMES.map(g => g.id)).size).toBe(GAMES.length);
@@ -220,9 +220,9 @@ describe('reinforcement learning and the maze', () => {
     expect(c.title).toBe('Reinforcement learning');
     expect(c.lead.length).toBeGreaterThan(0);
   });
-  it('maze entry has every field, no video yet, and its category exists', () => {
+  it('maze entry has every field, its video, and its category exists', () => {
     const g = gameById('maze');
-    expect(g).toMatchObject({ title: 'Treasure Maze', category: 'reinforcement-learning', path: 'games/maze/', writeup: 'games/maze/how-it-works/', shot: 'games/maze/shot.jpg', youtube: null, demo: null });
+    expect(g).toMatchObject({ title: 'Treasure Maze', category: 'reinforcement-learning', path: 'games/maze/', writeup: 'games/maze/how-it-works/', shot: 'games/maze/shot.jpg', youtube: '74Q8P1r7xeo', demo: null });
     for (const f of FIELDS) expect(g[f].length, f).toBeGreaterThan(0);
     expect(g.lesson).toMatch(/Teaches reward, value, the discount and exploring\.$/);
     expect(CATEGORIES.map(c => c.id)).toContain(g.category);

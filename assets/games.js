@@ -57,7 +57,7 @@ export const GAMES = [
       policy: 'The arrows on the grid are its policy: the best move it has found for each tile.',
       value: 'The lightness of each tile is its value, spreading back from the treasure as it learns.',
     },
-    added: '2026-11-13', shot: 'games/maze/shot.jpg', path: 'games/maze/', writeup: 'games/maze/how-it-works/', youtube: null, demo: null,
+    added: '2026-11-13', shot: 'games/maze/shot.jpg', path: 'games/maze/', writeup: 'games/maze/how-it-works/', youtube: '74Q8P1r7xeo', demo: null,
   },
 ];
 
