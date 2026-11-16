@@ -40,9 +40,9 @@ export const PRESETS = [
 export function checkPromise(id, a, legalTiles) {
   const clean = a.offTiles === 0 && a.redRuns === 0 && a.wrongWays === 0;
   switch (id) {
-    case 'speed': return a.arrived && a.offTiles > 0;
-    case 'walk': return a.offTiles === 0 && a.redRuns > 0;
-    case 'lights': return a.offTiles === 0 && a.redRuns === 0 && a.wrongWays > 0;
+    case 'speed': return a.arrived && a.parkTiles > 0;
+    case 'walk': return a.arrived && a.offTiles === 0 && a.redRuns > 0;
+    case 'lights': return a.arrived && a.offTiles === 0 && a.redRuns === 0 && a.wrongWays > 0;
     case 'legal': return a.arrived && clean;
     case 'mile': return !a.arrived && a.tiles > legalTiles;
     default: return false;

@@ -146,6 +146,7 @@ describe('analyzeRoute', () => {
     const a = analyzeRoute(W, route, all);
     expect(a).toMatchObject({ arrived: false, seconds: 4, tiles: 3, offTiles: 1, redRuns: 1, wrongWays: 0 });
     expect(a.reward).toBe(-4 - 10 - 20);
+    expect(a.parkTiles).toBe(0); // (2,1) is a footpath, not park
   });
   it('counts wrong-way moves and arrival', () => {
     const route = {
@@ -155,6 +156,7 @@ describe('analyzeRoute', () => {
     const a = analyzeRoute(W, route, all);
     expect(a.wrongWays).toBe(1);
     expect(a.offTiles).toBe(1); // back onto the park cell
+    expect(a.parkTiles).toBe(1);
     const win = analyzeRoute(W, { cells: [idx(3, 4), W.goal], actions: [E] }, all);
     expect(win).toMatchObject({ arrived: true, seconds: 1, tiles: 1 });
     expect(win.reward).toBe(99);
@@ -166,5 +168,12 @@ describe('analyzeRoute', () => {
     expect(a.seconds).toBe(4);
     expect(a.tiles).toBe(4);
     expect(a.reward).toBe(-4);
+  });
+});
+
+describe('loadWorld', () => {
+  it('throws on an unknown kind character', () => {
+    const bad = { ...city, kind: ['rrrrr', 'rbfrr', 'rrrqr', 'rrrrr', 'rrrrr'] };
+    expect(() => loadWorld(bad)).toThrow(/unknown kind/i);
   });
 });

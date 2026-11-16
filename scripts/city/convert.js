@@ -8,6 +8,8 @@
 // Grid: cell (col, row) has its centre at x = (col + 0.5) * cellM, y = (rows - 1 - row + 0.5) * cellM,
 // so row 0 is the north edge (north = row - 1, as the sim expects).
 // Cell kinds, highest priority first: b building, w water, x fence, r road, f footpath/plaza, p park.
+// Railway is not masked: the spec's sunken Grant Park rail cut is left drivable because no card route
+// reaches it (routes stay north of Monroe on the Millennium Park deck). Re-check if pickup/dropoff move.
 // Ground that no feature covers is 'f' (open pavement: drivable, but fined like a footpath).
 // Lines (roads, paths, fences) are rasterised at least MIN_HALF_CELLS * cellM either side of the line,
 // so a street is never thinner than a cell and stays connected on a four-move grid.
