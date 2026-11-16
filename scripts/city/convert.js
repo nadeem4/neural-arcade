@@ -304,6 +304,7 @@ export function convert(osm, config) {
     name: config.name,
     bbox,
     cellM,
+    lightPeriod: config.lightPeriod,
     cols,
     rows,
     kind,
