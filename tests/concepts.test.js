@@ -11,10 +11,11 @@ const DEFINITIONS = {
   value: ['Value', "A state's value is how much reward the agent can expect from there on, if it keeps following its policy."],
   mdp: ['Markov decision process', 'An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.'],
   pid: ['PID control', 'A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.'],
+  'reward-design': ['Reward design', 'Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.'],
 };
 
 describe('concepts data', () => {
-  it('has exactly the seven concepts with the exact words', () => {
+  it('has exactly the eight concepts with the exact words', () => {
     expect(CONCEPTS.map(c => c.id)).toEqual(Object.keys(DEFINITIONS));
     for (const c of CONCEPTS) {
       expect(c.title).toBe(DEFINITIONS[c.id][0]);
