@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { createAgent, trainEpisodes, greedyRoute } from '../games/city/train.js';
+import { goalReached } from '../games/city/words.js';
 import { EPISODES, HYPER, PRESETS, RANGES, GOAL_SECONDS, SEED, checkPromise } from '../games/city/presets.js';
 
 const world = loadWorld(JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8')));
@@ -26,7 +27,8 @@ describe('each try card shows the behaviour it promises (seed 1)', () => {
     const a = run(card('legal').rewards, SEED);
     expect(a.arrived).toBe(true);
     expect([a.offTiles, a.redRuns, a.wrongWays]).toEqual([0, 0, 0]);
-    expect(a.seconds).toBeLessThanOrEqual(GOAL_SECONDS);
+    expect(a.seconds).toBeLessThan(GOAL_SECONDS);
+    expect(goalReached(a)).toBe(true);
   }, 60000);
 });
 
