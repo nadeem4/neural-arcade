@@ -45,7 +45,7 @@ describe('usesHtml', () => {
   it('renders one chip per word, linking to the page or anchor', () => {
     const h = usesHtml({ uses: ['agent', 'mdp'] }, '../../');
     expect(h).toContain('href="../../concepts/agent/"');
-    expect(h).toContain('href="../../concepts/#mdp"');
+    expect(h).toContain('href="../../concepts/mdp/"');
     expect(h).toContain('>Agent and environment<');
     expect(h.match(/class="chip"/g)).toHaveLength(2);
   });

@@ -41,7 +41,7 @@ describe('relatedHtml', () => {
     const h = relatedHtml(pid, '../../');
     expect(h).toContain('Where it fits');
     expect(h).toContain('class="chip"');
-    expect(h).toContain('href="../../concepts/#mdp"');
+    expect(h).toContain('href="../../concepts/mdp/"');
   });
   it('wraps the chips in a .chips row', () => {
     expect(relatedHtml(pid, '')).toMatch(/<h2>Where it fits<\/h2><div class="chips"><a class="chip".*<\/a><\/div>$/);

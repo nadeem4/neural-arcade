@@ -70,7 +70,7 @@ export const CONCEPTS = [
   { id: 'return', title: 'Return and discount', youtube: null, page: true, related: ['state-action-reward', 'value'], definition: 'The return is all the reward still to come, with far-off reward counted for less by the discount.' },
   { id: 'policy', title: 'Policy', youtube: null, page: true, related: ['agent', 'value', 'pid'], definition: "A policy is the agent's rulebook: in each state, which action to take." },
   { id: 'value', title: 'Value', youtube: null, page: true, related: ['return', 'policy', 'mdp'], definition: "A state's value is how much reward the agent can expect from there on, if it keeps following its policy." },
-  { id: 'mdp', title: 'Markov decision process', youtube: null, related: ['value', 'state-action-reward'], definition: 'An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.' },
+  { id: 'mdp', title: 'Markov decision process', youtube: null, page: true, related: ['value', 'state-action-reward'], definition: 'An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.' },
   { id: 'pid', title: 'PID control', youtube: 'drtqgVse4jo', page: true, related: ['policy'], definition: 'A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.' },
 ];
 
