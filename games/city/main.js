@@ -8,6 +8,7 @@ import { buildReceipt, verdictOf } from './receipt.js';
 import { INFO, goalReached, shareLine } from './words.js';
 import { FIELDS, cardMatching, createSession, recordTry } from './payslip.js';
 import { webglAvailable, chooseStage } from './stage.js';
+import { createScene, isPhone } from './scene.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
@@ -177,8 +178,7 @@ async function start() {
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
     world = loadWorld(city);
-    // make3d arrives with the 3D stage; until then the message-only stage runs.
-    stage = chooseStage($('stage'), city, { webgl: webglAvailable(), make3d: null });
+    stage = chooseStage($('stage'), city, { webgl: webglAvailable(), make3d: (el, c) => createScene(el, c, { phone: isPhone() }) });
   } catch {
     say('The map did not load. Reload the page to try again.');
     return;
