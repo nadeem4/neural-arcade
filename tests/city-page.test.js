@@ -11,7 +11,7 @@ const mainPath = 'games/city/main.js';
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 const tag = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 
-const IDS = ['stage', 'stageNote', 'status', 'cards', 'slip', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset'];
+const IDS = ['stage', 'stageNote', 'status', 'cards', 'slip', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset', 'chase', 'labels'];
 
 describe('city page markup', () => {
   it('has every id main.js will look up', () => {
@@ -26,6 +26,11 @@ describe('city page markup', () => {
     expect(tag('verdict')).toContain('aria-live="polite"');
     expect(tag('receipt')).toContain('aria-live="off"');
     expect(html).toMatch(/<progress [^>]*id="progress"/);
+  });
+  it('has a chase cam toggle (aria-pressed off) and a landmark label layer hidden from screen readers', () => {
+    expect(tag('chase')).toMatch(/^<button /);
+    expect(tag('chase')).toContain('aria-pressed="false"');
+    expect(tag('labels')).toContain('aria-hidden="true"');
   });
   it('has one slider per pay slip line, with range and step from RANGES and the default value', () => {
     for (const f of FIELDS) {
