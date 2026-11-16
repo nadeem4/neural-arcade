@@ -9,6 +9,7 @@ const RELATED = {
   value: ['return', 'policy', 'mdp'],
   mdp: ['value', 'state-action-reward'],
   pid: ['policy'],
+  'reward-design': ['state-action-reward', 'return', 'policy'],
 };
 const game = id => GAMES.find(g => g.id === id);
 
@@ -40,9 +41,9 @@ describe('concept config', () => {
     expect(game('maze').uses).toHaveLength(5);
     expect(game('runner').uses).toHaveLength(3);
   });
-  it('pid has the video and the concept pages are all seven', () => {
+  it('pid has the video and the concept pages are all eight', () => {
     expect(conceptById('pid').youtube).toBe('drtqgVse4jo');
-    expect(CONCEPTS.map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid']);
+    expect(CONCEPTS.map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design']);
     for (const c of CONCEPTS) expect(c, c.id).not.toHaveProperty('page');
   });
   it('conceptHref always goes to the concept page', () => {

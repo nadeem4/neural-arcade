@@ -87,6 +87,7 @@ export const CONCEPTS = [
   { id: 'value', title: 'Value', youtube: null, related: ['return', 'policy', 'mdp'], definition: "A state's value is how much reward the agent can expect from there on, if it keeps following its policy." },
   { id: 'mdp', title: 'Markov decision process', youtube: null, related: ['value', 'state-action-reward'], definition: 'An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.' },
   { id: 'pid', title: 'PID control', youtube: 'drtqgVse4jo', related: ['policy'], definition: 'A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.' },
+  { id: 'reward-design', title: 'Reward design', youtube: null, related: ['state-action-reward', 'return', 'policy'], definition: 'Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.' },
 ];
 
 export const conceptById = id => CONCEPTS.find(c => c.id === id);

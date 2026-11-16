@@ -13,6 +13,7 @@ const CONCEPT_PAGES = [
   ['concepts/policy/index.html', ['assets/share.png']],
   ['concepts/value/index.html', ['assets/share.png']],
   ['concepts/mdp/index.html', ['assets/share.png']],
+  ['concepts/reward-design/index.html', ['concepts/reward-design/share.png']],
 ];
 
 const pages = [
