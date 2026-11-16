@@ -25,11 +25,12 @@ export const GAMES = [
     lesson: 'A hero learns a platformer level from points alone, and finds loopholes when the points are wrong. Teaches reward, exploration, policy gradients and reward hacking.',
     learnsBy: 'Reward, policy gradients',
     goesWrongWhen: 'It learns what you reward, not what you meant',
-    uses: ['agent', 'state-action-reward', 'policy'],
+    uses: ['agent', 'state-action-reward', 'policy', 'reward-design'],
     where: {
       agent: 'The hero is the agent and the platformer level is its environment.',
       'state-action-reward': 'The hero sees the level around it, picks one of four moves, and is paid points for coins and the flag.',
       policy: 'Its brain is the policy: it turns what the hero sees into a choice among the four moves, and the points reshape it.',
+      'reward-design': 'Pay more for coins than for the flag and the hero farms the coin block above the start for about 50 coins and never finishes: the best plan its points allow.',
     },
     added: '2026-10-24', shot: 'games/runner/shot.jpg', path: 'games/runner/', writeup: 'games/runner/how-it-works/', youtube: 'K1I7QxfrgIk',
     demo: { net: '12 inputs, 8 hidden, 4 moves', learns: 'Learning from points only', panel: 'Its four moves, right now', alt: 'A trained hero playing the Coin Runner level on a loop' },

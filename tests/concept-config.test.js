@@ -39,7 +39,8 @@ describe('concept config', () => {
       for (const u of g.uses) expect(g.where[u]?.length, `${id}.${u}`).toBeGreaterThan(0);
     }
     expect(game('maze').uses).toHaveLength(5);
-    expect(game('runner').uses).toHaveLength(3);
+    expect(game('runner').uses).toHaveLength(4);
+    expect(game('runner').uses).toContain('reward-design');
   });
   it('pid has the video and the concept pages are all eight', () => {
     expect(conceptById('pid').youtube).toBe('drtqgVse4jo');
