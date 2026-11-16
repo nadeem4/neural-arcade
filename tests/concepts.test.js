@@ -43,9 +43,9 @@ describe('usesHtml', () => {
     expect(usesHtml({ id: 'x', uses: [] }, '../../')).toBe('');
   });
   it('renders one chip per word, linking to the page or anchor', () => {
-    const h = usesHtml({ uses: ['agent', 'value'] }, '../../');
+    const h = usesHtml({ uses: ['agent', 'mdp'] }, '../../');
     expect(h).toContain('href="../../concepts/agent/"');
-    expect(h).toContain('href="../../concepts/#value"');
+    expect(h).toContain('href="../../concepts/#mdp"');
     expect(h).toContain('>Agent and environment<');
     expect(h.match(/class="chip"/g)).toHaveLength(2);
   });
@@ -133,7 +133,7 @@ describe('mountGamePage words row', () => {
   it('un-hides #uses and fills #usesChips with links to the concept anchors', async () => {
     const els = await mount(['uses', 'usesChips']);
     expect(els.uses.hidden).toBe(false);
-    for (const id of GAMES.find(g => g.id === 'maze').uses) expect(els.usesChips.innerHTML).toContain(`href="../../concepts/${['agent', 'state-action-reward', 'return', 'policy'].includes(id) ? id + '/' : '#' + id}"`);
+    for (const id of GAMES.find(g => g.id === 'maze').uses) expect(els.usesChips.innerHTML).toContain(`href="../../concepts/${['agent', 'state-action-reward', 'return', 'policy', 'value'].includes(id) ? id + '/' : '#' + id}"`);
   });
   it('a page without the #uses section still sets up the rest', async () => {
     const els = await mount(['crumb']);

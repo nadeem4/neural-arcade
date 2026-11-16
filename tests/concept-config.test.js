@@ -43,10 +43,10 @@ describe('concept config', () => {
   it('pid has the video and the concept pages are pid, agent, state-action-reward, return and policy', () => {
     expect(conceptById('pid').youtube).toBe('drtqgVse4jo');
     expect(conceptById('pid').page).toBe(true);
-    expect(CONCEPTS.filter(c => c.page).map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'pid']);
+    expect(CONCEPTS.filter(c => c.page).map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'pid']);
   });
   it('conceptHref goes to the page when there is one, else the anchor', () => {
     expect(conceptHref(conceptById('pid'), '../../')).toBe('../../concepts/pid/');
-    expect(conceptHref(conceptById('value'), '../../')).toBe('../../concepts/#value');
+    expect(conceptHref(conceptById('mdp'), '../../')).toBe('../../concepts/#mdp');
   });
 });

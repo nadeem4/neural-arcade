@@ -80,5 +80,6 @@
 .rbar .fill { width: 100%; min-height: 2px; background: var(--signal); border-radius: 4px; }
 .rbar .when { font-size: 14px; color: var(--stage-dim); }
 .dials.one { grid-template-columns: 1fr; }
+.views.one { grid-template-columns: 1fr; }
 .stage-foot .sum { font-size: 16px; color: var(--stage-ink); }
 @media (max-width: 760px) { .bars { gap: 4px; padding-inline: 12px; } .rbar .track { height: 120px; } }
