@@ -11,14 +11,14 @@ const mainPath = 'games/city/main.js';
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 const tag = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 
-const IDS = ['stage', 'stageNote', 'cards', 'slip', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset'];
+const IDS = ['stage', 'stageNote', 'status', 'cards', 'slip', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset'];
 
 describe('city page markup', () => {
   it('has every id main.js will look up', () => {
     const ids = [...IDS, ...FIELDS.flatMap(f => [f.key, f.key + 'Out'])];
     for (const id of ids) expect(html, id).toContain(`id="${id}"`);
-    const main = read(mainPath); // 'slip' is only a section anchor for the page, main.js never needs it
-    for (const id of IDS.filter(i => i !== 'slip')) expect(main, id).toContain(`$('${id}')`);
+    const main = read(mainPath); // 'slip' is only a section anchor; #stageNote belongs to the stage, main.js never touches it
+    for (const id of IDS.filter(i => i !== 'slip' && i !== 'stageNote')) expect(main, id).toContain(`$('${id}')`);
     expect(main).toContain('$(f.key)'); // the sliders are looked up through FIELDS
     expect(main).toContain("$(f.key + 'Out')");
   });
@@ -38,6 +38,11 @@ describe('city page markup', () => {
       expect(tag(f.key + 'Out'), f.key).toMatch(/^<output /);
       expect(html, f.key).toContain(`>${f.label}</label>`);
     }
+  });
+  it('hides every link to the write-up until RC6 adds it, and keeps the goal and status announced', () => {
+    for (const id of ['howTab', 'whyLink', 'how']) expect(tag(id), id).toMatch(/\shidden[\s>]/);
+    expect(tag('goal')).toContain('aria-live="polite"');
+    expect(tag('status')).toContain('aria-live="polite"');
   });
   it('keeps the share line hidden until success', () => {
     expect(tag('share')).toMatch(/\bhidden\b/);

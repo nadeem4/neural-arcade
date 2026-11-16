@@ -26,6 +26,11 @@ describe('stage', () => {
     const mine = { ready: true };
     expect(chooseStage(el, { a: 1 }, { webgl: true, make3d: (e, c) => (e === el && c.a === 1 ? mine : null) })).toBe(mine);
   });
+  it('chooseStage says the 3D map is coming, not that WebGL is missing, when there is no make3d yet', () => {
+    const el = fakeEl();
+    chooseStage(el, {}, { webgl: true, make3d: null });
+    expect(el.note.textContent).toBe('The 3D map arrives in a later update. The pay slip and receipt work now.');
+  });
   it("the fallback stage's showRoute still calls onDone", () => {
     const stage = createFallbackStage(fakeEl(), 'x');
     let done = 0;

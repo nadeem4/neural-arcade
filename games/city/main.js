@@ -13,25 +13,37 @@ const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
 
 let world = null, stage = null, session = createSession(), rewards = { ...PRESETS[0].rewards };
-let worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0;
+let worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
+const pending = new Map(); // message id -> { resolve, reject, onProgress }
+const say = text => { $('status').textContent = text; };
 
 // ---------- Training: Web Worker, else the main thread in chunks ----------
-const killWorker = () => { if (worker) worker.terminate(); worker = null; };
+function settleAll(value) { for (const p of pending.values()) p.resolve(value); pending.clear(); }
+function killWorker() { if (worker) worker.terminate(); worker = null; settleAll(null); }
 
 function viaWorker(req, onProgress) {
   return new Promise((resolve, reject) => {
     if (!worker) {
-      try { worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }); } catch (e) { reject(e); return; }
+      try {
+        worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
+      } catch (e) { reject(e); return; }
+      worker.onmessage = ({ data }) => {
+        const p = pending.get(data.id);
+        if (!p) return;
+        if (data.type === 'progress') p.onProgress(data);
+        else if (data.type === 'done') { pending.delete(data.id); p.resolve(data); }
+        else if (data.type === 'error') { pending.delete(data.id); p.reject(new Error(data.message)); }
+      };
+      worker.onerror = e => {
+        const err = new Error(e.message || 'worker failed to load');
+        for (const p of pending.values()) p.reject(err);
+        pending.clear();
+      };
     }
-    const w = worker, id = ++msgId;
-    w.onmessage = ({ data }) => {
-      if (data.id !== id) return;
-      if (data.type === 'progress') onProgress(data);
-      else if (data.type === 'done') resolve(data);
-      else if (data.type === 'error') reject(new Error(data.message));
-    };
-    w.onerror = e => reject(new Error(e.message || 'worker failed to load'));
-    w.postMessage({ type: 'train', id, ...req });
+    const id = ++msgId;
+    for (const [old, p] of pending) { p.resolve(null); pending.delete(old); } // superseded runs settle with null
+    pending.set(id, { resolve, reject, onProgress });
+    worker.postMessage({ type: 'train', id, ...req });
   });
 }
 
@@ -41,7 +53,7 @@ async function runTrain(req, onProgress) {
     try { return await viaWorker(req, onProgress); } catch {
       if (mine !== latest) return null;
       workerOk = false; killWorker();
-      $('stageNote').textContent = 'Training in the background did not start, so it runs here instead. It may take a few seconds.';
+      say('Training in the background did not start, so it runs here instead. It may take a few seconds.');
     }
   }
   return trainInChunks(world, req, onProgress, 50, () => mine !== latest);
@@ -73,7 +85,8 @@ function showGoal(a) {
   const goal = $('goal'), share = $('share');
   if (goalReached(a)) {
     goal.textContent = `Fixed. A legal trip in ${a.seconds} s, under ${GOAL_SECONDS} s.`;
-    $('shareText').textContent = shareLine(session.tries, a);
+    shareText = shareLine(session.tries, a);
+    $('shareText').textContent = shareText;
     share.hidden = false;
   } else {
     goal.textContent = `Fix the taxi: a legal trip under ${GOAL_SECONDS} s. Tries so far: ${session.tries}.` +
@@ -85,8 +98,8 @@ function showGoal(a) {
 // ---------- One training run ----------
 async function train(req) {
   const progress = $('progress');
-  progress.value = 0; $('train').dataset.stale = 'false';
-  if (workerOk) $('stageNote').textContent = '';
+  if (!stage) return;
+  progress.value = 0; $('train').dataset.stale = 'false'; say('');
   stage.clearRoute();
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
@@ -101,7 +114,7 @@ async function train(req) {
     showGoal(res.analysis);
   } catch {
     progress.value = 0;
-    $('stageNote').textContent = 'Training failed. Reload the page and try again.';
+    say('Training failed. Reload the page and try again.');
   }
 }
 function pick(id) {
@@ -129,11 +142,11 @@ function build() {
     jobs.cancel(); latest++; killWorker();
     session = createSession();
     for (const id of ['receipt', 'verdict', 'goal']) $(id).textContent = '';
-    $('share').hidden = true; $('stageNote').textContent = '';
+    $('share').hidden = true; say('');
     pick(PRESETS[0].id);
   });
   $('copy').addEventListener('click', async () => {
-    const text = $('shareText').textContent;
+    const text = shareText;
     try {
       await navigator.clipboard.writeText(text);
       $('copy').textContent = 'Copied';
@@ -152,20 +165,25 @@ function build() {
   }));
 }
 
+const controls = () => [...$('cards').children, ...FIELDS.map(f => $(f.key)), $('train'), $('reset')];
+const enable = on => controls().forEach(c => { c.disabled = !on; });
+
 async function start() {
   mountSite('../../');
   $('crumb').innerHTML = '<a href="../">Games</a> / Reward City';
   build();
   showSlip();
+  enable(false);
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
     world = loadWorld(city);
     // make3d arrives with the 3D stage; until then the message-only stage runs.
     stage = chooseStage($('stage'), city, { webgl: webglAvailable(), make3d: null });
   } catch {
-    $('stageNote').textContent = 'The map did not load. Reload the page to try again.';
+    say('The map did not load. Reload the page to try again.');
     return;
   }
+  enable(true);
   pick(PRESETS[0].id);
 }
 start();
