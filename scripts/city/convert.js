@@ -73,6 +73,7 @@ function eachCellNear(a, b, pad, cols, rows, cellM, fn) {
 }
 
 const halfWidth = (w, cellM) => Math.max(w / 2, MIN_HALF_CELLS * cellM);
+const FENCE_HALF_CELLS = 0.5; // fences are thin: about the cells the line passes through
 
 // features: { parks, plazas, buildings, water: rings; paths, roads: {pts, w}; fences: {pts} } (all optional).
 // Returns one string per row, one char per cell, by cell-centre sampling in priority order.
@@ -87,8 +88,7 @@ export function rasterise(features, cols, rows, cellM) {
       if (pointInRing(cx, cy, ring)) grid[r][c] = ch;
     });
   };
-  const paintLine = (ch, pts, w) => {
-    const half = halfWidth(w, cellM);
+  const paintLine = (ch, pts, half) => {
     for (let i = 0; i + 1 < pts.length; i++) {
       eachCellNear(pts[i], pts[i + 1], half, cols, rows, cellM, (c, r, cx, cy) => {
         if (distToSegment(cx, cy, pts[i], pts[i + 1]) <= half) grid[r][c] = ch;
@@ -97,9 +97,9 @@ export function rasterise(features, cols, rows, cellM) {
   };
   for (const ring of features.parks ?? []) paintArea('p', ring);
   for (const ring of features.plazas ?? []) paintArea('f', ring);
-  for (const p of features.paths ?? []) paintLine('f', p.pts, p.w);
-  for (const p of features.roads ?? []) paintLine('r', p.pts, p.w);
-  for (const p of features.fences ?? []) paintLine('x', p.pts, 0);
+  for (const p of features.paths ?? []) paintLine('f', p.pts, halfWidth(p.w, cellM));
+  for (const p of features.roads ?? []) paintLine('r', p.pts, halfWidth(p.w, cellM));
+  for (const p of features.fences ?? []) paintLine('x', p.pts, FENCE_HALF_CELLS * cellM);
   for (const ring of features.water ?? []) paintArea('w', ring);
   for (const ring of features.buildings ?? []) paintArea('b', ring);
   return grid.map((row) => row.join(''));
@@ -144,10 +144,19 @@ function roadWidth(tags, cls) {
   return lanes > 0 ? lanes * LANE_WIDTH : ROAD_WIDTH[cls];
 }
 
+// Only street level is mapped: tunnels, negative layers and indoor ways are skipped (bridges stay).
+function underground(tags) {
+  return (tags.tunnel && tags.tunnel !== 'no') || parseInt(tags.layer, 10) < 0 || !!tags.indoor;
+}
+
 function oneWayOf(tags) {
   if (tags.oneway === '-1') return -1;
   return ['yes', 'true', '1'].includes(tags.oneway) ? 1 : 0;
 }
+
+const lineLength = (pts) => pts.reduce((s, p, i) => (i ? s + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0), 0);
+const ringArea = (ring) =>
+  Math.abs(ring.reduce((s, p, i) => s + p[0] * ring[(i + 1) % ring.length][1] - ring[(i + 1) % ring.length][0] * p[1], 0)) / 2;
 
 function closeRing(pts) {
   const first = pts[0];
@@ -185,7 +194,7 @@ export function convert(osm, config) {
     return pts.length >= 2 && touchesMap(pts) ? pts : null;
   };
 
-  const buildings = [], roads = [], paths = [], parks = [], water = [], plazas = [], fences = [];
+  const buildings = [], roads = [], paths = [], sidewalks = [], parks = [], water = [], plazas = [], fences = [];
   const signalPts = [];
   for (const el of osm.elements) {
     const t = el.tags ?? {};
@@ -200,6 +209,7 @@ export function convert(osm, config) {
       }
     } else if (el.geometry) {
       const hw = (t.highway ?? '').replace('_link', '');
+      if (!t.building && underground(t)) continue;
       if (t.building) {
         const ring = ringOf(el.geometry);
         if (ring) buildings.push({ ring, h: buildingHeight(t) });
@@ -211,7 +221,10 @@ export function convert(osm, config) {
         if (ring) plazas.push(ring);
       } else if (PATH_WIDTH[hw]) {
         const pts = lineOf(el.geometry);
-        if (pts) paths.push({ pts, w: PATH_WIDTH[hw] });
+        if (!pts) continue;
+        // sidewalks and crossings shape the grid but are not emitted (keeps chicago.json small)
+        if (t.footway === 'sidewalk' || t.footway === 'crossing') sidewalks.push({ pts, w: PATH_WIDTH[hw] });
+        else paths.push({ pts, w: PATH_WIDTH[hw] });
       } else if (t['area:highway'] === 'footway') {
         const ring = ringOf(el.geometry);
         if (ring) plazas.push(ring);
@@ -229,7 +242,7 @@ export function convert(osm, config) {
   }
 
   const kind = rasterise(
-    { parks, plazas, paths, roads, fences, water, buildings: buildings.map((b) => b.ring) },
+    { parks, plazas, paths: [...paths, ...sidewalks], roads, fences, water, buildings: buildings.map((b) => b.ring) },
     cols, rows, cellM,
   );
   const oneway = onewayRows(roads, kind, cols, rows, cellM);
@@ -282,6 +295,10 @@ export function convert(osm, config) {
     if (onMap(x, y)) landmarks.push({ name, x, y });
   }
 
+  // Features smaller than one cell still shaped the grid above but are not emitted (keeps chicago.json small).
+  const emitPaths = paths.filter((p) => lineLength(p.pts) >= cellM);
+  const emitParks = parks.filter((r) => ringArea(r) >= cellM * cellM);
+
   return {
     id: config.id,
     name: config.name,
@@ -296,8 +313,8 @@ export function convert(osm, config) {
     dropoff,
     buildings,
     roads,
-    parks,
-    paths,
+    parks: emitParks,
+    paths: emitPaths,
     water,
     landmarks,
     size: [width, height],

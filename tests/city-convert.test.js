@@ -177,6 +177,32 @@ describe('convert', () => {
     expect(city.water).toHaveLength(1);
   });
 
+  it('ignores tunnels and negative layers: no cells, no emitted roads', () => {
+    // fixture: tunnel=yes road at y 230 (row 0, cols 5..11) and a layer=-1 service road at y 210 (row 2, cols 13..19)
+    for (let c = 5; c <= 11; c++) expect(kindAt(city, c, 0)).not.toBe('r');
+    for (let c = 13; c <= 19; c++) expect(kindAt(city, c, 2)).not.toBe('r');
+    expect(city.roads).toHaveLength(5);
+  });
+
+  it('thin fences leave a parallel road beside them intact', () => {
+    // fixture: fence at y 74, x 70..100, 8 m north of road A (row 14)
+    expect(kindAt(city, 6, 13)).toBe('x');
+    expect(kindAt(city, 6, 14)).toBe('r');
+    expect(kindAt(city, 7, 14)).toBe('r');
+  });
+
+  it('sidewalks are rasterised but not emitted as paths', () => {
+    // fixture: footway=sidewalk at y 102 over the park, cells (8..9, 11)
+    expect(kindAt(city, 9, 11)).toBe('f');
+    expect(city.paths).toHaveLength(1);
+  });
+
+  it('does not emit parks or paths smaller than one cell (they still shape the grid)', () => {
+    // fixture: an 8 m square park and a 6 m footway, both under the 12 m cell
+    expect(city.parks).toHaveLength(1);
+    expect(city.paths).toHaveLength(1);
+  });
+
   it('one-way road cells carry their direction, including oneway=-1 reversed', () => {
     expect(city.oneway[4][8]).toBe('E'); // road C, oneway=yes drawn west to east
     expect(city.oneway[9][4]).toBe('S'); // road D, oneway=-1 drawn south to north
