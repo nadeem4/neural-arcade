@@ -26,6 +26,7 @@ describe('Reward City listing', () => {
   });
   it('share.png is 1280x720', () => {
     const b = readFileSync(file('games/city/share.png'));
+    expect(b.toString('ascii', 12, 16)).toBe('IHDR');
     expect(b.readUInt32BE(16)).toBe(1280);
     expect(b.readUInt32BE(20)).toBe(720);
   });

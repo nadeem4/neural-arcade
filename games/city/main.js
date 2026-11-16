@@ -1,6 +1,6 @@
 // Reward City page: pay slip sliders, Try cards, live training, receipt, verdict and the goal.
-// The header and footer are mounted by assets/game-page.js; mountSite here also wires the theme lamp.
-import { mountSite } from '../../assets/site.js';
+// The header and footer are mounted by assets/game-page.js; the lamp is wired here.
+import { wireLamp } from '../../assets/theme.js';
 import { PRESETS, SEED, EPISODES, GOAL_SECONDS } from './presets.js';
 import { loadWorld } from './sim.js';
 import { createJobs, trainInChunks } from './jobs.js';
@@ -183,7 +183,7 @@ function setupChase() {
 }
 
 async function start() {
-  mountSite('../../');
+  wireLamp($('lamp'), () => {});
   build();
   showSlip();
   enable(false);

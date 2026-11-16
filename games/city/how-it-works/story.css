@@ -5,6 +5,8 @@
 .minis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 16px; }
 .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+.mini { width: 100%; max-width: 280px; margin: 0 auto; }
+.mini .map { aspect-ratio: auto; }
 .mini-cap { margin: 8px 0 0 !important; font-size: 14px !important; line-height: 1.4; color: var(--ink-2); }
 .mini-cap b { color: var(--ink); }
 @media (max-width: 640px) {
@@ -25,4 +27,5 @@
 
 .credit { font-size: 14px !important; color: var(--ink-2) !important; margin: 0 !important; }
 .credit a { color: var(--ink); }
-.lesson { padding: 14px 16px; border-left: 4px solid var(--signal-text); background: var(--surface); }
+.lesson { font-weight: 700; }
+.lesson small { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
