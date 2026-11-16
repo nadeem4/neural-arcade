@@ -84,7 +84,8 @@ const ARROWS = ['↑', '↓', '←', '→'];
 export function drawGrid(ctx, grid, opts = {}) {
   const { cell = 48, agent, values, policy, hover } = opts;
   const ink = css('--ink', '#222'), line = css('--line', '#888'), bg = css('--surface', '#fff');
-  const good = css('--good', '#2a9d4b'), bad = css('--bad', '#d64545'), accent = css('--accent', '#3b6fd4');
+  // no green token in studio.css: treasure keeps a fixed green that reads on both themes
+  const good = '#2a9d4b', bad = css('--red', '#e5533f'), accent = css('--signal', '#ff5a1f');
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   for (let y = 0; y < grid.h; y++) for (let x = 0; x < grid.w; x++) {

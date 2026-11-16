@@ -5,7 +5,10 @@ import { GAMES } from '../assets/games.js';
 const SITE = 'https://arcade.codewithnk.com/';
 const root = new URL('../', import.meta.url);
 // concept pages with their own page, extended each slice
-const CONCEPT_PAGES = [['concepts/pid/index.html', ['concepts/pid/share.png']]];
+const CONCEPT_PAGES = [
+  ['concepts/pid/index.html', ['concepts/pid/share.png']],
+  ['concepts/agent/index.html', ['assets/share.png']],
+];
 
 const pages = [
   ['index.html', ['assets/share.png']],

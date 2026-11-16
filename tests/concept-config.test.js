@@ -40,13 +40,13 @@ describe('concept config', () => {
     expect(game('maze').uses).toHaveLength(5);
     expect(game('runner').uses).toHaveLength(3);
   });
-  it('pid has the video and the only concept page', () => {
+  it('pid has the video and the concept pages are pid and agent', () => {
     expect(conceptById('pid').youtube).toBe('drtqgVse4jo');
     expect(conceptById('pid').page).toBe(true);
-    expect(CONCEPTS.filter(c => c.page).map(c => c.id)).toEqual(['pid']);
+    expect(CONCEPTS.filter(c => c.page).map(c => c.id)).toEqual(['agent', 'pid']);
   });
   it('conceptHref goes to the page when there is one, else the anchor', () => {
     expect(conceptHref(conceptById('pid'), '../../')).toBe('../../concepts/pid/');
-    expect(conceptHref(conceptById('agent'), '../../')).toBe('../../concepts/#agent');
+    expect(conceptHref(conceptById('policy'), '../../')).toBe('../../concepts/#policy');
   });
 });
