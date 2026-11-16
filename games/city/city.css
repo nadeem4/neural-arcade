@@ -48,6 +48,3 @@ input[type="range"]:focus-visible, button:focus-visible { outline: 2px solid var
   .receipt, .receipt .row { font-size: 13px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  #train { transition: none; }
-}

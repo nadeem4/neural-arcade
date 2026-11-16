@@ -17,15 +17,14 @@ describe('city page markup', () => {
   it('has every id main.js will look up', () => {
     const ids = [...IDS, ...FIELDS.flatMap(f => [f.key, f.key + 'Out'])];
     for (const id of ids) expect(html, id).toContain(`id="${id}"`);
-    // main.js arrives in the next task; once it exists it must look each id up.
-    if (existsSync(new URL('../' + mainPath, import.meta.url))) {
-      const main = read(mainPath);
-      for (const id of ids) expect(main, id).toContain(`$('${id}')`);
-    }
+    const main = read(mainPath); // 'slip' is only a section anchor for the page, main.js never needs it
+    for (const id of IDS.filter(i => i !== 'slip')) expect(main, id).toContain(`$('${id}')`);
+    expect(main).toContain('$(f.key)'); // the sliders are looked up through FIELDS
+    expect(main).toContain("$(f.key + 'Out')");
   });
-  it('announces the receipt and the verdict politely, and shows progress with a progress element', () => {
+  it('announces only the verdict, so the receipt is aria-live off to avoid a double announcement, and shows progress with a progress element', () => {
     expect(tag('verdict')).toContain('aria-live="polite"');
-    expect(tag('receipt')).toContain('aria-live="polite"');
+    expect(tag('receipt')).toContain('aria-live="off"');
     expect(html).toMatch(/<progress [^>]*id="progress"/);
   });
   it('has one slider per pay slip line, with range and step from RANGES and the default value', () => {
