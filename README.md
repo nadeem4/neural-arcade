@@ -79,7 +79,7 @@ An AI taxi learns by tabular Q-learning to cross real Chicago Loop streets; the 
 - **The map:** real OpenStreetMap data, converted once offline and saved as `games/city/chicago.json`; the site never calls OpenStreetMap. `scripts/city/convert.js` rasterises the export into a 12 m grid (building, water, fence, road, footpath or plaza, park; uncovered ground counts as footpath), with traffic-light cells and one-way directions, and keeps the vector geometry for the 3D view. Only street level is mapped. The bounding box, cell size, pickup, drop-off, landmarks and light period live in `scripts/city/chicago.config.json`. The map is never hand-edited.
 - **Making the map:** the raw Overpass export (about 4 MB) is git-ignored, so fetch it on a fresh clone, then convert:
   ```
-  node scripts/city/fetch-overpass.mjs
+  node scripts/city/fetch-overpass.mjs scripts/city/chicago.config.json scripts/city/data/chicago-overpass.json
   node scripts/city/convert.js scripts/city/chicago.config.json games/city/chicago.json
   ```
 - **Tuned values:** `games/city/presets.js` holds the seed, episodes, step cap, Q-learning settings, pay-slip defaults and slider ranges, the five Try cards and the goal time. `node scripts/city/spike.mjs` trains every card for seeds 1, 2 and 3 and checks each shows its promise within 1.5 s of training (pay it for speed crosses the park; fine the footpaths runs a red; fine red lights too goes the wrong way; fine everything drives legally; pay it by the mile never delivers).
