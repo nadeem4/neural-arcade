@@ -23,7 +23,9 @@ export function loadWorld(city, period) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const i = r * cols + c;
-      kind[i] = KIND[city.kind[r][c]];
+      const k = KIND[city.kind[r][c]];
+      if (k === undefined) throw new Error(`unknown kind '${city.kind[r][c]}' at col ${c}, row ${r}`);
+      kind[i] = k;
       const o = city.oneway[r][c];
       if (o in DIR) oneway[i] = DIR[o];
     }
@@ -71,7 +73,8 @@ export function stepWorld(world, rewards, cell, tick, action) {
 
 // Replays a route ({ cells, actions }, one action per second) and totals what happened.
 export function analyzeRoute(world, route, rewards) {
-  const out = { arrived: false, seconds: 0, tiles: 0, offTiles: 0, redRuns: 0, wrongWays: 0, reward: 0 };
+  const { kind } = world;
+  const out = { arrived: false, seconds: 0, tiles: 0, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, reward: 0 };
   let cell = route.cells[0];
   for (let t = 0; t < route.actions.length; t++) {
     const s = stepWorld(world, rewards, cell, t, route.actions[t]);
@@ -80,6 +83,7 @@ export function analyzeRoute(world, route, rewards) {
     out.reward += s.r;
     if (s.moved) out.tiles++;
     if (s.off) out.offTiles++;
+    if (s.moved && kind[s.cell2] === PARK) out.parkTiles++;
     if (s.red) out.redRuns++;
     if (s.wrong) out.wrongWays++;
     if (s.done) { out.arrived = true; break; }

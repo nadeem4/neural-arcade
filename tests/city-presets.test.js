@@ -38,22 +38,25 @@ describe('presets', () => {
 });
 
 describe('checkPromise', () => {
-  const run = (o) => ({ arrived: true, seconds: 50, tiles: 50, offTiles: 0, redRuns: 0, wrongWays: 0, ...o });
+  const run = (o) => ({ arrived: true, seconds: 50, tiles: 50, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, ...o });
 
   it('speed: arrives across the park', () => {
-    expect(checkPromise('speed', run({ offTiles: 3 }), 60)).toBe(true);
+    expect(checkPromise('speed', run({ offTiles: 3, parkTiles: 3 }), 60)).toBe(true);
     expect(checkPromise('speed', run({}), 60)).toBe(false);
-    expect(checkPromise('speed', run({ offTiles: 3, arrived: false }), 60)).toBe(false);
+    expect(checkPromise('speed', run({ offTiles: 3, parkTiles: 0 }), 60)).toBe(false); // footpath only
+    expect(checkPromise('speed', run({ offTiles: 3, parkTiles: 3, arrived: false }), 60)).toBe(false);
   });
 
   it('walk: stays on the road and runs a red', () => {
     expect(checkPromise('walk', run({ redRuns: 1 }), 60)).toBe(true);
     expect(checkPromise('walk', run({ redRuns: 1, offTiles: 1 }), 60)).toBe(false);
+    expect(checkPromise('walk', run({ redRuns: 1, arrived: false }), 60)).toBe(false);
   });
 
   it('lights: no park, no red, goes the wrong way', () => {
     expect(checkPromise('lights', run({ wrongWays: 2 }), 60)).toBe(true);
     expect(checkPromise('lights', run({ wrongWays: 2, redRuns: 1 }), 60)).toBe(false);
+    expect(checkPromise('lights', run({ wrongWays: 2, arrived: false }), 60)).toBe(false);
   });
 
   it('legal: arrives with no fines', () => {
