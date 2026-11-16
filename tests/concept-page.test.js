@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-import { conceptById } from '../assets/games.js';
+import { conceptById, CONCEPTS } from '../assets/games.js';
 import { videoHtml, gamesHtml, relatedHtml, triesHtml, mountConceptPage, wireTries } from '../assets/concept-page.js';
 
 const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['mdp'] };
@@ -139,4 +139,20 @@ describe('pid page file', () => {
       for (const a of ['alt', 'width', 'height']) expect(img).toMatch(new RegExp(` ${a}="[^"]+"`));
     });
   }
+});
+
+describe('every concept page', () => {
+  const read = (id, f) => readFileSync(new URL(`../concepts/${id}/${f}`, import.meta.url), 'utf8');
+  it('every concept has a page file with the shared sections', () => {
+    for (const c of CONCEPTS) {
+      const html = read(c.id, 'index.html');
+      for (const id of ['playground', 'tries', 'writeup', 'video', 'games', 'related']) expect(html, `${c.id} #${id}`).toContain(`id="${id}"`);
+      for (const a of ['assets/studio.css', 'assets/concept.css', 'assets/site.js', 'assets/concept-page.js']) expect(html, `${c.id} ${a}`).toContain(a);
+      const lead = html.match(/<p class="lead">(.*?)<\/p>/s)[1].replace(/<[^>]+>/g, '').replace(/&#39;/g, "'");
+      expect(lead, c.id).toBe(c.definition);
+    }
+  });
+  it('every concept has sim.js and play.js', () => {
+    for (const c of CONCEPTS) for (const f of ['sim.js', 'play.js']) expect(() => read(c.id, f), `${c.id}/${f}`).not.toThrow();
+  });
 });

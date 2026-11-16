@@ -42,11 +42,11 @@ describe('concept config', () => {
   });
   it('pid has the video and the concept pages are all seven', () => {
     expect(conceptById('pid').youtube).toBe('drtqgVse4jo');
-    expect(conceptById('pid').page).toBe(true);
-    expect(CONCEPTS.filter(c => c.page).map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid']);
+    expect(CONCEPTS.map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid']);
+    for (const c of CONCEPTS) expect(c, c.id).not.toHaveProperty('page');
   });
-  it('conceptHref goes to the page when there is one, else the anchor', () => {
+  it('conceptHref always goes to the concept page', () => {
     expect(conceptHref(conceptById('pid'), '../../')).toBe('../../concepts/pid/');
-    expect(conceptHref({ id: 'x', page: false }, '../../')).toBe('../../concepts/#x');
+    expect(conceptHref({ id: 'x' }, '../')).toBe('../concepts/x/');
   });
 });

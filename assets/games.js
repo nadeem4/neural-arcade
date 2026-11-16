@@ -63,21 +63,21 @@ export const GAMES = [
 
 export const gameById = id => GAMES.find(g => g.id === id);
 
-// The words the games share. A game lists the ones it uses in `uses`, with one sentence per word in `where` saying where it shows up in that game. A concept has `related` (ids of neighbouring concepts), may get a `youtube` id for a short explainer, and `page: true` when it has its own page at concepts/<id>/.
+// The words the games share. A game lists the ones it uses in `uses`, with one sentence per word in `where` saying where it shows up in that game. A concept has `related` (ids of neighbouring concepts), may get a `youtube` id for a short explainer and its own page at concepts/<id>/.
 export const CONCEPTS = [
-  { id: 'agent', title: 'Agent and environment', youtube: null, page: true, related: ['state-action-reward', 'policy'], definition: 'The agent is the learner that acts; the environment is everything it acts on, and it answers each move with a new situation and a reward.' },
-  { id: 'state-action-reward', title: 'State, action, reward', youtube: null, page: true, related: ['agent', 'return'], definition: 'A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.' },
-  { id: 'return', title: 'Return and discount', youtube: null, page: true, related: ['state-action-reward', 'value'], definition: 'The return is all the reward still to come, with far-off reward counted for less by the discount.' },
-  { id: 'policy', title: 'Policy', youtube: null, page: true, related: ['agent', 'value', 'pid'], definition: "A policy is the agent's rulebook: in each state, which action to take." },
-  { id: 'value', title: 'Value', youtube: null, page: true, related: ['return', 'policy', 'mdp'], definition: "A state's value is how much reward the agent can expect from there on, if it keeps following its policy." },
-  { id: 'mdp', title: 'Markov decision process', youtube: null, page: true, related: ['value', 'state-action-reward'], definition: 'An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.' },
-  { id: 'pid', title: 'PID control', youtube: 'drtqgVse4jo', page: true, related: ['policy'], definition: 'A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.' },
+  { id: 'agent', title: 'Agent and environment', youtube: null, related: ['state-action-reward', 'policy'], definition: 'The agent is the learner that acts; the environment is everything it acts on, and it answers each move with a new situation and a reward.' },
+  { id: 'state-action-reward', title: 'State, action, reward', youtube: null, related: ['agent', 'return'], definition: 'A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.' },
+  { id: 'return', title: 'Return and discount', youtube: null, related: ['state-action-reward', 'value'], definition: 'The return is all the reward still to come, with far-off reward counted for less by the discount.' },
+  { id: 'policy', title: 'Policy', youtube: null, related: ['agent', 'value', 'pid'], definition: "A policy is the agent's rulebook: in each state, which action to take." },
+  { id: 'value', title: 'Value', youtube: null, related: ['return', 'policy', 'mdp'], definition: "A state's value is how much reward the agent can expect from there on, if it keeps following its policy." },
+  { id: 'mdp', title: 'Markov decision process', youtube: null, related: ['value', 'state-action-reward'], definition: 'An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.' },
+  { id: 'pid', title: 'PID control', youtube: 'drtqgVse4jo', related: ['policy'], definition: 'A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.' },
 ];
 
 export const conceptById = id => CONCEPTS.find(c => c.id === id);
 
-// Where a concept chip links: its own page if it has one, else its anchor on the Concepts page.
-export const conceptHref = (c, base) => c.page ? `${base}concepts/${c.id}/` : `${base}concepts/#${c.id}`;
+// Where a concept chip links: its own page.
+export const conceptHref = (c, base) => `${base}concepts/${c.id}/`;
 
 // A game page's "Words this game uses": one chip per concept in game.uses, each linking to conceptHref. Empty when there are none.
 export const usesHtml = (game, base) =>
