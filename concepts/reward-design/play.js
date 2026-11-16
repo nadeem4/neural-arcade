@@ -26,7 +26,7 @@ export const shouldAnimate = mq => !(mq && mq.matches);
 // What the slip really paid for, in plain words.
 export function verdictOf(pay, r) {
   if (!r.arrived) {
-    return pay.perTile > 0
+    return pay.perTile > 0 && r.tiles >= r.steps / 2
       ? 'It earns more by driving than by delivering, so it never drops the passenger off.'
       : 'It never arrived. Nothing it tried paid better than standing still.';
   }
@@ -59,7 +59,7 @@ export function playgroundHtml() {
         <input id="rd-${d.key}" data-r="${d.key}" type="range" min="${RANGES[d.key].min}" max="${RANGES[d.key].max}" step="${RANGES[d.key].step}" value="0">
         <span class="say">${d.say}</span></div>`).join('')}
     </div>
-    <div class="stage-foot">${presets.map((p, i) => `<button type="button" class="sbtn${i ? '' : ' primary'}" data-r="preset${i}">${p.label}</button>`).join('')}
+    <div class="stage-foot">${presets.map((p, i) => `<button type="button" class="sbtn${i ? '' : ' primary'}" aria-pressed="${i ? 'false' : 'true'}" data-r="preset${i}">${p.label}</button>`).join('')}
       <span class="hint">The courier retrains each time a slider moves.</span>
     </div>`;
 }
@@ -86,22 +86,29 @@ export function mountPlayground(root) {
     const ox = (r.width - cell * cols) / 2, oy = (r.height - cell * rows) / 2;
     const mono = tok('--mono', 'monospace');
     const ink = tok('--stage-ink', '#E9EDF2'), dim = tok('--stage-dim', '#7D8794'), line = tok('--stage-2', '#1A2029'), sig = tok('--signal', '#FF5A1F');
+    const wall = tok('--ghost', 'rgba(233,237,242,.18)'), grass = 'rgba(74,160,96,.45)';
+    const labels = () => {
+      x.font = '12px ' + mono; x.fillStyle = ink;
+      MAP.forEach((row, j) => [...row].forEach((c, i) => {
+        const px = ox + i * cell + 6, py = oy + (j + 1) * cell - 8;
+        if (c === 'g' && i === 1) x.fillText('lawn', px, py);
+        if (c === 'S') x.fillText('start', px, py);
+        if (c === 'T') x.fillText('end', px, py);
+      }));
+    };
     MAP.forEach((row, j) => [...row].forEach((c, i) => {
       const px = ox + i * cell, py = oy + j * cell;
-      if (c === '#') { x.fillStyle = dim; x.fillRect(px + 1, py + 1, cell - 2, cell - 2); }
-      if (c === 'g') { x.fillStyle = line; x.fillRect(px + 1, py + 1, cell - 2, cell - 2); }
+      if (c === '#') { x.fillStyle = wall; x.fillRect(px + 1, py + 1, cell - 2, cell - 2); }
+      if (c === 'g') { x.fillStyle = grass; x.fillRect(px + 1, py + 1, cell - 2, cell - 2); }
       x.strokeStyle = line; x.lineWidth = 1; x.strokeRect(px + .5, py + .5, cell - 1, cell - 1);
-      x.font = '12px ' + mono; x.fillStyle = ink;
-      if (c === 'g' && i === 1) x.fillText('lawn', px + 6, py + 16);
-      if (c === 'S') x.fillText('start', px + 6, py + 16);
-      if (c === 'T') x.fillText('end', px + 6, py + 16);
     }));
-    if (!result) return;
+    if (!result) return labels();
     const pts = result.route.slice(0, shown + 1).map(p => [ox + (p.x + .5) * cell, oy + (p.y + .5) * cell]);
     x.strokeStyle = sig; x.lineWidth = 3; x.lineJoin = 'round'; x.beginPath();
     pts.forEach(([px, py], i) => (i ? x.lineTo(px, py) : x.moveTo(px, py))); x.stroke();
     const [ex, ey] = pts[pts.length - 1];
     x.fillStyle = sig; x.beginPath(); x.arc(ex, ey, cell / 6, 0, 7); x.fill();
+    labels();
   }
 
   function tick() {
@@ -119,12 +126,16 @@ export function mountPlayground(root) {
     if (shouldAnimate(mq)) { shown = 0; tick(); } else { shown = result.route.length - 1; draw(); }
   }
 
+  function mark(on) {
+    presets.forEach((p, i) => { const b = $('preset' + i); b.classList.toggle('primary', i === on); b.setAttribute('aria-pressed', String(i === on)); });
+  }
   function apply(state) {
     for (const k of KEYS) { pay[k] = state[k]; $(k).value = state[k]; $(k + 'V').textContent = state[k]; }
+    mark(presets.findIndex(p => KEYS.every(k => p.state[k] === state[k])));
     train();
   }
   for (const k of KEYS) {
-    $(k).addEventListener('input', () => { pay[k] = +$(k).value; $(k + 'V').textContent = pay[k]; train(); });
+    $(k).addEventListener('input', () => { pay[k] = +$(k).value; $(k + 'V').textContent = pay[k]; mark(presets.findIndex(p => KEYS.every(q => p.state[q] === pay[q]))); train(); });
   }
   presets.forEach((p, i) => $('preset' + i).addEventListener('click', () => apply(p.state)));
   window.addEventListener('resize', () => result && draw());

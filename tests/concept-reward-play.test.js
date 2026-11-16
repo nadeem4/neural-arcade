@@ -73,3 +73,11 @@ describe('verdict and receipt', () => {
     }
   });
 });
+
+describe('verdict for a slow driver', () => {
+  it('does not claim it prefers driving when it mostly stands still', () => {
+    const r = { arrived: false, steps: 40, tiles: 5, lawnTiles: 0 };
+    expect(verdictOf(pay({ perTile: 2 }), r)).not.toMatch(/earns more by driving/);
+    expect(verdictOf(pay({ perTile: 2 }), { ...r, tiles: 30 })).toMatch(/earns more by driving/);
+  });
+});
