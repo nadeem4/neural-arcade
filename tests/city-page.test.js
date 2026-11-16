@@ -44,8 +44,10 @@ describe('city page markup', () => {
       expect(html, f.key).toContain(`>${f.label}</label>`);
     }
   });
-  it('hides every link to the write-up until RC6 adds it, and keeps the goal and status announced', () => {
-    for (const id of ['howTab', 'whyLink', 'how']) expect(tag(id), id).toMatch(/\shidden[\s>]/);
+  it('links the write-up now it is listed, mounts the shared game page, and keeps the goal and status announced', () => {
+    for (const id of ['howTab', 'whyLink', 'how']) expect(tag(id), id).not.toMatch(/\shidden[\s>]/);
+    expect(html).toContain('src="../../assets/game-page.js"');
+    expect(tag('moreFrom')).toMatch(/\shidden[\s>]/);
     expect(tag('goal')).toContain('aria-live="polite"');
     expect(tag('status')).toContain('aria-live="polite"');
   });

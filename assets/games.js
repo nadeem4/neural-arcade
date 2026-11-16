@@ -59,6 +59,21 @@ export const GAMES = [
     },
     added: '2026-11-13', shot: 'games/maze/shot.jpg', path: 'games/maze/', writeup: 'games/maze/how-it-works/', youtube: '74Q8P1r7xeo', demo: null,
   },
+  {
+    id: 'city', title: 'Reward City', category: 'reinforcement-learning',
+    lesson: 'An AI taxi learns to cross downtown Chicago from the pay slip you write, and finds every loophole in it. Teaches reward design, and why an agent does what you pay it for, not what you meant.',
+    learnsBy: 'Reward design, reward hacking',
+    goesWrongWhen: 'The pay slip has a loophole',
+    uses: ['agent', 'state-action-reward', 'return', 'policy', 'value'],
+    where: {
+      agent: 'The taxi is the agent and the Chicago Loop, with its streets, lights and park, is the environment.',
+      'state-action-reward': 'Each map tile and light colour is a state, each move or wait is an action, and your pay slip hands back the reward.',
+      return: 'The fare comes only at the drop-off, so the taxi weighs the whole trip, clock and fines included, not just the next block.',
+      policy: 'The route it drives is its policy: the move it has found best for each tile and light, which changes whenever you rewrite the pay slip.',
+      value: 'Behind each choice is a value: how much pay the taxi expects from a tile and light onward, learned from the trips it has tried.',
+    },
+    added: '2026-11-16', shot: 'games/city/shot.jpg', path: 'games/city/', writeup: 'games/city/how-it-works/', youtube: null, demo: null,
+  },
 ];
 
 export const gameById = id => GAMES.find(g => g.id === id);
