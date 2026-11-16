@@ -18,19 +18,24 @@ export function createJobs(runTrain) {
 }
 
 // Main-thread fallback (no Worker): trains in chunks, yielding between them so the page stays live.
+// isStale() is checked before each chunk; a stale run stops and resolves null without reporting.
 // Chunks continue agent.episodes, so the result matches one trainEpisodes call. Progress about every 5 percent.
-export async function trainInChunks(world, req, onProgress = () => {}, chunk = 50) {
+export async function trainInChunks(world, req, onProgress = () => {}, chunk = 50, isStale = () => false) {
   const { seed, rewards, episodes } = req;
   const agent = createAgent(world, seed);
   const step = Math.max(1, Math.ceil(episodes / 20));
   let reported = 0;
   while (agent.episodes < episodes) {
+    if (isStale()) return null;
     trainEpisodes(agent, rewards, Math.min(chunk, episodes - agent.episodes), HYPER);
     if (agent.episodes - reported >= step || agent.episodes === episodes) {
       reported = agent.episodes;
       onProgress({ done: agent.episodes, total: episodes, visits: agent.visits.slice() });
     }
-    if (agent.episodes < episodes) await new Promise((r) => setTimeout(r, 0));
+    if (agent.episodes < episodes) {
+      await new Promise((r) => setTimeout(r, 0));
+      if (isStale()) return null;
+    }
   }
   const route = greedyRoute(agent, rewards);
   return { route, analysis: analyzeRoute(world, route, rewards), visits: agent.visits.slice() };

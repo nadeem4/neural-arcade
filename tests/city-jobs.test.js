@@ -84,4 +84,12 @@ describe('trainInChunks', () => {
     expect(seen[0].total).toBe(120);
     expect(seen[0].visits).not.toBe(seen[1].visits);
   });
+
+  it('stops when isStale turns true: resolves null, no further progress', async () => {
+    const seen = [];
+    let stale = false;
+    const res = await trainInChunks(WORLD, req, (p) => { seen.push(p); stale = true; }, 10, () => stale);
+    expect(res).toBeNull();
+    expect(seen.length).toBe(1);
+  });
 });
