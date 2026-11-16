@@ -1,13 +1,13 @@
 // The write-up's figures come from a real, seeded run on the real map, recorded once into story.json:
 //   node games/city/story-data.js
 // A test re-records it and checks story.json still matches, so the pictures can't drift from the code.
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from './sim.js';
 import { createAgent, trainEpisodes, greedyRoute } from './train.js';
-import { PRESETS, EPISODES, HYPER } from './presets.js';
+import { PRESETS, EPISODES, HYPER, SEED } from './presets.js';
 import { buildReceipt, verdictOf } from './receipt.js';
 
-export const STORY_SEED = 1;
+export const STORY_SEED = SEED;
 const SNAPSHOTS = [1, 10, 100, EPISODES];
 const city = JSON.parse(readFileSync(new URL('./chicago.json', import.meta.url), 'utf8'));
 
@@ -39,7 +39,6 @@ export function recordStory(seed = STORY_SEED) {
 }
 
 if (typeof process !== 'undefined' && import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/').replace(/^(?!\/)/, '/')}`) {
-  const fs = await import('node:fs');
-  fs.writeFileSync(new URL('./story.json', import.meta.url), JSON.stringify(recordStory()));
+  writeFileSync(new URL('./story.json', import.meta.url), JSON.stringify(recordStory()));
   console.log('story.json written');
 }

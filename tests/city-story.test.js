@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
 import { recordStory } from '../games/city/story-data.js';
 import { figureModel } from '../games/city/story-model.js';
@@ -9,13 +9,16 @@ const url = new URL('../games/city/story.json', import.meta.url);
 const saved = JSON.parse(readFileSync(url, 'utf8'));
 
 describe('the recorded run behind the Reward City write-up', () => {
+  let fresh;
+  beforeAll(() => { fresh = recordStory(); }, 60000);
+
   it('recordStory is deterministic', () => {
-    expect(recordStory(1).cards.map(c => c.route.actions)).toEqual(saved.cards.map(c => c.route.actions));
-  }, 120000);
+    expect(recordStory(1)).toEqual(fresh);
+  }, 60000);
 
   it('committed story.json matches a fresh recording (re-run node games/city/story-data.js if the sim changed)', () => {
-    expect(saved).toEqual(recordStory());
-  }, 60000);
+    expect(saved).toEqual(fresh);
+  });
 
   it('records all five cards, each satisfying its promise', () => {
     expect(saved.cards.map(c => c.id)).toEqual(PRESETS.map(p => p.id));
@@ -48,6 +51,8 @@ describe('figureModel', () => {
     expect(f.fig1.signals.length).toBeGreaterThan(0);
     expect(f.fig2.snapshots.length).toBe(4);
     expect(f.fig3.length).toBe(3);
+    expect(f.fig1.oneway.length).toBeGreaterThan(0);
+    for (const sn of f.fig2.snapshots) expect(sn.digits.length).toBe(f.fig2.rows);
     expect(f.fig4.loop.polyline.length).toBeGreaterThan(0);
     expect(f.fig4.legal.polyline.length).toBeGreaterThan(0);
   });
@@ -61,6 +66,8 @@ describe('figureModel', () => {
     });
   });
   it('fig4 pairs card 5 loop with card 4 legal route', () => {
+    expect(f.fig4.loop.id).toBe('mile');
+    expect(f.fig4.legal.id).toBe('legal');
     expect(f.fig4.loop.receipt).toEqual(saved.cards[4].receipt);
     expect(f.fig4.legal.receipt).toEqual(saved.cards[3].receipt);
   });
