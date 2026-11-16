@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { motionAllowed, routeFrames, lightPhase, chaseCamera, heatColour, frameAt, TICK_MS } from '../games/city/playback.js';
+import { motionAllowed, routeFrames, lightPhase, chaseCamera, heatColour, frameAt, TICK_MS, tickMsFor } from '../games/city/playback.js';
 import { loadWorld, lightRed, analyzeRoute, rewardsOf } from '../games/city/sim.js';
 import { cellCentre } from '../games/city/geometry.js';
 import { STEP_CAP } from '../games/city/presets.js';
@@ -140,5 +140,23 @@ describe('frameAt', () => {
   });
   it('a single frame is done at once', () => {
     expect(frameAt([frames[0]], 0, 400).done).toBe(true);
+  });
+});
+
+describe('chaseCamera ahead', () => {
+  it('aims at a point ahead of the taxi along its heading', () => {
+    const { target } = chaseCamera({ x: 0, z: 0, heading: Math.PI / 2, tick: 0 }, { ahead: 15 });
+    expect(target[0]).toBeCloseTo(15); expect(target[2]).toBeCloseTo(0);
+  });
+  it('defaults to the taxi itself', () => {
+    expect(chaseCamera({ x: 3, z: 4, heading: 1, tick: 0 }).target.slice(0, 3)).toEqual([3, 1, 4]);
+  });
+});
+
+describe('tickMsFor', () => {
+  it('keeps 400 ms for short routes and shortens long ones to fit the limit', () => {
+    expect(tickMsFor(10)).toBe(400);
+    expect(tickMsFor(STEP_CAP + 1) * STEP_CAP).toBeLessThanOrEqual(20000);
+    expect(tickMsFor(1)).toBe(400);
   });
 });

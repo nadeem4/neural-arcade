@@ -14,7 +14,7 @@ const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
 
 let world = null, stage = null, session = createSession(), rewards = { ...PRESETS[0].rewards };
-let worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
+let shown = 0, worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
 const pending = new Map(); // message id -> { resolve, reject, onProgress }
 const say = text => { $('status').textContent = text; };
 
@@ -101,6 +101,7 @@ async function train(req) {
   const progress = $('progress');
   if (!stage) return;
   progress.value = 0; $('train').dataset.stale = 'false'; say('');
+  const run = ++shown; // a drive that is interrupted must not show its receipt
   stage.clearRoute();
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
@@ -110,9 +111,7 @@ async function train(req) {
     rewards = req;
     session = recordTry(session, res.analysis);
     stage.setHeat(res.visits);
-    stage.showRoute(res.route, res.analysis, { onDone() {} });
-    showReceipt(res.analysis);
-    showGoal(res.analysis);
+    stage.showRoute(res.route, res.analysis, { onDone() { if (run === shown) { showReceipt(res.analysis); showGoal(res.analysis); } } });
   } catch {
     progress.value = 0;
     say('Training failed. Reload the page and try again.');
@@ -195,7 +194,7 @@ async function start() {
     // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
     const webgl = webglAvailable();
     const scene = webgl ? await import('./scene.js').catch(() => null) : null;
-    const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone(), labels: $('labels') }) : null;
+    const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone(), labels: $('labels'), onChaseOff: () => { $('chase').setAttribute('aria-pressed', 'false'); if (!motionAllowed()) { $('chase').disabled = true; $('chase').title = 'Off because your device asks for reduced motion.'; } } }) : null;
     stage = chooseStage($('stage'), city, { webgl, make3d });
   } catch {
     say('The map did not load. Reload the page to try again.');

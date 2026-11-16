@@ -31,11 +31,11 @@ export function routeFrames(world, cellM, route) {
 // 0 = north-south green (east-west red), 1 = swapped; agrees with sim.js lightRed.
 export const lightPhase = (world, tick) => (tick % world.period >= world.period / 2 ? 1 : 0);
 
-export function chaseCamera(frame, { back = 14, up = 7 } = {}) {
+export function chaseCamera(frame, { back = 14, up = 7, ahead = 0 } = {}) {
   const fx = Math.sin(frame.heading), fz = Math.cos(frame.heading);
   return {
     pos: [frame.x - fx * back, up, frame.z - fz * back],
-    target: [frame.x, 1, frame.z],
+    target: [frame.x + fx * ahead, 1, frame.z + fz * ahead],
   };
 }
 
@@ -46,6 +46,8 @@ export function heatColour(count, max) {
 }
 
 export const TICK_MS = 400;
+// A drive takes at most about 20 s: a long (capped) route plays faster than one step per 400 ms.
+export const tickMsFor = (nFrames, maxMs = 20000) => Math.min(TICK_MS, Math.floor(maxMs / Math.max(1, nFrames - 1)));
 
 // The taxi at `ms` into the drive: linear between frames, turning to the new heading in the first third of each move.
 // `tick` is the frame it is leaving, so lights match the step being taken; `done` once the last frame is reached.

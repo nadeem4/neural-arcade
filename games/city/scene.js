@@ -2,7 +2,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
 import { clampPitch, clampDistance, readColors } from './scene-math.js';
-import { motionAllowed, routeFrames, frameAt, lightPhase, chaseCamera, heatColour, TICK_MS } from './playback.js';
+import { motionAllowed, routeFrames, frameAt, lightPhase, chaseCamera, heatColour, tickMsFor } from './playback.js';
 
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
@@ -25,13 +25,13 @@ function geoOf({ positions, normals, indices }) {
 
 export function createScene(el, city, opts = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: !opts.phone, powerPreference: 'high-performance' });
-  try { return build(el, city, renderer, !!opts.phone, opts.labels ?? null); } catch (e) {
+  try { return build(el, city, renderer, !!opts.phone, opts.labels ?? null, opts.onChaseOff); } catch (e) {
     renderer.dispose(); renderer.domElement.remove();
     throw e;
   }
 }
 
-function build(el, city, renderer, phone, labelEl) {
+function build(el, city, renderer, phone, labelEl, onChaseOff) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, phone ? 1.5 : 2));
   renderer.shadowMap.enabled = false;
   const canvas = renderer.domElement;
@@ -105,7 +105,7 @@ function build(el, city, renderer, phone, labelEl) {
     signals.forEach(([c, r], i) => {
       const [x, z] = cellCentre(c, r, city);
       posts.setMatrixAt(i, m.setPosition(x, 0.8, z));
-      ns.setMatrixAt(i, m.setPosition(x - 3, 14, z));
+      ns.setMatrixAt(i, m.setPosition(x, 14, z - 3));
       ew.setMatrixAt(i, m.setPosition(x + 3, 14, z));
     });
     scene.add(posts, ns, ew);
@@ -123,6 +123,7 @@ function build(el, city, renderer, phone, labelEl) {
   setLights(0);
 
   // Heat: one vertex-coloured mesh over road, footpath and park cells, additive so unvisited cells stay invisible.
+  const startCell = city.pickup[1] * city.cols + city.pickup[0];
   const heatCells = [];
   for (let r = 0; r < city.rows; r++) for (let c = 0; c < city.cols; c++) if ('rfp'.includes(city.kind[r][c])) heatCells.push([c, r]);
   const hPos = new Float32Array(heatCells.length * 12), hCol = new Float32Array(heatCells.length * 12), hIdx = new Uint32Array(heatCells.length * 6);
@@ -142,8 +143,8 @@ function build(el, city, renderer, phone, labelEl) {
   scene.add(heatMesh);
 
   // Taxi and trail materials (their geometry is made per route and disposed in clearRoute).
-  mats.taxi = new THREE.MeshStandardMaterial({ color: '#FF5A1F', roughness: 0.6 });
-  mats.cab = new THREE.MeshStandardMaterial({ color: '#FF8A57', roughness: 0.6 });
+  mats.taxi = new THREE.MeshStandardMaterial({ color: '#FF5A1F', emissive: '#FF5A1F', emissiveIntensity: 0.4, roughness: 0.6 });
+  mats.cab = new THREE.MeshStandardMaterial({ color: '#FF8A57', emissive: '#FF8A57', emissiveIntensity: 0.4, roughness: 0.6 });
   mats.sign = new THREE.MeshBasicMaterial({ color: '#FACC15' });
   mats.trail = new THREE.LineBasicMaterial({ color: '#FF5A1F' });
 
@@ -176,7 +177,7 @@ function build(el, city, renderer, phone, labelEl) {
   const renderNow = () => {
     if (dead) return;
     if (chase && curFrame) {
-      const { pos, target } = chaseCamera(curFrame, { back: 40, up: 26 });
+      const { pos, target } = chaseCamera(curFrame, { back: 28, up: 12, ahead: 15 });
       want.set(pos[0], pos[1], pos[2]);
       if (chaseFresh) { chasePos.copy(want); chaseFresh = false; } else chasePos.lerp(want, 0.2);
       camera.position.copy(chasePos);
@@ -206,7 +207,9 @@ function build(el, city, renderer, phone, labelEl) {
   let pinch = 0, engaged = false;
   const spread = () => { const [a, b] = [...pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
   const zoom = (f) => { view.dist = clampDistance(view.dist * f, radius); draw(); };
+  const chaseOff = () => { if (!chase) return; chase = false; camera.near = radius * 0.05; camera.updateProjectionMatrix(); onChaseOff?.(); draw(); };
   const down = (e) => {
+    chaseOff();
     engaged = true;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     canvas.setPointerCapture(e.pointerId);
@@ -259,11 +262,10 @@ function build(el, city, renderer, phone, labelEl) {
     heatTimer = 0; heatAt = performance.now();
     const v = heatLatest; heatLatest = null;
     if (!v || dead) return;
-    let max = 0;
-    for (const n of v) if (n > max) max = n;
-    const k = 0.8; // linear, so only the busy corridors glow
+    let max = 0; // the pickup cell is every episode's start, so it is left out of the scale
+    v.forEach((n, i) => { if (i !== startCell && n > max) max = n; });
     heatCells.forEach(([c, r], i) => {
-      const col = heatColour((v[r * city.cols + c] || 0) * k, max);
+      const col = heatColour(v[r * city.cols + c] || 0, max);
       for (let k = 0; k < 4; k++) hCol.set(col, i * 12 + k * 3);
     });
     heatGeo.attributes.color.needsUpdate = true;
@@ -285,11 +287,11 @@ function build(el, city, renderer, phone, labelEl) {
   const tickLoop = (now) => {
     loopId = 0;
     if (dead || !play) return;
-    const f = frameAt(play.frames, now - play.t0, TICK_MS);
+    const f = frameAt(play.frames, now - play.t0, play.tickMs);
     place(f); setLights(f.tick);
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 34 + Math.sin(now / 300 + i) * 2; });
     renderNow();
-    if (f.done) { chaseFresh = true; renderNow(); finish(); return; }
+    if (f.done) { curFrame = null; chaseFresh = true; renderNow(); finish(); return; }
     loopId = requestAnimationFrame(tickLoop);
   };
   const stopRoute = () => {
@@ -307,6 +309,10 @@ function build(el, city, renderer, phone, labelEl) {
     if (setLights(Math.floor(performance.now() / 1500))) draw();
   }, 500);
 
+  const motionMq = matchMedia('(prefers-reduced-motion: reduce)');
+  const onMotion = () => { if (!motionAllowed()) chaseOff(); };
+  motionMq.addEventListener('change', onMotion);
+
   return {
     ready: true,
     setHeat(visits) {
@@ -320,8 +326,8 @@ function build(el, city, renderer, phone, labelEl) {
       taxi = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.8, 7.5), mats.taxi); body.position.y = 1;
       const cab = new THREE.Mesh(new THREE.BoxGeometry(2.9, 1.5, 3.6), mats.cab); cab.position.set(0, 2.6, -0.4);
-      const sign = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 0.8), mats.sign); sign.position.set(0, 3.6, -0.4);
-      taxi.add(body, cab, sign); taxi.scale.setScalar(2.5);
+      const sign = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.5), mats.sign); sign.position.set(0, 3.5, -0.4);
+      taxi.add(body, cab, sign); taxi.scale.setScalar(1.2);
       trailPts = new Float32Array((frames.length + 1) * 3);
       frames.forEach((f, i) => trailPts.set([f.x, 2.5, f.z], i * 3));
       const tg = new THREE.BufferGeometry();
@@ -337,7 +343,7 @@ function build(el, city, renderer, phone, labelEl) {
         finish();
         return;
       }
-      play.t0 = performance.now();
+      play.t0 = performance.now(); play.tickMs = tickMsFor(frames.length);
       loopId = requestAnimationFrame(tickLoop);
     },
     clearRoute() { stopRoute(); draw(); },
@@ -348,7 +354,7 @@ function build(el, city, renderer, phone, labelEl) {
     },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      stopRoute(); clearInterval(clock); if (heatTimer) clearTimeout(heatTimer);
+      stopRoute(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
       for (const { span } of labels) span.remove();
       ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
       window.removeEventListener('blur', disengage);
