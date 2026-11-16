@@ -8,6 +8,9 @@ const story = read('games/city/how-it-works/story.js');
 const URL_ = 'https://arcade.codewithnk.com/games/city/';
 
 describe('city how it works page', () => {
+  it('links the reward design concept page', () => {
+    expect(html).toContain('href="../../../concepts/reward-design/"');
+  });
   it('links the shared styles', () => {
     expect(html).toContain('href="../../../assets/studio.css"');
     expect(html).toContain('href="../../../assets/story.css"');

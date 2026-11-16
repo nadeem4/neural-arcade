@@ -30,7 +30,7 @@ describe('concepts data', () => {
   });
   it('maze and runner declare their words', () => {
     expect(GAMES.find(g => g.id === 'maze').uses).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value']);
-    expect(GAMES.find(g => g.id === 'runner').uses).toEqual(['agent', 'state-action-reward', 'policy']);
+    expect(GAMES.find(g => g.id === 'runner').uses).toEqual(['agent', 'state-action-reward', 'policy', 'reward-design']);
   });
   it('conceptById finds or returns undefined', () => {
     expect(conceptById('policy').title).toBe('Policy');

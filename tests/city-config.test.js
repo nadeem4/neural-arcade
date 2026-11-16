@@ -13,7 +13,8 @@ describe('Reward City listing', () => {
       path: 'games/city/', writeup: 'games/city/how-it-works/', shot: 'games/city/shot.jpg', youtube: null, demo: null,
     });
     expect(g.lesson).toMatch(/Teaches reward design, and why an agent does what you pay it for, not what you meant\.$/);
-    expect(g.uses).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value']);
+    expect(g.uses).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'reward-design']);
+    expect(g.where['reward-design']).toBe('The pay slip is the reward design: every fine you add closes one loophole and the taxi finds the next.');
   });
   it('its where keys equal its uses, each a real sentence', () => {
     expect(Object.keys(g.where).sort()).toEqual([...g.uses].sort());

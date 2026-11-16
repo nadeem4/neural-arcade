@@ -33,7 +33,7 @@ describe('reward design page shell', () => {
     expect(html).not.toContain('Where you meet it');
     expect(html).toContain('id="games"');
     const users = GAMES.filter(g => g.uses?.includes('reward-design')).map(g => g.id);
-    expect(users).toContain('runner');
+    expect(users.sort()).toEqual(['city', 'runner']);
     for (const id of users) expect(gameById(id).where['reward-design'].length).toBeGreaterThan(20);
   });
   it('wires the playground and the tries', () => {

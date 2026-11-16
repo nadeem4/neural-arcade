@@ -47,6 +47,9 @@ describe('concept config', () => {
     expect(CONCEPTS.map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design']);
     for (const c of CONCEPTS) expect(c, c.id).not.toHaveProperty('page');
   });
+  it('conceptHref for reward-design is the concept page', () => {
+    expect(conceptHref(conceptById('reward-design'), '../')).toBe('../concepts/reward-design/');
+  });
   it('conceptHref always goes to the concept page', () => {
     expect(conceptHref(conceptById('pid'), '../../')).toBe('../../concepts/pid/');
     expect(conceptHref({ id: 'x' }, '../')).toBe('../concepts/x/');
