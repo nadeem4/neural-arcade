@@ -1,3 +1,5 @@
+import { mulberry32 } from '../../engine/rng.js';
+
 // Pure geometry for the 3D city: map metres in (x east, y north), typed arrays out (y up, north is -z).
 
 const open = (ring) => {
@@ -172,17 +174,6 @@ const pointInRing = (x, y, ring) => {
   }
   return c;
 };
-const mulberry32 = (seed) => {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6D2B79F5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-};
-
 const TREE_AREA = 120, TREE_CAP = 600;
 
 // x, y, z triples (y = 0), about one tree per 120 m2 of park, at most 600. Same seed, same trees.
