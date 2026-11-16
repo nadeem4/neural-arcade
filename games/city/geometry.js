@@ -207,3 +207,6 @@ export function cityBounds(city) {
   if (x0 === Infinity) return { cx: 0, cz: 0, radius: 1 };
   return { cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, radius: Math.hypot(x1 - x0, z1 - z0) / 2 };
 }
+
+// World (x, z) of a grid cell's centre; matches scripts/city/convert.js (row 0 is the north edge), z = -y.
+export const cellCentre = (c, r, city) => [(c + 0.5) * city.cellM, -(city.rows - 1 - r + 0.5) * city.cellM];

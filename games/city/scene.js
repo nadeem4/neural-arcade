@@ -1,6 +1,6 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
-import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds } from './geometry.js';
+import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
 import { clampPitch, clampDistance, readColors } from './scene-math.js';
 
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
@@ -22,8 +22,15 @@ function geoOf({ positions, normals, indices }) {
   return g;
 }
 
-export function createScene(el, city, { phone = false } = {}) {
-  const renderer = new THREE.WebGLRenderer({ antialias: !phone, powerPreference: 'high-performance' });
+export function createScene(el, city, opts = {}) {
+  const renderer = new THREE.WebGLRenderer({ antialias: !opts.phone, powerPreference: 'high-performance' });
+  try { return build(el, city, renderer, !!opts.phone); } catch (e) {
+    renderer.dispose(); renderer.domElement.remove();
+    throw e;
+  }
+}
+
+function build(el, city, renderer, phone) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, phone ? 1.5 : 2));
   renderer.shadowMap.enabled = false;
   const canvas = renderer.domElement;
@@ -66,10 +73,9 @@ export function createScene(el, city, { phone = false } = {}) {
   }
 
   // Pickup and drop-off: a pin over a coloured pad, centred on the grid cell.
-  const cell = ([c, r]) => [(c + 0.5) * city.cellM, -(city.rows - 1 - r + 0.5) * city.cellM];
   for (const rc of [city.pickup, city.dropoff]) {
     if (!rc) continue;
-    const [x, z] = cell(rc);
+    const [x, z] = cellCentre(rc[0], rc[1], city);
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(city.cellM * 1.2, city.cellM * 1.2, 0.3, 24), mats.pad);
     pad.position.set(x, 1.4, z);
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 30, 8), mats.pin);
@@ -103,10 +109,11 @@ export function createScene(el, city, { phone = false } = {}) {
 
   // Drag to turn (one pointer), pinch and wheel to zoom.
   const pointers = new Map();
-  let pinch = 0;
+  let pinch = 0, engaged = false;
   const spread = () => { const [a, b] = [...pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
   const zoom = (f) => { view.dist = clampDistance(view.dist * f, radius); draw(); };
   const down = (e) => {
+    engaged = true;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     canvas.setPointerCapture(e.pointerId);
     if (pointers.size === 2) pinch = spread();
@@ -118,7 +125,7 @@ export function createScene(el, city, { phone = false } = {}) {
     p.x = e.clientX; p.y = e.clientY;
     if (pointers.size === 1) {
       view.yaw -= dx * 0.008;
-      view.pitch = clampPitch(view.pitch + dy * 0.005);
+      if (e.pointerType !== 'touch') view.pitch = clampPitch(view.pitch + dy * 0.005); // touch keeps vertical drags for page scroll
       draw();
     } else if (pointers.size === 2) {
       const s = spread();
@@ -127,20 +134,28 @@ export function createScene(el, city, { phone = false } = {}) {
     }
   };
   const up = (e) => { pointers.delete(e.pointerId); pinch = 0; };
-  const wheel = (e) => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.001)); };
+  // The wheel zooms only for a trackpad pinch (ctrl) or once the stage is engaged; otherwise the page scrolls.
+  const wheel = (e) => { if (!e.ctrlKey && !engaged) return; e.preventDefault(); zoom(Math.exp(e.deltaY * 0.001)); };
+  const disengage = () => { engaged = false; };
   canvas.addEventListener('pointerdown', down);
   canvas.addEventListener('pointermove', move);
   canvas.addEventListener('pointerup', up);
   canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('wheel', wheel, { passive: false });
+  canvas.addEventListener('pointerleave', disengage);
+  window.addEventListener('blur', disengage);
 
   // The light/dark lamp changes data-theme: recolour the sky and pads (cheap) and draw once.
-  const mo = new MutationObserver(() => {
+  const recolour = () => {
     const c = readColors(getComputedStyle(document.documentElement));
     scene.background.set(c.sky); scene.fog.color.set(c.sky); mats.pad.color.set(c.accent);
     draw();
-  });
+  };
+  const mo = new MutationObserver(recolour);
   mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  const scheme = matchMedia('(prefers-color-scheme: dark)');
+  const onScheme = () => { if (!document.documentElement.dataset.theme) recolour(); };
+  scheme.addEventListener('change', onScheme);
 
   resize();
 
@@ -152,7 +167,12 @@ export function createScene(el, city, { phone = false } = {}) {
     setChase() {},
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      ro.disconnect(); mo.disconnect(); renderer.dispose(); canvas.remove();
+      ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
+      window.removeEventListener('blur', disengage);
+      for (const [type, fn] of [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up], ['wheel', wheel], ['pointerleave', disengage]]) canvas.removeEventListener(type, fn);
+      scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+      for (const m of Object.values(mats)) m.dispose();
+      renderer.dispose(); canvas.remove();
     },
   };
 }

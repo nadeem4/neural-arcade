@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
-  buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, triangulate,
+  buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, triangulate, cellCentre,
 } from '../games/city/geometry.js';
 
 const square = (x, y, s, h) => ({ ring: [[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]], h });
@@ -134,5 +134,17 @@ describe('real map', () => {
     expect(parts.t.length / 3).toBeLessThanOrEqual(600);
     const { radius } = cityBounds(city);
     expect(radius).toBeGreaterThan(100);
+  });
+});
+
+describe('cellCentre', () => {
+  it('matches the converter grid (x east, y north, row 0 is north) with z = -y', () => {
+    const rows = 112, cellM = 12; // convert.js: y = (rows - 1 - row + 0.5) * cellM
+    const city = { rows, cellM };
+    for (const [c, r] of [[0, 0], [24, 28], [75, 111]]) {
+      const [x, z] = cellCentre(c, r, city);
+      expect(x).toBe((c + 0.5) * cellM);
+      expect(z).toBe(-((rows - 1 - r + 0.5) * cellM));
+    }
   });
 });
