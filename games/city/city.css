@@ -1,0 +1,50 @@
+/* Reward City only: the rest of the page comes from studio.css and assets/game.css. */
+
+.stage-body { display: block; } /* studio.css makes it a two-column grid; here the stage fills it */
+#stage { display: block; width: 100%; max-width: 860px; margin: 0 auto; aspect-ratio: 16 / 10; }
+.stage-note { margin: 0; padding: 12px 18px; font-size: 14px; color: var(--stage-dim); }
+.stage-note:empty { display: none; }
+
+/* Training progress under the stage. */
+progress { display: block; width: calc(100% - 36px); height: 6px; margin: 12px 18px 0; border: 0; border-radius: 6px; background: var(--stage-2); accent-color: var(--signal); }
+progress::-webkit-progress-bar { background: var(--stage-2); border-radius: 6px; }
+progress::-webkit-progress-value { background: var(--signal); border-radius: 6px; }
+progress::-moz-progress-bar { background: var(--signal); border-radius: 6px; }
+
+/* Try cards. */
+.cards { display: grid; gap: 8px; }
+.card-btn { display: grid; gap: 2px; width: 100%; padding: 10px 12px; text-align: left; border: 1.5px solid var(--line); border-radius: 12px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
+.card-btn b { font-size: 15px; }
+.card-btn span { font-size: 13.5px; line-height: 1.4; color: var(--ink-2); }
+.card-btn[aria-pressed="true"] { border-color: var(--signal-fill); box-shadow: inset 0 0 0 1px var(--signal-fill); }
+
+/* Pay slip sliders. */
+.dial { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; font-size: 14.5px; }
+.dial input { grid-column: 1 / -1; }
+.dial output { font: 600 14px var(--mono); }
+.panel input[type="range"] { width: 100%; }
+#train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 30%, transparent); }
+
+/* Receipt and verdict. */
+.receipt { font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
+.receipt .row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
+.receipt .row span:first-child { color: var(--ink-2); }
+.receipt .total { margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-weight: 700; }
+.verdict { margin: 0; font-size: 15px; line-height: 1.45; }
+.verdict b { color: var(--signal-text); }
+
+/* Goal and the share line. */
+.goal-line { margin: 0; font-weight: 600; }
+.share-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; }
+.share-line[hidden] { display: none; }
+.share-line output { flex: 1 1 14em; min-width: 0; font: 500 14px var(--mono); overflow-wrap: anywhere; }
+
+/* Keyboard focus on every control. */
+input[type="range"]:focus-visible, button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+
+@media (max-width: 360px) {
+  .card-btn { padding: 8px 10px; }
+  .dial { font-size: 14px; }
+  .receipt, .receipt .row { font-size: 13px; }
+}
+

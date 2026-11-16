@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reward City · Neural Arcade</title>
+<meta name="description" content="A taxi learns to cross the real Chicago Loop by trial and error. You write its pay slip, and it does exactly what you pay it for, loopholes included.">
+<link rel="canonical" href="https://arcade.codewithnk.com/games/city/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Reward City · Neural Arcade">
+<meta property="og:description" content="A taxi learns to cross the real Chicago Loop by trial and error. You write its pay slip, and it does exactly what you pay it for, loopholes included.">
+<meta property="og:url" content="https://arcade.codewithnk.com/games/city/">
+<meta property="og:image" content="https://arcade.codewithnk.com/games/city/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Reward City: an orange taxi cutting across a park in a map of the Chicago Loop">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reward City · Neural Arcade">
+<meta name="twitter:description" content="A taxi learns to cross the real Chicago Loop by trial and error. You write its pay slip, and it does exactly what you pay it for, loopholes included.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/games/city/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/game.css">
+<link rel="stylesheet" href="city.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body data-game="city">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i" viewBox="0 0 256 256"><path fill="currentColor" d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol></svg>
+
+<header data-site="games"></header>
+
+<main class="wrap game">
+  <div class="head">
+    <div>
+      <div class="crumb" id="crumb"></div>
+      <h1>Reward City</h1>
+      <p class="lead lesson">A taxi learns to cross the real Chicago Loop, and you write its pay slip. It does what you pay it for, not what you meant. Teaches reward design.</p>
+    </div>
+    <nav class="switch" aria-label="On this page">
+      <a href="#play" aria-current="true">Play</a>
+      <a href="#how" id="howTab" hidden>How it works</a>
+    </nav>
+  </div>
+
+  <dl class="brief" aria-label="The experiment">
+    <div><dt>The setup</dt><dd>A taxi on a map of the Chicago Loop. It starts at the pickup and has to reach the drop-off. Buildings and water block it. Parks and footpaths do not.</dd></div>
+    <div><dt>The rule</dt><dd>It knows nothing at first. It tries trips and keeps whatever earned the most on the pay slip. You set the slip: the fare, the clock, and a fine for each way of cheating.</dd></div>
+    <div><dt>Watch for</dt><dd>With only the clock on, it drives across the park. Fine that, and it runs red lights. Fine those, and it goes the wrong way. Then fix it: a legal trip that is still fast.</dd></div>
+  </dl>
+
+  <section class="play" id="play" aria-label="The game">
+    <div class="stage">
+      <div class="stage-head"><span class="live"><i></i><b>The taxi drives what it learned</b></span>
+        <span class="stage-tools"><button class="info" type="button" aria-expanded="false" aria-controls="info-map" aria-label="Explain the map" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></span></div>
+      <p class="info-text" id="info-map" data-info="map" hidden></p>
+      <div class="stage-body">
+        <div id="stage" role="img" aria-label="Map of the taxi's trip (not drawn yet)"></div>
+      </div>
+      <p class="stage-note" id="stageNote"></p>
+      <progress id="progress" max="100" value="0" aria-label="Training progress"></progress>
+      <p class="stage-note" id="status" aria-live="polite"></p>
+    </div>
+
+    <aside class="panel" aria-label="Controls">
+      <section aria-labelledby="ch">
+        <h2><span id="ch">Try a pay slip</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-cards" aria-label="Explain the try cards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-cards" data-info="cards" hidden></p>
+        <div class="cards" id="cards"></div>
+      </section>
+      <section aria-labelledby="sh" id="slip">
+        <h2><span id="sh">Its pay slip</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-slip" aria-label="Explain the pay slip" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-slip" data-info="slip" hidden></p>
+        <div class="dial"><label for="fare">Fare for arriving</label><output class="num" id="fareOut" for="fare"></output>
+          <input id="fare" type="range" min="0" max="200" step="10" value="100"></div>
+        <div class="dial"><label for="time">Cost per second</label><output class="num" id="timeOut" for="time"></output>
+          <input id="time" type="range" min="0" max="3" step="0.5" value="1"></div>
+        <div class="dial"><label for="off">Fine per park or footpath tile</label><output class="num" id="offOut" for="off"></output>
+          <input id="off" type="range" min="0" max="40" step="5" value="0"></div>
+        <div class="dial"><label for="red">Fine per red light run</label><output class="num" id="redOut" for="red"></output>
+          <input id="red" type="range" min="0" max="40" step="5" value="0"></div>
+        <div class="dial"><label for="wrong">Fine per wrong-way move</label><output class="num" id="wrongOut" for="wrong"></output>
+          <input id="wrong" type="range" min="0" max="40" step="5" value="0"></div>
+        <div class="dial"><label for="perTile">Pay per tile driven</label><output class="num" id="perTileOut" for="perTile"></output>
+          <input id="perTile" type="range" min="0" max="5" step="0.5" value="0"></div>
+        <button class="btn primary" type="button" id="train">Train this pay slip</button>
+        <button class="btn" type="button" id="reset">Back to the first card</button>
+      </section>
+      <section aria-labelledby="rh">
+        <h2><span id="rh">Last trip</span></h2>
+        <div class="receipt" id="receipt" aria-live="off"></div>
+        <p class="verdict" id="verdict" aria-live="polite"></p>
+      </section>
+      <section aria-labelledby="gh">
+        <h2><span id="gh">Your goal</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-goal" aria-label="Explain the goal" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-goal" data-info="goal" hidden></p>
+        <p class="goal-line" id="goal" aria-live="polite"></p>
+        <p class="share-line" id="share" hidden><output id="shareText"></output> <button class="btn" type="button" id="copy">Copy</button></p>
+      </section>
+    </aside>
+  </section>
+
+  <div class="moral">
+    <div><small>The lesson</small><p>The reward is the only thing the taxi wants: it does what you pay it for, not what you meant.</p></div>
+    <a class="btn" href="#how" id="whyLink" hidden>Why it works</a>
+  </div>
+
+  <section class="more" aria-label="Read">
+    <!-- RC6 un-hides the How it works links (howTab, whyLink and this section) once the write-up exists. -->
+    <div class="read" id="how" hidden>
+      <h2>How it works</h2>
+      <p>The illustrated write-up of this game.</p>
+      <a class="btn primary" id="writeup" href="how-it-works/">Read How it works</a>
+    </div>
+  </section>
+
+  <section class="uses" id="uses" aria-labelledby="usesTitle" hidden>
+    <h2 id="usesTitle">Words this game uses</h2>
+    <div class="chips" id="usesChips"></div>
+  </section>
+
+  <p class="credit">Map data: <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a></p>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
