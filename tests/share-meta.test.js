@@ -10,6 +10,7 @@ const CONCEPT_PAGES = [
   ['concepts/agent/index.html', ['assets/share.png']],
   ['concepts/state-action-reward/index.html', ['assets/share.png']],
   ['concepts/return/index.html', ['assets/share.png']],
+  ['concepts/policy/index.html', ['assets/share.png']],
 ];
 
 const pages = [

@@ -3,7 +3,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { conceptById } from '../assets/games.js';
 import { videoHtml, gamesHtml, relatedHtml, triesHtml, mountConceptPage, wireTries } from '../assets/concept-page.js';
 
-const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['policy'] };
+const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['value'] };
 
 describe('videoHtml', () => {
   it('is empty without a youtube id', () => expect(videoHtml({ ...pid, youtube: null })).toBe(''));
@@ -41,7 +41,7 @@ describe('relatedHtml', () => {
     const h = relatedHtml(pid, '../../');
     expect(h).toContain('Where it fits');
     expect(h).toContain('class="chip"');
-    expect(h).toContain('href="../../concepts/#policy"');
+    expect(h).toContain('href="../../concepts/#value"');
   });
   it('wraps the chips in a .chips row', () => {
     expect(relatedHtml(pid, '')).toMatch(/<h2>Where it fits<\/h2><div class="chips"><a class="chip".*<\/a><\/div>$/);
@@ -80,7 +80,7 @@ describe('DOM helpers', () => {
     expect(els.games.innerHTML).toContain('href="../../games/balance/"');
     expect(els.games.innerHTML).toContain('class="where"');
     expect(els.related.hidden).toBe(false);
-    expect(els.related.innerHTML).toContain('href="../../concepts/#policy"');
+    expect(els.related.innerHTML).toContain('href="../../concepts/policy/"');
   });
   it('keeps an empty section hidden', () => {
     const els = { video: el(), games: el(), related: el() };
