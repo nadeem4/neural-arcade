@@ -1,8 +1,6 @@
 // The Stage interface: { ready, setHeat(visits), showRoute(route, analysis, { onDone }), clearRoute(), setChase(on), destroy() }.
-// RC3 and RC4 supply the 3D stage; this file holds the choice between it and the message-only fallback.
+// scene.js supplies the 3D stage; this file holds the choice between it and the message-only fallback.
 export const NO_WEBGL = '3D view needs WebGL. The pay slip and receipt still work.';
-
-export const NO_3D_YET = 'The 3D map arrives in a later update. The pay slip and receipt work now.';
 
 export function webglAvailable(doc = globalThis.document) {
   try {
@@ -26,7 +24,6 @@ export function createFallbackStage(el, message) {
 }
 
 export function chooseStage(el, city, { webgl, make3d }) {
-  if (webgl && typeof make3d !== 'function') return createFallbackStage(el, NO_3D_YET);
   if (webgl) {
     try {
       const stage = make3d(el, city);

@@ -177,8 +177,11 @@ async function start() {
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
     world = loadWorld(city);
-    // make3d arrives with the 3D stage; until then the message-only stage runs.
-    stage = chooseStage($('stage'), city, { webgl: webglAvailable(), make3d: null });
+    // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
+    const webgl = webglAvailable();
+    const scene = webgl ? await import('./scene.js').catch(() => null) : null;
+    const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone() }) : null;
+    stage = chooseStage($('stage'), city, { webgl, make3d });
   } catch {
     say('The map did not load. Reload the page to try again.');
     return;
