@@ -117,7 +117,7 @@ describe('game pages', () => {
 describe('mountGamePage words row', () => {
   // no jsdom in this repo: a tiny stand-in document with just the elements the script touches
   const mount = async (ids) => {
-    const els = Object.fromEntries([...ids, 'moreFrom', 'moreTitle', 'moreTiles', 'writeup'].map(id => [id, { innerHTML: '', hidden: true, dataset: {}, addEventListener() {} }]));
+    const els = Object.fromEntries([...ids, 'moreFrom', 'moreTitle', 'moreTiles', 'writeup', 'watchBox', 'watchCol', 'switchWatch'].map(id => [id, { innerHTML: '', hidden: true, dataset: {}, addEventListener() {}, querySelectorAll: () => [] }]));
     vi.stubGlobal('document', {
       body: { dataset: { game: 'maze' } },
       getElementById: id => els[id] ?? null,
