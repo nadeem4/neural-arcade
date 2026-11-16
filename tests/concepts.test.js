@@ -133,7 +133,7 @@ describe('mountGamePage words row', () => {
   it('un-hides #uses and fills #usesChips with links to the concept anchors', async () => {
     const els = await mount(['uses', 'usesChips']);
     expect(els.uses.hidden).toBe(false);
-    for (const id of GAMES.find(g => g.id === 'maze').uses) expect(els.usesChips.innerHTML).toContain(`href="../../concepts/${id === 'agent' ? id + '/' : '#' + id}"`);
+    for (const id of GAMES.find(g => g.id === 'maze').uses) expect(els.usesChips.innerHTML).toContain(`href="../../concepts/${['agent', 'state-action-reward'].includes(id) ? id + '/' : '#' + id}"`);
   });
   it('a page without the #uses section still sets up the rest', async () => {
     const els = await mount(['crumb']);

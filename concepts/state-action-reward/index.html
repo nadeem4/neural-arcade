@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>State, action, reward · Neural Arcade</title>
+<meta name="description" content="A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/state-action-reward/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="State, action, reward · Neural Arcade">
+<meta property="og:description" content="A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/state-action-reward/">
+<meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="State, action, reward · Neural Arcade">
+<meta name="twitter:description" content="A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/concept.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="concepts"></header>
+
+<main class="wrap concept-page">
+  <section>
+    <div class="crumb"><a href="../">Concepts</a> / State, action, reward</div>
+    <h1>State, action, reward</h1>
+    <p class="lead">A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.</p>
+  </section>
+
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>Three words, one step</h2>
+    <p>Every step of reinforcement learning is described with the same three words. Learn them once and every game here reads the same way.</p>
+    <h3>State</h3>
+    <p>The state is where things stand right now. In this grid it is just which cell the agent is on, so each cell has its own number.</p>
+    <h3>Action</h3>
+    <p>An action is one move the agent may make from that state. Here there are four: up, down, left and right.</p>
+    <h3>Reward</h3>
+    <p>For each action the world hands back a number. A treasure pays 10, a pit costs 10, and every ordinary step costs a little, so wandering is never free.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> a state offers actions, and every action comes with a reward. Learning is working out which actions are worth taking.</p>
+  </section>
+
+  <section id="video" hidden></section>
+  <section id="games" hidden></section>
+  <section id="related" hidden></section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../../assets/site.js';
+  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
+  import { presets, mountPlayground } from './play.js';
+  import { figureHtml } from './figures.js';
+  mountSite('../../');
+  mountConceptPage('state-action-reward', '../../');
+  document.getElementById('figure').innerHTML = figureHtml() + '<figcaption>One state, four actions, four rewards: the cell beside the pit</figcaption>';
+  document.getElementById('tries').innerHTML = triesHtml(presets);
+  const { apply } = mountPlayground(document.getElementById('playground'));
+  wireTries(document.getElementById('tries'), presets, apply);
+</script>
+</body>
+</html>

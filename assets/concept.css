@@ -30,6 +30,8 @@
 .readout { display: grid; align-content: center; gap: 20px; padding: 20px 22px; border-left: 1px solid var(--stage-2); }
 .readout .who { font: 700 12px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--signal); }
 .readout p { margin: 4px 0 0; color: var(--stage-ink); font-size: 15px; }
+.readout .opts { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; color: var(--stage-ink); }
+.readout .opts li { display: flex; justify-content: space-between; gap: 16px; max-width: 220px; }
 
 /* things to try */
 .tries { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; counter-reset: t; }
