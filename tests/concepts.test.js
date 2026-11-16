@@ -42,10 +42,10 @@ describe('usesHtml', () => {
     expect(usesHtml({ id: 'x' }, '../../')).toBe('');
     expect(usesHtml({ id: 'x', uses: [] }, '../../')).toBe('');
   });
-  it('renders one chip per word, linking to the page or anchor', () => {
-    const h = usesHtml({ uses: ['agent', 'value'] }, '../../');
+  it('renders one chip per word, linking to its page', () => {
+    const h = usesHtml({ uses: ['agent', 'mdp'] }, '../../');
     expect(h).toContain('href="../../concepts/agent/"');
-    expect(h).toContain('href="../../concepts/#value"');
+    expect(h).toContain('href="../../concepts/mdp/"');
     expect(h).toContain('>Agent and environment<');
     expect(h.match(/class="chip"/g)).toHaveLength(2);
   });
@@ -72,13 +72,13 @@ describe('concept page rendering', () => {
     const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
     for (const sel of ['.video {', '.video-play {', '.video-label {', '.video iframe {']) expect(css).toContain(sel);
   });
-  it('links the title to its own page only when it has one', () => {
-    expect(conceptHtml({ ...c, id: 'pid', page: true }, [], '../')).toContain('<h2><a href="../concepts/pid/">Policy</a></h2>');
-    expect(conceptHtml(c, [], '../')).not.toContain('<h2><a');
-    expect(conceptHtml({ ...c, page: true }, [], '../')).toContain('id="policy"');
+  it('links the title to its page and keeps the id so old concepts/#id anchors land', () => {
+    const h = conceptHtml({ ...c, id: 'pid' }, [], '../');
+    expect(h).toContain('<h2><a href="../concepts/pid/">Policy</a></h2>');
+    expect(h).toContain('id="pid"');
   });
-  it('escapes the title of a concept with a page', () => {
-    expect(conceptHtml({ ...c, page: true, title: 'A<b>' }, [], '../')).toContain('>A&lt;b&gt;</a></h2>');
+  it('escapes the title', () => {
+    expect(conceptHtml({ ...c, title: 'A<b>' }, [], '../')).toContain('>A&lt;b&gt;</a></h2>');
   });
   it('lists the games that use it', () => {
     const h = conceptHtml(c, [{ title: 'Gee', path: 'games/g/' }], '../');
@@ -133,7 +133,7 @@ describe('mountGamePage words row', () => {
   it('un-hides #uses and fills #usesChips with links to the concept anchors', async () => {
     const els = await mount(['uses', 'usesChips']);
     expect(els.uses.hidden).toBe(false);
-    for (const id of GAMES.find(g => g.id === 'maze').uses) expect(els.usesChips.innerHTML).toContain(`href="../../concepts/${['agent', 'state-action-reward', 'return', 'policy'].includes(id) ? id + '/' : '#' + id}"`);
+    for (const id of GAMES.find(g => g.id === 'maze').uses) expect(els.usesChips.innerHTML).toContain(`href="../../concepts/${['agent', 'state-action-reward', 'return', 'policy', 'value'].includes(id) ? id + '/' : '#' + id}"`);
   });
   it('a page without the #uses section still sets up the rest', async () => {
     const els = await mount(['crumb']);

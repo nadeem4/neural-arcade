@@ -83,14 +83,14 @@ const ARROWS = ['↑', '↓', '←', '→'];
 // opts: { cell, agent:{x,y}, values:number[], policy:number[], hover:{x,y} }
 export function drawGrid(ctx, grid, opts = {}) {
   const { cell = 48, agent, values, policy, hover } = opts;
-  const ink = css('--ink', '#222'), line = css('--line', '#888'), bg = css('--surface', '#fff');
+  const ink = css('--ink', '#222'), line = css('--line', '#888'), bg = css('--surface', '#fff'), wall = css('--ink-2', '#4A515B');
   // no green token in studio.css: treasure keeps a fixed green that reads on both themes
   const good = '#2a9d4b', bad = css('--red', '#e5533f'), accent = css('--signal', '#ff5a1f');
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   for (let y = 0; y < grid.h; y++) for (let x = 0; x < grid.w; x++) {
     const c = grid.cells[y][x], px = x * cell, py = y * cell;
-    ctx.fillStyle = c === '#' ? line : c === 'T' ? good : c === 'X' ? bad : bg;
+    ctx.fillStyle = c === '#' ? wall : c === 'T' ? good : c === 'X' ? bad : bg;
     ctx.fillRect(px, py, cell, cell);
     ctx.strokeStyle = line;
     ctx.strokeRect(px, py, cell, cell);

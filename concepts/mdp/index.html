@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Markov decision process · Neural Arcade</title>
+<meta name="description" content="An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/mdp/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Markov decision process · Neural Arcade">
+<meta property="og:description" content="An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/mdp/">
+<meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Markov decision process · Neural Arcade">
+<meta name="twitter:description" content="An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/concept.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="concepts"></header>
+
+<main class="wrap concept-page">
+  <section>
+    <div class="crumb"><a href="../">Concepts</a> / Markov decision process</div>
+    <h1>Markov decision process</h1>
+    <p class="lead">An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.</p>
+  </section>
+
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>An MDP is the game written down, where only now matters</h2>
+    <p>Take any game the agent plays and write it out plainly: the states it can be in, the actions it can take, the reward it gets, and the odds of landing in each next state. That table is a Markov decision process, or MDP. Reinforcement learning is the search for a good way to play it.</p>
+    <h3>States, moves and odds</h3>
+    <p>This page uses weather with no actions, so only the states and the odds show. Every state lists where it can go next, each with a chance, and the chances out of a state add up to 100%.</p>
+    <h3>Only the present state matters</h3>
+    <p>The odds for tomorrow come from today's state alone. It does not matter whether it was sunny or rainy last week: once you know it is cloudy now, the odds are the same. That is the Markov property, and it is what makes the table small enough to write down.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> an MDP writes the game down as states, moves, rewards and odds, and the next state depends only on the present one, not on how you got there.</p>
+  </section>
+
+  <section id="video" hidden></section>
+  <section id="games" hidden></section>
+  <section id="related" hidden></section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../../assets/site.js';
+  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
+  import { presets, mountPlayground } from './play.js';
+  import { figureHtml } from './figures.js';
+  mountSite('../../');
+  mountConceptPage('mdp', '../../');
+  document.getElementById('figure').innerHTML = figureHtml() + '<figcaption>One seeded run of twenty days, and the odds that drive it</figcaption>';
+  document.getElementById('tries').innerHTML = triesHtml(presets);
+  const { apply } = mountPlayground(document.getElementById('playground'));
+  wireTries(document.getElementById('tries'), presets, apply);
+</script>
+</body>
+</html>

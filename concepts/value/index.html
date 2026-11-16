@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Value · Neural Arcade</title>
+<meta name="description" content="A state's value is how much reward the agent can expect from there on, if it keeps following its policy.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/value/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Value · Neural Arcade">
+<meta property="og:description" content="A state's value is how much reward the agent can expect from there on, if it keeps following its policy.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/value/">
+<meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Value · Neural Arcade">
+<meta name="twitter:description" content="A state's value is how much reward the agent can expect from there on, if it keeps following its policy.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/concept.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="concepts"></header>
+
+<main class="wrap concept-page">
+  <section>
+    <div class="crumb"><a href="../">Concepts</a> / Value</div>
+    <h1>Value</h1>
+    <p class="lead">A state's value is how much reward the agent can expect from there on, if it keeps following its policy.</p>
+  </section>
+
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>Value is the reward you can expect from here</h2>
+    <p>A state's value is a forecast: starting from this cell and playing well, how much reward will the agent collect? The cells leading to the treasure are worth a little less with every step back.</p>
+    <h3>Value spreads back from the treasure</h3>
+    <p>A cell next to the treasure is worth nearly the full prize. A cell one step further is worth a bit less, and so on. The numbers form a slope that always points toward the reward.</p>
+    <h3>The discount sets how far the slope reaches</h3>
+    <p>With a low discount the slope is short: only cells close to the treasure look valuable. With a high discount it reaches all the way back to the start, so the agent can tell which way to go from far away.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> a state's value is the reward the agent can expect from there. It spreads back from the treasure, and the discount decides how far.</p>
+  </section>
+
+  <section id="video" hidden></section>
+  <section id="games" hidden></section>
+  <section id="related" hidden></section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../../assets/site.js';
+  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
+  import { presets, mountPlayground } from './play.js';
+  import { figureHtml } from './figures.js';
+  mountSite('../../');
+  mountConceptPage('value', '../../');
+  document.getElementById('figure').innerHTML = figureHtml() + '<figcaption>The same grid at two discounts: each number is a cell\'s value</figcaption>';
+  document.getElementById('tries').innerHTML = triesHtml(presets);
+  const { apply } = mountPlayground(document.getElementById('playground'));
+  wireTries(document.getElementById('tries'), presets, apply);
+</script>
+</body>
+</html>
