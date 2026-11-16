@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
-import { conceptById } from '../assets/games.js';
+import { readFileSync, existsSync, statSync } from 'node:fs';
+import { GAMES, conceptById, gameById } from '../assets/games.js';
 
 const html = readFileSync(new URL('../concepts/reward-design/index.html', import.meta.url), 'utf8');
 const c = conceptById('reward-design');
@@ -29,11 +29,30 @@ describe('reward design page shell', () => {
     for (const w of ['park', 'red light', 'wrong way', 'mile']) expect(html.toLowerCase()).toContain(w);
     expect(html).toContain('What to try');
   });
-  it('shows "Where you meet it" linking Reward City and Coin Runner', () => {
-    expect(html).toContain('Where you meet it');
-    expect(html).toContain('href="../../games/city/"');
-    expect(html).toContain('href="../../games/runner/"');
-    expect(html.match(/reward hacking/gi)?.length).toBeGreaterThanOrEqual(2);
+  it('fills the games section from the config, not a static list', () => {
+    expect(html).not.toContain('Where you meet it');
+    expect(html).toContain('id="games"');
+    const users = GAMES.filter(g => g.uses?.includes('reward-design')).map(g => g.id);
+    expect(users.sort()).toEqual(['city', 'runner']);
+    for (const id of users) expect(gameById(id).where['reward-design'].length).toBeGreaterThan(20);
+  });
+  it('wires the playground and the tries', () => {
+    expect(html).toContain("from './play.js'");
+    expect(html).toContain('triesHtml(presets)');
+    expect(html).toContain('mountPlayground');
+  });
+  for (const f of ['fig-lawn', 'fig-loop']) {
+    it(`${f}.webp exists, under 150 KB and an img with alt, width and height`, () => {
+      expect(statSync(new URL(`../concepts/reward-design/${f}.webp`, import.meta.url)).size).toBeLessThan(150000);
+      const img = html.match(new RegExp(`<img[^>]*src="${f}\.webp"[^>]*>`))?.[0];
+      expect(img, f).toBeTruthy();
+      for (const a of ['alt', 'width', 'height']) expect(img).toMatch(new RegExp(` ${a}="[^"]+"`));
+    });
+  }
+  it('share.png is 1280x720', () => {
+    const b = readFileSync(new URL('../concepts/reward-design/share.png', import.meta.url));
+    expect(b.readUInt32BE(16)).toBe(1280);
+    expect(b.readUInt32BE(20)).toBe(720);
   });
 });
 

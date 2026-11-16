@@ -39,12 +39,16 @@ describe('concept config', () => {
       for (const u of g.uses) expect(g.where[u]?.length, `${id}.${u}`).toBeGreaterThan(0);
     }
     expect(game('maze').uses).toHaveLength(5);
-    expect(game('runner').uses).toHaveLength(3);
+    expect(game('runner').uses).toHaveLength(4);
+    expect(game('runner').uses).toContain('reward-design');
   });
   it('pid has the video and the concept pages are all eight', () => {
     expect(conceptById('pid').youtube).toBe('drtqgVse4jo');
     expect(CONCEPTS.map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design']);
     for (const c of CONCEPTS) expect(c, c.id).not.toHaveProperty('page');
+  });
+  it('conceptHref for reward-design is the concept page', () => {
+    expect(conceptHref(conceptById('reward-design'), '../')).toBe('../concepts/reward-design/');
   });
   it('conceptHref always goes to the concept page', () => {
     expect(conceptHref(conceptById('pid'), '../../')).toBe('../../concepts/pid/');

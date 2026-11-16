@@ -46,6 +46,7 @@
       <div class="part">
         <div class="letter">1</div>
         <div><h3>Cutting across the park</h3><p>Pay only for speed and the shortest path wins, even over a lawn. The fix is a fine on the lawn, big enough that the longer road becomes the cheaper trip.</p></div>
+        <figure class="fig"><img src="fig-lawn.webp" width="960" height="248" loading="lazy" alt="The toy map: paid for speed alone, the courier drives straight across the lawn to the end."><figcaption>Paid for speed alone: straight across the lawn</figcaption></figure>
       </div>
       <div class="part">
         <div class="letter">2</div>
@@ -58,18 +59,11 @@
       <div class="part">
         <div class="letter">!</div>
         <div><h3>Paying by the mile</h3><p>The cautionary end: pay for every tile driven and the best plan is to never finish. The agent loops for ever, collecting more than the fare would ever give it.</p></div>
+        <figure class="fig"><img src="fig-loop.webp" width="960" height="248" loading="lazy" alt="The toy map: paid by the tile, the courier shuttles back and forth by the start and never reaches the end."><figcaption>Paid by the tile: it shuttles by the start and never arrives</figcaption></figure>
       </div>
     </div>
     <h2>What to try</h2>
     <p>Start with the clock only and watch it take the shortcut. Fine the shortcut and see the road win. Then pay by the mile and watch it stop arriving at all. Each time, ask what the slip really says, not what you meant.</p>
-  </section>
-
-  <section id="meet">
-    <h2>Where you meet it</h2>
-    <div class="games">
-      <a class="game" href="../../games/city/"><h3>Reward City</h3><p>Write a taxi's pay slip and watch it find every loophole across real Chicago streets.</p><p class="where">Cutting through the park, running lights and going the wrong way are all reward hacking: the best plan your rules allow.</p></a>
-      <a class="game" href="../../games/runner/"><h3>Coin Runner</h3><p>A hero learns a platformer level from points alone.</p><p class="where">Pay more for coins than for the flag and it farms the coin block: reward hacking in a platformer.</p></a>
-    </div>
   </section>
 
   <section id="video" hidden></section>
@@ -81,9 +75,13 @@
 
 <script type="module">
   import { mountSite } from '../../assets/site.js';
-  import { mountConceptPage } from '../../assets/concept-page.js';
+  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
+  import { presets, mountPlayground } from './play.js';
   mountSite('../../');
   mountConceptPage('reward-design', '../../');
+  document.getElementById('tries').innerHTML = triesHtml(presets);
+  const { apply } = mountPlayground(document.getElementById('playground'));
+  wireTries(document.getElementById('tries'), presets, apply);
 </script>
 </body>
 </html>
