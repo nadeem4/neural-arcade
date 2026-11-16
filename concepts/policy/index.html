@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Policy · Neural Arcade</title>
+<meta name="description" content="A policy is the agent's rulebook: in each state, which action to take.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/policy/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Policy · Neural Arcade">
+<meta property="og:description" content="A policy is the agent's rulebook: in each state, which action to take.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/policy/">
+<meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Policy · Neural Arcade">
+<meta name="twitter:description" content="A policy is the agent's rulebook: in each state, which action to take.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/concept.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="concepts"></header>
+
+<main class="wrap concept-page">
+  <section>
+    <div class="crumb"><a href="../">Concepts</a> / Policy</div>
+    <h1>Policy</h1>
+    <p class="lead">A policy is the agent's rulebook: in each state, which action to take.</p>
+  </section>
+
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>A policy is a rulebook, one move per place</h2>
+    <p>The agent does not plan from scratch every step. It carries a rulebook that says what to do in every state, and it just follows it. That rulebook is the policy.</p>
+    <h3>One action per state</h3>
+    <p>In this grid the policy is an arrow in every cell. Wherever the agent stands, it looks up that cell and takes the move the arrow shows.</p>
+    <h3>Good and bad rulebooks</h3>
+    <p>Some rulebooks go round in circles, some run straight into the pit, and some find the treasure. Learning is the search for a rulebook that earns a lot of reward.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> a policy says which action to take in each state, and a better policy earns more reward. Reinforcement learning is the search for a good one.</p>
+  </section>
+
+  <section id="video" hidden></section>
+  <section id="games" hidden></section>
+  <section id="related" hidden></section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../../assets/site.js';
+  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
+  import { presets, mountPlayground } from './play.js';
+  import { figureHtml } from './figures.js';
+  mountSite('../../');
+  mountConceptPage('policy', '../../');
+  document.getElementById('figure').innerHTML = figureHtml() + '<figcaption>Three rulebooks on the same grid: where each one walks, and the total reward it earns</figcaption>';
+  document.getElementById('tries').innerHTML = triesHtml(presets);
+  const { apply } = mountPlayground(document.getElementById('playground'));
+  wireTries(document.getElementById('tries'), presets, apply);
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Return and discount · Neural Arcade</title>
+<meta name="description" content="The return is all the reward still to come, with far-off reward counted for less by the discount.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/return/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Return and discount · Neural Arcade">
+<meta property="og:description" content="The return is all the reward still to come, with far-off reward counted for less by the discount.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/return/">
+<meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Return and discount · Neural Arcade">
+<meta name="twitter:description" content="The return is all the reward still to come, with far-off reward counted for less by the discount.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/concept.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="concepts"></header>
+
+<main class="wrap concept-page">
+  <section>
+    <div class="crumb"><a href="../">Concepts</a> / Return and discount</div>
+    <h1>Return and discount</h1>
+    <p class="lead">The return is all the reward still to come, with far-off reward counted for less by the discount.</p>
+  </section>
+
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>Rewards now count for more than rewards later</h2>
+    <p>One reward is not the goal. The agent wants all the reward that is still to come, added up. That total is the return.</p>
+    <h3>The return</h3>
+    <p>Look ahead along the path the agent will take and add up each reward it will collect. That sum is the return, and it is what the agent really tries to make big.</p>
+    <h3>The discount</h3>
+    <p>A reward far away is less certain than one right now, so it is counted for less. Each step further out multiplies the reward by the discount, a number from 0 to just under 1. At 1 nothing shrinks, at 0.5 every step halves it.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> the return adds up the rewards still to come, and the discount sets how far ahead the agent looks. A small discount makes it near-sighted.</p>
+  </section>
+
+  <section id="video" hidden></section>
+  <section id="games" hidden></section>
+  <section id="related" hidden></section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../../assets/site.js';
+  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
+  import { presets, mountPlayground } from './play.js';
+  import { figureHtml } from './figures.js';
+  mountSite('../../');
+  mountConceptPage('return', '../../');
+  document.getElementById('figure').innerHTML = figureHtml() + '<figcaption>The same eight rewards at discount 1, 0.9 and 0.5, with the exact return of each</figcaption>';
+  document.getElementById('tries').innerHTML = triesHtml(presets);
+  const { apply } = mountPlayground(document.getElementById('playground'));
+  wireTries(document.getElementById('tries'), presets, apply);
+</script>
+</body>
+</html>
