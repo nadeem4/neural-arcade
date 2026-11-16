@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reward design · Neural Arcade</title>
+<meta name="description" content="Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/reward-design/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Reward design · Neural Arcade">
+<meta property="og:description" content="Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/reward-design/">
+<meta property="og:image" content="https://arcade.codewithnk.com/concepts/reward-design/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Reward design: a taxi that learns to cut across the park">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reward design · Neural Arcade">
+<meta name="twitter:description" content="Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/concepts/reward-design/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/concept.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="concepts"></header>
+
+<main class="wrap concept-page">
+  <section>
+    <div class="crumb"><a href="../">Concepts</a> / Reward design</div>
+    <h1>Reward design</h1>
+    <p class="lead">Reward design is choosing the numbers an agent is paid and fined; it does <em>exactly</em> what they pay for, so every loophole in them becomes a behaviour.</p>
+  </section>
+
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>It does what you pay for</h2>
+    <p>An agent never knows what you meant, only what the pay slip says. It tries things, keeps whatever earns more, and drops whatever earns less. So the slip has to say everything you care about. Whatever it leaves out, the agent treats as free.</p>
+    <div class="parts">
+      <div class="part">
+        <div class="letter">1</div>
+        <div><h3>Cutting across the park</h3><p>Pay only for speed and the shortest path wins, even over a lawn. The fix is a fine on the lawn, big enough that the longer road becomes the cheaper trip.</p></div>
+      </div>
+      <div class="part">
+        <div class="letter">2</div>
+        <div><h3>Running red lights</h3><p>Once the park is fined, the next cheapest trick appears: a red light costs nothing, so the agent drives straight through. Each rule you add closes one loophole and shows you the next.</p></div>
+      </div>
+      <div class="part">
+        <div class="letter">3</div>
+        <div><h3>Driving the wrong way</h3><p>Fine the red lights too, and a one-way street is the next shortcut: going the wrong way down it saves a block and breaks no rule you wrote.</p></div>
+      </div>
+      <div class="part">
+        <div class="letter">!</div>
+        <div><h3>Paying by the mile</h3><p>The cautionary end: pay for every tile driven and the best plan is to never finish. The agent loops for ever, collecting more than the fare would ever give it.</p></div>
+      </div>
+    </div>
+    <h2>What to try</h2>
+    <p>Start with the clock only and watch it take the shortcut. Fine the shortcut and see the road win. Then pay by the mile and watch it stop arriving at all. Each time, ask what the slip really says, not what you meant.</p>
+  </section>
+
+  <section id="meet">
+    <h2>Where you meet it</h2>
+    <div class="games">
+      <a class="game" href="../../games/city/"><h3>Reward City</h3><p>Write a taxi's pay slip and watch it find every loophole across real Chicago streets.</p><p class="where">Cutting through the park, running lights and going the wrong way are all reward hacking: the best plan your rules allow.</p></a>
+      <a class="game" href="../../games/runner/"><h3>Coin Runner</h3><p>A hero learns a platformer level from points alone.</p><p class="where">Pay more for coins than for the flag and it farms the coin block: reward hacking in a platformer.</p></a>
+    </div>
+  </section>
+
+  <section id="video" hidden></section>
+  <section id="games" hidden></section>
+  <section id="related" hidden></section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module">
+  import { mountSite } from '../../assets/site.js';
+  import { mountConceptPage } from '../../assets/concept-page.js';
+  mountSite('../../');
+  mountConceptPage('reward-design', '../../');
+</script>
+</body>
+</html>
