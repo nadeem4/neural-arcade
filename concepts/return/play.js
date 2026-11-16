@@ -27,8 +27,8 @@ export function mountPlayground(root) {
     $('gv').textContent = g.toFixed(2);
     bars.innerHTML = REWARDS.map((r, t) => `
       <div class="rbar"><div class="track"><div class="fill" style="height:${(d[t] / 10) * 100}%"></div></div>
-        <span class="num">${show(d[t])}</span><span class="step">${t === 0 ? 'now' : '+' + t}</span></div>`).join('');
-    $('sum').innerHTML = `Return = ${d.map(show).join(' + ')} = <b class="num">${returnOf(REWARDS, g).toFixed(2)}</b>`;
+        <span class="num">${show(d[t])}</span><span class="when">${t === 0 ? 'now' : '+' + t}</span></div>`).join('');
+    $('sum').innerHTML = `Return = ${d.map(show).join(" + ")} ≈ <b class="num">${returnOf(REWARDS, g).toFixed(2)}</b>`;
   }
 
   slider.addEventListener('input', render);
