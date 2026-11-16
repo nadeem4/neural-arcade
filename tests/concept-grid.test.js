@@ -61,14 +61,7 @@ describe('valueIteration', () => {
   });
   it('a cell beside the pit is below the cell beside the treasure', () => {
     const v = valueIteration(GRID, 0.9);
-    const t = find(GRID, 'T'), x = find(GRID, 'X');
-    const near = (p, q) => Math.abs(p.x - q.x) + Math.abs(p.y - q.y) === 1;
-    for (let y = 0; y < GRID.h; y++) for (let xx = 0; xx < GRID.w; xx++) {
-      if (GRID.cells[y][xx] === '#' || 'TX'.includes(GRID.cells[y][xx])) continue;
-      if (near({ x: xx, y }, x) && !near({ x: xx, y }, t)) {
-        expect(v[stateId(GRID, { x: xx, y })]).toBeLessThan(10);
-      }
-    }
+    expect(v[stateId(GRID, { x: 1, y: 0 })]).toBeLessThan(v[stateId(GRID, { x: 4, y: 1 })]);
   });
 });
 

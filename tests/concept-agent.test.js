@@ -10,15 +10,15 @@ import { conceptById } from '../assets/games.js';
 const RIGHT = 3, DOWN = 1;
 
 describe('agent sim', () => {
-  it('same seed, same start; starts on S with nothing earned', () => {
-    const a = createWorld(1), b = createWorld(1);
+  it('two worlds start the same, on S with nothing earned', () => {
+    const a = createWorld(), b = createWorld();
     expect(a).toEqual(b);
     expect(a.pos).toEqual({ x: 0, y: 0 });
     expect(a.last).toBeNull();
     expect(a.total).toBe(0);
   });
   it('act updates pos, last and total by the grid reward', () => {
-    const w = createWorld(1);
+    const w = createWorld();
     act(w, RIGHT);
     expect(w.pos).toEqual({ x: 1, y: 0 });
     expect(w.last).toEqual({ action: RIGHT, reward: REWARD.step });
@@ -26,13 +26,13 @@ describe('agent sim', () => {
     expect(w.total).toBeCloseTo(REWARD.step);
   });
   it('a wall bump keeps the agent in place and still pays the step', () => {
-    const w = createWorld(1);
+    const w = createWorld();
     act(w, 0);
     expect(w.pos).toEqual({ x: 0, y: 0 });
     expect(w.last.reward).toBe(REWARD.step);
   });
   it('a terminal act sets done, and the next act restarts the episode', () => {
-    const w = createWorld(1);
+    const w = createWorld();
     act(w, RIGHT); act(w, RIGHT); // onto the pit at (2,0)
     expect(w.done).toBe(true);
     expect(w.last.reward).toBe(REWARD.pit);
@@ -45,7 +45,7 @@ describe('agent sim', () => {
   });
   it('autoAct is deterministic for a seed and usually finds the treasure', () => {
     const run = seed => {
-      const w = createWorld(seed), rng = mulberry32(seed);
+      const w = createWorld(), rng = mulberry32(seed);
       let wins = 0;
       for (let i = 0; i < 50; i++) { autoAct(w, rng); if (w.done && w.last.reward === REWARD.treasure) wins++; }
       return { w, wins };
@@ -53,7 +53,7 @@ describe('agent sim', () => {
     expect(run(5)).toEqual(run(5));
     let wins = 0, pits = 0;
     for (let s = 1; s <= 10; s++) {
-      const w = createWorld(s), rng = mulberry32(s);
+      const w = createWorld(), rng = mulberry32(s);
       for (let i = 0; i < 50; i++) { autoAct(w, rng); if (w.done) { if (w.last.reward === REWARD.treasure) wins++; else pits++; } }
     }
     expect(wins).toBeGreaterThan(pits);
@@ -67,7 +67,7 @@ describe('presets', () => {
   });
   it('every preset applied to a fresh world leaves finite numbers', () => {
     for (const p of presets) {
-      const w = createWorld(3), rng = mulberry32(3);
+      const w = createWorld(), rng = mulberry32(3);
       if (p.state.act !== undefined) act(w, p.state.act);
       if (p.state.auto) for (let i = 0; i < 10; i++) autoAct(w, rng);
       for (const v of [w.pos.x, w.pos.y, w.steps, w.total]) expect(Number.isFinite(v)).toBe(true);
@@ -80,9 +80,17 @@ describe('figureHtml', () => {
   it('is deterministic, an svg, and carries the real first reward', () => {
     expect(figureHtml(7)).toBe(figureHtml(7));
     expect(figureHtml(7).startsWith('<svg')).toBe(true);
-    const w = createWorld(7), rng = mulberry32(7);
+    const w = createWorld(), rng = mulberry32(7);
     autoAct(w, rng);
     expect(figureHtml(7)).toContain(`reward ${w.last.reward.toFixed(1)}`);
+  });
+  it('shows whole grids and puts the step captions in legible HTML under the svg', () => {
+    const h = figureHtml(7);
+    const vb = h.match(/viewBox="(\S+) (\S+) (\S+) (\S+)"/).slice(1).map(Number);
+    expect(vb[0]).toBeLessThan(0);
+    expect(vb[1]).toBeLessThan(0);
+    expect(h).toContain('</svg><ol');
+    expect(h.match(/<svg[\s\S]*<\/svg>/)[0]).not.toContain('<text x="' + (vb[2] / 2) + '"');
   });
 });
 

@@ -20,6 +20,8 @@ export function mountPlayground(root) {
   const $ = n => root.querySelector(`[data-r="${n}"]`);
   const canvas = $('world'), info = $('info');
   let hover = null;
+  canvas.tabIndex = 0;
+  canvas.setAttribute('aria-label', 'Grid of states. Use the arrow keys to move between cells, or hover or tap a cell, to inspect it.');
 
   const layout = () => {
     const r = canvas.getBoundingClientRect();
@@ -56,7 +58,19 @@ export function mountPlayground(root) {
   }
   canvas.addEventListener('pointermove', pick);
   canvas.addEventListener('pointerdown', pick); // tap on touch
+  const KEYS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+  canvas.addEventListener('keydown', e => {
+    const k = KEYS[e.key];
+    if (!k) return;
+    e.preventDefault();
+    const p = hover || { x: 0, y: 0 };
+    hover = { x: Math.min(GRID.w - 1, Math.max(0, p.x + k[0])), y: Math.min(GRID.h - 1, Math.max(0, p.y + k[1])) };
+    readout(); draw();
+  });
   window.addEventListener('resize', draw);
+  // Redraw when the theme changes, since the grid colours come from CSS tokens.
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (typeof matchMedia === 'function') matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
 
   function apply(state) {
     hover = { x: state.hover[0], y: state.hover[1] };

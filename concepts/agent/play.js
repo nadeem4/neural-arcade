@@ -38,7 +38,7 @@ export function mountPlayground(root) {
     const l = world.last;
     $('n').textContent = world.steps;
     $('tot').textContent = world.total.toFixed(1);
-    if (!l) return;
+    if (!l) { $('said').textContent = 'Waiting for a move.'; $('answered').textContent = 'New episode: back at the start.'; return; }
     $('said').textContent = `Agent did: ${ACTIONS[l.action].name}`;
     const end = world.done ? (l.reward > 0 ? ' Treasure! Episode over.' : ' Into the pit. Episode over.') : '';
     $('answered').textContent = `World answered: new state (${world.pos.x},${world.pos.y}), reward ${l.reward.toFixed(1)}.${end}`;
@@ -48,6 +48,7 @@ export function mountPlayground(root) {
     world = createWorld();
     autoBox.checked = !!state.auto && !reduced();
     if (state.act !== undefined) act(world, state.act);
+    if (state.auto && reduced()) autoAct(world, rng); // no animation, so take one visible step
     readout();
     last = 0;
     wake();

@@ -69,7 +69,8 @@ describe('figureHtml', () => {
   it('uses theme tokens, never hard-coded hex colours (also the agent figure)', () => {
     expect(figureHtml()).not.toMatch(HEX_COLOUR);
     expect(agentFigure(7)).not.toMatch(HEX_COLOUR);
-    expect(figureHtml()).toContain('var(--ink)');
+    expect(figureHtml()).toContain('var(--stage-ink)');
+    expect(figureHtml()).not.toContain('var(--ink)'); // the figure sits on the dark stage
   });
 });
 
