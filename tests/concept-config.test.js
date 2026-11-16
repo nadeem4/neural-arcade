@@ -44,7 +44,7 @@ describe('concept config', () => {
   it('pid has the video and the concept pages are all eight', () => {
     expect(conceptById('pid').youtube).toBe('drtqgVse4jo');
     expect(CONCEPTS.map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design']);
-    expect(CONCEPTS.filter(c => c.page).map(c => c.id)).toEqual(['reward-design']);
+    for (const c of CONCEPTS) expect(c, c.id).not.toHaveProperty('page');
   });
   it('conceptHref always goes to the concept page', () => {
     expect(conceptHref(conceptById('pid'), '../../')).toBe('../../concepts/pid/');
