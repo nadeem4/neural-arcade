@@ -178,3 +178,36 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 #train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--hud-taxi) 35%, transparent); }
 
 .endcard .receipt .row { border: 0; }
+
+/* Garage drawer: navy cards with a coloured stripe per name; empty bays are dashed. */
+.drawer { position: absolute; top: 60px; right: 12px; bottom: 90px; z-index: 5; width: 340px; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 10px; padding: 16px; border: 1px solid var(--navy-line); border-radius: 18px; background: var(--navy); color: #E8EDF4; font-family: var(--sans); box-shadow: 0 8px 30px rgba(0, 0, 0, .45); }
+.drawer[hidden] { display: none; }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; }
+.drawer-head h2 { margin: 0; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
+.drawer .btn { height: 36px; padding: 0 12px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: 13px; }
+.drawer-empty { margin: 0; color: #9AA7B8; font-size: 14px; }
+.drawer-empty[hidden] { display: none; }
+.bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; grid-auto-rows: max-content; gap: 10px; overflow-y: auto; }
+.bay { display: grid; gap: 6px; padding: 16px 14px 12px; position: relative; overflow: hidden; border: 1px solid var(--navy-line); border-radius: 12px; background: var(--navy-soft); }
+.bay-stripe { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+.bay-stats { display: flex; align-items: baseline; gap: 12px; }
+.bay-earned { font: 700 16px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.bay-earned.pay { color: var(--hud-pay); }
+.bay-earned.fine { color: var(--hud-fine); }
+.bay.empty { border: 2px dashed var(--navy-line); background: none; color: #6F7C8E; text-align: center; padding: 12px; }
+.bay-head { display: flex; align-items: center; gap: 10px; }
+.bay-name { font: 700 17px "Space Grotesk", var(--sans); }
+.bay-try { margin-left: auto; font-size: 12px; color: #9AA7B8; }
+.bay-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-rate { padding: 3px 8px; border-radius: 6px; background: var(--navy); color: #C5CEDA; font: 600 12px var(--sans); }
+.bay-time { font: 700 22px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.bay-note { font-size: 13px; color: #9AA7B8; }
+.bay-actions { display: flex; gap: 8px; }
+.bay-actions .go { flex: 1; }
+.drawer button:focus-visible { outline: 2px solid var(--hud-taxi); outline-offset: 3px; }
+@media (max-width: 720px) {
+  .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 50svh; padding: 12px; }
+  .bay { padding: 12px 10px 8px; gap: 4px; }
+  .bay-time { font-size: 18px; }
+  .bay.empty { display: none; }
+}

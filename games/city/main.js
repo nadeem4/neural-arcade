@@ -17,6 +17,9 @@ import { createSound } from './sound.js';
 import { stepRate, rateRows } from './rates.js';
 import { nextScreen, canToggleView } from './screens.js';
 import { endCardModel } from './endcard.js';
+import { createGarage, keep, remove, serialize, parse, validTaxi } from './garage.js';
+import { nameFor, uniqueName, noteFor } from './naming.js';
+import { renderGarage } from './garage-view.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
@@ -112,7 +115,6 @@ const jobs = createJobs(runTrain);
 
 // ---------- Screens: map (rate card), training, driving, done (end card) ----------
 let screen = 'map', trip = null; // trip: { rewards, analysis, events, route, track, ended } for the trip on screen
-const hooks = { onKeep: () => toast('Garage arrives next') }; // RC13 replaces onKeep with the real save to the garage
 let toastTimer = 0;
 function toast(text) {
   const t = $('toast');
@@ -129,6 +131,7 @@ function go(event) {
   $('driveProgress').hidden = screen !== 'driving';
   $('train').disabled = busy || !stage;
   $('train').textContent = busy ? 'TRAINING…' : 'TRAIN & DRIVE';
+  if (busy) showGarage(false);
   showRates();
 }
 
@@ -156,7 +159,7 @@ function showStage() {
 // ---------- The end card ----------
 function showEnd(t) {
   const m = endCardModel(t.rewards, t.analysis, GOAL_SECONDS);
-  $('endTitle').textContent = `TRIP DONE · TRY ${session.tries}`;
+  $('endTitle').textContent = `TRIP DONE · TRY ${t.tries}`;
   const flag = $('endFlag');
   flag.textContent = m.timeOk ? 'Legal and on time' : m.legal ? 'Legal, but slow' : 'Not legal';
   flag.className = 'end-flag' + (m.timeOk ? ' ok' : '');
@@ -175,7 +178,7 @@ function showEnd(t) {
     row('row total', 'Total', signed(m.earned)));
   $('endVerdict').textContent = m.verdict;
   const fixed = goalReached(t.analysis);
-  shareText = fixed ? shareLine(session.tries, t.analysis) : '';
+  shareText = fixed ? shareLine(t.tries, t.analysis) : '';
   $('shareText').textContent = shareText; $('share').hidden = !fixed;
   $('announce').textContent = `Trip done. ${m.timeLine}. ${m.verdict}` + (fixed ? ' Fixed.' : '');
 }
@@ -212,13 +215,60 @@ async function train(req) {
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events);
-    trip = { rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, ended: false };
+    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, ended: false };
     go('trained');
     drive(trip);
   } catch {
     progress.hidden = true; go('failed');
     say('Training failed. Reload the page and try again.');
   }
+}
+
+// ---------- The garage: kept taxis in localStorage (in memory only if storage is blocked) ----------
+const GARAGE_KEY = 'rc-garage-v1';
+let garage = createGarage();
+// Read once the map is loaded, so a stored route can be checked against it.
+function loadGarage() {
+  try { garage = parse(localStorage.getItem(GARAGE_KEY), { cellCount: world.cols * world.rows }); } catch { /* storage blocked: the garage lasts this visit */ }
+}
+const saveGarage = () => { try { localStorage.setItem(GARAGE_KEY, serialize(garage)); } catch { /* storage blocked */ } };
+// Focus goes to the first DRIVE (or Close when empty) on open, and to the Garage button when the player closes it; auto-closes leave focus alone.
+const driveButtons = () => [...$('garageList').querySelectorAll('.go')];
+function closeGarage() { showGarage(false); $('garage').focus(); }
+function showGarage(open, focusIndex) {
+  $('garageDrawer').hidden = !open;
+  $('garage').setAttribute('aria-expanded', String(open));
+  $('garageCount').textContent = garage.taxis.length;
+  $('garageEmpty').hidden = garage.taxis.length > 0;
+  renderGarage($('garageList'), garage, {
+    canDrive: screen !== 'training',
+    onDrive: driveKept,
+    onRemove: (taxi, i) => { garage = remove(garage, taxi.id); saveGarage(); showGarage(true, i); },
+  });
+  if (open && focusIndex !== undefined) (driveButtons()[focusIndex] ?? driveButtons().pop() ?? $('garageClose')).focus();
+}
+function keepTrip(t) {
+  const name = uniqueName(nameFor(t.rewards), garage.taxis.map(x => x.name));
+  garage = keep(garage, {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, tries: t.tries,
+    rewards: { ...t.rewards }, route: t.route, analysis: t.analysis,
+    bestSeconds: t.analysis.seconds, note: noteFor(t.analysis), keptAt: Date.now(),
+  });
+  saveGarage(); showGarage(false);
+  toast(`Kept as ${garage.taxis[0].name}`);
+}
+// DRIVE from a bay: its rates go into the rate card, then the stored route plays through the same path as a fresh trip, with no training.
+function driveKept(taxi) {
+  if (!stage || screen === 'training' || !validTaxi(taxi, world.cols * world.rows)) return;
+  showGarage(false);
+  jobs.cancel(); latest++; sound.unlock();
+  rewards = { ...taxi.rewards };
+  const events = tripEvents(world, taxi.rewards, taxi.route);
+  const track = driveTrack(routeFrames(world, cellM, taxi.route), events);
+  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, ended: false };
+  stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
+  go('replay');
+  drive(trip);
 }
 
 // ---------- Wiring ----------
@@ -240,7 +290,10 @@ function build() {
     $('announce').textContent = '';
     go('edit'); $('fareInc').focus({ preventScroll: true });
   });
-  $('endKeep').addEventListener('click', () => { if (trip) hooks.onKeep(trip); });
+  $('endKeep').addEventListener('click', () => { if (trip) keepTrip(trip); });
+  $('garage').addEventListener('click', () => { if ($('garageDrawer').hidden) showGarage(true, 0); else closeGarage(); });
+  $('garageClose').addEventListener('click', closeGarage);
+  $('garageDrawer').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeGarage(); } });
   $('endAgain').addEventListener('click', () => {
     if (!trip) return;
     go('again'); sound.unlock(); drive(trip);
@@ -307,8 +360,10 @@ async function start() {
     say('The map did not load. Reload the page to try again.');
     return;
   }
+  loadGarage();
   enable(true);
   setupChase();
   go('none'); // the map screen: the rate card and TRAIN & DRIVE
+  showGarage(false);
 }
 start();
