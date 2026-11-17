@@ -43,14 +43,18 @@ export function raceStateAt(race, ms) {
   });
   const dist = cars.map(c => Math.hypot(c.state.x - race.goal.x, c.state.z - race.goal.z));
   const gap = Math.abs(dist[0] - dist[1]);
-  return { cars, leader: gap < 1e-6 ? null : dist[0] < dist[1] ? 0 : 1, done: cars.every(c => c.finished) };
+  // tick is the shared light clock: the lights run for the whole race, whichever car has finished.
+  return { cars, tick: Math.floor(t / race.tickMs), leader: gap < 1e-6 ? null : dist[0] < dist[1] ? 0 : 1, done: cars.every(c => c.finished) };
 }
 
 // Sound in a race is the leader's only, to avoid noise. `done` is how many steps each car has already been through;
 // returns the leader's newly finished steps and the new counts (the trailing car's count moves on without a sound).
 export function leaderBlips(race, rs, done) {
   const next = rs.cars.map((c, i) => Math.min(c.state.stepIndex, race.cars[i].events.steps.length));
-  const steps = rs.leader === null ? [] : race.cars[rs.leader].events.steps.slice(done[rs.leader], next[rs.leader]);
+  // A car that has finished is silent while the other still drives; that one is the voice until it arrives.
+  const driving = rs.cars.findIndex(c => !c.finished);
+  const voice = rs.cars.some(c => c.finished) && driving >= 0 ? driving : rs.leader;
+  const steps = voice === null ? [] : race.cars[voice].events.steps.slice(done[voice], next[voice]);
   return { steps, done: next };
 }
 

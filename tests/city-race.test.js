@@ -66,6 +66,25 @@ describe('raceStateAt', () => {
   });
 });
 
+describe('shared light clock', () => {
+  it('is floor(ms / tickMs) all race long, so it keeps running after one car finishes', () => {
+    const [a] = race.cars.map(c => c.track.total);
+    for (const ms of [0, 1234, a - 1, a + race.tickMs * 2, race.total - 1, race.total + 500]) {
+      expect(raceStateAt(race, ms).tick).toBe(Math.floor(Math.min(ms, race.total) / race.tickMs));
+    }
+    const after = raceStateAt(race, a + race.tickMs * 3);
+    expect(after.cars[0].finished).toBe(true);
+    expect(after.tick).toBeGreaterThan(raceStateAt(race, a).tick);
+  });
+  it('plays the still-driving car (not the finished leader) once the other has finished once the other has finished', () => {
+    const [a] = race.cars.map(c => c.track.total);
+    const s = raceStateAt(race, a + race.tickMs * 3);
+    expect(s.cars.map(c => c.finished)).toEqual([true, false]);
+    const r = leaderBlips(race, s, [0, 0]);
+    expect(r.steps).toEqual(race.cars[1].events.steps.slice(0, Math.min(s.cars[1].state.stepIndex, race.cars[1].events.steps.length)));
+  });
+});
+
 describe('result', () => {
   it('gives the race to the faster arrival, by the seconds between them', () => {
     expect(result(fake(T(true, 30, 50), T(true, 40, 90)))).toMatchObject({ winner: 0, by: 10, reason: 'time' });

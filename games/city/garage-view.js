@@ -36,9 +36,12 @@ function card(taxi, i, { onDrive, onRemove, onPick, canDrive, picks = [], canRac
   const race = el('button', 'btn bay-race', picked ? 'In race' : 'Race');
   race.type = 'button'; race.disabled = !canRace; race.setAttribute('aria-pressed', String(picked));
   race.setAttribute('aria-label', `Race ${taxi.name}`);
-  if (!canRace) race.title = raceTitle;
   race.addEventListener('click', () => onPick(taxi, i));
-  const actions = el('div', 'bay-actions'); actions.append(drive, race, del);
+  // A disabled button shows no tooltip, so the span carries the title.
+  const raceWrap = el('span', 'bay-race-wrap');
+  if (!canRace) raceWrap.title = raceTitle;
+  raceWrap.append(race);
+  const actions = el('div', 'bay-actions'); actions.append(drive, raceWrap, del);
   const earned = Math.round(taxi.analysis.reward * 10) / 10 + 0;
   const stats = el('div', 'bay-stats');
   stats.append(el('span', 'bay-time', `${taxi.bestSeconds} s`), el('span', `bay-earned ${earned >= 0 ? 'pay' : 'fine'}`, `${earned > 0 ? '+' : ''}${earned}`));

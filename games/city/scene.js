@@ -362,8 +362,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       span.style.transform = `translate(${cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width}px, ${cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height}px) translate(-50%, -100%)`;
     });
     play.state = rs;
-    const lead = rs.cars[rs.leader ?? 0].state;
-    setLights(lead.tick, lead.facing);
+    setLights(rs.tick, rs.cars[rs.leader ?? 0].state.facing);
   };
   // Where the taxi is on screen, in the label layer's pixels, so the tags can pop up beside it.
   const taxiScreen = () => {
