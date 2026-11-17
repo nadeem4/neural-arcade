@@ -1,6 +1,6 @@
 // The Stage interface: { ready, setHeat(visits), showRoute(route, analysis, { onDone }), clearRoute(), setChase(on), destroy() }.
 // scene.js supplies the 3D stage; this file holds the choice between it and the message-only fallback.
-export const NO_WEBGL = '3D view needs WebGL. The pay slip and receipt still work.';
+export const NO_WEBGL = '3D view needs WebGL. The reward and receipt still work.';
 
 export function webglAvailable(doc = globalThis.document) {
   try {

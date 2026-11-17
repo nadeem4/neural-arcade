@@ -1,4 +1,6 @@
-// The trip receipt and the one-sentence verdict, from the pay slip and analyzeRoute's result.
+// The trip receipt and the one-sentence verdict, from the reward and analyzeRoute's result.
+import { GOAL_SECONDS } from './presets.js';
+
 const round1 = (n) => Math.round(n * 10) / 10 + 0; // + 0 turns -0 into 0
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -34,4 +36,24 @@ export function verdictOf(rewards, a) {
   if (a.redRuns > 0) return 'It ran red lights: they cost less than waiting.';
   if (a.wrongWays > 0) return 'It went the wrong way down a one-way street to save time.';
   return 'Legal trip: no fines.';
+}
+
+// The game page's verdict: names the cheat and the slider to try next. (verdictOf stays as it is for the write-up's recording.)
+export function nextStepOf(rewards, a) {
+  if (!a.arrived) {
+    if (rewards.perTile > 0 && a.seconds > 0 && a.tiles >= a.seconds / 2) {
+      return 'It drove extra to earn pay per tile and never dropped the passenger off. Try lowering pay per tile.';
+    }
+    if (rewards.fare <= 0) return 'It never arrived. Nothing pays it for the drop-off. Try raising the fare.';
+    const fines = rewards.off * a.offTiles + rewards.red * a.redRuns + rewards.wrong * a.wrongWays;
+    return fines >= rewards.fare
+      ? 'It never arrived. The fines outweigh the fare. Try lowering a fine or raising the fare.'
+      : 'It never arrived. Try raising the fare.';
+  }
+  const cheat = (what, rate, fine) => `${what} ${rate > 0 ? 'The fine is too small.' : 'Nothing fines that.'} Try ${rate > 0 ? 'a bigger' : 'the'} ${fine} fine.`;
+  if (a.parkTiles > 0) return cheat('It cut across the park.', rewards.off, 'park');
+  if (a.offTiles > 0) return cheat('It drove along the footpaths.', rewards.off, 'park');
+  if (a.redRuns > 0) return cheat('It ran red lights.', rewards.red, 'red-light');
+  if (a.wrongWays > 0) return cheat('It went the wrong way down a one-way street.', rewards.wrong, 'wrong-way');
+  return a.seconds < GOAL_SECONDS ? 'Clean, fast and legal. That is a fixed taxi.' : 'Legal, but not fast enough. Try a higher cost per second.';
 }

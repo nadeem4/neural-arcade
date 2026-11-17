@@ -13,7 +13,7 @@ export const RANGES = {
   perTile: { min: 0, max: 5, step: 0.5 },
 };
 
-// Training values. SEED is the fixed seed the try cards train with.
+// Training values. SEED is the fixed seed the game page and the write-up's recorded story train with.
 export const SEED = 1;
 export const EPISODES = 20000;
 export const STEP_CAP = 400;
