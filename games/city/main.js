@@ -9,15 +9,57 @@ import { buildReceipt, nextStepOf } from './receipt.js';
 import { INFO, goalReached, shareLine } from './words.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage } from './stage.js';
-import { motionAllowed } from './playback.js';
+import { motionAllowed, routeFrames } from './playback.js';
+import { tripEvents, tagsFor } from './events.js';
+import { driveTrack } from './drive.js';
+import { meterAt } from './meter.js';
+import { minimapModel, drawMinimap } from './minimap.js';
+import { createSound } from './sound.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
 
-let world = null, stage = null, session = createSession(), rewards = defaultRewards();
+let world = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
 let shown = 0, worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
 const pending = new Map(); // message id -> { resolve, reject, onProgress }
 const say = text => { $('status').textContent = text; };
+
+// ---------- Drive HUD: live meter, floating tags, minimap, sound ----------
+const MUTE_KEY = 'rc-muted';
+const loadMuted = () => { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; } };
+const sound = createSound({ muted: loadMuted(), reducedMotion: !motionAllowed() });
+let hud = null; // { events, route, done } while a trip is on screen
+const round1 = n => Math.round(n * 10) / 10 + 0;
+
+function showMeter(on) { $('meter').hidden = !on; $('minimap').hidden = !on; }
+function popTag(tag, at) {
+  const span = document.createElement('span');
+  span.className = `tag ${tag.kind}`; span.textContent = tag.text;
+  span.style.left = at.x + 'px'; span.style.top = at.y + 'px';
+  $('labels').append(span);
+  setTimeout(() => span.remove(), 1400);
+}
+// One frame of the drive: the meter and minimap follow the taxi; each tile it finishes can fire tags and a blip.
+function hudFrame(state, at) {
+  if (!hud) return;
+  const m = meterAt(hud.events, state.progress);
+  $('meterTotal').textContent = signed(round1(m.total));
+  $('meterCounts').textContent = `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`;
+  const c = $('minimap');
+  drawMinimap(c.getContext('2d'), minimapModel(world, hud.route, state.progress, hud.events), c.width);
+  for (; hud.done < Math.min(state.stepIndex, hud.events.steps.length); hud.done++) {
+    if (!at) continue; // the end jump under reduced motion: no tags, no sound
+    const step = hud.events.steps[hud.done];
+    const tags = tagsFor(step, rewards);
+    tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }));
+    sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
+  }
+}
+function startHud(events, route) {
+  hud = { events, route, done: 0 };
+  showMeter(stage.ready);
+  hudFrame({ progress: 0, stepIndex: 0 }, null);
+}
 
 // ---------- Training: Web Worker, else the main thread in chunks ----------
 function settleAll(value) { for (const p of pending.values()) p.resolve(value); pending.clear(); }
@@ -118,7 +160,7 @@ async function train(req) {
   progress.value = 0; progress.hidden = false; $('driving').hidden = true; $('train').dataset.stale = 'false'; say('Training the taxiâ€¦');
   for (const id of ['verdict', 'verdictFloat', 'announce']) $(id).textContent = '';
   const run = ++shown; // a drive that is interrupted must not show its receipt
-  stage.clearRoute();
+  stage.clearRoute(); hud = null; showMeter(false);
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
       p => { progress.value = Math.round(100 * p.done / p.total); if (p.visits) stage.setHeat(p.visits); });
@@ -128,7 +170,10 @@ async function train(req) {
     session = recordTry(session, res.analysis);
     stage.setHeat(res.visits);
     if (run === shown) $('driving').hidden = false;
-    stage.showRoute(res.route, res.analysis, { onDone() { if (run === shown) { $('driving').hidden = true; showReceipt(res.analysis); showGoal(res.analysis); $('announce').textContent += ' ' + $('goal').textContent; } } });
+    const events = tripEvents(world, req, res.route);
+    const track = driveTrack(routeFrames(world, cellM, res.route), events);
+    startHud(events, res.route);
+    stage.playTrip({ track, events, onFrame: hudFrame, onDone() { if (run === shown) { $('driving').hidden = true; showReceipt(res.analysis); showGoal(res.analysis); $('announce').textContent += ' ' + $('goal').textContent; } } });
   } catch {
     progress.hidden = true;
     say('Training failed. Reload the page and try again.');
@@ -136,7 +181,7 @@ async function train(req) {
 }
 function reset() {
   jobs.cancel(); latest++; killWorker(); shown++;
-  session = createSession(); rewards = defaultRewards();
+  session = createSession(); rewards = defaultRewards(); hud = null; showMeter(false);
   for (const id of ['receipt', 'verdict', 'verdictFloat', 'announce', 'goal']) $(id).textContent = '';
   $('share').hidden = true; $('progress').hidden = true; $('driving').hidden = true; say('');
   showReward();
@@ -148,7 +193,13 @@ function build() {
   for (const f of FIELDS) {
     $(f.key).addEventListener('input', () => { rewards = readRewards(); showReward(); $('train').dataset.stale = 'true'; });
   }
-  $('train').addEventListener('click', () => { showStage(); train(readRewards()); });
+  $('train').addEventListener('click', () => { sound.unlock(); showStage(); train(readRewards()); });
+  $('mute').addEventListener('click', () => {
+    const muted = $('mute').getAttribute('aria-pressed') !== 'true';
+    $('mute').setAttribute('aria-pressed', String(muted)); $('mute').textContent = muted ? 'Sound off' : 'Sound on';
+    sound.setMuted(muted);
+    try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch { /* storage blocked: the choice lasts this visit */ }
+  });
   $('reset').addEventListener('click', () => { showStage(); reset(); });
   for (const id of ['panelToggle', 'panelTab']) $(id).addEventListener('click', () => setPanel($('play').dataset.collapsed === 'true'));
   $('copy').addEventListener('click', async () => {
@@ -192,11 +243,12 @@ async function start() {
   $('lamp').innerHTML = SUN + MOON;
   wireLamp($('lamp'), () => {});
   build();
+  if (loadMuted()) { $('mute').setAttribute('aria-pressed', 'true'); $('mute').textContent = 'Sound off'; }
   showReward();
   enable(false);
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
-    world = loadWorld(city);
+    world = loadWorld(city); cellM = city.cellM;
     // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
     const webgl = webglAvailable();
     const scene = webgl ? await import('./scene.js').catch(() => null) : null;

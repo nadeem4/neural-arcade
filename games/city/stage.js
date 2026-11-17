@@ -1,4 +1,4 @@
-// The Stage interface: { ready, setHeat(visits), showRoute(route, analysis, { onDone }), clearRoute(), setChase(on), destroy() }.
+// The Stage interface: { ready, setHeat(visits), playTrip({ track, events, onFrame, onDone }), clearRoute(), setChase(on), setShot(name), destroy() }.
 // scene.js supplies the 3D stage; this file holds the choice between it and the message-only fallback.
 export const NO_WEBGL = '3D view needs WebGL. The reward and receipt still work.';
 
@@ -9,16 +9,17 @@ export function webglAvailable(doc = globalThis.document) {
   } catch { return false; }
 }
 
-// ready:false. Writes the message into #stageNote; showRoute calls onDone at once so the page carries on.
+// ready:false. Writes the message into #stageNote; playTrip calls onDone at once (and never onFrame) so the page carries on.
 export function createFallbackStage(el, message) {
   const note = el && el.ownerDocument && el.ownerDocument.getElementById('stageNote');
   if (note) note.textContent = message;
   return {
     ready: false,
     setHeat() {},
-    showRoute(route, analysis, { onDone } = {}) { if (onDone) onDone(); },
+    playTrip({ onDone } = {}) { if (onDone) onDone(); },
     clearRoute() {},
     setChase() {},
+    setShot() {},
     destroy() {},
   };
 }

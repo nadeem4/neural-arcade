@@ -26,15 +26,17 @@ describe('stage', () => {
     const mine = { ready: true };
     expect(chooseStage(el, { a: 1 }, { webgl: true, make3d: (e, c) => (e === el && c.a === 1 ? mine : null) })).toBe(mine);
   });
-  it("the fallback stage's showRoute still calls onDone", () => {
+  it("the fallback stage's playTrip calls onDone once and never onFrame", () => {
     const stage = createFallbackStage(fakeEl(), 'x');
-    let done = 0;
-    stage.showRoute({}, {}, { onDone: () => done++ });
+    let done = 0, frames = 0;
+    stage.playTrip({ track: {}, events: {}, onFrame: () => frames++, onDone: () => done++ });
     expect(done).toBe(1);
-    expect(() => { stage.setHeat(new Uint32Array(1)); stage.clearRoute(); stage.setChase(true); stage.destroy(); }).not.toThrow();
+    expect(frames).toBe(0);
+    expect(() => { stage.setHeat(new Uint32Array(1)); stage.clearRoute(); stage.setChase(true); stage.setShot('chase'); stage.destroy(); }).not.toThrow();
   });
-  it('showRoute without options does not throw', () => {
-    expect(() => createFallbackStage(fakeEl(), 'x').showRoute({}, {})).not.toThrow();
+  it('playTrip without options does not throw', () => {
+    expect(() => createFallbackStage(fakeEl(), 'x').playTrip()).not.toThrow();
+    expect(() => createFallbackStage(fakeEl(), 'x').playTrip({})).not.toThrow();
   });
   it('webglAvailable returns false for an object without createElement', () => {
     expect(webglAvailable({})).toBe(false);

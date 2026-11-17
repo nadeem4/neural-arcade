@@ -100,3 +100,20 @@ input[type="range"]:focus-visible, button:focus-visible { outline: 2px solid var
   .dial { font-size: 14px; }
   .receipt, .receipt .row { font-size: 13px; }
 }
+
+/* Drive HUD: dark navy panels over the map, in light and dark. Numbers use Space Grotesk where installed, else the page font. */
+:root { --hud: rgba(13, 19, 27, .9); --hud-ink: #F2F6FA; --hud-taxi: #F5B820; --hud-route: #5BC0EB; --hud-fine: #FF9A6B; --hud-pay: #8FE3A1; }
+.meter { display: grid; gap: 2px; min-width: 150px; padding: 10px 16px; border-radius: 14px; background: var(--hud); color: var(--hud-ink); font-family: "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.meter[hidden] { display: none; }
+.meter-total { font-size: 34px; font-weight: 700; line-height: 1; color: var(--hud-taxi); }
+.meter-label { font-size: 12px; opacity: .75; }
+.meter-counts { font-size: 12px; color: var(--hud-route); }
+.minimap { position: absolute; top: 12px; right: 364px; width: 120px; height: 120px; border-radius: 50%; background: var(--hud); border: 2px solid var(--hud-route); pointer-events: none; }
+.minimap[hidden] { display: none; }
+.play[data-collapsed="true"] .minimap { right: 56px; }
+#labels span.tag { padding: 4px 10px; border-radius: 999px; font: 700 15px "Space Grotesk", var(--sans); background: var(--hud); animation: tag-pop 1.3s ease-out forwards; }
+#labels span.tag.fine { color: var(--hud-fine); }
+#labels span.tag.pay { color: var(--hud-pay); }
+@keyframes tag-pop { from { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 15% { opacity: 1; transform: translate(-50%, -140%) scale(1.1); } to { opacity: 0; transform: translate(-50%, -320%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { #labels span.tag { animation: none; } }
+@media (max-width: 720px) { .minimap { right: 12px; width: 84px; height: 84px; } .play[data-collapsed="true"] .minimap { right: 12px; } .meter { min-width: 120px; padding: 8px 12px; } .meter-total { font-size: 26px; } }

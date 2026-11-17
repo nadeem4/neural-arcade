@@ -2,7 +2,9 @@
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
 import { clampPitch, clampDistance, readColors } from './scene-math.js';
-import { motionAllowed, routeFrames, frameAt, lightPhase, chaseCamera, heatColour, tickMsFor } from './playback.js';
+import { motionAllowed, lightPhase, chaseCamera, heatColour } from './playback.js';
+import { stateAt } from './drive.js';
+import { shotAt, timeline, SWOOP_MS } from './director.js';
 
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
@@ -143,16 +145,15 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   scene.add(heatMesh);
 
   // Taxi and trail materials (their geometry is made per route and disposed in clearRoute).
-  mats.taxi = new THREE.MeshStandardMaterial({ color: '#FF5A1F', emissive: '#FF5A1F', emissiveIntensity: 0.4, roughness: 0.6 });
-  mats.cab = new THREE.MeshStandardMaterial({ color: '#FF8A57', emissive: '#FF8A57', emissiveIntensity: 0.4, roughness: 0.6 });
-  mats.sign = new THREE.MeshBasicMaterial({ color: '#FACC15' });
-  mats.trail = new THREE.LineBasicMaterial({ color: '#FF5A1F' });
+  mats.taxi = new THREE.MeshStandardMaterial({ color: '#F5B820', emissive: '#F5B820', emissiveIntensity: 0.4, roughness: 0.6 });
+  mats.cab = new THREE.MeshStandardMaterial({ color: '#FFD25A', emissive: '#FFD25A', emissiveIntensity: 0.4, roughness: 0.6 });
+  mats.sign = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
+  mats.trail = new THREE.LineBasicMaterial({ color: '#5BC0EB' });
 
   const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, radius * 10);
   const view = { yaw: 0.6, pitch: 0.95, dist: radius * 1.25 };
   let queued = 0, dead = false;
-  let chase = false, chaseFresh = true, taxi = null, trail = null, trailPts = null, curFrame = null;
-  const chasePos = new THREE.Vector3(), want = new THREE.Vector3();
+  let chase = false, taxi = null, trail = null, trailPts = null, play = null;
 
   // Landmark labels: DOM text projected each render, hidden when behind the camera or off the stage.
   const labels = (city.landmarks ?? []).map((l) => {
@@ -174,19 +175,21 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     }
   };
 
+  // The camera: the orbit view you drag, or the director's shot while a trip plays (map, swoop, chase, pullback).
+  const orbitShot = () => {
+    const cp = Math.cos(view.pitch);
+    return { pos: [cx + Math.sin(view.yaw) * cp * view.dist, Math.sin(view.pitch) * view.dist, cz + Math.cos(view.yaw) * cp * view.dist], target: [cx, 0, cz], fov: 38 };
+  };
   const renderNow = () => {
     if (dead) return;
-    if (chase && curFrame) {
-      const { pos, target } = chaseCamera(curFrame, { back: 28, up: 12, ahead: 15 });
-      want.set(pos[0], pos[1], pos[2]);
-      if (chaseFresh) { chasePos.copy(want); chaseFresh = false; } else chasePos.lerp(want, 0.2);
-      camera.position.copy(chasePos);
-      camera.lookAt(target[0], target[1], target[2]);
-    } else {
-      const cp = Math.cos(view.pitch);
-      camera.position.set(cx + Math.sin(view.yaw) * cp * view.dist, Math.sin(view.pitch) * view.dist, cz + Math.cos(view.yaw) * cp * view.dist);
-      camera.lookAt(cx, 0, cz);
-    }
+    const mapShot = orbitShot();
+    const shot = play && play.phase !== 'map'
+      ? shotAt(play.phase, play.t, mapShot, { ...chaseCamera(play.state, { back: 18, up: 7, ahead: 14 }), fov: 55 })
+      : mapShot;
+    const near = play && play.phase !== 'map' ? 2 : radius * 0.05;
+    if (camera.fov !== shot.fov || camera.near !== near) { camera.fov = shot.fov; camera.near = near; camera.updateProjectionMatrix(); }
+    camera.position.set(...shot.pos);
+    camera.lookAt(...shot.target);
     renderer.render(scene, camera);
     placeLabels();
   };
@@ -207,7 +210,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   let pinch = 0, engaged = false;
   const spread = () => { const [a, b] = [...pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
   const zoom = (f) => { view.dist = clampDistance(view.dist * f, radius); draw(); };
-  const chaseOff = () => { if (!chase) return; chase = false; camera.near = radius * 0.05; camera.updateProjectionMatrix(); onChaseOff?.(); draw(); };
+  const chaseOff = () => { if (!chase) return; chase = false; onChaseOff?.(); };
   const down = (e) => {
     chaseOff();
     engaged = true;
@@ -272,26 +275,39 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     draw();
   };
 
-  // Playback: its own rAF loop, alive only while a route plays.
-  let play = null, loopId = 0;
-  const finish = () => { const p = play; play = null; if (p && p.onDone) p.onDone(); }; // exactly once per route
-  const place = (f) => {
-    curFrame = f;
-    taxi.position.set(f.x, 1.5, f.z); taxi.rotation.y = f.heading;
-    const here = play.frames[f.tick];
-    trailPts.set([here.x, 2.5, here.z], f.tick * 3); // the point just left snaps back to its cell
-    trailPts.set([f.x, 2.5, f.z], (f.tick + 1) * 3); // the trail's last point rides with the taxi
-    trail.geometry.setDrawRange(0, f.tick + 2);
+  // Playback: its own rAF loop, alive only while a trip plays. Each frame asks drive.js for the taxi and director.js for the camera.
+  let loopId = 0;
+  const finish = () => { const p = play; play = null; if (p && p.onDone) p.onDone(); }; // exactly once per trip
+  const place = (st) => {
+    const frames = play.track.frames, k = Math.min(st.stepIndex, frames.length - 1);
+    taxi.position.set(st.x, 1.5, st.z); taxi.rotation.y = st.heading;
+    trailPts.set([frames[k].x, 2.5, frames[k].z], k * 3); // the point just left snaps back to its cell
+    trailPts.set([st.x, 2.5, st.z], (k + 1) * 3); // the trail's last point rides with the taxi
+    trail.geometry.setDrawRange(0, k + 2);
     trail.geometry.attributes.position.needsUpdate = true;
+    play.state = st;
+    setLights(st.tick);
+  };
+  // Where the taxi is on screen, in the label layer's pixels, so the tags can pop up beside it.
+  const taxiScreen = () => {
+    if (!labelEl || !taxi) return null;
+    tmp.set(taxi.position.x, 6, taxi.position.z).project(camera);
+    if (tmp.z > 1) return null;
+    const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
+    return { x: cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width, y: cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height };
   };
   const tickLoop = (now) => {
     loopId = 0;
     if (dead || !play) return;
-    const f = frameAt(play.frames, now - play.t0, play.tickMs);
-    place(f); setLights(f.tick);
+    const intro = play.swoop ? SWOOP_MS : 0;
+    const elapsed = now - play.t0;
+    const { phase, t } = timeline(play.track.total, elapsed, { swoop: play.swoop });
+    const st = stateAt(play.track, Math.max(0, elapsed - intro));
+    place(st); play.phase = phase; play.t = t;
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 34 + Math.sin(now / 300 + i) * 2; });
     renderNow();
-    if (f.done) { curFrame = null; chaseFresh = true; renderNow(); finish(); return; }
+    play.onFrame?.(st, phase === 'map' ? null : taxiScreen()); // the last frame carries the done state
+    if (phase === 'map') { finish(); return; }
     loopId = requestAnimationFrame(tickLoop);
   };
   const stopRoute = () => {
@@ -300,7 +316,6 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     finish();
     if (taxi) { scene.remove(taxi); taxi.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); taxi = null; }
     if (trail) { scene.remove(trail); trail.geometry.dispose(); trail = null; }
-    curFrame = null; chaseFresh = true;
   };
 
   // Idle: the lights follow a slow clock (not under reduced motion).
@@ -320,9 +335,10 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       const wait = 100 - (performance.now() - heatAt);
       if (wait <= 0) { if (heatTimer) clearTimeout(heatTimer); applyHeat(); } else if (!heatTimer) heatTimer = setTimeout(applyHeat, wait);
     },
-    showRoute(route, analysis, { onDone } = {}) {
+    // track: drive.js driveTrack; events: events.js tripEvents (the page reads those; the stage only needs the track).
+    playTrip({ track, onFrame, onDone } = {}) {
       stopRoute();
-      const frames = routeFrames({ cols: city.cols, rows: city.rows }, city.cellM, route);
+      const frames = track.frames;
       taxi = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.8, 7.5), mats.taxi); body.position.y = 1;
       const cab = new THREE.Mesh(new THREE.BoxGeometry(2.9, 1.5, 3.6), mats.cab); cab.position.set(0, 2.6, -0.4);
@@ -334,24 +350,22 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       tg.setAttribute('position', new THREE.BufferAttribute(trailPts, 3));
       trail = new THREE.Line(tg, mats.trail); trail.frustumCulled = false;
       scene.add(taxi, trail);
-      play = { frames, onDone };
-      if (!motionAllowed()) { // no animation: the end state with the whole trail
-        const last = frames[frames.length - 1];
-        place({ ...last, tick: frames.length - 1 });
+      play = { track, onFrame, onDone, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
+      if (!motionAllowed()) { // no animation: the end state with the whole trail and the final numbers
+        const end = stateAt(track, track.total);
+        place({ ...end, stepIndex: frames.length - 2 });
         tg.setDrawRange(0, frames.length);
-        setLights(last.tick); draw();
+        draw();
+        onFrame?.(end, null);
         finish();
         return;
       }
-      play.t0 = performance.now(); play.tickMs = tickMsFor(frames.length);
+      play.t0 = performance.now();
       loopId = requestAnimationFrame(tickLoop);
     },
     clearRoute() { stopRoute(); draw(); },
-    setChase(on) {
-      chase = !!on && motionAllowed(); chaseFresh = true;
-      camera.near = chase ? 2 : radius * 0.05; camera.updateProjectionMatrix();
-      draw();
-    },
+    setChase(on) { chase = !!on && motionAllowed(); }, // on: a trip starts in the chase view, with no swoop in or out
+    setShot(name) { chase = name === 'chase' && motionAllowed(); },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
       stopRoute(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);

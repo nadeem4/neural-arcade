@@ -11,7 +11,7 @@ const mainPath = 'games/city/main.js';
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 const tag = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 
-const IDS = ['announce', 'play', 'about', 'panel', 'panelToggle', 'panelTab', 'driving', 'verdictFloat', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset', 'chase', 'labels'];
+const IDS = ['announce', 'play', 'about', 'panel', 'panelToggle', 'panelTab', 'driving', 'verdictFloat', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset', 'chase', 'labels', 'meter', 'meterTotal', 'meterCounts', 'minimap', 'mute'];
 
 describe('city page markup', () => {
   it('has every id main.js will look up', () => {
@@ -35,6 +35,16 @@ describe('city page markup', () => {
     expect(tag('chase')).toMatch(/^<button /);
     expect(tag('chase')).toContain('aria-pressed="false"');
     expect(tag('labels')).toContain('aria-hidden="true"');
+  });
+  it('has the drive HUD: a live meter and a round minimap hidden from screen readers until a drive starts, and a mute toggle', () => {
+    for (const id of ['meter', 'minimap']) {
+      expect(tag(id), id).toContain('aria-hidden="true"');
+      expect(tag(id), id).toMatch(/\shidden[\s>]/);
+    }
+    expect(tag('minimap')).toMatch(/^<canvas /);
+    expect(tag('mute')).toContain('aria-pressed="false"');
+    expect(rules('.minimap')).toContain('border-radius: 50%');
+    expect(css).toContain('prefers-reduced-motion');
   });
   it('has one slider per reward line, with range and step from RANGES and the default value', () => {
     for (const f of FIELDS) {

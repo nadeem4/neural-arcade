@@ -83,7 +83,8 @@ describe('chaseCamera', () => {
   });
   it('has defaults', () => {
     const { pos } = chaseCamera({ x: 0, z: 0, heading: 0, tick: 0 });
-    expect(pos[1]).toBe(7);
+    expect(pos[1]).toBe(4);
+    expect(pos[2]).toBeCloseTo(-9); // 9 behind a taxi facing +z
   });
 });
 

@@ -31,7 +31,7 @@ export function routeFrames(world, cellM, route) {
 // 0 = north-south green (east-west red), 1 = swapped; agrees with sim.js lightRed.
 export const lightPhase = (world, tick) => (tick % world.period >= world.period / 2 ? 1 : 0);
 
-export function chaseCamera(frame, { back = 14, up = 7, ahead = 0 } = {}) {
+export function chaseCamera(frame, { back = 9, up = 4, ahead = 0 } = {}) {
   const fx = Math.sin(frame.heading), fz = Math.cos(frame.heading);
   return {
     pos: [frame.x - fx * back, up, frame.z - fz * back],
