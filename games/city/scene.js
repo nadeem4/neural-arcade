@@ -333,7 +333,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     trail.geometry.setDrawRange(0, k + 2);
     trail.geometry.attributes.position.needsUpdate = true;
     play.state = st;
-    setLights(st.tick, st.heading);
+    setLights(st.tick, st.facing); // the lamp follows the move being made, not the eased heading
   };
   // Where the taxi is on screen, in the label layer's pixels, so the tags can pop up beside it.
   const taxiScreen = () => {

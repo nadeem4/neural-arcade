@@ -53,6 +53,15 @@ describe('stateAt', () => {
     expect(worst).toBeLessThan(1.5 * (Math.PI / 2) * dt / (0.3 * track.tickMs) + 1e-6); // half a turn is spread over 30% of a tile
     expect(angle(prev.heading, frames[frames.length - 1].heading)).toBeLessThan(1e-6);
   });
+  it('faces the move being made: a wait shows the next move direction from its first frame, a move its own', () => {
+    const waits = track.segs.map((g, i) => [g, i]).filter(([g]) => g.wait);
+    expect(waits.length).toBeGreaterThan(0);
+    for (const [g, i] of waits) {
+      for (const u of [0, 0.25, 0.5, 0.99]) expect(stateAt(track, (i + u) * track.tickMs).facing).toBe(g.to);
+    }
+    const j = track.segs.findIndex((g) => !g.wait);
+    expect(stateAt(track, (j + 0.5) * track.tickMs).facing).toBe(track.segs[j].h1);
+  });
   it('stops at a wait, with brake on, and at the end', () => {
     const i = events.steps.findIndex((s) => !s.moved);
     const mid = stateAt(track, (i + 0.5) * track.tickMs);

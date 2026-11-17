@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { loadWorld, lightRed } from '../games/city/sim.js';
 import { signalState, signalCorners, headingAction } from '../games/city/signals.js';
 import { cellCentre } from '../games/city/geometry.js';
+import { routeFrames } from '../games/city/playback.js';
 
 const city = {
   cols: 3, rows: 3, cellM: 12, lightPeriod: 8,
@@ -21,6 +22,16 @@ describe('headingAction', () => {
     expect(headingAction(Math.PI - 0.2)).toBe(0);
     expect(headingAction(-Math.PI + 0.2)).toBe(0);
     expect(headingAction(Math.PI / 2 + 0.3)).toBe(1);
+  });
+});
+
+describe('headings from real moves', () => {
+  it('routeFrames headings for north, east, south and west moves map to actions 0, 1, 2, 3', () => {
+    // a 3x3 board, moving from the centre cell (4) one tile each way; cells are row * 3 + col
+    for (const [action, to] of [[0, 1], [1, 5], [2, 7], [3, 3]]) {
+      const f = routeFrames(world, city.cellM, { cells: [4, to], actions: [action] });
+      expect(headingAction(f[1].heading)).toBe(action);
+    }
   });
 });
 

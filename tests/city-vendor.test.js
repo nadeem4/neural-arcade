@@ -42,3 +42,9 @@ describe('readColors', () => {
     expect(c.road).toMatch(/^#[0-9a-f]{6}$/i);
   });
 });
+
+describe('the windows hook', () => {
+  it('vendored three.js still has the emissivemap_fragment include scene-look.js patches', () => {
+    expect(readFileSync(new URL('../games/city/vendor/three.module.min.js', import.meta.url), 'utf8')).toContain('#include <emissivemap_fragment>');
+  });
+});

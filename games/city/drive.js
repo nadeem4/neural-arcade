@@ -53,19 +53,19 @@ export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length) }
 }
 
 // The taxi `ms` into the drive. stepIndex is the tick being driven (the tick count once done), so steps below it are
-// complete; progress is stepIndex plus how far through the tile; tick is the light tick, as the sim uses it.
+// complete; facing is the heading of the move being made (not the eased heading), for the signal lamp; progress is stepIndex plus how far through the tile; tick is the light tick, as the sim uses it.
 export function stateAt(track, ms) {
   const { frames, segs, tickMs, total } = track;
   const n = segs.length;
   if (n === 0 || ms >= total) {
     const f = frames[n];
-    return { x: f.x, z: f.z, heading: f.heading, speed: 0, braking: false, stepIndex: n, progress: n, tick: f.tick, done: true };
+    return { x: f.x, z: f.z, heading: f.heading, facing: f.heading, speed: 0, braking: false, stepIndex: n, progress: n, tick: f.tick, done: true };
   }
   const t = Math.max(0, ms) / tickMs;
   const i = Math.floor(t), u = t - i;
   const s = segs[i], a = frames[i], b = frames[i + 1];
   if (s.wait) {
-    return { x: a.x, z: a.z, heading: towards(s.from, s.to, smooth(u)), speed: 0, braking: true, stepIndex: i, progress: i, tick: a.tick, done: false };
+    return { x: a.x, z: a.z, heading: towards(s.from, s.to, smooth(u)), facing: s.to, speed: 0, braking: true, stepIndex: i, progress: i, tick: a.tick, done: false };
   }
   const [f, df] = ease(u, s.m0, s.m1);
   let heading = s.h1;
@@ -77,7 +77,7 @@ export function stateAt(track, ms) {
   }
   const dist = Math.hypot(b.x - a.x, b.z - a.z);
   return {
-    x: a.x + (b.x - a.x) * f, z: a.z + (b.z - a.z) * f, heading,
+    x: a.x + (b.x - a.x) * f, z: a.z + (b.z - a.z) * f, heading, facing: s.h1,
     speed: Math.abs(df) * dist / (tickMs / 1000),
     braking: s.m1 === 0 && u > 0.5,
     stepIndex: i, progress: i + f, tick: a.tick, done: false,
