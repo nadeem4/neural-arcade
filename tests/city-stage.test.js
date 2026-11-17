@@ -5,7 +5,7 @@ const fakeEl = () => {
   const note = { textContent: '' };
   return { note, querySelector: (s) => (s === '#stageNote' ? note : null), ownerDocument: { getElementById: (id) => (id === 'stageNote' ? note : null) } };
 };
-const MSG = '3D view needs WebGL. The pay slip and receipt still work.';
+const MSG = '3D view needs WebGL. The reward and receipt still work.';
 
 describe('stage', () => {
   it('chooseStage falls back when webgl is false', () => {

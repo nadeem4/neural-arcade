@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildReceipt, verdictOf } from '../games/city/receipt.js';
+import { buildReceipt, verdictOf, nextStepOf } from '../games/city/receipt.js';
 import { LESSON, INFO, isLegal, goalReached, shareLine } from '../games/city/words.js';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { GOAL_SECONDS, DEFAULT_REWARDS } from '../games/city/presets.js';
@@ -73,9 +73,9 @@ describe('verdictOf', () => {
 });
 
 describe('words', () => {
-  it('has the lesson and the four info texts', () => {
+  it('has the lesson and the three info texts', () => {
     expect(LESSON).toBe('The reward is the only thing the taxi wants: it does what you pay it for, not what you meant.');
-    for (const k of ['slip', 'cards', 'goal', 'map']) expect(INFO[k].length).toBeGreaterThan(10);
+    for (const k of ['reward', 'goal', 'map']) expect(INFO[k].length).toBeGreaterThan(10);
   });
 
   it('isLegal needs arrival and no fines', () => {
@@ -98,7 +98,7 @@ describe('words', () => {
   });
 });
 
-describe('player copy matches the pay slip', () => {
+describe('player copy matches the reward', () => {
   it('uses singular for one tile, one move', () => {
     const l = buildReceipt(R, A({ offTiles: 1, wrongWays: 1 })).lines;
     expect(l.find((x) => x.label === 'Park and footpath').detail).toBe('1 tile');
@@ -137,5 +137,39 @@ describe('player copy matches the pay slip', () => {
     expect(an.arrived).toBe(true);
     const r = buildReceipt(rw, an);
     expect(sum(r)).toBeCloseTo(r.total, 5);
+  });
+});
+
+describe('nextStepOf: names the cheat and the slider to try next', () => {
+  const free = { ...R, off: 0, red: 0, wrong: 0 };
+  it('park, red light and wrong way', () => {
+    expect(nextStepOf(free, A({ offTiles: 3, parkTiles: 3 }))).toBe('It cut across the park. Nothing fines that. Try the park fine.');
+    expect(nextStepOf(free, A({ redRuns: 1 }))).toBe('It ran red lights. Nothing fines that. Try the red-light fine.');
+    expect(nextStepOf(free, A({ wrongWays: 1 }))).toBe('It went the wrong way down a one-way street. Nothing fines that. Try the wrong-way fine.');
+  });
+  it('footpaths point at the same fine as the park', () => {
+    expect(nextStepOf(free, A({ offTiles: 2, parkTiles: 0 }))).toBe('It drove along the footpaths. Nothing fines that. Try the park fine.');
+  });
+  it('a fine that exists but is too small says to raise it', () => {
+    expect(nextStepOf({ ...free, off: 5 }, A({ offTiles: 3, parkTiles: 3 }))).toBe('It cut across the park. The fine is too small. Try a bigger park fine.');
+    expect(nextStepOf({ ...free, red: 5 }, A({ redRuns: 1 }))).toMatch(/Try a bigger red-light fine\.$/);
+    expect(nextStepOf({ ...free, wrong: 5 }, A({ wrongWays: 1 }))).toMatch(/Try a bigger wrong-way fine\.$/);
+  });
+  it('per-tile loops say it drove extra for per-tile pay and to lower it', () => {
+    const v = nextStepOf({ ...free, perTile: 3 }, A({ arrived: false, seconds: 400, tiles: 400 }));
+    expect(v).toBe('It drove extra to earn pay per tile and never dropped the passenger off. Try lowering pay per tile.');
+  });
+  it('never arrived without a loop says what to change', () => {
+    expect(nextStepOf({ ...free, fare: 0 }, A({ arrived: false, tiles: 5 }))).toMatch(/Try raising the fare\.$/);
+    expect(nextStepOf(free, A({ arrived: false, tiles: 5 }))).toMatch(/^It never arrived\./);
+  });
+  it('a clean fast legal trip is the success line, a clean slow one asks for speed', () => {
+    expect(nextStepOf(free, A({ seconds: GOAL_SECONDS - 1 }))).toBe('Clean, fast and legal. That is a fixed taxi.');
+    expect(nextStepOf(free, A({ seconds: GOAL_SECONDS + 10 }))).toBe('Legal, but not fast enough. Try a higher cost per second.');
+  });
+  it('never says pay slip', () => {
+    for (const a of [A({ parkTiles: 1, offTiles: 1 }), A({ redRuns: 1 }), A({ arrived: false, tiles: 400 }), A({})]) {
+      expect(nextStepOf({ ...free, perTile: 3 }, a)).not.toMatch(/pay slip/i);
+    }
   });
 });

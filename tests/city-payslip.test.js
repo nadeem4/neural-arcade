@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { FIELDS, cardMatching, createSession, recordTry } from '../games/city/payslip.js';
-import { PRESETS, DEFAULT_REWARDS, RANGES } from '../games/city/presets.js';
+import { FIELDS, defaultRewards, createSession, recordTry } from '../games/city/payslip.js';
+import { DEFAULT_REWARDS, RANGES } from '../games/city/presets.js';
 
 const trip = (over = {}) => ({ arrived: true, seconds: 80, offTiles: 0, redRuns: 0, wrongWays: 0, ...over });
 
-describe('pay slip fields', () => {
+describe('reward fields', () => {
   it('has one field per reward line, each with a slider range', () => {
     expect(FIELDS.map(f => f.key)).toEqual(['fare', 'time', 'off', 'red', 'wrong', 'perTile']);
     expect(FIELDS.map(f => f.sign)).toEqual(['+', '-', '-', '-', '-', '+']);
@@ -15,18 +15,16 @@ describe('pay slip fields', () => {
   });
 });
 
-describe('cardMatching', () => {
-  it('finds each preset and null after any edit', () => {
-    for (const p of PRESETS) {
-      expect(cardMatching({ ...p.rewards })).toBe(p.id);
-      for (const f of FIELDS) {
-        const edited = { ...p.rewards, [f.key]: p.rewards[f.key] + RANGES[f.key].step };
-        const other = PRESETS.find(q => FIELDS.every(g => q.rewards[g.key] === edited[g.key]));
-        expect(cardMatching(edited), `${p.id} edited ${f.key}`).toBe(other ? other.id : null);
-      }
-    }
-    expect(cardMatching({ ...DEFAULT_REWARDS, fare: 90 })).toBeNull();
-    expect(cardMatching({ ...DEFAULT_REWARDS, time: 2 })).toBeNull();
+describe('defaultRewards (what Reset restores)', () => {
+  it('is fare 100, cost per second 1, every fine 0 and pay per tile 0', () => {
+    expect(defaultRewards()).toEqual({ fare: 100, time: 1, off: 0, red: 0, wrong: 0, perTile: 0 });
+    expect(defaultRewards()).toEqual(DEFAULT_REWARDS);
+  });
+  it('hands out a fresh copy each time', () => {
+    const a = defaultRewards();
+    a.fare = 5;
+    expect(defaultRewards().fare).toBe(100);
+    expect(DEFAULT_REWARDS.fare).toBe(100);
   });
 });
 

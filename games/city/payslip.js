@@ -1,5 +1,5 @@
-// Pure pay-slip state for Reward City: the six lines, which try card a slip matches, and the try count.
-import { PRESETS } from './presets.js';
+// Pure reward state for Reward City: the six sliders, the defaults Reset restores, and the try count.
+import { DEFAULT_REWARDS } from './presets.js';
 import { isLegal } from './words.js';
 
 export const FIELDS = [
@@ -11,11 +11,8 @@ export const FIELDS = [
   { key: 'perTile', label: 'Pay per tile driven', sign: '+' },
 ];
 
-// The id of the try card whose pay slip equals these rewards exactly, or null.
-export function cardMatching(rewards) {
-  const p = PRESETS.find(p => FIELDS.every(f => p.rewards[f.key] === rewards[f.key]));
-  return p ? p.id : null;
-}
+// A fresh copy of the starting reward: what Reset puts back.
+export const defaultRewards = () => ({ ...DEFAULT_REWARDS });
 
 export const createSession = () => ({ tries: 0, best: null });
 
