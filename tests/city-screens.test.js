@@ -30,9 +30,8 @@ describe('nextScreen', () => {
 });
 
 describe('canToggleView', () => {
-  it('only while driving or done', () => {
+  it('only while driving', () => {
     expect(canToggleView('driving')).toBe(true);
-    expect(canToggleView('done')).toBe(true);
     expect(canToggleView('map')).toBe(false);
     expect(canToggleView('training')).toBe(false);
   });

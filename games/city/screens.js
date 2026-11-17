@@ -9,5 +9,5 @@ const NEXT = {
 // An event that does not apply on this screen leaves it where it is.
 export const nextScreen = (state, event) => NEXT[state]?.[event] ?? state;
 
-// The Map view toggle only makes sense while a trip is on screen.
-export const canToggleView = state => state === 'driving' || state === 'done';
+// The Map view toggle only makes sense while the taxi drives.
+export const canToggleView = state => state === 'driving';

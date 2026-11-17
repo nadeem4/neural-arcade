@@ -15,14 +15,14 @@ import { meterAt, meterText } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
 import { createSound } from './sound.js';
 import { stepRate, rateRows } from './rates.js';
-import { nextScreen } from './screens.js';
+import { nextScreen, canToggleView } from './screens.js';
 import { endCardModel } from './endcard.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
 
 let world = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
-let shown = 0, worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
+let worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
 const pending = new Map(); // message id -> { resolve, reject, onProgress }
 const say = text => { $('status').textContent = text; };
 
@@ -111,7 +111,7 @@ async function runTrain(req, onProgress) {
 const jobs = createJobs(runTrain);
 
 // ---------- Screens: map (rate card), training, driving, done (end card) ----------
-let screen = 'map', trip = null; // trip: { run, rewards, analysis, events, route, track, ended } for the trip on screen
+let screen = 'map', trip = null; // trip: { rewards, analysis, events, route, track, ended } for the trip on screen
 const hooks = { onKeep: () => toast('Garage arrives next') }; // RC13 replaces onKeep with the real save to the garage
 let toastTimer = 0;
 function toast(text) {
@@ -124,7 +124,7 @@ function go(event) {
   $('play').dataset.screen = screen;
   const busy = screen === 'training';
   $('endcard').hidden = screen !== 'done';
-  $('barDrive').hidden = screen !== 'driving';
+  $('barDrive').hidden = !canToggleView(screen);
   $('skip').hidden = screen !== 'driving';
   $('driveProgress').hidden = screen !== 'driving';
   $('train').disabled = busy || !stage;
@@ -202,7 +202,6 @@ async function train(req) {
   go('train');
   progress.value = 0; progress.hidden = false; $('train').dataset.stale = 'false'; say('Training the taxi…');
   $('announce').textContent = '';
-  const run = ++shown;
   stage.clearRoute(); hud = null; trip = null; showMeter(false);
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
@@ -213,7 +212,7 @@ async function train(req) {
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events);
-    trip = { run, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, ended: false };
+    trip = { rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, ended: false };
     go('trained');
     drive(trip);
   } catch {
@@ -237,7 +236,7 @@ function build() {
     stage.setMapView(on);
   });
   $('endEdit').addEventListener('click', () => {
-    jobs.cancel(); latest++; shown++; stage.clearRoute(); hud = null; trip = null; showMeter(false); say('');
+    jobs.cancel(); latest++; stage.clearRoute(); hud = null; trip = null; showMeter(false); say('');
     $('announce').textContent = '';
     go('edit'); $('fareInc').focus({ preventScroll: true });
   });
