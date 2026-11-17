@@ -45,3 +45,10 @@ export function tagsFor(step, rewards) {
   if (step.done) tags.push({ text: `+${rewards.fare} fare`, kind: 'pay' });
   return tags;
 }
+
+// Folds a tag into the run before it: the same text on the very next step adds to a count instead of stacking a second tag.
+// prev is the last result (or null); i is the step index. Returns { text, kind, count, i, label }.
+export function foldTag(prev, tag, i) {
+  const count = prev && prev.text === tag.text && i - prev.i <= 1 ? prev.count + 1 : 1;
+  return { text: tag.text, kind: tag.kind, count, i, label: count > 1 ? `${tag.text} ×${count}` : tag.text };
+}

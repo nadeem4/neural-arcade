@@ -10,9 +10,9 @@ import { INFO, goalReached, shareLine } from './words.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
-import { tripEvents, tagsFor } from './events.js';
+import { tripEvents, tagsFor, foldTag } from './events.js';
 import { driveTrack } from './drive.js';
-import { meterAt } from './meter.js';
+import { meterAt, meterText } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
 import { createSound } from './sound.js';
 
@@ -29,21 +29,25 @@ const MUTE_KEY = 'rc-muted';
 const loadMuted = () => { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; } };
 const sound = createSound({ muted: loadMuted(), reducedMotion: !motionAllowed() });
 let hud = null; // { events, route, done } while a trip is on screen
-const round1 = n => Math.round(n * 10) / 10 + 0;
 
 function showMeter(on) { $('meter').hidden = !on; $('minimap').hidden = !on; }
-function popTag(tag, at) {
-  const span = document.createElement('span');
-  span.className = `tag ${tag.kind}`; span.textContent = tag.text;
+// A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
+function popTag(tag, at, i) {
+  const prev = hud.lastTag?.[tag.text];
+  const run = foldTag(prev, tag, i);
+  let span = run.count > 1 && prev.span.isConnected ? prev.span : null;
+  if (!span) { span = document.createElement('span'); $('labels').append(span); }
+  hud.lastTag = { ...hud.lastTag, [tag.text]: { ...run, span } };
+  span.className = `tag ${tag.kind}`; span.textContent = run.label;
   span.style.left = at.x + 'px'; span.style.top = at.y + 'px';
-  $('labels').append(span);
-  setTimeout(() => span.remove(), 1400);
+  span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
+  clearTimeout(span._t); span._t = setTimeout(() => span.remove(), 1400);
 }
 // One frame of the drive: the meter and minimap follow the taxi; each tile it finishes can fire tags and a blip.
 function hudFrame(state, at) {
   if (!hud) return;
   const m = meterAt(hud.events, state.progress);
-  $('meterTotal').textContent = signed(round1(m.total));
+  $('meterTotal').textContent = meterText(m.total);
   $('meterCounts').textContent = `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`;
   const c = $('minimap');
   drawMinimap(c.getContext('2d'), minimapModel(world, hud.route, state.progress, hud.events), c.width);
@@ -51,7 +55,7 @@ function hudFrame(state, at) {
     if (!at) continue; // the end jump under reduced motion: no tags, no sound
     const step = hud.events.steps[hud.done];
     const tags = tagsFor(step, hud.rewards);
-    tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }));
+    tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }, hud.done));
     sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
   }
 }

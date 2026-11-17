@@ -16,3 +16,9 @@ export function meterAt(events, f) {
   if (whole < steps.length) total += steps[whole].delta * Math.max(0, Math.min(1, f - whole));
   return { total, counts, seconds: whole };
 }
+
+// The big number: whole, with a real minus sign (a gain gets a plus).
+export function meterText(total) {
+  const n = Math.round(total);
+  return n === 0 ? '0' : n < 0 ? `−${-n}` : `+${n}`;
+}
