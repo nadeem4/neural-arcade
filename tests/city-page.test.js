@@ -181,4 +181,10 @@ describe('city.css', () => {
     expect(css).not.toMatch(/border-(left|right):\s*\d+px solid/);
     if (/animation:/.test(css)) expect(css).toMatch(/prefers-reduced-motion/);
   });
+  it('garage cards have a flat stripe element, not a thick top border, and show what the taxi earned', () => {
+    expect(rules('.bay')).not.toContain('border-top');
+    expect(rules('.bay-stripe')).toContain('height: 4px');
+    expect(read('games/city/garage-view.js')).toContain('bay-stripe');
+    expect(read('games/city/garage-view.js')).toContain('analysis.reward');
+  });
 });

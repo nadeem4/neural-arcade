@@ -18,9 +18,9 @@ const el = (tag, cls, text) => {
   return e;
 };
 
-function card(taxi, { onDrive, onRemove, canDrive }) {
+function card(taxi, i, { onDrive, onRemove, canDrive }) {
   const li = el('li', 'bay');
-  li.style.setProperty('--stripe', stripeFor(taxi.name));
+  const stripe = el('span', 'bay-stripe'); stripe.style.background = stripeFor(taxi.name);
   const head = el('div', 'bay-head');
   head.append(taxiIcon(), el('span', 'bay-name', taxi.name), el('span', 'bay-try', `Try ${taxi.tries}`));
   const chips = el('div', 'bay-chips');
@@ -31,15 +31,18 @@ function card(taxi, { onDrive, onRemove, canDrive }) {
   drive.addEventListener('click', () => onDrive(taxi));
   const del = el('button', 'btn bay-remove', 'Remove');
   del.type = 'button'; del.setAttribute('aria-label', `Remove ${taxi.name}`);
-  del.addEventListener('click', () => onRemove(taxi));
+  del.addEventListener('click', () => onRemove(taxi, i));
   const actions = el('div', 'bay-actions'); actions.append(drive, del);
-  li.append(head, chips, el('span', 'bay-time', `${taxi.bestSeconds} s`), el('span', 'bay-note', taxi.note), actions);
+  const earned = Math.round(taxi.analysis.reward * 10) / 10 + 0;
+  const stats = el('div', 'bay-stats');
+  stats.append(el('span', 'bay-time', `${taxi.bestSeconds} s`), el('span', `bay-earned ${earned >= 0 ? 'pay' : 'fine'}`, `${earned > 0 ? '+' : ''}${earned}`));
+  li.append(stripe, head, chips, stats, el('span', 'bay-note', taxi.note), actions);
   return li;
 }
 
 // Fills the list from the garage. handlers: { onDrive(taxi), onRemove(taxi), canDrive }.
 export function renderGarage(list, garage, handlers) {
-  const bays = garage.taxis.map(t => card(t, handlers));
+  const bays = garage.taxis.map((t, i) => card(t, i, handlers));
   for (let i = garage.taxis.length; i < garage.max; i++) {
     const li = el('li', 'bay empty'); li.append(el('span', 'bay-name', 'Empty bay'));
     bays.push(li);

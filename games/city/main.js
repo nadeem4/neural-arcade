@@ -17,7 +17,7 @@ import { createSound } from './sound.js';
 import { stepRate, rateRows } from './rates.js';
 import { nextScreen, canToggleView } from './screens.js';
 import { endCardModel } from './endcard.js';
-import { createGarage, keep, remove, serialize, parse } from './garage.js';
+import { createGarage, keep, remove, serialize, parse, validTaxi } from './garage.js';
 import { nameFor, uniqueName, noteFor } from './naming.js';
 import { renderGarage } from './garage-view.js';
 
@@ -227,9 +227,15 @@ async function train(req) {
 // ---------- The garage: kept taxis in localStorage (in memory only if storage is blocked) ----------
 const GARAGE_KEY = 'rc-garage-v1';
 let garage = createGarage();
-try { garage = parse(localStorage.getItem(GARAGE_KEY)); } catch { /* storage blocked: the garage lasts this visit */ }
+// Read once the map is loaded, so a stored route can be checked against it.
+function loadGarage() {
+  try { garage = parse(localStorage.getItem(GARAGE_KEY), { cellCount: world.cols * world.rows }); } catch { /* storage blocked: the garage lasts this visit */ }
+}
 const saveGarage = () => { try { localStorage.setItem(GARAGE_KEY, serialize(garage)); } catch { /* storage blocked */ } };
-function showGarage(open) {
+// Focus goes to the first DRIVE (or Close when empty) on open, and to the Garage button when the player closes it; auto-closes leave focus alone.
+const driveButtons = () => [...$('garageList').querySelectorAll('.go')];
+function closeGarage() { showGarage(false); $('garage').focus(); }
+function showGarage(open, focusIndex) {
   $('garageDrawer').hidden = !open;
   $('garage').setAttribute('aria-expanded', String(open));
   $('garageCount').textContent = garage.taxis.length;
@@ -237,8 +243,9 @@ function showGarage(open) {
   renderGarage($('garageList'), garage, {
     canDrive: screen !== 'training',
     onDrive: driveKept,
-    onRemove: taxi => { garage = remove(garage, taxi.id); saveGarage(); showGarage(true); },
+    onRemove: (taxi, i) => { garage = remove(garage, taxi.id); saveGarage(); showGarage(true, i); },
   });
+  if (open && focusIndex !== undefined) (driveButtons()[focusIndex] ?? driveButtons().pop() ?? $('garageClose')).focus();
 }
 function keepTrip(t) {
   const name = uniqueName(nameFor(t.rewards), garage.taxis.map(x => x.name));
@@ -252,7 +259,7 @@ function keepTrip(t) {
 }
 // DRIVE from a bay: its rates go into the rate card, then the stored route plays through the same path as a fresh trip, with no training.
 function driveKept(taxi) {
-  if (!stage || screen === 'training') return;
+  if (!stage || screen === 'training' || !validTaxi(taxi, world.cols * world.rows)) return;
   showGarage(false);
   jobs.cancel(); latest++; sound.unlock();
   rewards = { ...taxi.rewards };
@@ -284,9 +291,9 @@ function build() {
     go('edit'); $('fareInc').focus({ preventScroll: true });
   });
   $('endKeep').addEventListener('click', () => { if (trip) keepTrip(trip); });
-  $('garage').addEventListener('click', () => showGarage($('garageDrawer').hidden));
-  $('garageClose').addEventListener('click', () => { showGarage(false); $('garage').focus(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('garageDrawer').hidden) { showGarage(false); $('garage').focus(); } });
+  $('garage').addEventListener('click', () => { if ($('garageDrawer').hidden) showGarage(true, 0); else closeGarage(); });
+  $('garageClose').addEventListener('click', closeGarage);
+  $('garageDrawer').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeGarage(); } });
   $('endAgain').addEventListener('click', () => {
     if (!trip) return;
     go('again'); sound.unlock(); drive(trip);
@@ -353,6 +360,7 @@ async function start() {
     say('The map did not load. Reload the page to try again.');
     return;
   }
+  loadGarage();
   enable(true);
   setupChase();
   go('none'); // the map screen: the rate card and TRAIN & DRIVE

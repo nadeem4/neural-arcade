@@ -187,8 +187,13 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .drawer .btn { height: 36px; padding: 0 12px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: 13px; }
 .drawer-empty { margin: 0; color: #9AA7B8; font-size: 14px; }
 .drawer-empty[hidden] { display: none; }
-.bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; gap: 10px; overflow-y: auto; }
-.bay { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--navy-line); border-top: 4px solid var(--stripe); border-radius: 12px; background: var(--navy-soft); }
+.bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; grid-auto-rows: max-content; gap: 10px; overflow-y: auto; }
+.bay { display: grid; gap: 6px; padding: 16px 14px 12px; position: relative; overflow: hidden; border: 1px solid var(--navy-line); border-radius: 12px; background: var(--navy-soft); }
+.bay-stripe { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+.bay-stats { display: flex; align-items: baseline; gap: 12px; }
+.bay-earned { font: 700 16px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.bay-earned.pay { color: var(--hud-pay); }
+.bay-earned.fine { color: var(--hud-fine); }
 .bay.empty { border: 2px dashed var(--navy-line); background: none; color: #6F7C8E; text-align: center; padding: 12px; }
 .bay-head { display: flex; align-items: center; gap: 10px; }
 .bay-name { font: 700 17px "Space Grotesk", var(--sans); }
@@ -202,7 +207,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .drawer button:focus-visible { outline: 2px solid var(--hud-taxi); outline-offset: 3px; }
 @media (max-width: 720px) {
   .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 50svh; padding: 12px; }
-  .bay { padding: 8px 10px; gap: 4px; }
+  .bay { padding: 12px 10px 8px; gap: 4px; }
   .bay-time { font-size: 18px; }
   .bay.empty { display: none; }
 }
