@@ -4,7 +4,7 @@ import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositi
 import { clampPitch, clampDistance, readColors, treesToHide } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
-import { shotAt, timeline, SWOOP_MS } from './director.js';
+import { shotAt, timeline, SWOOP_MS, PULLBACK_MS } from './director.js';
 import { loadWorld } from './sim.js';
 import { signalState, signalCorners } from './signals.js';
 import { skyColours, fogFor, heatOpacity } from './sky.js';
@@ -62,7 +62,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   const sky = createSky(skyColours(dark()));
   const scene = new THREE.Scene();
   scene.background = sky.texture;
-  scene.fog = new THREE.Fog(skyColours(dark()).bottom, radius * 2.5, radius * 6);
+  scene.fog = new THREE.Fog(skyColours(dark()).bottom, radius * 1.4, radius * 6);
   scene.add(new THREE.HemisphereLight('#BFD4FF', '#20242C', 0.9));
   const sun = new THREE.DirectionalLight('#FFE8CC', 1.1);
   sun.position.set(cx + radius, radius * 1.5, cz + radius * 0.6);
@@ -119,17 +119,19 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   }
 
   // Pickup and drop-off: a pin over a coloured pad, centred on the grid cell.
-  const heads = [];
+  const heads = [], pins = [];
   for (const rc of [city.pickup, city.dropoff]) {
     if (!rc) continue;
     const [x, z] = cellCentre(rc[0], rc[1], city);
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(city.cellM * 1.2, city.cellM * 1.2, 0.3, 24), mats.pad);
-    pad.position.set(x, 1.4, z);
+    pad.position.set(0, 0, 0);
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 30, 8), mats.pin);
-    stem.position.set(x, 15, z);
+    stem.position.set(0, 13.6, 0);
     const head = new THREE.Mesh(new THREE.SphereGeometry(7, 14, 10), mats.pin);
-    head.position.set(x, 34, z);
-    scene.add(pad, stem, head);
+    head.position.set(0, 32.6, 0);
+    const pin = new THREE.Group(); // scaled down in the chase so it is street-sized, not tower-sized
+    pin.position.set(x, 1.4, z); pin.add(pad, stem, head);
+    scene.add(pin); pins.push(pin);
     heads.push(head);
   }
 
@@ -216,7 +218,6 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     const cp = Math.cos(view.pitch);
     return { pos: [cx + Math.sin(view.yaw) * cp * view.dist, Math.sin(view.pitch) * view.dist, cz + Math.cos(view.yaw) * cp * view.dist], target: [cx, 0, cz], fov: 38 };
   };
-  let fogPhase = 'map';
   const renderNow = () => {
     if (dead) return;
     const mapShot = orbitShot();
@@ -225,11 +226,12 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       : mapShot;
     const phase = play ? play.phase : 'map';
     const near = phase !== 'map' ? 2 : radius * 0.05;
-    if (phase !== fogPhase) { fogPhase = phase; Object.assign(scene.fog, fogFor(phase, radius, phone)); }
+    Object.assign(scene.fog, fogFor(1 - heatOpacity(phase, play ? play.t : 0), radius, phone)); // the same 0..1 curve as the heat fade
     mats.heat.opacity = play ? heatOpacity(phase, play.t) : 1; // the heat is for the map; it fades out in the chase
     if (play && taxi) focusShadow(phase !== 'map', taxi.position.x, taxi.position.z);
     else focusShadow(false);
     if (camera.fov !== shot.fov || camera.near !== near) { camera.fov = shot.fov; camera.near = near; camera.updateProjectionMatrix(); }
+    for (const p of pins) p.scale.setScalar(phase === 'chase' ? 0.15 : phase === 'map' ? 1 : phase === 'swoop' ? 1 - 0.85 * Math.min(1, play.t / SWOOP_MS) : 0.15 + 0.85 * Math.min(1, play.t / PULLBACK_MS));
     clearTrees(play && phase !== 'map' ? [shot.pos[0], shot.pos[2]] : null, play && taxi ? [taxi.position.x, taxi.position.z] : null);
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
@@ -326,8 +328,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     const frames = play.track.frames, k = Math.min(st.stepIndex, frames.length - 1);
     taxi.position.set(st.x, 1, st.z); taxi.rotation.y = st.heading;
     taxiMaker.setBraking(st.braking);
-    trailPts.set([frames[k].x, 2.5, frames[k].z], k * 3); // the point just left snaps back to its cell
-    trailPts.set([st.x, 2.5, st.z], (k + 1) * 3); // the trail's last point rides with the taxi
+    trailPts.set([frames[k].x, 1.4, frames[k].z], k * 3); // the point just left snaps back to its cell
+    trailPts.set([st.x, 1.4, st.z], (k + 1) * 3); // the trail's last point rides with the taxi
     trail.geometry.setDrawRange(0, k + 2);
     trail.geometry.attributes.position.needsUpdate = true;
     play.state = st;
@@ -349,7 +351,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     const { phase, t } = timeline(play.track.total, elapsed, { swoop: play.swoop });
     const st = stateAt(play.track, Math.max(0, elapsed - intro));
     place(st); play.phase = phase; play.t = t;
-    if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 34 + Math.sin(now / 300 + i) * 2; });
+    if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
     play.onFrame?.(st, taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
     if (phase === 'map') { finish(); return; }
@@ -387,7 +389,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       taxi = taxiMaker.make();
       taxi.traverse((o) => { o.castShadow = true; });
       trailPts = new Float32Array((frames.length + 1) * 3);
-      frames.forEach((f, i) => trailPts.set([f.x, 2.5, f.z], i * 3));
+      frames.forEach((f, i) => trailPts.set([f.x, 1.4, f.z], i * 3));
       const tg = new THREE.BufferGeometry();
       tg.setAttribute('position', new THREE.BufferAttribute(trailPts, 3));
       trail = new THREE.Line(tg, mats.trail); trail.frustumCulled = false;

@@ -6,11 +6,12 @@ export function skyColours(isDark) {
   return isDark ? { top: '#3D5A80', bottom: '#E9A86B' } : { top: '#8EC5F0', bottom: '#F6E7C8' };
 }
 
-// Distance fog for the camera phase, as multiples of the city radius: wide on the map, close in the chase, closer on a phone.
-export function fogFor(phase, radius, phone) {
-  if (phase === 'map') return { near: radius * 2.5, far: radius * 6 };
-  const far = radius * (phone ? 0.4 : 0.6);
-  return { near: far * 0.25, far };
+// Distance fog, as multiples of the city radius: wide on the map (k = 0), close in the chase (k = 1, closer on a phone),
+// blended in between so the swoop and pullback never fog the whole city out.
+export function fogFor(k, radius, phone) {
+  const cFar = radius * (phone ? 0.4 : 0.6);
+  const near = radius * 2.5 + (cFar * 0.25 - radius * 2.5) * k, far = radius * 6 + (cFar - radius * 6) * k;
+  return { near, far };
 }
 
 // A small seeded random generator (mulberry32) from a string key.

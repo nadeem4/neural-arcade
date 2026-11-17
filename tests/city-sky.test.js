@@ -14,13 +14,15 @@ describe('skyColours', () => {
 
 describe('fogFor', () => {
   it('is tighter in the chase than on the map, and tighter again on a phone', () => {
-    const map = fogFor('map', 1000, false), chase = fogFor('chase', 1000, false), phone = fogFor('chase', 1000, true);
+    const map = fogFor(0, 1000, false), chase = fogFor(1, 1000, false), phone = fogFor(1, 1000, true);
     expect(chase.far).toBeLessThan(map.far);
     expect(phone.far).toBeLessThan(chase.far);
     for (const f of [map, chase, phone]) expect(f.near).toBeLessThan(f.far);
   });
-  it('treats swoop and pullback as the chase fog', () => {
-    expect(fogFor('swoop', 1000, false)).toEqual(fogFor('chase', 1000, false));
+  it('blends between map and chase fog', () => {
+    const half = fogFor(0.5, 1000, false);
+    expect(half.far).toBeGreaterThan(fogFor(1, 1000, false).far);
+    expect(half.far).toBeLessThan(fogFor(0, 1000, false).far);
   });
 });
 
