@@ -3,7 +3,7 @@ import * as THREE from './vendor/three.module.min.js';
 import { taxiParts } from './taxi-model.js';
 
 const BRAKE_ON = '#FF2A2A', BRAKE_OFF = '#7A1F1F';
-export const TAXI_SCALE = 2; // metres to scene units: the 4.2 m model becomes a car about two thirds of a 12 m tile
+export const TAXI_SCALE = 1.5; // metres to scene units: the 4.2 m model becomes a car about half a 12 m tile wide
 
 export function createTaxiMaker() {
   const cache = {};

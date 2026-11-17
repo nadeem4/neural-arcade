@@ -2,7 +2,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import { windowPattern } from './sky.js';
 
-const WIN_COLS = 8, WIN_ROWS = 16, WIN_W = 4, WIN_H = 4.5; // a repeat of the texture is 32 m wide and 72 m tall
+const WIN_COLS = 8, WIN_ROWS = 16, WIN_W = 3, WIN_H = 3.5; // windows 3 m apart, floors 3.5 m: a repeat is 24 m wide and 56 m tall
 const LIT = '#F4C76B';
 
 // A vertical gradient as the scene background; repaint(colours) redraws it when the theme changes.
@@ -23,22 +23,22 @@ export function createSky(colours) {
 }
 
 // Lit windows on a MeshStandardMaterial: the shader reads a small shared canvas by world position (wall faces only), so the
-// existing building geometry needs no UVs. Mipmaps average the windows into a soft glow far away, so nothing shimmers.
+// existing building geometry needs no UVs. Nearest magnification keeps edges crisp; mipmaps average to a soft glow far away.
 export function addWindows(mat, { phone, glow }) {
-  const cell = phone ? 4 : 8;
+  const cell = phone ? 16 : 32;
   const canvas = document.createElement('canvas');
   canvas.width = WIN_COLS * cell; canvas.height = WIN_ROWS * cell;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = LIT;
-  const pad = Math.max(1, cell / 4);
+  const padX = cell * 0.27, padY = cell * 0.25; // a window is about 1.4 m by 1.8 m in its 3 m by 3.5 m bay
   windowPattern('reward-city', WIN_COLS, WIN_ROWS).forEach((row, r) => row.forEach((on, c) => {
-    if (on) ctx.fillRect(c * cell + pad, r * cell + pad, cell - 2 * pad, cell - 2 * pad);
+    if (on) ctx.fillRect(c * cell + padX, r * cell + padY, cell - 2 * padX, cell - 2 * padY);
   }));
   const map = new THREE.CanvasTexture(canvas);
   map.wrapS = map.wrapT = THREE.RepeatWrapping;
   map.colorSpace = THREE.SRGBColorSpace;
-  map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter;
+  map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter; map.magFilter = THREE.NearestFilter; // crisp up close, soft glow far away
   const uniforms = { winMap: { value: map }, winGlow: { value: glow } };
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);

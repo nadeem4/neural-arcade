@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, readColors } from './scene-math.js';
+import { clampPitch, clampDistance, readColors, treesToHide } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, SWOOP_MS } from './director.js';
@@ -11,6 +11,7 @@ import { skyColours, fogFor, heatOpacity } from './sky.js';
 import { createSky, addWindows } from './scene-look.js';
 import { createTaxiMaker } from './scene-taxi.js';
 
+const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
 const TREE_SEED = 7;
@@ -99,10 +100,21 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
 
   // Instanced trees: one cone each, shared geometry.
   const pos = treePositions(city.parks ?? [], TREE_SEED);
+  let trees = null, hiddenTrees = [];
+  const treeMat = new THREE.Matrix4(), treeOff = new THREE.Matrix4().makeScale(0, 0, 0);
+  const placeTree = (i, on) => trees.setMatrixAt(i, on ? treeMat.setPosition(pos[i * 3], 0.4, pos[i * 3 + 2]) : treeOff);
+  // In the chase, trees near the camera or on its line to the taxi are scaled to nothing so they never block the view.
+  const clearTrees = (cam, taxiAt) => {
+    if (!trees) return;
+    const next = cam ? treesToHide(pos, cam, taxiAt) : [];
+    if (next.length === hiddenTrees.length && next.every((v, k) => v === hiddenTrees[k])) return;
+    for (const i of hiddenTrees) placeTree(i, true);
+    for (const i of next) placeTree(i, false);
+    hiddenTrees = next; trees.instanceMatrix.needsUpdate = true;
+  };
   if (pos.length) {
-    const trees = new THREE.InstancedMesh(new THREE.ConeGeometry(2.4, 8, 6).translate(0, 4, 0), mats.leaf, pos.length / 3);
-    const m = new THREE.Matrix4();
-    for (let i = 0; i < pos.length / 3; i++) trees.setMatrixAt(i, m.setPosition(pos[i * 3], 0.4, pos[i * 3 + 2]));
+    trees = new THREE.InstancedMesh(new THREE.ConeGeometry(2.4, 8, 6).translate(0, 4, 0), mats.leaf, pos.length / 3);
+    for (let i = 0; i < pos.length / 3; i++) placeTree(i, true);
     scene.add(trees);
   }
 
@@ -209,7 +221,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     if (dead) return;
     const mapShot = orbitShot();
     const shot = play && play.phase !== 'map'
-      ? shotAt(play.phase, play.t, mapShot, { ...chaseCamera(play.state, { back: 18, up: 7, ahead: 14 }), fov: 55 })
+      ? shotAt(play.phase, play.t, mapShot, { ...chaseCamera(play.state, CHASE), fov: 55 })
       : mapShot;
     const phase = play ? play.phase : 'map';
     const near = phase !== 'map' ? 2 : radius * 0.05;
@@ -218,6 +230,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     if (play && taxi) focusShadow(phase !== 'map', taxi.position.x, taxi.position.z);
     else focusShadow(false);
     if (camera.fov !== shot.fov || camera.near !== near) { camera.fov = shot.fov; camera.near = near; camera.updateProjectionMatrix(); }
+    clearTrees(play && phase !== 'map' ? [shot.pos[0], shot.pos[2]] : null, play && taxi ? [taxi.position.x, taxi.position.z] : null);
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
     renderer.render(scene, camera);
