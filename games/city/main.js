@@ -20,7 +20,7 @@ import { endCardModel } from './endcard.js';
 import { createGarage, keep, remove, serialize, parse, validTaxi } from './garage.js';
 import { nameFor, uniqueName, noteFor } from './naming.js';
 import { renderGarage } from './garage-view.js';
-import { raceTracks, raceStateAt, result, togglePick } from './race.js';
+import { raceTracks, raceStateAt, result, togglePick, leaderBlips } from './race.js';
 import { renderRaceBar, showRaceMeters, updateRaceHud, showBanner } from './race-view.js';
 
 const $ = id => document.getElementById(id);
@@ -291,7 +291,7 @@ function startRace() {
   raceRun = null; hud = null; trip = null; stage.clearRoute();
   $('viewToggle').setAttribute('aria-pressed', 'false'); stage.setMapView(false);
   $('train').dataset.stale = 'false'; $('announce').textContent = ''; $('driveProgress').value = 0;
-  const run = raceRun = { race, names: chosen.map(t => t.name), ended: false };
+  const run = raceRun = { race, names: chosen.map(t => t.name), ended: false, done: [0, 0], skipped: false };
   go('race');
   showRaceMeters(true, run.names); updateRaceHud(world, race, raceStateAt(race, 0));
   stage.playRace({
@@ -299,6 +299,8 @@ function startRace() {
     onFrame: rs => {
       $('driveProgress').value = Math.round(100 * Math.max(...rs.cars.map((c, i) => c.state.progress / Math.max(1, race.cars[i].events.steps.length))));
       updateRaceHud(world, race, rs);
+      const b = leaderBlips(race, rs, run.done); run.done = b.done;
+      if (!run.skipped) for (const step of b.steps) sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
     },
     onDone: () => finishRace(run, 'finished'),
   });
@@ -321,7 +323,7 @@ function build() {
   $('train').addEventListener('click', () => { sound.unlock(); showStage(); train({ ...rewards }); });
   $('reset').addEventListener('click', () => { rewards = defaultRewards(); $('train').dataset.stale = 'true'; showRates(); });
   $('skip').addEventListener('click', () => {
-    if (raceRun) { stage.skipTrip(); finishRace(raceRun, 'skip'); return; }
+    if (raceRun) { raceRun.skipped = true; stage.skipTrip(); finishRace(raceRun, 'skip'); return; }
     if (!trip || !hud) return; hud.skipped = true; stage.skipTrip(); finish(trip, 'skip');
   });
   $('startRace').addEventListener('click', startRace);

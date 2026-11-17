@@ -10,7 +10,7 @@ import { loadWorld } from './sim.js';
 import { signalState, signalCorners } from './signals.js';
 import { skyColours, fogFor, heatOpacity } from './sky.js';
 import { createSky, addWindows } from './scene-look.js';
-import { createTaxiMaker } from './scene-taxi.js';
+import { createTaxiMaker, TAXI_SCALE } from './scene-taxi.js';
 
 const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
@@ -196,6 +196,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   let queued = 0, dead = false;
   let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;
   let taxiB = null, trailB = null, trailPtsB = null; // the second car of a race
+  let raceTags = []; // two name tags over the cars (DOM, in the label layer), alive for a race
+  const RACE_SCALE = 2.5; // both cars are drawn bigger in a race so they read from the high camera
+  const clearRaceTags = () => { raceTags.forEach(s => s.remove()); raceTags = []; };
 
   // Landmark labels: DOM text projected each render, hidden when behind the camera or off the stage.
   const labels = (city.landmarks ?? []).map((l) => {
@@ -327,7 +330,11 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
 
   // Playback: its own rAF loop, alive only while a trip plays. Each frame asks drive.js for the taxi and director.js for the camera.
   let loopId = 0;
-  const finish = () => { const p = play; play = null; if (p && p.onDone) p.onDone(); }; // exactly once per trip
+  const finish = () => {
+    const p = play; play = null;
+    if (p && p.race) { clearRaceTags(); for (const t of [taxi, taxiB]) t?.scale.setScalar(TAXI_SCALE); } // back to normal size
+    if (p && p.onDone) p.onDone();
+  }; // exactly once per trip
   const placeCar = (tx, tr, pts, maker, frames, st) => {
     const k = Math.min(st.stepIndex, frames.length - 1);
     tx.position.set(st.x, 1, st.z); tx.rotation.y = st.heading;
@@ -347,6 +354,13 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     const [a, b] = play.race.cars;
     placeCar(taxi, trail, trailPts, taxiMaker, a.track.frames, rs.cars[0].state);
     placeCar(taxiB, trailB, trailPtsB, taxiMakerB, b.track.frames, rs.cars[1].state);
+    raceTags.forEach((span, i) => { // each name tag sits above its car, in its car's colour
+      const t = i ? taxiB : taxi;
+      tmp.set(t.position.x, 14, t.position.z).project(camera);
+      const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
+      span.style.display = tmp.z > 1 ? 'none' : '';
+      span.style.transform = `translate(${cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width}px, ${cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height}px) translate(-50%, -100%)`;
+    });
     play.state = rs;
     const lead = rs.cars[rs.leader ?? 0].state;
     setLights(lead.tick, lead.facing);
@@ -442,6 +456,12 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       };
       [taxi, trail, trailPts] = make(taxiMaker, mats.trail, race.cars[0].track.frames);
       [taxiB, trailB, trailPtsB] = make(taxiMakerB, mats.trailB, race.cars[1].track.frames);
+      taxi.scale.setScalar(TAXI_SCALE * RACE_SCALE); taxiB.scale.setScalar(TAXI_SCALE * RACE_SCALE);
+      raceTags = labelEl ? race.cars.map((c, i) => {
+        const span = document.createElement('span');
+        span.className = 'race-tag'; span.textContent = c.entry.name; span.style.color = TINTS[i].css;
+        labelEl.append(span); return span;
+      }) : [];
       play = { race, track: { total: race.total }, onFrame, onDone, state: raceStateAt(race, 0), phase: 'map', t: 0, swoop: true };
       if (!motionAllowed()) { // no animation: both cars at their finish with the whole trails and final numbers
         const end = raceStateAt(race, race.total);

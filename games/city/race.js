@@ -46,6 +46,14 @@ export function raceStateAt(race, ms) {
   return { cars, leader: gap < 1e-6 ? null : dist[0] < dist[1] ? 0 : 1, done: cars.every(c => c.finished) };
 }
 
+// Sound in a race is the leader's only, to avoid noise. `done` is how many steps each car has already been through;
+// returns the leader's newly finished steps and the new counts (the trailing car's count moves on without a sound).
+export function leaderBlips(race, rs, done) {
+  const next = rs.cars.map((c, i) => Math.min(c.state.stepIndex, race.cars[i].events.steps.length));
+  const steps = rs.leader === null ? [] : race.cars[rs.leader].events.steps.slice(done[rs.leader], next[rs.leader]);
+  return { steps, done: next };
+}
+
 // Who won. Arriving beats not arriving; then fewer seconds; then more earned; then a tie.
 // by is the gap in seconds (null when only one taxi arrived).
 export function result(race) {

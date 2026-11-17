@@ -25,7 +25,7 @@ export function shotAt(phase, t, mapShot, chaseShot, { reduced = false } = {}) {
 
 // The race camera: behind and above the midpoint of the two cars, rising and pulling back as they spread apart (up to a limit), so both stay in view.
 // a and b are { x, z, heading }; the view faces the way the two cars head on average.
-const RACE = { back: 30, up: 45, backPer: 0.5, upPer: 0.95, maxBack: 160, maxUp: 300 };
+const RACE = { back: 26, up: 34, backPer: 0.4, upPer: 0.75, maxBack: 160, maxUp: 300 };
 export function raceShot(a, b, { fov = 55 } = {}) {
   const mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2;
   const h = Math.atan2(Math.sin(a.heading) + Math.sin(b.heading), Math.cos(a.heading) + Math.cos(b.heading));
