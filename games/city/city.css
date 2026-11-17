@@ -5,15 +5,15 @@
 .citybar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; height: var(--bar); padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); background: var(--surface); border-bottom: 1px solid var(--line); }
 .citybar .logo { font-size: 15px; }
 .citybar .sep { color: var(--ink-2); }
-.citybar h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: normal; line-height: 1; }
+.citybar h1 { white-space: nowrap; margin: 0; font-size: 15px; font-weight: 700; letter-spacing: normal; line-height: 1; }
 .citybar .tag { flex: 1; min-width: 0; margin: 0 0 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--ink-2); }
 .citybar nav { display: flex; align-items: center; gap: 14px; margin-left: auto; }
-.citybar nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; color: var(--ink-2); }
+.citybar nav a { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; color: var(--ink-2); }
 .citybar nav a:hover { color: var(--ink); }
 .citybar .lamp { width: 44px; height: 44px; }
 
 .play { display: block; position: relative; height: calc(100vh - var(--bar)); height: calc(100svh - var(--bar)); min-height: 420px; overflow: hidden; background: var(--stage); scroll-margin-top: var(--bar); }
-.stage-body { position: absolute; inset: 0; }
+.stage-body { display: block; position: absolute; inset: 0; } /* studio.css makes it a two-column grid */
 #stage { display: block; width: 100%; height: 100%; }
 #stage canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
 #stage canvas:active { cursor: grabbing; }
@@ -87,6 +87,7 @@ input[type="range"]:focus-visible, button:focus-visible { outline: 2px solid var
   .fold { border-top: 1px solid var(--line); }
   .panel input[type="range"], .dial input { height: 44px; }
   .panel .info, .hud .info { width: 44px; height: 44px; }
+  .chase { height: 44px; }
 }
 @media (max-width: 560px) {
   .citybar { gap: 8px; }
