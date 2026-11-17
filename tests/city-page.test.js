@@ -124,6 +124,42 @@ describe('city page markup', () => {
   });
 });
 
+describe('city page race markup', () => {
+  const RACE_IDS = ['meterLabel', 'meterB', 'meterBTotal', 'meterBLabel', 'meterBCounts', 'raceBar', 'raceLine', 'startRace', 'raceBanner', 'raceTitle', 'raceDetail', 'raceAgain', 'raceBack'];
+  it('has the race pieces, each looked up by main.js or race-view.js', () => {
+    const code = read(mainPath) + read('games/city/race-view.js');
+    for (const id of RACE_IDS) {
+      expect(html, id).toContain(`id="${id}"`);
+      expect(code, id).toContain(`'${id}'`);
+    }
+  });
+  it('hides the second meter, the race bar and the result banner until a race, and the banner can take focus', () => {
+    for (const id of ['meterB', 'raceBar', 'raceBanner']) expect(tag(id), id).toMatch(/\shidden[\s>]/);
+    expect(tag('meterB')).toContain('aria-hidden="true"');
+    expect(tag('raceBanner')).toContain('tabindex="-1"');
+    expect(tag('startRace')).toMatch(/^<button /);
+    expect(html).toContain('>START RACE</button>');
+    expect(html).toContain('>Rematch</button>');
+    expect(html).toContain('>Back to garage</button>');
+  });
+  it('rings the picked taxis in cyan and styles the START RACE button cyan', () => {
+    expect(rules('.bay.picked')).toContain('var(--hud-route)');
+    expect(rules('#startRace')).toContain('var(--hud-route)');
+  });
+  it('the garage cards carry a Race toggle that says In race when picked, and main.js checks both taxis with validTaxi first', () => {
+    const view = read('games/city/garage-view.js');
+    expect(view).toContain('In race');
+    expect(view).toContain('aria-pressed');
+    const main = read(mainPath), start = main.slice(main.indexOf('function startRace'));
+    expect(start.indexOf('validTaxi')).toBeGreaterThan(-1);
+    expect(start.indexOf('validTaxi')).toBeLessThan(start.indexOf('raceTracks'));
+    expect(start.indexOf('raceTracks')).toBeLessThan(start.indexOf("go('race')"));
+  });
+  it('hides Race without 3D, with a title that says why', () => {
+    expect(read(mainPath)).toContain('Racing needs the 3D view.');
+  });
+});
+
 describe('city page layout', () => {
   it('has no Try cards: no #cards, no card code, no card styles', () => {
     expect(html).not.toContain('id="cards"');

@@ -4,9 +4,10 @@ const PAD = 0.1;
 const FINES = ['red', 'wrong', 'off'];
 
 // `f` is the step index as a float. The view is fitted to the whole route once, so it never rescales mid-drive.
-export function minimapModel(world, route, f, events) {
+// A race passes both routes as fitRoutes so the two models share one view.
+export function minimapModel(world, route, f, events, fitRoutes = [route]) {
   const at = (cell) => [cell % world.cols, Math.floor(cell / world.cols)];
-  const all = [...route.cells, world.goal].map(at);
+  const all = [...fitRoutes.flatMap((r) => r.cells), world.goal].map(at);
   const xs = all.map((p) => p[0]), ys = all.map((p) => p[1]);
   const x0 = Math.min(...xs), y0 = Math.min(...ys), span = Math.max(1, Math.max(...xs) - x0, Math.max(...ys) - y0);
   const k = (1 - 2 * PAD) / span;
@@ -27,11 +28,13 @@ export function minimapModel(world, route, f, events) {
   return { points, taxi, dots, flag: unit(world.goal) };
 }
 
+export const COLOURS_B = { route: '#FF7AB6', taxi: '#E8589C', fine: '#FF9A6B', flag: '#8FE3A1' };
 const COLOURS = { route: '#5BC0EB', taxi: '#F5B820', fine: '#FF9A6B', flag: '#8FE3A1' };
 
-export function drawMinimap(ctx, model, size, colours = COLOURS) {
+// clear:false draws over what is there, for the second car of a race.
+export function drawMinimap(ctx, model, size, colours = COLOURS, { clear = true } = {}) {
   const px = (p) => [p.x * size, p.y * size];
-  ctx.clearRect(0, 0, size, size);
+  if (clear) ctx.clearRect(0, 0, size, size);
   if (model.points.length > 1) {
     ctx.beginPath();
     ctx.moveTo(...px(model.points[0]));

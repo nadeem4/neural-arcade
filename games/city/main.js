@@ -20,11 +20,14 @@ import { endCardModel } from './endcard.js';
 import { createGarage, keep, remove, serialize, parse, validTaxi } from './garage.js';
 import { nameFor, uniqueName, noteFor } from './naming.js';
 import { renderGarage } from './garage-view.js';
+import { raceTracks, raceStateAt, result, togglePick } from './race.js';
+import { renderRaceBar, showRaceMeters, updateRaceHud, showBanner } from './race-view.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
 
 let world = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
+let picks = [], raceRun = null; // garage ids picked for a race; the race on screen: { race, names, ended }
 let worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
 const pending = new Map(); // message id -> { resolve, reject, onProgress }
 const say = text => { $('status').textContent = text; };
@@ -35,7 +38,7 @@ const loadMuted = () => { try { return localStorage.getItem(MUTE_KEY) === '1'; }
 const sound = createSound({ muted: loadMuted(), reducedMotion: !motionAllowed() });
 let hud = null; // { events, route, done } while a trip is on screen
 
-function showMeter(on) { $('meter').hidden = !on; $('minimap').hidden = !on; }
+function showMeter(on) { showRaceMeters(false); $('meter').hidden = !on; $('minimap').hidden = !on; }
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
 function popTag(tag, at, i) {
   const prev = hud.lastTag?.[tag.text];
@@ -127,8 +130,9 @@ function go(event) {
   const busy = screen === 'training';
   $('endcard').hidden = screen !== 'done';
   $('barDrive').hidden = !canToggleView(screen);
-  $('skip').hidden = screen !== 'driving';
-  $('driveProgress').hidden = screen !== 'driving';
+  $('skip').hidden = !(screen === 'driving' || screen === 'racing');
+  $('driveProgress').hidden = !(screen === 'driving' || screen === 'racing');
+  $('raceBanner').hidden = screen !== 'raced';
   $('train').disabled = busy || !stage;
   $('train').textContent = busy ? 'TRAINING…' : 'TRAIN & DRIVE';
   if (busy) showGarage(false);
@@ -192,7 +196,7 @@ function finish(t, event) {
 
 // ---------- One drive, and one training run ----------
 function drive(t) {
-  hud = null;
+  hud = null; raceRun = null;
   $('viewToggle').setAttribute('aria-pressed', 'false'); stage.setMapView(false);
   $('driveProgress').value = 0;
   startHud(t.events, t.route, t.rewards);
@@ -205,7 +209,7 @@ async function train(req) {
   go('train');
   progress.value = 0; progress.hidden = false; $('train').dataset.stale = 'false'; say('Training the taxi…');
   $('announce').textContent = '';
-  stage.clearRoute(); hud = null; trip = null; showMeter(false);
+  raceRun = null; stage.clearRoute(); hud = null; trip = null; showMeter(false);
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
       p => { progress.value = Math.round(100 * p.done / p.total); if (p.visits) stage.setHeat(p.visits); });
@@ -240,11 +244,15 @@ function showGarage(open, focusIndex) {
   $('garage').setAttribute('aria-expanded', String(open));
   $('garageCount').textContent = garage.taxis.length;
   $('garageEmpty').hidden = garage.taxis.length > 0;
+  picks = picks.filter(id => garage.taxis.some(t => t.id === id));
   renderGarage($('garageList'), garage, {
     canDrive: screen !== 'training',
     onDrive: driveKept,
     onRemove: (taxi, i) => { garage = remove(garage, taxi.id); saveGarage(); showGarage(true, i); },
+    picks, canRace: !!stage?.ready && screen !== 'training', raceTitle: stage?.ready ? '' : 'Racing needs the 3D view.',
+    onPick: (taxi, i) => { picks = togglePick(picks, taxi.id); showGarage(true); $('garageList').querySelectorAll('.bay-race')[i]?.focus(); },
   });
+  renderRaceBar(picks.map(id => garage.taxis.find(t => t.id === id).name));
   if (open && focusIndex !== undefined) (driveButtons()[focusIndex] ?? driveButtons().pop() ?? $('garageClose')).focus();
 }
 function keepTrip(t) {
@@ -266,9 +274,42 @@ function driveKept(taxi) {
   const events = tripEvents(world, taxi.rewards, taxi.route);
   const track = driveTrack(routeFrames(world, cellM, taxi.route), events);
   trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, ended: false };
-  stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
+  raceRun = null; stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
   go('replay');
   drive(trip);
+}
+
+// RACE from the garage: both picked taxis are checked first, then they drive the same trip on the same lights, side by side.
+function startRace() {
+  const cells = world.cols * world.rows;
+  const chosen = picks.map(id => garage.taxis.find(t => t.id === id));
+  if (!stage?.ready || screen === 'training' || chosen.length !== 2 || !chosen.every(t => validTaxi(t, cells))) return;
+  let race;
+  try { race = raceTracks(world, cellM, chosen); } catch { toast('Those two taxis start from different places.'); return; }
+  showGarage(false);
+  jobs.cancel(); latest++; sound.unlock();
+  raceRun = null; hud = null; trip = null; stage.clearRoute();
+  $('viewToggle').setAttribute('aria-pressed', 'false'); stage.setMapView(false);
+  $('train').dataset.stale = 'false'; $('announce').textContent = ''; $('driveProgress').value = 0;
+  const run = raceRun = { race, names: chosen.map(t => t.name), ended: false };
+  go('race');
+  showRaceMeters(true, run.names); updateRaceHud(world, race, raceStateAt(race, 0));
+  stage.playRace({
+    race,
+    onFrame: rs => {
+      $('driveProgress').value = Math.round(100 * Math.max(...rs.cars.map((c, i) => c.state.progress / Math.max(1, race.cars[i].events.steps.length))));
+      updateRaceHud(world, race, rs);
+    },
+    onDone: () => finishRace(run, 'finished'),
+  });
+}
+// The end of a race, by both cars arriving or by Skip; the first of the two wins. The banner gets focus.
+function finishRace(run, event) {
+  if (run.ended || run !== raceRun) return;
+  run.ended = true;
+  go(event);
+  updateRaceHud(world, run.race, raceStateAt(run.race, run.race.total));
+  $('announce').textContent = `Race done. ${showBanner(run.race, result(run.race), run.names)}`;
 }
 
 // ---------- Wiring ----------
@@ -279,14 +320,23 @@ function build() {
   }
   $('train').addEventListener('click', () => { sound.unlock(); showStage(); train({ ...rewards }); });
   $('reset').addEventListener('click', () => { rewards = defaultRewards(); $('train').dataset.stale = 'true'; showRates(); });
-  $('skip').addEventListener('click', () => { if (!trip || !hud) return; hud.skipped = true; stage.skipTrip(); finish(trip, 'skip'); });
+  $('skip').addEventListener('click', () => {
+    if (raceRun) { stage.skipTrip(); finishRace(raceRun, 'skip'); return; }
+    if (!trip || !hud) return; hud.skipped = true; stage.skipTrip(); finish(trip, 'skip');
+  });
+  $('startRace').addEventListener('click', startRace);
+  $('raceAgain').addEventListener('click', startRace);
+  $('raceBack').addEventListener('click', () => {
+    raceRun = null; stage.clearRoute(); showMeter(false);
+    go('edit'); showGarage(true, 0);
+  });
   $('viewToggle').addEventListener('click', () => {
     const on = $('viewToggle').getAttribute('aria-pressed') !== 'true';
     $('viewToggle').setAttribute('aria-pressed', String(on));
     stage.setMapView(on);
   });
   $('endEdit').addEventListener('click', () => {
-    jobs.cancel(); latest++; stage.clearRoute(); hud = null; trip = null; showMeter(false); say('');
+    jobs.cancel(); latest++; raceRun = null; stage.clearRoute(); hud = null; trip = null; showMeter(false); say('');
     $('announce').textContent = '';
     go('edit'); $('fareInc').focus({ preventScroll: true });
   });

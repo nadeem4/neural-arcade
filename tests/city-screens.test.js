@@ -1,6 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { nextScreen, canToggleView } from '../games/city/screens.js';
 
+describe('the race screens', () => {
+  it('a race starts from the map, a drive or the end card, and ends on the race result', () => {
+    for (const from of ['map', 'driving', 'done', 'raced']) expect(nextScreen(from, 'race')).toBe('racing');
+    expect(nextScreen('training', 'race')).toBe('training');
+    expect(nextScreen('racing', 'finished')).toBe('raced');
+    expect(nextScreen('racing', 'skip')).toBe('raced');
+  });
+  it('leaves the result for the rate card or for training, and lets the Map view work in a race', () => {
+    expect(nextScreen('raced', 'edit')).toBe('map');
+    expect(nextScreen('raced', 'train')).toBe('training');
+    expect(nextScreen('raced', 'replay')).toBe('driving');
+    expect(canToggleView('racing')).toBe(true);
+  });
+});
+
 describe('nextScreen', () => {
   it('walks the loop: map, training, driving, done, then back', () => {
     let s = 'map';

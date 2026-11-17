@@ -71,8 +71,13 @@
     <div class="hud">
       <div class="meter" id="meter" aria-hidden="true" hidden>
         <span class="meter-total" id="meterTotal">0</span>
-        <span class="meter-label">earned this trip</span>
+        <span class="meter-label" id="meterLabel">earned this trip</span>
         <span class="meter-counts" id="meterCounts"></span>
+      </div>
+      <div class="meter meter-b" id="meterB" aria-hidden="true" hidden>
+        <span class="meter-total" id="meterBTotal">0</span>
+        <span class="meter-label" id="meterBLabel"></span>
+        <span class="meter-counts" id="meterBCounts"></span>
       </div>
     </div>
     <div class="notes">
@@ -113,7 +118,20 @@
       <div class="drawer-head"><h2 id="garageTitle">Garage</h2><button class="btn" type="button" id="garageClose">Close</button></div>
       <p class="drawer-empty" id="garageEmpty">Train a taxi, then keep it here.</p>
       <ul class="bays" id="garageList"></ul>
+      <div class="racebar" id="raceBar" hidden>
+        <p id="raceLine"></p>
+        <button class="go small" type="button" id="startRace">START RACE</button>
+      </div>
     </aside>
+    <section class="endcard racebanner" id="raceBanner" tabindex="-1" aria-labelledby="raceTitle" hidden>
+      <div class="end-head"><span>RACE DONE</span></div>
+      <p class="race-title" id="raceTitle"></p>
+      <p class="race-detail" id="raceDetail"></p>
+      <div class="end-actions">
+        <button class="go small" type="button" id="raceAgain">Rematch</button>
+        <button class="btn" type="button" id="raceBack">Back to garage</button>
+      </div>
+    </section>
     <p class="toast" id="toast" role="status" hidden></p>
   </section>
         <section aria-labelledby="rh">
