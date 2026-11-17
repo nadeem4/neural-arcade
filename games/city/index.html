@@ -47,13 +47,20 @@
     </div>
 
     <div class="hud">
+      <div class="meter" id="meter" aria-hidden="true" hidden>
+        <span class="meter-total" id="meterTotal">0</span>
+        <span class="meter-label">earned this trip</span>
+        <span class="meter-counts" id="meterCounts"></span>
+      </div>
       <span class="chip" id="driving" hidden>Driving…</span>
       <progress id="progress" max="100" value="0" aria-label="Training progress" hidden></progress>
       <p class="chip" id="status" aria-live="polite"></p>
       <p class="chip" id="stageNote"></p>
-      <div class="hud-tools"><button class="btn chase" type="button" id="chase" aria-pressed="false">Chase cam</button> <button class="info" type="button" aria-expanded="false" aria-controls="info-map" aria-label="Explain the map" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></div>
+      <div class="hud-tools"><button class="btn chase" type="button" id="chase" aria-pressed="false" title="Start the drive in the chase view, with no swoop">Chase cam</button> <button class="btn chase" type="button" id="mute" aria-pressed="false">Sound on</button> <button class="info" type="button" aria-expanded="false" aria-controls="info-map" aria-label="Explain the map" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></div>
       <p class="info-text" id="info-map" data-info="map" hidden></p>
     </div>
+
+    <canvas class="minimap" id="minimap" width="240" height="240" aria-hidden="true" hidden></canvas>
 
     <p class="sr-only" id="announce" aria-live="polite"></p>
     <p class="verdict-float" id="verdictFloat" aria-hidden="true"></p>

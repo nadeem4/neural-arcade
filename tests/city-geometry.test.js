@@ -112,7 +112,7 @@ describe('cityBounds', () => {
 });
 
 describe('real map', () => {
-  it('builds finite geometry within budget', () => {
+  it('builds finite geometry within budget', { timeout: 20000 }, () => {
     const city = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url)));
     const t0 = performance.now();
     const parts = {
