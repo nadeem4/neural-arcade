@@ -2,16 +2,22 @@
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
 import { clampPitch, clampDistance, readColors } from './scene-math.js';
-import { motionAllowed, lightPhase, chaseCamera, heatColour } from './playback.js';
+import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, SWOOP_MS } from './director.js';
+import { loadWorld } from './sim.js';
+import { signalState, signalCorners } from './signals.js';
+import { skyColours, fogFor, heatOpacity } from './sky.js';
+import { createSky, addWindows } from './scene-look.js';
+import { createTaxiMaker } from './scene-taxi.js';
 
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
 const TREE_SEED = 7;
 
-function meshOf(geo, mat) {
+function meshOf(geo, mat, { cast = false, receive = false } = {}) {
   const m = new THREE.Mesh(geo, mat);
+  m.castShadow = cast; m.receiveShadow = receive;
   m.matrixAutoUpdate = false; m.updateMatrix();
   return m;
 }
@@ -35,7 +41,8 @@ export function createScene(el, city, opts = {}) {
 
 function build(el, city, renderer, phone, labelEl, onChaseOff) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, phone ? 1.5 : 2));
-  renderer.shadowMap.enabled = false;
+  renderer.shadowMap.enabled = !phone; // shadows are a desktop-only extra
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const canvas = renderer.domElement;
   el.replaceChildren(canvas);
 
@@ -50,22 +57,45 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   mats.pin = new THREE.MeshStandardMaterial({ color: colors.pin, emissive: colors.pin, emissiveIntensity: 0.5 });
   mats.pad = new THREE.MeshBasicMaterial({ color: colors.accent });
 
+  const dark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
+  const sky = createSky(skyColours(dark()));
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(colors.sky);
-  scene.fog = new THREE.Fog(colors.sky, radius * 2.5, radius * 6);
+  scene.background = sky.texture;
+  scene.fog = new THREE.Fog(skyColours(dark()).bottom, radius * 2.5, radius * 6);
   scene.add(new THREE.HemisphereLight('#BFD4FF', '#20242C', 0.9));
   const sun = new THREE.DirectionalLight('#FFE8CC', 1.1);
   sun.position.set(cx + radius, radius * 1.5, cz + radius * 0.6);
   sun.target.position.set(cx, 0, cz);
   scene.add(sun, sun.target);
+  // Desktop shadows: one directional light whose shadow box covers the city on the map and a patch around the taxi in the chase.
+  const SUN_OFFSET = [radius, radius * 1.5, radius * 0.6];
+  let shadowFocus = null;
+  const focusShadow = (chaseOn, x = cx, z = cz) => {
+    if (phone) return;
+    const cam = sun.shadow.camera, half = chaseOn ? 160 : radius, k = chaseOn ? 300 / Math.hypot(...SUN_OFFSET) : 1;
+    sun.target.position.set(x, 0, z);
+    sun.position.set(x + SUN_OFFSET[0] * k, SUN_OFFSET[1] * k, z + SUN_OFFSET[2] * k);
+    if (shadowFocus !== chaseOn) {
+      Object.assign(cam, { left: -half, right: half, top: half, bottom: -half, near: 1, far: chaseOn ? 700 : radius * 4 });
+      cam.updateProjectionMatrix();
+      shadowFocus = chaseOn;
+    }
+  };
+  if (!phone) {
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.6;
+    focusShadow(false);
+  }
 
-  scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -0.5, cz), mats.ground));
+  scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -0.5, cz), mats.ground, { receive: true }));
   scene.add(meshOf(geoOf(buildFlats(city.water ?? [], 0.2)), mats.water));
   scene.add(meshOf(geoOf(buildFlats(city.parks ?? [], 0.4)), mats.park));
   scene.add(meshOf(geoOf(buildRoadStrips(city.paths ?? [], 0.6)), mats.walk));
-  scene.add(meshOf(geoOf(buildRoadStrips(city.roads ?? [], 0.8)), mats.road));
+  scene.add(meshOf(geoOf(buildRoadStrips(city.roads ?? [], 0.8)), mats.road, { receive: true }));
   scene.add(meshOf(geoOf(buildLaneMarks(city.roads ?? [], 1.0)), mats.mark));
-  scene.add(meshOf(geoOf(buildBuildings(city.buildings ?? [])), mats.building));
+  scene.add(meshOf(geoOf(buildBuildings(city.buildings ?? [])), mats.building, { cast: true, receive: true }));
+  const windows = addWindows(mats.building, { phone, glow: dark() ? 1 : 0.35 });
 
   // Instanced trees: one cone each, shared geometry.
   const pos = treePositions(city.parks ?? [], TREE_SEED);
@@ -91,35 +121,31 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     heads.push(head);
   }
 
-  // Traffic lights: a post with two lamps per signal cell (north-south and east-west), recoloured by phase.
+  // Traffic lights: a post and one lamp at the corner of each signal cell, showing only the taxi's own direction of travel.
   const signals = city.signals ?? [];
-  const lightWorld = { period: city.lightPeriod ?? 8 };
+  const world = loadWorld(city);
   const GREEN = '#22C55E', RED = '#EF4444';
   mats.post = new THREE.MeshStandardMaterial({ color: '#8A93A3', roughness: 0.8 });
-  mats.lampNS = new THREE.MeshBasicMaterial({ color: GREEN });
-  mats.lampEW = new THREE.MeshBasicMaterial({ color: RED });
+  mats.lamp = new THREE.MeshBasicMaterial({ color: GREEN });
   if (signals.length) {
     const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 0.7, 12, 6).translate(0, 6, 0), mats.post, signals.length);
-    const lampGeo = new THREE.SphereGeometry(1.4, 10, 8);
-    const ns = new THREE.InstancedMesh(lampGeo, mats.lampNS, signals.length);
-    const ew = new THREE.InstancedMesh(lampGeo, mats.lampEW, signals.length);
+    const lamps = new THREE.InstancedMesh(new THREE.SphereGeometry(1.8, 10, 8), mats.lamp, signals.length);
     const m = new THREE.Matrix4();
     signals.forEach(([c, r], i) => {
-      const [x, z] = cellCentre(c, r, city);
+      const { x, z } = signalCorners(world, r * city.cols + c, city.cellM);
       posts.setMatrixAt(i, m.setPosition(x, 0.8, z));
-      ns.setMatrixAt(i, m.setPosition(x, 14, z - 3));
-      ew.setMatrixAt(i, m.setPosition(x + 3, 14, z));
+      lamps.setMatrixAt(i, m.setPosition(x, 13, z));
     });
-    scene.add(posts, ns, ew);
+    scene.add(posts, lamps);
   }
-  let shownPhase = -1;
-  // Phase 0: east-west red, north-south green; phase 1 the other way (same as sim.js lightRed). True if it changed.
-  const setLights = (tick) => {
-    const phase = lightPhase(lightWorld, tick);
-    if (phase === shownPhase) return false;
-    shownPhase = phase;
-    mats.lampNS.color.set(phase === 1 ? RED : GREEN);
-    mats.lampEW.color.set(phase === 0 ? RED : GREEN);
+  const lampCell = signals.length ? signals[0][1] * city.cols + signals[0][0] : -1;
+  let shownLamp = '';
+  // The lamp colour is signalState for the taxi's heading (all signals share one phase). True if it changed.
+  const setLights = (tick, heading = Math.PI) => {
+    const state = lampCell < 0 ? 'go' : signalState(world, lampCell, heading, tick);
+    if (state === shownLamp) return false;
+    shownLamp = state;
+    mats.lamp.color.set(state === 'stop' ? RED : GREEN);
     return true;
   };
   setLights(0);
@@ -145,9 +171,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   scene.add(heatMesh);
 
   // Taxi and trail materials (their geometry is made per route and disposed in clearRoute).
-  mats.taxi = new THREE.MeshStandardMaterial({ color: '#F5B820', emissive: '#F5B820', emissiveIntensity: 0.4, roughness: 0.6 });
-  mats.cab = new THREE.MeshStandardMaterial({ color: '#FFD25A', emissive: '#FFD25A', emissiveIntensity: 0.4, roughness: 0.6 });
-  mats.sign = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
+  const taxiMaker = createTaxiMaker();
   mats.trail = new THREE.LineBasicMaterial({ color: '#5BC0EB' });
 
   const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, radius * 10);
@@ -180,13 +204,19 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     const cp = Math.cos(view.pitch);
     return { pos: [cx + Math.sin(view.yaw) * cp * view.dist, Math.sin(view.pitch) * view.dist, cz + Math.cos(view.yaw) * cp * view.dist], target: [cx, 0, cz], fov: 38 };
   };
+  let fogPhase = 'map';
   const renderNow = () => {
     if (dead) return;
     const mapShot = orbitShot();
     const shot = play && play.phase !== 'map'
       ? shotAt(play.phase, play.t, mapShot, { ...chaseCamera(play.state, { back: 18, up: 7, ahead: 14 }), fov: 55 })
       : mapShot;
-    const near = play && play.phase !== 'map' ? 2 : radius * 0.05;
+    const phase = play ? play.phase : 'map';
+    const near = phase !== 'map' ? 2 : radius * 0.05;
+    if (phase !== fogPhase) { fogPhase = phase; Object.assign(scene.fog, fogFor(phase, radius, phone)); }
+    mats.heat.opacity = play ? heatOpacity(phase, play.t) : 1; // the heat is for the map; it fades out in the chase
+    if (play && taxi) focusShadow(phase !== 'map', taxi.position.x, taxi.position.z);
+    else focusShadow(false);
     if (camera.fov !== shot.fov || camera.near !== near) { camera.fov = shot.fov; camera.near = near; camera.updateProjectionMatrix(); }
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
@@ -248,7 +278,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   // The light/dark lamp changes data-theme: recolour the sky and pads (cheap) and draw once.
   const recolour = () => {
     const c = readColors(getComputedStyle(document.documentElement));
-    scene.background.set(c.sky); scene.fog.color.set(c.sky); mats.pad.color.set(c.accent);
+    const sc = skyColours(dark());
+    sky.repaint(sc); scene.fog.color.set(sc.bottom); windows.setGlow(dark() ? 1 : 0.35); mats.pad.color.set(c.accent);
     draw();
   };
   const mo = new MutationObserver(recolour);
@@ -280,13 +311,14 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   const finish = () => { const p = play; play = null; if (p && p.onDone) p.onDone(); }; // exactly once per trip
   const place = (st) => {
     const frames = play.track.frames, k = Math.min(st.stepIndex, frames.length - 1);
-    taxi.position.set(st.x, 1.5, st.z); taxi.rotation.y = st.heading;
+    taxi.position.set(st.x, 1, st.z); taxi.rotation.y = st.heading;
+    taxiMaker.setBraking(st.braking);
     trailPts.set([frames[k].x, 2.5, frames[k].z], k * 3); // the point just left snaps back to its cell
     trailPts.set([st.x, 2.5, st.z], (k + 1) * 3); // the trail's last point rides with the taxi
     trail.geometry.setDrawRange(0, k + 2);
     trail.geometry.attributes.position.needsUpdate = true;
     play.state = st;
-    setLights(st.tick);
+    setLights(st.tick, st.heading);
   };
   // Where the taxi is on screen, in the label layer's pixels, so the tags can pop up beside it.
   const taxiScreen = () => {
@@ -339,11 +371,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     playTrip({ track, onFrame, onDone } = {}) {
       stopRoute();
       const frames = track.frames;
-      taxi = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.8, 7.5), mats.taxi); body.position.y = 1;
-      const cab = new THREE.Mesh(new THREE.BoxGeometry(2.9, 1.5, 3.6), mats.cab); cab.position.set(0, 2.6, -0.4);
-      const sign = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.5), mats.sign); sign.position.set(0, 3.5, -0.4);
-      taxi.add(body, cab, sign); taxi.scale.setScalar(1.2);
+      taxi = taxiMaker.make();
+      taxi.traverse((o) => { o.castShadow = true; });
       trailPts = new Float32Array((frames.length + 1) * 3);
       frames.forEach((f, i) => trailPts.set([f.x, 2.5, f.z], i * 3));
       const tg = new THREE.BufferGeometry();
@@ -368,7 +397,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     setShot(name) { chase = name === 'chase' && motionAllowed(); },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      stopRoute(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
+      stopRoute(); taxiMaker.dispose(); windows.dispose(); sky.texture.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
       for (const { span } of labels) span.remove();
       ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
       window.removeEventListener('blur', disengage);
