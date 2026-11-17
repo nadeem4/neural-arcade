@@ -1,11 +1,10 @@
-// Reward City page: the reward sliders, live training, the drive, receipt, verdict and the goal.
+// Reward City page: the rate card, live training, the drive with its HUD, and the end card.
 // The footer is mounted by assets/game-page.js; the top bar is in the page and the lamp is wired here.
 import { wireLamp } from '../../assets/theme.js';
 import { SUN, MOON } from '../../assets/site.js';
 import { SEED, EPISODES, GOAL_SECONDS } from './presets.js';
 import { loadWorld } from './sim.js';
 import { createJobs, trainInChunks } from './jobs.js';
-import { buildReceipt, nextStepOf } from './receipt.js';
 import { INFO, goalReached, shareLine } from './words.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage } from './stage.js';
@@ -15,6 +14,9 @@ import { driveTrack } from './drive.js';
 import { meterAt, meterText } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
 import { createSound } from './sound.js';
+import { stepRate, rateRows } from './rates.js';
+import { nextScreen, canToggleView } from './screens.js';
+import { endCardModel } from './endcard.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
@@ -52,7 +54,7 @@ function hudFrame(state, at) {
   const c = $('minimap');
   drawMinimap(c.getContext('2d'), minimapModel(world, hud.route, state.progress, hud.events), c.width);
   for (; hud.done < Math.min(state.stepIndex, hud.events.steps.length); hud.done++) {
-    if (!at) continue; // the end jump under reduced motion: no tags, no sound
+    if (!at || hud.skipped) continue; // the end jump under reduced motion, or Skip: no tags, no sound
     const step = hud.events.steps[hud.done];
     const tags = tagsFor(step, hud.rewards);
     tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }, hud.done));
@@ -108,19 +110,41 @@ async function runTrain(req, onProgress) {
 }
 const jobs = createJobs(runTrain);
 
-// ---------- Reward sliders ----------
-const readRewards = () => Object.fromEntries(FIELDS.map(f => [f.key, Number($(f.key).value)]));
-function showReward() {
-  for (const f of FIELDS) { $(f.key).value = rewards[f.key]; $(f.key + 'Out').textContent = String(rewards[f.key]); }
+// ---------- Screens: map (rate card), training, driving, done (end card) ----------
+let screen = 'map', trip = null; // trip: { run, rewards, analysis, events, route, track, ended } for the trip on screen
+const hooks = { onKeep: () => toast('Garage arrives next') }; // RC13 replaces onKeep with the real save to the garage
+let toastTimer = 0;
+function toast(text) {
+  const t = $('toast');
+  t.textContent = text; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+}
+function go(event) {
+  screen = nextScreen(screen, event);
+  $('play').dataset.screen = screen;
+  const busy = screen === 'training';
+  $('endcard').hidden = screen !== 'done';
+  $('barDrive').hidden = !canToggleView(screen);
+  $('skip').hidden = screen !== 'driving';
+  $('driveProgress').hidden = screen !== 'driving';
+  $('train').disabled = busy || !stage;
+  $('train').textContent = busy ? 'TRAINING…' : 'TRAIN & DRIVE';
+  showRates();
 }
 
-// ---------- The panel: open, or folded away to a tab (desktop) or a handle (phone) ----------
-function setPanel(open) {
-  $('play').dataset.collapsed = String(!open);
-  for (const id of ['panelToggle', 'panelTab']) $(id).setAttribute('aria-expanded', String(open));
-  $('panelToggle').firstElementChild.textContent = open ? 'Hide ›' : 'Show ▴';
-  const next = open ? $('panelToggle') : $('panelTab');
-  if (next.offsetParent) next.focus(); // the tab is not shown on a phone, where the handle stays
+// ---------- The rate card ----------
+function showRates() {
+  for (const r of rateRows(rewards)) {
+    const out = $(r.key + 'Out');
+    out.textContent = r.text; out.className = `num tone-${r.tone}`;
+    $(r.key + 'Dec').disabled = !r.canDec || screen === 'training';
+    $(r.key + 'Inc').disabled = !r.canInc || screen === 'training';
+  }
+}
+function nudge(key, dir) {
+  rewards = { ...rewards, [key]: stepRate(key, rewards[key], dir) };
+  $('train').dataset.stale = 'true';
+  showRates();
 }
 
 // A press of Train brings the map back if the player had scrolled down to the brief.
@@ -129,83 +153,105 @@ function showStage() {
   if (r.top < -40 || r.top > innerHeight * 0.2) $('play').scrollIntoView({ behavior: motionAllowed() ? 'smooth' : 'auto', block: 'start' });
 }
 
-// ---------- Receipt, verdict, goal ----------
-function showReceipt(a) {
-  const { lines, total } = buildReceipt(rewards, a);
+// ---------- The end card ----------
+function showEnd(t) {
+  const m = endCardModel(t.rewards, t.analysis, GOAL_SECONDS);
+  $('endTitle').textContent = `TRIP DONE · TRY ${session.tries}`;
+  const flag = $('endFlag');
+  flag.textContent = m.timeOk ? 'Legal and on time' : m.legal ? 'Legal, but slow' : 'Not legal';
+  flag.className = 'end-flag' + (m.timeOk ? ' ok' : '');
+  $('endTime').textContent = `${t.analysis.seconds} s`;
+  $('endTime').className = 'big ' + (m.timeOk ? 'pay' : 'fine');
+  $('endGoal').textContent = m.timeLine;
+  $('endEarned').textContent = signed(m.earned);
+  $('endEarned').className = 'big ' + (m.earned >= 0 ? 'pay' : 'fine');
   const row = (cls, left, right) => {
     const d = document.createElement('div'); d.className = cls;
-    for (const t of [left, right]) { const s = document.createElement('span'); s.textContent = t; d.append(s); }
+    for (const x of [left, right]) { const s = document.createElement('span'); s.textContent = x; d.append(s); }
     return d;
   };
   $('receipt').replaceChildren(
-    ...lines.map(l => row('row', l.detail ? `${l.label}: ${l.detail}` : l.label, signed(l.amount))),
-    row('row total', 'Total', signed(total)));
-  const verdict = nextStepOf(rewards, a);
-  $('verdict').textContent = verdict; $('verdictFloat').textContent = verdict; $('announce').textContent = verdict;
+    ...m.lines.map(l => row('row', l.detail ? `${l.label}: ${l.detail}` : l.label, signed(l.amount))),
+    row('row total', 'Total', signed(m.earned)));
+  $('endVerdict').textContent = m.verdict;
+  const fixed = goalReached(t.analysis);
+  shareText = fixed ? shareLine(session.tries, t.analysis) : '';
+  $('shareText').textContent = shareText; $('share').hidden = !fixed;
+  $('announce').textContent = `Trip done. ${m.timeLine}. ${m.verdict}` + (fixed ? ' Fixed.' : '');
 }
-function showGoal(a) {
-  const goal = $('goal'), share = $('share');
-  if (goalReached(a)) {
-    goal.textContent = `Fixed. A legal trip in ${a.seconds} s, under ${GOAL_SECONDS} s.`;
-    shareText = shareLine(session.tries, a);
-    $('shareText').textContent = shareText;
-    share.hidden = false;
-  } else {
-    goal.textContent = `Fix the taxi: a legal trip under ${GOAL_SECONDS} s. Tries so far: ${session.tries}.` +
-      (session.best ? ` Best legal trip: ${session.best.seconds} s.` : '');
-    share.hidden = true;
-  }
+// The end of a drive, reached by arriving or by Skip; the first of the two wins.
+function finish(t, event) {
+  if (t.ended || t !== trip) return;
+  t.ended = true;
+  go(event); showEnd(t);
+  $('endEdit').focus({ preventScroll: true });
 }
 
-// ---------- One training run ----------
+// ---------- One drive, and one training run ----------
+function drive(t) {
+  hud = null;
+  $('viewToggle').setAttribute('aria-pressed', 'false'); stage.setMapView(false);
+  $('driveProgress').value = 0;
+  startHud(t.events, t.route, t.rewards);
+  t.ended = false;
+  stage.playTrip({ track: t.track, events: t.events, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onDone() { finish(t, 'arrived'); } });
+}
 async function train(req) {
   const progress = $('progress');
-  if (!stage) return;
-  progress.value = 0; progress.hidden = false; $('driving').hidden = true; $('train').dataset.stale = 'false'; say('Training the taxi…');
-  for (const id of ['verdict', 'verdictFloat', 'announce']) $(id).textContent = '';
-  const run = ++shown; // a drive that is interrupted must not show its receipt
-  stage.clearRoute(); hud = null; showMeter(false);
+  if (!stage || screen === 'training') return;
+  go('train');
+  progress.value = 0; progress.hidden = false; $('train').dataset.stale = 'false'; say('Training the taxi…');
+  $('announce').textContent = '';
+  const run = ++shown;
+  stage.clearRoute(); hud = null; trip = null; showMeter(false);
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
       p => { progress.value = Math.round(100 * p.done / p.total); if (p.visits) stage.setHeat(p.visits); });
     if (!res) return; // a newer run took over
     progress.hidden = true; say('');
-    rewards = req;
     session = recordTry(session, res.analysis);
     stage.setHeat(res.visits);
-    if (run === shown) $('driving').hidden = false;
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events);
-    startHud(events, res.route, req);
-    stage.playTrip({ track, events, onFrame: hudFrame, onDone() { if (run === shown) { $('driving').hidden = true; showReceipt(res.analysis); showGoal(res.analysis); $('announce').textContent += ' ' + $('goal').textContent; } } });
+    trip = { run, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, ended: false };
+    go('trained');
+    drive(trip);
   } catch {
-    progress.hidden = true;
+    progress.hidden = true; go('failed');
     say('Training failed. Reload the page and try again.');
   }
-}
-function reset() {
-  jobs.cancel(); latest++; killWorker(); shown++;
-  session = createSession(); rewards = defaultRewards(); hud = null; showMeter(false);
-  for (const id of ['receipt', 'verdict', 'verdictFloat', 'announce', 'goal']) $(id).textContent = '';
-  $('share').hidden = true; $('progress').hidden = true; $('driving').hidden = true; say('');
-  showReward();
-  train(rewards);
 }
 
 // ---------- Wiring ----------
 function build() {
   for (const f of FIELDS) {
-    $(f.key).addEventListener('input', () => { rewards = readRewards(); showReward(); $('train').dataset.stale = 'true'; });
+    $(f.key + 'Dec').addEventListener('click', () => nudge(f.key, -1));
+    $(f.key + 'Inc').addEventListener('click', () => nudge(f.key, 1));
   }
-  $('train').addEventListener('click', () => { sound.unlock(); showStage(); train(readRewards()); });
+  $('train').addEventListener('click', () => { sound.unlock(); showStage(); train({ ...rewards }); });
+  $('reset').addEventListener('click', () => { rewards = defaultRewards(); $('train').dataset.stale = 'true'; showRates(); });
+  $('skip').addEventListener('click', () => { if (!trip || !hud) return; hud.skipped = true; stage.skipTrip(); finish(trip, 'skip'); });
+  $('viewToggle').addEventListener('click', () => {
+    const on = $('viewToggle').getAttribute('aria-pressed') !== 'true';
+    $('viewToggle').setAttribute('aria-pressed', String(on));
+    stage.setMapView(on);
+  });
+  $('endEdit').addEventListener('click', () => {
+    jobs.cancel(); latest++; shown++; stage.clearRoute(); hud = null; trip = null; showMeter(false); say('');
+    $('announce').textContent = '';
+    go('edit'); $('fareInc').focus({ preventScroll: true });
+  });
+  $('endKeep').addEventListener('click', () => { if (trip) hooks.onKeep(trip); });
+  $('endAgain').addEventListener('click', () => {
+    if (!trip) return;
+    go('again'); sound.unlock(); drive(trip);
+  });
   $('mute').addEventListener('click', () => {
     const muted = $('mute').getAttribute('aria-pressed') !== 'true';
     $('mute').setAttribute('aria-pressed', String(muted)); $('mute').textContent = muted ? 'Sound off' : 'Sound on';
     sound.setMuted(muted);
     try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch { /* storage blocked: the choice lasts this visit */ }
   });
-  $('reset').addEventListener('click', () => { showStage(); reset(); });
-  for (const id of ['panelToggle', 'panelTab']) $(id).addEventListener('click', () => setPanel($('play').dataset.collapsed === 'true'));
   $('copy').addEventListener('click', async () => {
     const text = shareText;
     try {
@@ -226,7 +272,7 @@ function build() {
   }));
 }
 
-const controls = () => [...FIELDS.map(f => $(f.key)), $('train'), $('reset')];
+const controls = () => [...FIELDS.flatMap(f => [$(f.key + 'Dec'), $(f.key + 'Inc')]), $('train'), $('reset')];
 const enable = on => controls().forEach(c => { c.disabled = !on; });
 
 function setupChase() {
@@ -248,7 +294,7 @@ async function start() {
   wireLamp($('lamp'), () => {});
   build();
   if (loadMuted()) { $('mute').setAttribute('aria-pressed', 'true'); $('mute').textContent = 'Sound off'; }
-  showReward();
+  go('none');
   enable(false);
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
@@ -264,6 +310,6 @@ async function start() {
   }
   enable(true);
   setupChase();
-  train(rewards); // the default reward, trained and driven on load
+  go('none'); // the map screen: the rate card and TRAIN & DRIVE
 }
 start();
