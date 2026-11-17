@@ -306,7 +306,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     place(st); play.phase = phase; play.t = t;
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 34 + Math.sin(now / 300 + i) * 2; });
     renderNow();
-    play.onFrame?.(st, phase === 'map' ? null : taxiScreen()); // the last frame carries the done state
+    play.onFrame?.(st, taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
     if (phase === 'map') { finish(); return; }
     loopId = requestAnimationFrame(tickLoop);
   };
@@ -353,7 +353,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       play = { track, onFrame, onDone, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
       if (!motionAllowed()) { // no animation: the end state with the whole trail and the final numbers
         const end = stateAt(track, track.total);
-        place({ ...end, stepIndex: frames.length - 2 });
+        place({ ...end, stepIndex: frames.length - 2 }); // place() draws the trail to stepIndex + 1, the last point, and the taxi at its end position
         tg.setDrawRange(0, frames.length);
         draw();
         onFrame?.(end, null);

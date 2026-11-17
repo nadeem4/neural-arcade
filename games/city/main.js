@@ -44,19 +44,19 @@ function hudFrame(state, at) {
   if (!hud) return;
   const m = meterAt(hud.events, state.progress);
   $('meterTotal').textContent = signed(round1(m.total));
-  $('meterCounts').textContent = `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`;
+  $('meterCounts').textContent = `${m.seconds} s Â· ${m.counts.tiles} tiles Â· off ${m.counts.off} Â· red ${m.counts.red} Â· wrong ${m.counts.wrong}`;
   const c = $('minimap');
   drawMinimap(c.getContext('2d'), minimapModel(world, hud.route, state.progress, hud.events), c.width);
   for (; hud.done < Math.min(state.stepIndex, hud.events.steps.length); hud.done++) {
     if (!at) continue; // the end jump under reduced motion: no tags, no sound
     const step = hud.events.steps[hud.done];
-    const tags = tagsFor(step, rewards);
+    const tags = tagsFor(step, hud.rewards);
     tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }));
     sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
   }
 }
-function startHud(events, route) {
-  hud = { events, route, done: 0 };
+function startHud(events, route, rewards_) {
+  hud = { events, route, rewards: { ...rewards_ }, done: 0 };
   showMeter(stage.ready);
   hudFrame({ progress: 0, stepIndex: 0 }, null);
 }
@@ -172,7 +172,7 @@ async function train(req) {
     if (run === shown) $('driving').hidden = false;
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events);
-    startHud(events, res.route);
+    startHud(events, res.route, req);
     stage.playTrip({ track, events, onFrame: hudFrame, onDone() { if (run === shown) { $('driving').hidden = true; showReceipt(res.analysis); showGoal(res.analysis); $('announce').textContent += ' ' + $('goal').textContent; } } });
   } catch {
     progress.hidden = true;
