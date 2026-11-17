@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { FIELDS, defaultRewards, createSession, recordTry } from '../games/city/payslip.js';
+import { FIELDS, defaultRewards, createSession, recordTry } from '../games/city/reward.js';
 import { DEFAULT_REWARDS, RANGES } from '../games/city/presets.js';
 
 const trip = (over = {}) => ({ arrived: true, seconds: 80, offTiles: 0, redRuns: 0, wrongWays: 0, ...over });

@@ -1,41 +1,69 @@
 /* Reward City only: the rest of the page comes from studio.css and assets/game.css. */
 
-.stage-body { display: block; position: relative; } /* studio.css makes it a two-column grid; here the stage fills it */
+/* Slim top bar, then a stage that fills the rest of the screen. */
+:root { --bar: 52px; }
+.citybar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; height: var(--bar); padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); background: var(--surface); border-bottom: 1px solid var(--line); }
+.citybar .logo { font-size: 15px; }
+.citybar .sep { color: var(--ink-2); }
+.citybar h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: normal; line-height: 1; }
+.citybar .tag { flex: 1; min-width: 0; margin: 0 0 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--ink-2); }
+.citybar nav { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.citybar nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; color: var(--ink-2); }
+.citybar nav a:hover { color: var(--ink); }
+.citybar .lamp { width: 44px; height: 44px; }
+
+.play { display: block; position: relative; height: calc(100vh - var(--bar)); height: calc(100svh - var(--bar)); min-height: 420px; overflow: hidden; background: var(--stage); scroll-margin-top: var(--bar); }
+.stage-body { position: absolute; inset: 0; }
+#stage { display: block; width: 100%; height: 100%; }
 #stage canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
 #stage canvas:active { cursor: grabbing; }
-#stage { display: block; width: 100%; max-width: 860px; margin: 0 auto; aspect-ratio: 16 / 10; }
-.stage-note { margin: 0; padding: 12px 18px; font-size: 14px; color: var(--stage-dim); }
-.stage-note:empty { display: none; }
 
-/* Training progress under the stage. */
-progress { display: block; width: calc(100% - 36px); height: 6px; margin: 12px 18px 0; border: 0; border-radius: 6px; background: var(--stage-2); accent-color: var(--signal); }
+/* On the map, top left: training progress, "Driving…", the chase cam toggle. */
+.hud { position: absolute; top: 12px; left: 12px; display: grid; justify-items: start; gap: 8px; max-width: calc(100% - 380px); pointer-events: none; }
+.hud button { pointer-events: auto; }
+.chip { margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(13, 16, 21, .78); color: #fff; font: 600 14px/1.3 var(--sans); }
+.chip:empty, .chip[hidden] { display: none; }
+.hud progress { width: min(240px, 100%); margin: 0; }
+progress[hidden] { display: none; }
+progress { display: block; height: 6px; border: 0; border-radius: 6px; background: var(--stage-2); accent-color: var(--signal); }
 progress::-webkit-progress-bar { background: var(--stage-2); border-radius: 6px; }
 progress::-webkit-progress-value { background: var(--signal); border-radius: 6px; }
 progress::-moz-progress-bar { background: var(--signal); border-radius: 6px; }
+.hud-tools { display: flex; align-items: center; gap: 8px; }
+.hud .info { color: #fff; background: rgba(13, 16, 21, .78); margin: 0; }
+.hud .info-text { max-width: 300px; background: rgba(13, 16, 21, .88); color: #fff; pointer-events: auto; }
+.chase { height: 34px; padding: 0 14px; font-size: 13px; }
+.chase[aria-pressed="true"] { background: var(--signal); color: #fff; }
+.chase:disabled { opacity: .5; cursor: not-allowed; }
+#labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+#labels span { position: absolute; left: 0; top: 0; padding: 2px 6px; border-radius: 6px; font-size: 12px; white-space: nowrap; background: rgba(13, 16, 21, .72); color: #fff; }
 
-/* Try cards. */
-.cards { display: grid; gap: 8px; }
-.card-btn { display: grid; gap: 2px; width: 100%; padding: 10px 12px; text-align: left; border: 1.5px solid var(--line); border-radius: 12px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
-.card-btn b { font-size: 15px; }
-.card-btn span { font-size: 13.5px; line-height: 1.4; color: var(--ink-2); }
-.card-btn[aria-pressed="true"] { border-color: var(--signal-fill); box-shadow: inset 0 0 0 1px var(--signal-fill); }
+/* The controls float over the map on the right. */
+.panel { position: absolute; top: 12px; right: 12px; width: 340px; max-height: calc(100% - 24px); overflow-y: auto; align-content: start; box-shadow: 0 8px 30px rgba(0, 0, 0, .3); }
+.handle { display: flex; align-items: center; justify-content: flex-end; min-height: 44px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--line); background: transparent; font: 600 14px var(--sans); color: var(--ink-2); cursor: pointer; }
+.verdict { margin: 0; padding: 14px 20px 0; font-size: 15px; line-height: 1.45; }
+.verdict:empty { display: none; }
+.actions { display: flex; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+.actions .primary { flex: 1; justify-content: center; }
+#train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 30%, transparent); }
+.fold { display: grid; }
+.tab { display: none; position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 2; min-width: 44px; padding: 18px 0; writing-mode: vertical-rl; border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; background: var(--surface); color: var(--ink); font: 600 14px var(--sans); cursor: pointer; }
+.play[data-collapsed="true"] .panel { display: none; }
+.play[data-collapsed="true"] .tab { display: block; }
+.verdict-float { display: none; position: absolute; left: 12px; right: 68px; bottom: 12px; margin: 0; padding: 10px 14px; border-radius: 12px; background: rgba(13, 16, 21, .85); color: #fff; font-size: 15px; line-height: 1.4; }
+.play[data-collapsed="true"] .verdict-float:not(:empty) { display: block; }
 
-/* Pay slip sliders. */
+/* Reward sliders. */
 .dial { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; font-size: 14.5px; }
 .dial input { grid-column: 1 / -1; }
 .dial output { font: 600 14px var(--mono); }
 .panel input[type="range"] { width: 100%; }
-#train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 30%, transparent); }
 
-/* Receipt and verdict. */
+/* Receipt and the goal. */
 .receipt { font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
 .receipt .row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
 .receipt .row span:first-child { color: var(--ink-2); }
 .receipt .total { margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-weight: 700; }
-.verdict { margin: 0; font-size: 15px; line-height: 1.45; }
-.verdict b { color: var(--signal-text); }
-
-/* Goal and the share line. */
 .goal-line { margin: 0; font-weight: 600; }
 .share-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; }
 .share-line[hidden] { display: none; }
@@ -44,16 +72,27 @@ progress::-moz-progress-bar { background: var(--signal); border-radius: 6px; }
 /* Keyboard focus on every control. */
 input[type="range"]:focus-visible, button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 
+@media (max-width: 900px) { .citybar .tag { display: none; } .citybar nav { margin-left: auto; } }
+
+/* Phone: the panel is a bottom sheet over the lower part of the map; its handle folds it to the handle and the Train row. */
+@media (max-width: 720px) {
+  .hud { max-width: calc(100% - 24px); }
+  .panel { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 62%; }
+  .handle { justify-content: center; }
+  .play[data-collapsed] .tab { display: none; }
+  .play[data-collapsed="true"] .panel { display: grid; }
+  .play[data-collapsed="true"] .fold { display: none; }
+  .play[data-collapsed="true"] .verdict-float:not(:empty) { display: none; }
+  .actions { border-bottom: 0; }
+  .fold { border-top: 1px solid var(--line); }
+  .panel input[type="range"], .dial input { height: 44px; }
+  .panel .info, .hud .info { width: 44px; height: 44px; }
+}
+@media (max-width: 560px) {
+  .citybar { gap: 8px; }
+  .citybar .sep, .citybar #howTab, .citybar .long { display: none; }
+}
 @media (max-width: 360px) {
-  .card-btn { padding: 8px 10px; }
   .dial { font-size: 14px; }
   .receipt, .receipt .row { font-size: 13px; }
 }
-
-
-/* Chase cam toggle and landmark labels over the 3D stage. */
-.chase { height: 34px; padding: 0 14px; font-size: 13px; }
-.chase[aria-pressed="true"] { background: var(--signal); color: #fff; }
-.chase:disabled { opacity: .5; cursor: not-allowed; }
-#labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-#labels span { position: absolute; left: 0; top: 0; padding: 2px 6px; border-radius: 6px; font-size: 12px; white-space: nowrap; background: rgba(13, 16, 21, .72); color: #fff; }

@@ -1,19 +1,20 @@
-// Reward City page: pay slip sliders, Try cards, live training, receipt, verdict and the goal.
+// Reward City page: the reward sliders, live training, the drive, receipt, verdict and the goal.
 // The header and footer are mounted by assets/game-page.js; the lamp is wired here.
 import { wireLamp } from '../../assets/theme.js';
-import { PRESETS, SEED, EPISODES, GOAL_SECONDS } from './presets.js';
+import { SUN, MOON } from '../../assets/site.js';
+import { SEED, EPISODES, GOAL_SECONDS } from './presets.js';
 import { loadWorld } from './sim.js';
 import { createJobs, trainInChunks } from './jobs.js';
-import { buildReceipt, verdictOf } from './receipt.js';
+import { buildReceipt, nextStepOf } from './receipt.js';
 import { INFO, goalReached, shareLine } from './words.js';
-import { FIELDS, cardMatching, createSession, recordTry } from './payslip.js';
+import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage } from './stage.js';
 import { motionAllowed } from './playback.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
 
-let world = null, stage = null, session = createSession(), rewards = { ...PRESETS[0].rewards };
+let world = null, stage = null, session = createSession(), rewards = defaultRewards();
 let shown = 0, worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
 const pending = new Map(); // message id -> { resolve, reject, onProgress }
 const say = text => { $('status').textContent = text; };
@@ -61,12 +62,25 @@ async function runTrain(req, onProgress) {
 }
 const jobs = createJobs(runTrain);
 
-// ---------- Pay slip ----------
+// ---------- Reward sliders ----------
 const readRewards = () => Object.fromEntries(FIELDS.map(f => [f.key, Number($(f.key).value)]));
-function showSlip() {
+function showReward() {
   for (const f of FIELDS) { $(f.key).value = rewards[f.key]; $(f.key + 'Out').textContent = String(rewards[f.key]); }
-  const card = cardMatching(rewards);
-  for (const b of $('cards').children) b.setAttribute('aria-pressed', String(b.dataset.id === card));
+}
+
+// ---------- The panel: open, or folded away to a tab (desktop) or a handle (phone) ----------
+function setPanel(open) {
+  $('play').dataset.collapsed = String(!open);
+  for (const id of ['panelToggle', 'panelTab']) $(id).setAttribute('aria-expanded', String(open));
+  $('panelToggle').firstElementChild.textContent = open ? 'Hide ›' : 'Show ‹';
+  const next = open ? $('panelToggle') : $('panelTab');
+  if (next.offsetParent) next.focus(); // the tab is not shown on a phone, where the handle stays
+}
+
+// A press of Train brings the map back if the player had scrolled down to the brief.
+function showStage() {
+  const r = $('play').getBoundingClientRect();
+  if (r.top < -40 || r.top > innerHeight * 0.2) $('play').scrollIntoView({ behavior: motionAllowed() ? 'smooth' : 'auto', block: 'start' });
 }
 
 // ---------- Receipt, verdict, goal ----------
@@ -80,7 +94,8 @@ function showReceipt(a) {
   $('receipt').replaceChildren(
     ...lines.map(l => row('row', l.detail ? `${l.label}: ${l.detail}` : l.label, signed(l.amount))),
     row('row total', 'Total', signed(total)));
-  $('verdict').textContent = verdictOf(rewards, a);
+  const verdict = nextStepOf(rewards, a);
+  $('verdict').textContent = verdict; $('verdictFloat').textContent = verdict;
 }
 function showGoal(a) {
   const goal = $('goal'), share = $('share');
@@ -100,51 +115,42 @@ function showGoal(a) {
 async function train(req) {
   const progress = $('progress');
   if (!stage) return;
-  progress.value = 0; $('train').dataset.stale = 'false'; say('');
+  progress.value = 0; progress.hidden = false; $('driving').hidden = true; $('train').dataset.stale = 'false'; say('Training the taxi…');
+  for (const id of ['verdict', 'verdictFloat']) $(id).textContent = '';
   const run = ++shown; // a drive that is interrupted must not show its receipt
   stage.clearRoute();
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
       p => { progress.value = Math.round(100 * p.done / p.total); if (p.visits) stage.setHeat(p.visits); });
     if (!res) return; // a newer run took over
-    progress.value = 100;
+    progress.hidden = true; say('');
     rewards = req;
     session = recordTry(session, res.analysis);
     stage.setHeat(res.visits);
-    stage.showRoute(res.route, res.analysis, { onDone() { if (run === shown) { showReceipt(res.analysis); showGoal(res.analysis); } } });
+    if (run === shown) $('driving').hidden = false;
+    stage.showRoute(res.route, res.analysis, { onDone() { if (run === shown) { $('driving').hidden = true; showReceipt(res.analysis); showGoal(res.analysis); } } });
   } catch {
-    progress.value = 0;
+    progress.hidden = true;
     say('Training failed. Reload the page and try again.');
   }
 }
-function pick(id) {
-  rewards = { ...PRESETS.find(p => p.id === id).rewards };
-  showSlip();
+function reset() {
+  jobs.cancel(); latest++; killWorker(); shown++;
+  session = createSession(); rewards = defaultRewards();
+  for (const id of ['receipt', 'verdict', 'verdictFloat', 'goal']) $(id).textContent = '';
+  $('share').hidden = true; $('progress').hidden = true; $('driving').hidden = true; say('');
+  showReward();
   train(rewards);
 }
 
 // ---------- Wiring ----------
 function build() {
-  for (const p of PRESETS) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'card-btn'; b.dataset.id = p.id; b.setAttribute('aria-pressed', 'false');
-    const name = document.createElement('b'), text = document.createElement('span');
-    name.textContent = p.name; text.textContent = p.text;
-    b.append(name, text);
-    b.addEventListener('click', () => pick(p.id));
-    $('cards').append(b);
-  }
   for (const f of FIELDS) {
-    $(f.key).addEventListener('input', () => { rewards = readRewards(); showSlip(); $('train').dataset.stale = 'true'; });
+    $(f.key).addEventListener('input', () => { rewards = readRewards(); showReward(); $('train').dataset.stale = 'true'; });
   }
-  $('train').addEventListener('click', () => train(readRewards()));
-  $('reset').addEventListener('click', () => {
-    jobs.cancel(); latest++; killWorker();
-    session = createSession();
-    for (const id of ['receipt', 'verdict', 'goal']) $(id).textContent = '';
-    $('share').hidden = true; say('');
-    pick(PRESETS[0].id);
-  });
+  $('train').addEventListener('click', () => { showStage(); train(readRewards()); });
+  $('reset').addEventListener('click', () => { showStage(); reset(); });
+  for (const id of ['panelToggle', 'panelTab']) $(id).addEventListener('click', () => setPanel($('play').dataset.collapsed === 'true'));
   $('copy').addEventListener('click', async () => {
     const text = shareText;
     try {
@@ -165,7 +171,7 @@ function build() {
   }));
 }
 
-const controls = () => [...$('cards').children, ...FIELDS.map(f => $(f.key)), $('train'), $('reset')];
+const controls = () => [...FIELDS.map(f => $(f.key)), $('train'), $('reset')];
 const enable = on => controls().forEach(c => { c.disabled = !on; });
 
 function setupChase() {
@@ -183,9 +189,10 @@ function setupChase() {
 }
 
 async function start() {
+  $('lamp').innerHTML = SUN + MOON;
   wireLamp($('lamp'), () => {});
   build();
-  showSlip();
+  showReward();
   enable(false);
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
@@ -201,6 +208,6 @@ async function start() {
   }
   enable(true);
   setupChase();
-  pick(PRESETS[0].id);
+  train(rewards); // the default reward, trained and driven on load
 }
 start();
