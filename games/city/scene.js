@@ -191,7 +191,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, radius * 10);
   const view = { yaw: 0.6, pitch: 0.95, dist: radius * 1.25 };
   let queued = 0, dead = false;
-  let chase = false, taxi = null, trail = null, trailPts = null, play = null;
+  let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;
 
   // Landmark labels: DOM text projected each render, hidden when behind the camera or off the stage.
   const labels = (city.landmarks ?? []).map((l) => {
@@ -221,7 +221,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   const renderNow = () => {
     if (dead) return;
     const mapShot = orbitShot();
-    const shot = play && play.phase !== 'map'
+    const shot = play && play.phase !== 'map' && !mapView
       ? shotAt(play.phase, play.t, mapShot, { ...chaseCamera(play.state, CHASE), fov: 55 })
       : mapShot;
     const phase = play ? play.phase : 'map';
@@ -407,6 +407,10 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       play.t0 = performance.now();
       loopId = requestAnimationFrame(tickLoop);
     },
+    // Skip to the end of the drive: the taxi jumps to its last tile and the camera pulls back.
+    skipTrip() { if (play) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
+    // The Map view toggle: the high map camera while the taxi drives, instead of the chase.
+    setMapView(on) { mapView = !!on; if (!play) draw(); },
     clearRoute() { stopRoute(); draw(); },
     setChase(on) { chase = !!on && motionAllowed(); }, // on: a trip starts in the chase view, with no swoop in or out
     setShot(name) { chase = name === 'chase' && motionAllowed(); },

@@ -32,7 +32,7 @@ describe('stage', () => {
     stage.playTrip({ track: {}, events: {}, onFrame: () => frames++, onDone: () => done++ });
     expect(done).toBe(1);
     expect(frames).toBe(0);
-    expect(() => { stage.setHeat(new Uint32Array(1)); stage.clearRoute(); stage.setChase(true); stage.setShot('chase'); stage.destroy(); }).not.toThrow();
+    expect(() => { stage.setHeat(new Uint32Array(1)); stage.clearRoute(); stage.setChase(true); stage.setShot('chase'); stage.skipTrip(); stage.setMapView(true); stage.destroy(); }).not.toThrow();
   });
   it('playTrip without options does not throw', () => {
     expect(() => createFallbackStage(fakeEl(), 'x').playTrip()).not.toThrow();

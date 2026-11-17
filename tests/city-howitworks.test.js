@@ -42,4 +42,8 @@ describe('city how it works page', () => {
     expect(html).not.toMatch(/<audio|<video|quiz|tour/i);
     expect(html + story).not.toMatch(/GTA|grand theft/i);
   });
+  it('says reward and rate card, never pay slip', () => {
+    expect(html + story).not.toMatch(/pay ?slip/i);
+    expect(read('assets/games.js')).not.toMatch(/pay ?slip/i);
+  });
 });

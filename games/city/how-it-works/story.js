@@ -88,13 +88,13 @@ for (const sn of M.fig2.snapshots) {
 // ---------- Fig. 3: the first three loopholes ----------
 const caption = c => `<b>${nameOf(c.id)}</b><br>Pay: ${c.receipt.total}. ${c.verdict}`;
 for (const c of M.fig3) {
-  const cv = mk($('loopholes'), `The route after the pay slip "${nameOf(c.id)}". ${c.verdict}`, caption(c));
+  const cv = mk($('loopholes'), `The route after the reward "${nameOf(c.id)}". ${c.verdict}`, caption(c));
   add(() => drawMap(cv, M.fig1, { dim: 0.55, route: c.polyline }));
 }
 
 // ---------- Fig. 4: legal against paid by the mile ----------
 for (const c of [M.fig4.legal, M.fig4.loop]) {
-  const cv = mk($('endings'), `The route after the pay slip "${nameOf(c.id)}". ${c.verdict}`, caption(c));
+  const cv = mk($('endings'), `The route after the reward "${nameOf(c.id)}". ${c.verdict}`, caption(c));
   add(() => drawMap(cv, M.fig1, { dim: 0.55, route: c.polyline }));
 }
 

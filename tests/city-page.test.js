@@ -11,23 +11,23 @@ const mainPath = 'games/city/main.js';
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 const tag = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 
-const IDS = ['announce', 'play', 'about', 'panel', 'panelToggle', 'panelTab', 'driving', 'verdictFloat', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset', 'chase', 'labels', 'meter', 'meterTotal', 'meterCounts', 'minimap', 'mute'];
+const IDS = ['announce', 'play', 'about', 'rateCard', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'share', 'shareText', 'copy', 'reset', 'chase', 'labels', 'meter', 'meterTotal', 'meterCounts', 'minimap', 'mute', 'garage', 'bar', 'barDrive', 'viewToggle', 'driveProgress', 'skip', 'endcard', 'endTitle', 'endFlag', 'endTime', 'endGoal', 'endEarned', 'endVerdict', 'endEdit', 'endKeep', 'endAgain', 'toast'];
 
 describe('city page markup', () => {
   it('has every id main.js will look up', () => {
-    const ids = [...IDS, ...FIELDS.flatMap(f => [f.key, f.key + 'Out'])];
+    const ids = [...IDS, ...FIELDS.flatMap(f => [f.key + 'Out', f.key + 'Dec', f.key + 'Inc'])];
     for (const id of ids) expect(html, id).toContain(`id="${id}"`);
-    const main = read(mainPath); // 'about' and 'panel' are anchors and aria targets; #stageNote belongs to the stage, main.js never touches it
-    for (const id of IDS.filter(i => !['about', 'panel', 'stageNote'].includes(i))) expect(main, id).toContain(`$('${id}')`);
-    expect(main).toContain('$(f.key)'); // the sliders are looked up through FIELDS
-    expect(main).toContain("$(f.key + 'Out')");
+    const main = read(mainPath); // 'about' and 'rateCard' are anchors and aria targets; #garage is a disabled placeholder until RC13; #stageNote belongs to the stage, main.js never touches it
+    for (const id of IDS.filter(i => !['about', 'rateCard', 'stageNote', 'garage', 'bar'].includes(i))) expect(main, id).toContain(`$('${id}')`);
+    expect(main).toContain("$(r.key + 'Out')"); // the steppers are looked up through FIELDS
+    expect(main).toContain("$(f.key + 'Dec')");
+    expect(main).toContain("$(f.key + 'Inc')");
   });
   it('announces only the verdict, so the receipt is aria-live off to avoid a double announcement, and shows progress with a progress element', () => {
     expect(tag('announce')).toContain('aria-live="polite"');
     expect(tag('announce')).toContain('class="sr-only"');
-    expect(html.indexOf('id="announce"')).toBeLessThan(html.indexOf('id="panel"')); // outside the panel, so folding it cannot silence it
-    expect(tag('verdict')).not.toContain('aria-live');
-    expect(tag('goal')).not.toContain('aria-live');
+    expect(html.slice(html.indexOf('<aside'), html.indexOf('</aside>'))).not.toContain('id="announce"'); // outside the rate card, so hiding it cannot silence it
+    expect(tag('endVerdict')).not.toContain('aria-live');
     expect(tag('receipt')).toContain('aria-live="off"');
     expect(html).toMatch(/<progress [^>]*id="progress"/);
   });
@@ -46,17 +46,28 @@ describe('city page markup', () => {
     expect(rules('.minimap')).toContain('border-radius: 50%');
     expect(css).toContain('prefers-reduced-motion');
   });
-  it('has one slider per reward line, with range and step from RANGES and the default value', () => {
+  it('has a - and + stepper per reward line, with a live value, and no sliders left', () => {
     for (const f of FIELDS) {
-      const t = tag(f.key);
-      const r = RANGES[f.key];
-      expect(t, f.key).toMatch(/^<input /);
-      expect(t, f.key).toContain('type="range"');
-      expect(t, f.key).toContain(`min="${r.min}" max="${r.max}" step="${r.step}"`);
-      expect(t, f.key).toContain(`value="${DEFAULT_REWARDS[f.key]}"`);
+      expect(tag(f.key + 'Dec'), f.key).toMatch(/^<button .*aria-label="Lower /);
+      expect(tag(f.key + 'Inc'), f.key).toMatch(/^<button .*aria-label="Raise /);
       expect(tag(f.key + 'Out'), f.key).toMatch(/^<output /);
-      expect(html, f.key).toContain(`>${f.label}</label>`);
+      expect(html, f.key).toContain(`>${f.label}</span>`);
     }
+    expect(html).not.toContain('type="range"');
+  });
+  it('has Train & Drive in a bottom bar, a disabled Garage placeholder, and a hidden end card with its three buttons', () => {
+    expect(html).toContain('>TRAIN &amp; DRIVE</button>');
+    expect(tag('garage')).toMatch(/\sdisabled[\s>]/);
+    expect(tag('garage')).toContain('title="Garage: soon"');
+    expect(tag('endcard')).toMatch(/\shidden[\s>]/);
+    expect(html).toContain('>Change the rates</button>');
+    expect(html).toContain('>Keep in the garage</button>');
+    expect(html).toContain('>Watch again</button>');
+    expect(html).toContain('>Reset to the default</button>');
+    expect(tag('barDrive')).toMatch(/\shidden[\s>]/);
+    expect(html).toContain('>Skip to the end</button>');
+    expect(html).toContain('>Map view</button>');
+    expect(tag('driveProgress')).toMatch(/^<progress /);
   });
   it('links the write-up now it is listed, mounts the shared game page, and keeps the goal and status announced', () => {
     for (const id of ['howTab', 'whyLink', 'how']) expect(tag(id), id).not.toMatch(/\shidden[\s>]/);
@@ -114,28 +125,16 @@ describe('city page layout', () => {
     expect(read(mainPath)).not.toMatch(/PRESETS|cardMatching|card-btn|pick\(/);
     expect(read('games/city/city.css')).not.toMatch(/card-btn|\.cards/);
   });
-  it('has a panel that collapses: toggle and tab carry aria-expanded and aria-controls', () => {
-    expect(tag('panel')).toMatch(/^<aside /);
-    expect(tag('panelToggle')).toMatch(/^<button /);
-    expect(tag('panelToggle')).toContain('aria-expanded="true"');
-    expect(tag('panelToggle')).toContain('aria-controls="panel"');
-    expect(tag('panelTab')).toContain('aria-expanded="false"');
-    expect(tag('panelTab')).toContain('aria-controls="panel"');
-    expect(html).toMatch(/id="panelTab"[^>]*>[^<]*Reward and Train/);
+  it('keeps focus order: rate card, then Train, then the end card', () => {
+    const at = x => html.indexOf(x);
+    expect(at('id="reset"')).toBeGreaterThan(at('id="rateCard"'));
+    expect(at('id="train"')).toBeGreaterThan(at('id="reset"'));
+    expect(at('id="endEdit"')).toBeGreaterThan(at('id="train"'));
+    expect(at('id="endKeep"')).toBeGreaterThan(at('id="endEdit"'));
+    expect(at('id="endAgain"')).toBeGreaterThan(at('id="endKeep"'));
   });
-  it('puts the verdict first in the panel, then Train and Reset, then the sliders', () => {
-    const at = s => html.indexOf(s);
-    expect(at('id="verdict"')).toBeGreaterThan(at('id="panel"'));
-    expect(at('id="train"')).toBeGreaterThan(at('id="verdict"'));
-    expect(at('id="reset"')).toBeGreaterThan(at('id="train"'));
-    expect(at('id="fare"')).toBeGreaterThan(at('id="reset"'));
-    expect(html).toContain('>Train with this reward</button>');
-    expect(html).toContain('>Reset</button>');
-  });
-  it('shows a Driving status chip on the map that starts hidden', () => {
-    expect(tag('driving')).toMatch(/\bhidden\b/);
-    expect(html).toMatch(/id="driving"[^>]*>Driving…</);
-    expect(tag('verdictFloat')).toContain('aria-hidden="true"');
+  it('starts on the map screen', () => {
+    expect(html).toMatch(/id="play"[^>]*data-screen="map"/);
   });
   it('keeps the brief, lesson and write-up below the full screen stage, under #about', () => {
     const at = s => html.indexOf(s);
@@ -156,14 +155,17 @@ describe('city page layout', () => {
 });
 
 describe('city.css', () => {
-  it('shows keyboard focus on sliders and buttons', () => {
-    expect(css).toMatch(/input\[type="range"\]:focus-visible/);
+  it('shows keyboard focus on buttons', () => {
     expect(css).toMatch(/button:focus-visible/);
   });
-  it('fills the screen with the stage and has a phone bottom sheet rule', () => {
+  it('fills the screen with the stage, switches panels by screen, and keeps the phone sheets to 35% of the viewport', () => {
     expect(css).toMatch(/100svh/);
-    expect(css).toMatch(/@media \(max-width: 720px\)/);
-    expect(css).toMatch(/\[data-collapsed="true"\]/);
+    expect(css).toMatch(/\[data-screen=/);
+    const phone = css.slice(css.indexOf('@media (max-width: 720px)'));
+    for (const sel of ['.ratecard', '.endcard']) expect(phone).toMatch(new RegExp(sel.replace('.', String.raw`\.`) + String.raw`[^{}]*\{[^}]*max-height:\s*35svh`));
+  });
+  it('loads Space Grotesk from the vendored font files', () => {
+    expect(css).toMatch(/font-family:\s*"Space Grotesk"[^}]*fonts\/space-grotesk-latin-700-normal\.woff2/);
   });
   it('has a 360 px rule and keeps the stage inside a phone width', () => {
     expect(css).toMatch(/@media \(max-width: 360px\)/);
