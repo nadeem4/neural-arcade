@@ -17,6 +17,10 @@ describe('nextScreen', () => {
   it('skip ends a drive', () => {
     expect(nextScreen('driving', 'skip')).toBe('done');
   });
+  it('replay (DRIVE from the garage) starts a drive from the map, a drive or the end card, but not while training', () => {
+    for (const from of ['map', 'driving', 'done']) expect(nextScreen(from, 'replay')).toBe('driving');
+    expect(nextScreen('training', 'replay')).toBe('training');
+  });
   it('ignores events that make no sense', () => {
     expect(nextScreen('training', 'train')).toBe('training');
     expect(nextScreen('map', 'skip')).toBe('map');

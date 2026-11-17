@@ -64,7 +64,7 @@
       <button class="btn chase" type="button" id="chase" aria-pressed="false" title="Start the drive in the chase view, with no swoop">Chase cam</button>
       <button class="btn chase" type="button" id="mute" aria-pressed="false">Sound on</button>
       <button class="info" type="button" aria-expanded="false" aria-controls="info-map" aria-label="Explain the map" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
-      <button class="btn chase" type="button" id="garage" disabled title="Garage: soon">Garage</button>
+      <button class="btn chase" type="button" id="garage" aria-expanded="false" aria-controls="garageDrawer">Garage · <span id="garageCount">0</span></button>
       <p class="info-text" id="info-map" data-info="map" hidden></p>
     </div>
 
@@ -109,6 +109,11 @@
         <button class="btn" type="button" id="endAgain">Watch again</button>
       </div>
     </section>
+    <aside class="drawer" id="garageDrawer" aria-labelledby="garageTitle" hidden>
+      <div class="drawer-head"><h2 id="garageTitle">Garage</h2><button class="btn" type="button" id="garageClose">Close</button></div>
+      <p class="drawer-empty" id="garageEmpty">Train a taxi, then keep it here.</p>
+      <ul class="bays" id="garageList"></ul>
+    </aside>
     <p class="toast" id="toast" role="status" hidden></p>
   </section>
         <section aria-labelledby="rh">

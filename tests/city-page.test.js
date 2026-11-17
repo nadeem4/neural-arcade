@@ -11,14 +11,14 @@ const mainPath = 'games/city/main.js';
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 const tag = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 
-const IDS = ['announce', 'play', 'about', 'rateCard', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'share', 'shareText', 'copy', 'reset', 'chase', 'labels', 'meter', 'meterTotal', 'meterCounts', 'minimap', 'mute', 'garage', 'bar', 'barDrive', 'viewToggle', 'driveProgress', 'skip', 'endcard', 'endTitle', 'endFlag', 'endTime', 'endGoal', 'endEarned', 'endVerdict', 'endEdit', 'endKeep', 'endAgain', 'toast'];
+const IDS = ['announce', 'play', 'about', 'rateCard', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'share', 'shareText', 'copy', 'reset', 'chase', 'labels', 'meter', 'meterTotal', 'meterCounts', 'minimap', 'mute', 'garage', 'garageCount', 'garageDrawer', 'garageList', 'garageClose', 'garageEmpty', 'bar', 'barDrive', 'viewToggle', 'driveProgress', 'skip', 'endcard', 'endTitle', 'endFlag', 'endTime', 'endGoal', 'endEarned', 'endVerdict', 'endEdit', 'endKeep', 'endAgain', 'toast'];
 
 describe('city page markup', () => {
   it('has every id main.js will look up', () => {
     const ids = [...IDS, ...FIELDS.flatMap(f => [f.key + 'Out', f.key + 'Dec', f.key + 'Inc'])];
     for (const id of ids) expect(html, id).toContain(`id="${id}"`);
-    const main = read(mainPath); // 'about' and 'rateCard' are anchors and aria targets; #garage is a disabled placeholder until RC13; #stageNote belongs to the stage, main.js never touches it
-    for (const id of IDS.filter(i => !['about', 'rateCard', 'stageNote', 'garage', 'bar'].includes(i))) expect(main, id).toContain(`$('${id}')`);
+    const main = read(mainPath); // 'about' and 'rateCard' are anchors and aria targets; #stageNote belongs to the stage, main.js never touches it
+    for (const id of IDS.filter(i => !['about', 'rateCard', 'stageNote', 'bar'].includes(i))) expect(main, id).toContain(`$('${id}')`);
     expect(main).toContain("$(r.key + 'Out')"); // the steppers are looked up through FIELDS
     expect(main).toContain("$(f.key + 'Dec')");
     expect(main).toContain("$(f.key + 'Inc')");
@@ -55,10 +55,15 @@ describe('city page markup', () => {
     }
     expect(html).not.toContain('type="range"');
   });
-  it('has Train & Drive in a bottom bar, a disabled Garage placeholder, and a hidden end card with its three buttons', () => {
+  it('has Train & Drive in a bottom bar, a Garage button with a count and a hidden drawer, and a hidden end card with its three buttons', () => {
     expect(html).toContain('>TRAIN &amp; DRIVE</button>');
-    expect(tag('garage')).toMatch(/\sdisabled[\s>]/);
-    expect(tag('garage')).toContain('title="Garage: soon"');
+    expect(tag('garage')).not.toMatch(/\sdisabled[\s>]/);
+    expect(tag('garage')).toContain('aria-controls="garageDrawer"');
+    expect(tag('garage')).toContain('aria-expanded="false"');
+    expect(html).toContain('Train a taxi, then keep it here.');
+    expect(tag('garageDrawer')).toMatch(/\shidden[\s>]/);
+    expect(tag('garageList')).toMatch(/^<ul /);
+    expect(read('games/city/main.js')).not.toContain('Garage arrives next');
     expect(tag('endcard')).toMatch(/\shidden[\s>]/);
     expect(html).toContain('>Change the rates</button>');
     expect(html).toContain('>Keep in the garage</button>');
