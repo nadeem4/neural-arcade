@@ -159,6 +159,10 @@ describe('nextStepOf: names the cheat and the slider to try next', () => {
     const v = nextStepOf({ ...free, perTile: 3 }, A({ arrived: false, seconds: 400, tiles: 400 }));
     expect(v).toBe('It drove extra to earn pay per tile and never dropped the passenger off. Try lowering pay per tile.');
   });
+  it('fines that outweigh the fare say so and what to change', () => {
+    const v = nextStepOf({ ...free, fare: 100, off: 20 }, A({ arrived: false, seconds: 40, tiles: 5, offTiles: 10 }));
+    expect(v).toBe('It never arrived. The fines outweigh the fare. Try lowering a fine or raising the fare.');
+  });
   it('never arrived without a loop says what to change', () => {
     expect(nextStepOf({ ...free, fare: 0 }, A({ arrived: false, tiles: 5 }))).toMatch(/Try raising the fare\.$/);
     expect(nextStepOf(free, A({ arrived: false, tiles: 5 }))).toMatch(/^It never arrived\./);

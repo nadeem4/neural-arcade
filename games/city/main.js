@@ -1,5 +1,5 @@
 // Reward City page: the reward sliders, live training, the drive, receipt, verdict and the goal.
-// The header and footer are mounted by assets/game-page.js; the lamp is wired here.
+// The footer is mounted by assets/game-page.js; the top bar is in the page and the lamp is wired here.
 import { wireLamp } from '../../assets/theme.js';
 import { SUN, MOON } from '../../assets/site.js';
 import { SEED, EPISODES, GOAL_SECONDS } from './presets.js';
@@ -72,7 +72,7 @@ function showReward() {
 function setPanel(open) {
   $('play').dataset.collapsed = String(!open);
   for (const id of ['panelToggle', 'panelTab']) $(id).setAttribute('aria-expanded', String(open));
-  $('panelToggle').firstElementChild.textContent = open ? 'Hide ›' : 'Show ‹';
+  $('panelToggle').firstElementChild.textContent = open ? 'Hide ›' : 'Show ▴';
   const next = open ? $('panelToggle') : $('panelTab');
   if (next.offsetParent) next.focus(); // the tab is not shown on a phone, where the handle stays
 }
@@ -95,7 +95,7 @@ function showReceipt(a) {
     ...lines.map(l => row('row', l.detail ? `${l.label}: ${l.detail}` : l.label, signed(l.amount))),
     row('row total', 'Total', signed(total)));
   const verdict = nextStepOf(rewards, a);
-  $('verdict').textContent = verdict; $('verdictFloat').textContent = verdict;
+  $('verdict').textContent = verdict; $('verdictFloat').textContent = verdict; $('announce').textContent = verdict;
 }
 function showGoal(a) {
   const goal = $('goal'), share = $('share');
@@ -116,7 +116,7 @@ async function train(req) {
   const progress = $('progress');
   if (!stage) return;
   progress.value = 0; progress.hidden = false; $('driving').hidden = true; $('train').dataset.stale = 'false'; say('Training the taxi…');
-  for (const id of ['verdict', 'verdictFloat']) $(id).textContent = '';
+  for (const id of ['verdict', 'verdictFloat', 'announce']) $(id).textContent = '';
   const run = ++shown; // a drive that is interrupted must not show its receipt
   stage.clearRoute();
   try {
@@ -128,7 +128,7 @@ async function train(req) {
     session = recordTry(session, res.analysis);
     stage.setHeat(res.visits);
     if (run === shown) $('driving').hidden = false;
-    stage.showRoute(res.route, res.analysis, { onDone() { if (run === shown) { $('driving').hidden = true; showReceipt(res.analysis); showGoal(res.analysis); } } });
+    stage.showRoute(res.route, res.analysis, { onDone() { if (run === shown) { $('driving').hidden = true; showReceipt(res.analysis); showGoal(res.analysis); $('announce').textContent += ' ' + $('goal').textContent; } } });
   } catch {
     progress.hidden = true;
     say('Training failed. Reload the page and try again.');
@@ -137,7 +137,7 @@ async function train(req) {
 function reset() {
   jobs.cancel(); latest++; killWorker(); shown++;
   session = createSession(); rewards = defaultRewards();
-  for (const id of ['receipt', 'verdict', 'verdictFloat', 'goal']) $(id).textContent = '';
+  for (const id of ['receipt', 'verdict', 'verdictFloat', 'announce', 'goal']) $(id).textContent = '';
   $('share').hidden = true; $('progress').hidden = true; $('driving').hidden = true; say('');
   showReward();
   train(rewards);

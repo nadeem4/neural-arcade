@@ -55,12 +55,13 @@
       <p class="info-text" id="info-map" data-info="map" hidden></p>
     </div>
 
+    <p class="sr-only" id="announce" aria-live="polite"></p>
     <p class="verdict-float" id="verdictFloat" aria-hidden="true"></p>
     <button class="tab" type="button" id="panelTab" aria-expanded="false" aria-controls="panel">‹ Reward and Train</button>
 
     <aside class="panel" id="panel" aria-label="Controls">
       <button class="handle" type="button" id="panelToggle" aria-expanded="true" aria-controls="panel"><span>Hide ›</span></button>
-      <p class="verdict" id="verdict" aria-live="polite"></p>
+      <p class="verdict" id="verdict"></p>
       <div class="actions">
         <button class="btn primary" type="button" id="train">Train with this reward</button>
         <button class="btn" type="button" id="reset">Reset</button>
@@ -89,7 +90,7 @@
         <section aria-labelledby="gh">
           <h2><span id="gh">Your goal</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-goal" aria-label="Explain the goal" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
           <p class="info-text" id="info-goal" data-info="goal" hidden></p>
-          <p class="goal-line" id="goal" aria-live="polite"></p>
+          <p class="goal-line" id="goal"></p>
           <p class="share-line" id="share" hidden><output id="shareText"></output> <button class="btn" type="button" id="copy">Copy</button></p>
         </section>
       </div>

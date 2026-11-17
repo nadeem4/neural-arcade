@@ -11,7 +11,7 @@ const mainPath = 'games/city/main.js';
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 const tag = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 
-const IDS = ['play', 'about', 'panel', 'panelToggle', 'panelTab', 'driving', 'verdictFloat', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset', 'chase', 'labels'];
+const IDS = ['announce', 'play', 'about', 'panel', 'panelToggle', 'panelTab', 'driving', 'verdictFloat', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'verdict', 'goal', 'share', 'copy', 'reset', 'chase', 'labels'];
 
 describe('city page markup', () => {
   it('has every id main.js will look up', () => {
@@ -23,7 +23,11 @@ describe('city page markup', () => {
     expect(main).toContain("$(f.key + 'Out')");
   });
   it('announces only the verdict, so the receipt is aria-live off to avoid a double announcement, and shows progress with a progress element', () => {
-    expect(tag('verdict')).toContain('aria-live="polite"');
+    expect(tag('announce')).toContain('aria-live="polite"');
+    expect(tag('announce')).toContain('class="sr-only"');
+    expect(html.indexOf('id="announce"')).toBeLessThan(html.indexOf('id="panel"')); // outside the panel, so folding it cannot silence it
+    expect(tag('verdict')).not.toContain('aria-live');
+    expect(tag('goal')).not.toContain('aria-live');
     expect(tag('receipt')).toContain('aria-live="off"');
     expect(html).toMatch(/<progress [^>]*id="progress"/);
   });
@@ -48,7 +52,6 @@ describe('city page markup', () => {
     for (const id of ['howTab', 'whyLink', 'how']) expect(tag(id), id).not.toMatch(/\shidden[\s>]/);
     expect(html).toContain('src="../../assets/game-page.js"');
     expect(tag('moreFrom')).toMatch(/\shidden[\s>]/);
-    expect(tag('goal')).toContain('aria-live="polite"');
     expect(tag('status')).toContain('aria-live="polite"');
   });
   it('keeps the share line hidden until success', () => {
