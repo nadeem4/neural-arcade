@@ -38,6 +38,13 @@ describe('stage', () => {
     expect(() => createFallbackStage(fakeEl(), 'x').playTrip()).not.toThrow();
     expect(() => createFallbackStage(fakeEl(), 'x').playTrip({})).not.toThrow();
   });
+  it("the fallback stage's playRace calls onDone once, never onFrame, and tolerates no options", () => {
+    const stage = createFallbackStage(fakeEl(), 'x');
+    let frames = 0, done = 0;
+    stage.playRace({ race: {}, onFrame: () => frames++, onDone: () => done++ });
+    expect([frames, done]).toEqual([0, 1]);
+    expect(() => stage.playRace()).not.toThrow();
+  });
   it('webglAvailable returns false for an object without createElement', () => {
     expect(webglAvailable({})).toBe(false);
     expect(webglAvailable(undefined)).toBe(false);

@@ -12,6 +12,33 @@ const ev = tripEvents(world, card.rewards, route);
 const n = ev.steps.length;
 const inUnit = (p) => p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1;
 
+describe('minimapModel for a race', () => {
+  const other = read('story.json').cards.find((c) => c.id === 'legal');
+  const evB = tripEvents(world, other.rewards, other.route);
+  const fit = [route, other.route];
+  const both = () => [minimapModel(world, route, ev.steps.length, ev, fit), minimapModel(world, other.route, evB.steps.length, evB, fit)];
+  it('fits both routes in one view, so the shared flag lines up and every point is inside', () => {
+    const [a, b] = both();
+    expect(a.flag).toEqual(b.flag);
+    expect(a.points.every(inUnit) && b.points.every(inUnit)).toBe(true);
+    expect(a.points[0]).toEqual(b.points[0]); // the same pickup
+  });
+  it('keeps each route its own length and its own fine dots', () => {
+    const [a, b] = both();
+    expect(a.points.length).toBe(ev.steps.length + 1);
+    expect(b.points.length).toBe(evB.steps.length + 1);
+    const fines = (e) => e.steps.filter((s) => ['red', 'wrong', 'off'].some((l) => s.lines.includes(l))).length;
+    expect(a.dots.length).toBe(fines(ev));
+    expect(b.dots.length).toBe(fines(evB));
+  });
+  it('draws a second model over the first without clearing it', () => {
+    const calls = [];
+    const ctx = new Proxy({}, { get: (_, k) => () => { calls.push(k); }, set: () => true });
+    drawMinimap(ctx, minimapModel(world, route, 3, ev), 100, undefined, { clear: false });
+    expect(calls).not.toContain('clearRect');
+  });
+});
+
 describe('minimapModel', () => {
   it('has one point per step so far plus the start, all inside the unit square', () => {
     for (const i of [0, 1, 5, n]) {

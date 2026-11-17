@@ -5,7 +5,8 @@ import { taxiParts } from './taxi-model.js';
 const BRAKE_ON = '#FF2A2A', BRAKE_OFF = '#7A1F1F';
 export const TAXI_SCALE = 1.5; // metres to scene units: the 4.2 m model becomes a car about half a 12 m tile wide
 
-export function createTaxiMaker() {
+// tint: { body, cab } swaps the yellow for a second car's colours.
+export function createTaxiMaker(tint = null) {
   const cache = {};
   const mat = (colour, role) => (cache[colour + role] ??= role === 'brake'
     ? new THREE.MeshBasicMaterial({ color: colour })
@@ -18,7 +19,8 @@ export function createTaxiMaker() {
       for (const m of brakeMats) m.dispose();
       brakeMats.length = 0;
       for (const p of taxiParts()) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(...p.size), p.role === 'brake' ? new THREE.MeshBasicMaterial({ color: BRAKE_OFF }) : mat(p.colour, p.role));
+        const colour = tint && tint[p.role] ? tint[p.role] : p.colour;
+        const m = new THREE.Mesh(new THREE.BoxGeometry(...p.size), p.role === 'brake' ? new THREE.MeshBasicMaterial({ color: BRAKE_OFF }) : mat(colour, p.role));
         m.position.set(...p.pos);
         if (p.role === 'brake') brakeMats.push(m.material);
         g.add(m);

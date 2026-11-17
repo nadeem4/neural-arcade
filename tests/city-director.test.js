@@ -1,5 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { shotAt, timeline, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
+import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
+
+describe('raceShot', () => {
+  const car = (x, z, heading = 0) => ({ x, z, heading });
+  it('looks at the midpoint of the two cars from behind and above', () => {
+    const s = raceShot(car(0, 0), car(20, 0));
+    expect(s.target[0]).toBeCloseTo(10); expect(s.target[2]).toBeCloseTo(0);
+    expect(s.pos[1]).toBeGreaterThan(0);
+    expect(s.pos[2]).toBeLessThan(0); // heading 0 faces +z, so behind is -z
+  });
+  it('pulls back further as the gap grows, up to a limit', () => {
+    const near = raceShot(car(0, 0), car(4, 0)), far = raceShot(car(0, 0), car(80, 0));
+    expect(far.pos[1]).toBeGreaterThan(near.pos[1]);
+    expect(Math.abs(far.pos[2])).toBeGreaterThan(Math.abs(near.pos[2]));
+    const huge = raceShot(car(0, 0), car(5000, 0)), more = raceShot(car(0, 0), car(8000, 0));
+    expect(huge.pos[1]).toBeCloseTo(more.pos[1]); // clamped: the same height at any larger gap
+  });
+});
 
 const MAP = { pos: [100, 500, 100], target: [0, 0, 0], fov: 38 };
 const CHASE = { pos: [10, 4, 20], target: [12, 1, 5], fov: 60 };

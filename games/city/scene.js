@@ -4,12 +4,13 @@ import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositi
 import { clampPitch, clampDistance, readColors, treesToHide } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
-import { shotAt, timeline, SWOOP_MS, PULLBACK_MS } from './director.js';
+import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
+import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { signalState, signalCorners } from './signals.js';
 import { skyColours, fogFor, heatOpacity } from './sky.js';
 import { createSky, addWindows } from './scene-look.js';
-import { createTaxiMaker } from './scene-taxi.js';
+import { createTaxiMaker, TAXI_SCALE } from './scene-taxi.js';
 
 const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
@@ -186,12 +187,18 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
 
   // Taxi and trail materials (their geometry is made per route and disposed in clearRoute).
   const taxiMaker = createTaxiMaker();
-  mats.trail = new THREE.LineBasicMaterial({ color: '#5BC0EB' });
+  mats.trail = new THREE.LineBasicMaterial({ color: TINTS[0].route });
+  mats.trailB = new THREE.LineBasicMaterial({ color: TINTS[1].route });
+  const taxiMakerB = createTaxiMaker(TINTS[1]); // the second car of a race, tinted pink
 
   const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, radius * 10);
   const view = { yaw: 0.6, pitch: 0.95, dist: radius * 1.25 };
   let queued = 0, dead = false;
   let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;
+  let taxiB = null, trailB = null, trailPtsB = null; // the second car of a race
+  let raceTags = []; // two name tags over the cars (DOM, in the label layer), alive for a race
+  const RACE_SCALE = 2.5; // both cars are drawn bigger in a race so they read from the high camera
+  const clearRaceTags = () => { raceTags.forEach(s => s.remove()); raceTags = []; };
 
   // Landmark labels: DOM text projected each render, hidden when behind the camera or off the stage.
   const labels = (city.landmarks ?? []).map((l) => {
@@ -222,7 +229,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     if (dead) return;
     const mapShot = orbitShot();
     const shot = play && play.phase !== 'map' && !mapView
-      ? shotAt(play.phase, play.t, mapShot, { ...chaseCamera(play.state, CHASE), fov: 55 })
+      ? shotAt(play.phase, play.t, mapShot, play.race ? raceShot(play.state.cars[0].state, play.state.cars[1].state) : { ...chaseCamera(play.state, CHASE), fov: 55 })
       : mapShot;
     const phase = play ? play.phase : 'map';
     const near = phase !== 'map' ? 2 : radius * 0.05;
@@ -323,17 +330,39 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
 
   // Playback: its own rAF loop, alive only while a trip plays. Each frame asks drive.js for the taxi and director.js for the camera.
   let loopId = 0;
-  const finish = () => { const p = play; play = null; if (p && p.onDone) p.onDone(); }; // exactly once per trip
+  const finish = () => {
+    const p = play; play = null;
+    if (p && p.race) { clearRaceTags(); for (const t of [taxi, taxiB]) t?.scale.setScalar(TAXI_SCALE); } // back to normal size
+    if (p && p.onDone) p.onDone();
+  }; // exactly once per trip
+  const placeCar = (tx, tr, pts, maker, frames, st) => {
+    const k = Math.min(st.stepIndex, frames.length - 1);
+    tx.position.set(st.x, 1, st.z); tx.rotation.y = st.heading;
+    maker.setBraking(st.braking);
+    pts.set([frames[k].x, 1.4, frames[k].z], k * 3); // the point just left snaps back to its cell
+    pts.set([st.x, 1.4, st.z], (k + 1) * 3); // the trail's last point rides with the taxi
+    tr.geometry.setDrawRange(0, k + 2);
+    tr.geometry.attributes.position.needsUpdate = true;
+  };
   const place = (st) => {
-    const frames = play.track.frames, k = Math.min(st.stepIndex, frames.length - 1);
-    taxi.position.set(st.x, 1, st.z); taxi.rotation.y = st.heading;
-    taxiMaker.setBraking(st.braking);
-    trailPts.set([frames[k].x, 1.4, frames[k].z], k * 3); // the point just left snaps back to its cell
-    trailPts.set([st.x, 1.4, st.z], (k + 1) * 3); // the trail's last point rides with the taxi
-    trail.geometry.setDrawRange(0, k + 2);
-    trail.geometry.attributes.position.needsUpdate = true;
+    placeCar(taxi, trail, trailPts, taxiMaker, play.track.frames, st);
     play.state = st;
     setLights(st.tick, st.facing); // the lamp follows the move being made, not the eased heading
+  };
+  // A race: both cars on one clock. The lamp shows the leader's direction (the lights are the same for both).
+  const placeRace = (rs) => {
+    const [a, b] = play.race.cars;
+    placeCar(taxi, trail, trailPts, taxiMaker, a.track.frames, rs.cars[0].state);
+    placeCar(taxiB, trailB, trailPtsB, taxiMakerB, b.track.frames, rs.cars[1].state);
+    raceTags.forEach((span, i) => { // each name tag sits above its car, in its car's colour
+      const t = i ? taxiB : taxi;
+      tmp.set(t.position.x, 14, t.position.z).project(camera);
+      const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
+      span.style.display = tmp.z > 1 ? 'none' : '';
+      span.style.transform = `translate(${cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width}px, ${cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height}px) translate(-50%, -100%)`;
+    });
+    play.state = rs;
+    setLights(rs.tick, rs.cars[rs.leader ?? 0].state.facing);
   };
   // Where the taxi is on screen, in the label layer's pixels, so the tags can pop up beside it.
   const taxiScreen = () => {
@@ -349,11 +378,13 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     const intro = play.swoop ? SWOOP_MS : 0;
     const elapsed = now - play.t0;
     const { phase, t } = timeline(play.track.total, elapsed, { swoop: play.swoop });
-    const st = stateAt(play.track, Math.max(0, elapsed - intro));
-    place(st); play.phase = phase; play.t = t;
+    const ms = Math.max(0, elapsed - intro);
+    const st = play.race ? raceStateAt(play.race, ms) : stateAt(play.track, ms);
+    if (play.race) placeRace(st); else place(st);
+    play.phase = phase; play.t = t;
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
-    play.onFrame?.(st, taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
+    play.onFrame?.(st, play.race ? null : taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
     if (phase === 'map') { finish(); return; }
     loopId = requestAnimationFrame(tickLoop);
   };
@@ -363,6 +394,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     finish();
     if (taxi) { scene.remove(taxi); taxi.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); taxi = null; }
     if (trail) { scene.remove(trail); trail.geometry.dispose(); trail = null; }
+    if (taxiB) { scene.remove(taxiB); taxiB.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); taxiB = null; }
+    if (trailB) { scene.remove(trailB); trailB.geometry.dispose(); trailB = null; }
   };
 
   // Idle: the lights follow a slow clock (not under reduced motion).
@@ -407,6 +440,39 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
       play.t0 = performance.now();
       loopId = requestAnimationFrame(tickLoop);
     },
+    // race: race.js raceTracks. Two taxis from the same pickup on one clock; onFrame gets the raceStateAt result.
+    playRace({ race, onFrame, onDone } = {}) {
+      stopRoute();
+      const make = (maker, mat, frames) => {
+        const tx = maker.make(), pts = new Float32Array((frames.length + 1) * 3);
+        tx.traverse((o) => { o.castShadow = true; });
+        frames.forEach((f, i) => pts.set([f.x, 1.4, f.z], i * 3));
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+        const tr = new THREE.Line(g, mat); tr.frustumCulled = false;
+        scene.add(tx, tr);
+        return [tx, tr, pts];
+      };
+      [taxi, trail, trailPts] = make(taxiMaker, mats.trail, race.cars[0].track.frames);
+      [taxiB, trailB, trailPtsB] = make(taxiMakerB, mats.trailB, race.cars[1].track.frames);
+      taxi.scale.setScalar(TAXI_SCALE * RACE_SCALE); taxiB.scale.setScalar(TAXI_SCALE * RACE_SCALE);
+      raceTags = labelEl ? race.cars.map((c, i) => {
+        const span = document.createElement('span');
+        span.className = 'race-tag'; span.textContent = c.entry.name; span.style.color = TINTS[i].css;
+        labelEl.append(span); return span;
+      }) : [];
+      play = { race, track: { total: race.total }, onFrame, onDone, state: raceStateAt(race, 0), phase: 'map', t: 0, swoop: true };
+      if (!motionAllowed()) { // no animation: both cars at their finish with the whole trails and final numbers
+        const end = raceStateAt(race, race.total);
+        placeRace(end);
+        draw();
+        onFrame?.(end, null);
+        finish();
+        return;
+      }
+      play.t0 = performance.now();
+      loopId = requestAnimationFrame(tickLoop);
+    },
     // Skip to the end of the drive: the taxi jumps to its last tile and the camera pulls back.
     skipTrip() { if (play) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
     // The Map view toggle: the high map camera while the taxi drives, instead of the chase.
@@ -416,7 +482,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     setShot(name) { chase = name === 'chase' && motionAllowed(); },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      stopRoute(); taxiMaker.dispose(); windows.dispose(); sky.texture.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
+      stopRoute(); taxiMaker.dispose(); taxiMakerB.dispose(); windows.dispose(); sky.texture.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
       for (const { span } of labels) span.remove();
       ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
       window.removeEventListener('blur', disengage);

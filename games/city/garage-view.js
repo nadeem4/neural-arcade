@@ -18,8 +18,9 @@ const el = (tag, cls, text) => {
   return e;
 };
 
-function card(taxi, i, { onDrive, onRemove, canDrive }) {
-  const li = el('li', 'bay');
+function card(taxi, i, { onDrive, onRemove, onPick, canDrive, picks = [], canRace = false, raceTitle = '' }) {
+  const picked = picks.includes(taxi.id);
+  const li = el('li', picked ? 'bay picked' : 'bay');
   const stripe = el('span', 'bay-stripe'); stripe.style.background = stripeFor(taxi.name);
   const head = el('div', 'bay-head');
   head.append(taxiIcon(), el('span', 'bay-name', taxi.name), el('span', 'bay-try', `Try ${taxi.tries}`));
@@ -32,7 +33,15 @@ function card(taxi, i, { onDrive, onRemove, canDrive }) {
   const del = el('button', 'btn bay-remove', 'Remove');
   del.type = 'button'; del.setAttribute('aria-label', `Remove ${taxi.name}`);
   del.addEventListener('click', () => onRemove(taxi, i));
-  const actions = el('div', 'bay-actions'); actions.append(drive, del);
+  const race = el('button', 'btn bay-race', picked ? 'In race' : 'Race');
+  race.type = 'button'; race.disabled = !canRace; race.setAttribute('aria-pressed', String(picked));
+  race.setAttribute('aria-label', `Race ${taxi.name}`);
+  race.addEventListener('click', () => onPick(taxi, i));
+  // A disabled button shows no tooltip, so the span carries the title.
+  const raceWrap = el('span', 'bay-race-wrap');
+  if (!canRace) raceWrap.title = raceTitle;
+  raceWrap.append(race);
+  const actions = el('div', 'bay-actions'); actions.append(drive, raceWrap, del);
   const earned = Math.round(taxi.analysis.reward * 10) / 10 + 0;
   const stats = el('div', 'bay-stats');
   stats.append(el('span', 'bay-time', `${taxi.bestSeconds} s`), el('span', `bay-earned ${earned >= 0 ? 'pay' : 'fine'}`, `${earned > 0 ? '+' : ''}${earned}`));
@@ -40,7 +49,7 @@ function card(taxi, i, { onDrive, onRemove, canDrive }) {
   return li;
 }
 
-// Fills the list from the garage. handlers: { onDrive(taxi), onRemove(taxi), canDrive }.
+// Fills the list from the garage. handlers: { onDrive(taxi), onRemove(taxi), onPick(taxi), canDrive, picks (ids), canRace, raceTitle }.
 export function renderGarage(list, garage, handlers) {
   const bays = garage.taxis.map((t, i) => card(t, i, handlers));
   for (let i = garage.taxis.length; i < garage.max; i++) {
