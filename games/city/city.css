@@ -92,6 +92,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .ratecard .info, .endcard .info { margin: 0; color: #E8EDF4; }
 .ratecard .info-text, .endcard .info-text { margin: 0; color: #C5CEDA; font-size: 14px; }
 .rates { display: grid; gap: 10px; }
+.rate .short { display: none; }
 .rate { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 14px; color: #C5CEDA; }
 .stepper { display: inline-flex; align-items: center; gap: 4px; }
 .rstep { width: 36px; height: 36px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 18px/1 "Space Grotesk", var(--sans); cursor: pointer; }
@@ -152,12 +153,16 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .ratecard, .endcard { top: auto; left: 8px; right: 8px; width: auto; transform: none; padding: 12px 14px; gap: 8px; }
   .ratecard { bottom: 80px; max-height: 35svh; }
   .endcard { bottom: 80px; max-height: 35svh; display: flex; flex-direction: column; }
-  .rates { grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .rates { grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+  .ratecard { gap: 6px; padding: 10px 12px; }
+  .ratecard h2 { font-size: 13px; }
+  .link { padding: 0; }
   .rate { grid-template-columns: 1fr; gap: 2px; font-size: 13px; }
-  .rate-label { line-height: 1.2; }
+  .rate-label { line-height: 1.2; white-space: nowrap; }
+  .rate .long { display: none; } .rate .short { display: inline; }
   .stepper { justify-content: space-between; }
   .rate output { font-size: 18px; }
-  .rstep { width: 44px; height: 40px; }
+  .rstep { width: 44px; height: 36px; }
   .gbar { left: 8px; right: 8px; bottom: 8px; transform: none; justify-content: center; }
   .gbar .go { flex: 1; }
   .bar-drive { flex: 1; gap: 8px; }
@@ -171,3 +176,5 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .end-actions .btn, .end-actions .go { height: 40px; padding: 0 12px; font-size: 13px; }
 }
 #train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--hud-taxi) 35%, transparent); }
+
+.endcard .receipt .row { border: 0; }

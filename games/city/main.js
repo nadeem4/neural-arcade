@@ -15,7 +15,7 @@ import { meterAt, meterText } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
 import { createSound } from './sound.js';
 import { stepRate, rateRows } from './rates.js';
-import { nextScreen, canToggleView } from './screens.js';
+import { nextScreen } from './screens.js';
 import { endCardModel } from './endcard.js';
 
 const $ = id => document.getElementById(id);
@@ -124,7 +124,7 @@ function go(event) {
   $('play').dataset.screen = screen;
   const busy = screen === 'training';
   $('endcard').hidden = screen !== 'done';
-  $('barDrive').hidden = !canToggleView(screen);
+  $('barDrive').hidden = screen !== 'driving';
   $('skip').hidden = screen !== 'driving';
   $('driveProgress').hidden = screen !== 'driving';
   $('train').disabled = busy || !stage;
