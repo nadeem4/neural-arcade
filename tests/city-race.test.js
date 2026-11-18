@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { raceTracks, raceStateAt, result, bannerLine, raceBarLine, leaderBlips, togglePick, MAX_PICK } from '../games/city/race.js';
+import { raceDetailOf } from '../games/city/race-view.js';
 
 const read = f => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const city = read('chicago.json');
@@ -90,9 +91,9 @@ describe('result', () => {
     expect(result(fake(T(true, 30, 50), T(true, 40, 90)))).toMatchObject({ winner: 0, by: 10, reason: 'time' });
     expect(result(fake(T(true, 50, 90), T(true, 40, 50)))).toMatchObject({ winner: 1, by: 10 });
   });
-  it('breaks a tie on seconds by what each earned, and calls equal earnings a tie', () => {
-    expect(result(fake(T(true, 40, 50), T(true, 40, 90)))).toMatchObject({ winner: 1, by: 0, reason: 'earned' });
-    expect(result(fake(T(true, 40, 70), T(true, 40, 70)))).toMatchObject({ winner: 'tie' });
+  it('equal seconds is a dead heat even if rewards differ', () => {
+    expect(result(fake(T(true, 40, 50), T(true, 40, 90)))).toEqual({ winner: 'tie', by: 0, reason: 'time' });
+    expect(result(fake(T(true, 40, 70), T(true, 40, 70)))).toEqual({ winner: 'tie', by: 0, reason: 'time' });
   });
   it('a taxi that never arrives loses, and two that never arrive tie', () => {
     expect(result(fake(T(false, 90, 500), T(true, 80, -10)))).toMatchObject({ winner: 1, reason: 'arrived' });
@@ -111,10 +112,9 @@ describe('bannerLine', () => {
   it('says who won and by how much', () => {
     expect(bannerLine({ winner: 0, by: 12, reason: 'time' }, names)).toBe('Speedy wins by 12 s');
     expect(bannerLine({ winner: 1, by: 1, reason: 'time' }, names)).toBe('Legal wins by 1 s');
-    expect(bannerLine({ winner: 1, by: 0, reason: 'earned' }, names)).toBe('Same time: Legal wins on earnings');
     expect(bannerLine({ winner: 0, by: null, reason: 'arrived' }, names)).toBe('Speedy wins: Legal never arrived');
     expect(bannerLine({ winner: 'tie', by: 0, reason: 'none' }, names)).toBe('Neither taxi arrived');
-    expect(bannerLine({ winner: 'tie', by: 0, reason: 'earned' }, names)).toBe('A dead heat');
+    expect(bannerLine({ winner: 'tie', by: 0, reason: 'time' }, names)).toBe('A dead heat');
   });
 });
 
@@ -152,5 +152,20 @@ describe('togglePick', () => {
     p = togglePick(p, 'b'); expect(p).toEqual(['a', 'b']);
     expect(togglePick(p, 'c')).toEqual(['b', 'c']);
     expect(togglePick(p, 'a')).toEqual(['b']);
+  });
+});
+
+describe('raceDetailOf', () => {
+  const names = ['Speedy', 'Legal'];
+  it('explains a dead heat on time with different rewards', () => {
+    const t = [T(true, 40, 50), T(true, 40, 90)];
+    const text = raceDetailOf(result(fake(...t)), t, names);
+    expect(text).toBe('Speedy: 40 s, earned +50. Legal: 40 s, earned +90. Same time, so nobody wins, even though one earned more.');
+  });
+  it('adds nothing when the rewards match or someone won', () => {
+    const same = [T(true, 40, 70), T(true, 40, 70)];
+    expect(raceDetailOf(result(fake(...same)), same, names)).not.toContain('Same time');
+    const won = [T(true, 30, 50), T(true, 40, 90)];
+    expect(raceDetailOf(result(fake(...won)), won, names)).not.toContain('Same time');
   });
 });

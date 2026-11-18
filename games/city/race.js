@@ -58,15 +58,14 @@ export function leaderBlips(race, rs, done) {
   return { steps, done: next };
 }
 
-// Who won. Arriving beats not arriving; then fewer seconds; then more earned; then a tie.
+// Who won. Arriving beats not arriving; then fewer seconds; equal seconds is a dead heat, whatever each earned.
 // by is the gap in seconds (null when only one taxi arrived).
 export function result(race) {
   const [a, b] = race.cars.map(c => c.events.totals);
   if (!a.arrived && !b.arrived) return { winner: 'tie', by: 0, reason: 'none' };
   if (a.arrived !== b.arrived) return { winner: a.arrived ? 0 : 1, by: null, reason: 'arrived' };
   if (a.seconds !== b.seconds) return { winner: a.seconds < b.seconds ? 0 : 1, by: Math.abs(a.seconds - b.seconds), reason: 'time' };
-  if (a.reward !== b.reward) return { winner: a.reward > b.reward ? 0 : 1, by: 0, reason: 'earned' };
-  return { winner: 'tie', by: 0, reason: 'earned' };
+  return { winner: 'tie', by: 0, reason: 'time' }; // pay never decides a race: the earner is not the winner
 }
 
 // The line in the garage's race bar for the names picked so far.
@@ -81,6 +80,5 @@ export function bannerLine(res, names) {
   if (res.winner === 'tie') return res.reason === 'none' ? 'Neither taxi arrived' : 'A dead heat';
   const win = names[res.winner], lose = names[1 - res.winner];
   if (res.reason === 'arrived') return `${win} wins: ${lose} never arrived`;
-  if (res.reason === 'earned') return `Same time: ${win} wins on earnings`;
   return `${win} wins by ${res.by} s`;
 }

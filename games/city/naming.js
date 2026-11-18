@@ -1,23 +1,33 @@
 import { isLegal, goalReached } from './words.js';
 import { FIELDS } from './reward.js';
 
-// Names for kept taxis, from which fines are zero on the rate card. Pure.
+// Names for kept taxis, from what the trip did (its analysis), not from the rates. Pure.
 const STRIPES = {
-  'Anything goes': '#FF9A6B',
-  'Red runner': '#FF6B6B',
+  'Never arrives': '#9AA7B8',
+  'Circler': '#FF9A6B',
   'Park cutter': '#FFB547',
+  'Footpath rider': '#E6D24A',
+  'Red runner': '#FF6B6B',
   'Wrong-way driver': '#B79CFF',
   'By the book': '#8FE3A1',
 };
 
-// First match wins: all three fines zero, then red, then park/footpath, then wrong way.
-export function nameFor(rewards) {
-  const { off, red, wrong } = rewards;
-  if (!off && !red && !wrong) return 'Anything goes';
-  if (!red) return 'Red runner';
-  if (!off) return 'Park cutter';
-  if (!wrong) return 'Wrong-way driver';
+// First match wins: never arrived (a circler if most seconds were moves), park, footpath, red, wrong way, else legal.
+export function nameFor(a) {
+  if (!a.arrived) return a.seconds > 0 && a.tiles >= a.seconds / 2 ? 'Circler' : 'Never arrives';
+  if (a.parkTiles > 0) return 'Park cutter';
+  if (a.offTiles > 0) return 'Footpath rider';
+  if (a.redRuns > 0) return 'Red runner';
+  if (a.wrongWays > 0) return 'Wrong-way driver';
   return 'By the book';
+}
+
+// Names a garage's taxis from their stored analysis (garages saved before this carry the old rate-card names).
+// Taxis are newest first; the oldest of a repeated name keeps it plain, the later ones get 2, 3.
+export function behaviourNames(taxis) {
+  const names = [];
+  for (const t of [...taxis].reverse()) names.unshift(uniqueName(nameFor(t.analysis), names));
+  return taxis.map((t, i) => ({ ...t, name: names[i] }));
 }
 
 // A name already in the garage gets " 2", " 3" and so on.
