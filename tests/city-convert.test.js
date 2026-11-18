@@ -164,24 +164,45 @@ describe('convert', () => {
     expect(estimateHeight({ height: '30' }, 100)).toBe(30);
     expect(estimateHeight({ height: '12.5 m' }, 100)).toBe(12.5);
     expect(estimateHeight({ 'building:levels': '4' }, 5000)).toBe(14);
-    expect(estimateHeight({}, 100)).toBe(9);
-    expect(estimateHeight({}, 800)).toBe(18);
-    expect(estimateHeight({}, 5000)).toBe(30);
+    expect(estimateHeight({}, 100)).toBe(12);
+    expect(estimateHeight({}, 800)).toBe(20);
+    expect(estimateHeight({}, 5000)).toBe(32);
     expect(buildingAt(city, 150, 126).h).toBe(30);
     expect(buildingAt(city, 215, 170).h).toBe(14); // 4 levels
     expect(buildingAt(city, 80, 30).h).toBe(estimateHeight({}, ringAreaOf(buildingAt(city, 80, 30))));
   });
 
+  it('reads heights in feet as metres', () => {
+    expect(estimateHeight({ height: '120 ft' }, 100)).toBe(36.6);
+    expect(estimateHeight({ height: "120'" }, 100)).toBe(36.6);
+    expect(estimateHeight({ height: "10'6\"" }, 100)).toBe(3.2);
+    expect(estimateHeight({ height: '12.5 m' }, 100)).toBe(12.5);
+  });
+
   it('keeps building tags and marks parts', () => {
     const b2 = buildingAt(city, 215, 170);
     expect(b2).toMatchObject({ levels: 4, roof: 'gabled', part: false, minH: 0, colour: null, material: null });
-    expect(Object.keys(b2)).toEqual(['ring', 'h', 'minH', 'levels', 'part', 'roof', 'colour', 'material']);
+    expect(Object.keys(b2)).toEqual(['ring', 'h', 'minH', 'levels', 'part', 'hasParts', 'roof', 'colour', 'material']);
     const part = city.buildings.find((b) => b.part);
     expect(part).toMatchObject({
       h: 20, minH: 10, levels: null, part: true, roof: 'hipped', colour: '#aa5533', material: 'brick',
     });
-    expect(city.buildings.filter((b) => b.part)).toHaveLength(1);
+    expect(city.buildings.filter((b) => b.part)).toHaveLength(2);
+    // a way tagged building and building:part is a part, and feet become metres
+    const both = city.buildings.find((b) => b.part && b.h === 36.6);
+    expect(both).toMatchObject({ part: true, hasParts: false });
     expect(buildingAt(city, 80, 30)).toMatchObject({ roof: 'flat', part: false });
+  });
+
+  it('marks outlines that contain a part, and only those', () => {
+    expect(buildingAt(city, 150, 126).hasParts).toBe(true); // b1 holds the hipped part
+    expect(buildingAt(city, 215, 170).hasParts).toBe(false);
+    expect(buildingAt(city, 80, 30).hasParts).toBe(false);
+    expect(city.buildings.filter((b) => b.hasParts)).toHaveLength(1);
+  });
+
+  it('a way tagged building and building:part still paints the grid', () => {
+    expect(kindAt(city, 12, 6)).toBe('b'); // cell centre (150, 162) is inside the ring at x 149 to 157, y 155 to 167
   });
 
   it('parts do not change the grid', () => {
@@ -228,11 +249,13 @@ describe('convert', () => {
     expect(city.trees).toEqual([[80, 120], [82, 125]]);
   });
 
-  it('rail keeps surface and elevated lines, skips tunnels, h is the deck height', () => {
-    expect(city.rail).toHaveLength(2);
-    expect(city.rail[0]).toMatchObject({ h: 8 });
+  it('rail keeps surface, elevated rail and the elevated subway L, skips tunnels', () => {
+    expect(city.rail).toHaveLength(3);
+    expect(city.rail[0]).toMatchObject({ h: 8, elevated: true });
     expect(city.rail[0].pts).toHaveLength(3);
-    expect(city.rail[1]).toMatchObject({ h: 0 });
+    expect(city.rail[1]).toMatchObject({ h: 0, elevated: false });
+    expect(city.rail[2]).toMatchObject({ h: 8, elevated: true }); // railway=subway, bridge=yes, layer=2
+    expect(Object.keys(city.rail[2])).toEqual(['pts', 'h', 'elevated']);
   });
 
   it('closes unclosed rings and turns multipolygon outer rings into buildings', () => {
@@ -354,9 +377,11 @@ describe('fetch-overpass buildQuery', () => {
     const { buildQuery } = await import('../scripts/city/fetch-overpass.mjs');
     const q = buildQuery([1, 2, 3, 4]);
     for (const part of [
-      'way["building:part"]', 'way[railway]', 'node[highway=street_lamp]', 'node[natural=tree]',
-      'node[highway=crossing]', 'way[footway=sidewalk]', 'way[footway=crossing]',
+      'way["building:part"]', 'way[railway~"^(rail|light_rail|subway)$"]', 'node[highway=street_lamp]', 'node[natural=tree]',
+      'node[highway=crossing]', 'way[highway]', // way[highway] already covers sidewalks and crossings
     ]) expect(q).toContain(part);
+    expect(q).not.toContain('way[railway]');
+    expect(q).not.toContain('way[footway=');
     expect(q).toContain('(1,2,3,4)');
   });
 });

@@ -5,11 +5,16 @@
 // `node scripts/city/fetch-overpass.mjs` (the query and fetch date are recorded in that script's header).
 //
 // Besides the grid, each building carries h (metres: height tag, else building:levels x 3.5, else a guess from its
-// footprint), minH, levels, part (a building:part, never painted on the grid), roof (flat, gabled, hipped or
-// pyramidal), colour and material (null when untagged). Each road carries lanes, cls (highway class) and name.
+// footprint: 12 m small, 20 m mid, 32 m large), minH, levels, part (a building:part, or a way tagged both building
+// and building:part; never painted on the grid), hasParts (an outline that contains the centroid of any part, so a
+// renderer should draw its parts and skip the outline), roof (flat, gabled, hipped or pyramidal; every other
+// roof:shape becomes flat), colour and material (null when untagged). Heights in feet ("120 ft", 120') become metres. Each road carries lanes, cls (highway class) and name.
 // Extra arrays: sidewalks [{pts, w}], crossings [{x, y, angle, w}] (angle = bearing of travel across the road,
 // degrees 0 to 179; w = length across the road), signalHeads [{x, y, dir}] (dir = bearing of the nearest road,
-// degrees 0 to 179), lamps and trees [[x, y]], rail [{pts, h}] (h = 8 m for a bridge or layer 1 and up, else 0).
+// degrees 0 to 179), lamps and trees [[x, y]], rail [{pts, h, elevated}] (elevated is true for a bridge or layer 1 and
+// up, with h its deck height: layer x 4 m, 8 m for a bridge with no layer; else false and 0). Rail is railway=rail,
+// light_rail or subway above ground (tunnels are skipped): the Chicago L is railway=subway, bridge=yes, layer=2,
+// so it is the elevated entries.
 // None of these change kind, oneway, signals, pickup or dropoff.
 //
 // Output coordinates are metres east/north of the bbox south-west corner, rounded to 0.1.
@@ -28,7 +33,16 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const EARTH_R = 6371000;
 const LEVEL_HEIGHT = 3.5; // metres per building:levels
 const ROOFS = ['flat', 'gabled', 'hipped', 'pyramidal'];
-const ELEVATED_RAIL_H = 8; // metres, deck height of a bridge or layer>=1 railway
+const ELEVATED_RAIL_H = 8; // metres, deck height of a bridge with no layer tag
+const ELEVATED_LAYER_H = 4; // metres per layer, deck height of a layer>=1 railway
+const RAIL_KINDS = ['rail', 'light_rail', 'subway'];
+const FT = 0.3048;
+// Footprint height guess (m2 breakpoints, metres), used when a building has no height or levels tag.
+const SMALL_AREA = 400;
+const MID_AREA = 1500;
+const SMALL_H = 12;
+const MID_H = 20;
+const LARGE_H = 32;
 const LANE_WIDTH = 3.5; // metres per lane, when the way has a lanes tag
 const MIN_HALF_CELLS = 0.75;
 
@@ -143,17 +157,27 @@ function onewayRows(roads, kind, cols, rows, cellM) {
 }
 
 // Metres: the height tag, else building:levels x 3.5, else a guess from the footprint area (m2).
+// Metres from a tag value: "12.5", "12.5 m", "120 ft", "120'" or "10'6\"" (NaN when unreadable).
+function metres(v) {
+  const s = String(v ?? '').trim();
+  const ftIn = s.match(/^(\d+(?:\.\d+)?)\s*'\s*(?:(\d+(?:\.\d+)?)\s*")?$/);
+  if (ftIn) return (parseFloat(ftIn[1]) + (parseFloat(ftIn[2]) || 0) / 12) * FT;
+  const ft = s.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot)$/i);
+  if (ft) return parseFloat(ft[1]) * FT;
+  return parseFloat(s);
+}
+
 export function estimateHeight(tags, footprintArea) {
-  const h = parseFloat(tags.height);
+  const h = metres(tags.height);
   if (h > 0) return round1(h);
   const levels = parseFloat(tags['building:levels']);
   if (levels > 0) return round1(levels * LEVEL_HEIGHT);
-  return footprintArea < 400 ? 9 : footprintArea < 1500 ? 18 : 30;
+  return footprintArea < SMALL_AREA ? SMALL_H : footprintArea < MID_AREA ? MID_H : LARGE_H;
 }
 
 // Everything a building carries beyond its ring, in a fixed key order. Missing tags are null (minH 0).
 function buildingOf(ring, tags, part) {
-  const minH = parseFloat(tags.min_height);
+  const minH = metres(tags.min_height);
   const levels = parseInt(tags['building:levels'], 10);
   return {
     ring,
@@ -161,6 +185,7 @@ function buildingOf(ring, tags, part) {
     minH: minH > 0 ? round1(minH) : 0,
     levels: levels > 0 ? levels : null,
     part,
+    hasParts: false,
     roof: ROOFS.includes(tags['roof:shape']) ? tags['roof:shape'] : 'flat',
     colour: tags['building:colour'] ?? null,
     material: tags['building:material'] ?? null,
@@ -244,6 +269,7 @@ export function convert(osm, config) {
 
   const wayCrossings = [];
   const lamps = [], trees = [], crossingNodes = [], crossings = [], rail = [];
+  const footprints = []; // every ring tagged building (even if also a part) paints the grid
   const buildings = [], roads = [], paths = [], sidewalks = [], parks = [], water = [], plazas = [], fences = [];
   const signalPts = [];
   for (const el of osm.elements) {
@@ -259,18 +285,22 @@ export function convert(osm, config) {
       for (const m of el.members ?? []) {
         if ((m.role !== 'outer' && m.role !== 'outline') || !m.geometry) continue;
         const ring = ringOf(m.geometry);
-        if (ring) buildings.push(buildingOf(ring, t, false));
+        if (ring) { buildings.push(buildingOf(ring, t, false)); footprints.push(ring); }
       }
     } else if (el.geometry) {
       const hw = (t.highway ?? '').replace('_link', '');
       if (!t.building && underground(t)) continue;
       if (t.building || t['building:part']) {
         const ring = ringOf(el.geometry);
-        if (ring) buildings.push(buildingOf(ring, t, !t.building));
-      } else if (t.railway === 'rail' || t.railway === 'light_rail') {
+        if (ring) {
+          buildings.push(buildingOf(ring, t, !!t['building:part']));
+          if (t.building) footprints.push(ring);
+        }
+      } else if (RAIL_KINDS.includes(t.railway)) {
         const pts = lineOf(el.geometry);
-        const up = (t.bridge && t.bridge !== 'no') || parseInt(t.layer, 10) > 0;
-        if (pts) rail.push({ pts, h: up ? ELEVATED_RAIL_H : 0 });
+        const layer = parseInt(t.layer, 10);
+        const elevated = (!!t.bridge && t.bridge !== 'no') || layer > 0;
+        if (pts) rail.push({ pts, h: elevated ? (layer > 0 ? layer * ELEVATED_LAYER_H : ELEVATED_RAIL_H) : 0, elevated });
       } else if (ROAD_WIDTH[hw]) {
         const pts = lineOf(el.geometry);
         if (pts) roads.push({ pts, w: roadWidth(t, hw), oneway: oneWayOf(t), lanes: parseInt(t.lanes, 10) > 0 ? parseInt(t.lanes, 10) : null, cls: hw, name: t.name ?? null });
@@ -301,8 +331,17 @@ export function convert(osm, config) {
     }
   }
 
+  // An outline that holds the centroid of any part is drawn by its parts.
+  const centroids = buildings.filter((b) => b.part).map((b) => {
+    const pts = b.ring.slice(0, -1);
+    return [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
+  });
+  for (const b of buildings) {
+    if (!b.part && centroids.some(([x, y]) => pointInRing(x, y, b.ring))) b.hasParts = true;
+  }
+
   const kind = rasterise(
-    { parks, plazas, paths: [...paths, ...sidewalks, ...wayCrossings.map((pts) => ({ pts, w: PATH_WIDTH.footway }))], roads, fences, water, buildings: buildings.filter((b) => !b.part).map((b) => b.ring) },
+    { parks, plazas, paths: [...paths, ...sidewalks, ...wayCrossings.map((pts) => ({ pts, w: PATH_WIDTH.footway }))], roads, fences, water, buildings: footprints },
     cols, rows, cellM,
   );
   const oneway = onewayRows(roads, kind, cols, rows, cellM);

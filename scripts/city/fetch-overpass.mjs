@@ -3,7 +3,7 @@
 // The export (scripts/city/data/) is over 3 MB, so it is git-ignored; rerun this to recreate it.
 // Last fetched 2026-11-18 with the query built by buildQuery() below, for bbox [41.874,-87.628,41.886,-87.617]:
 //   buildings and building:part ways, building relations, every highway way (so sidewalks and crossings), parks,
-//   water, waterways, fences and walls, grass, area:highway footways, railway ways, and the nodes for traffic
+//   water, waterways, fences and walls, grass, area:highway footways, rail, light_rail and subway ways (the Chicago L is railway=subway on a bridge), and the nodes for traffic
 //   signals, street lamps, trees and crossings, plus named artwork, towers and fountains; out geom.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -32,9 +32,7 @@ export function buildQuery([s, w, n, e]) {
   node[highway=street_lamp](${b});
   node[natural=tree](${b});
   node[highway=crossing](${b});
-  way[footway=sidewalk](${b});
-  way[footway=crossing](${b});
-  way[railway](${b});
+  way[railway~"^(rail|light_rail|subway)$"](${b});
   nwr[tourism=artwork][name](${b});
   nwr[man_made=tower][name](${b});
   nwr[amenity=fountain](${b});

@@ -711,6 +711,77 @@
      "lon": -87.628792
     }
    ]
+  },
+  {
+   "type": "way",
+   "id": 38,
+   "tags": {
+    "railway": "subway",
+    "bridge": "yes",
+    "layer": "2",
+    "operator": "Chicago Transit Authority",
+    "name": "Loop L"
+   },
+   "geometry": [
+    {
+     "lat": 41.8815,
+     "lon": -87.629
+    },
+    {
+     "lat": 41.8815,
+     "lon": -87.6285
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 39,
+   "tags": {
+    "railway": "subway",
+    "tunnel": "yes",
+    "layer": "-2"
+   },
+   "geometry": [
+    {
+     "lat": 41.8817,
+     "lon": -87.629
+    },
+    {
+     "lat": 41.8817,
+     "lon": -87.6285
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 40,
+   "tags": {
+    "building": "yes",
+    "building:part": "yes",
+    "height": "120 ft"
+   },
+   "geometry": [
+    {
+     "lat": 41.8814,
+     "lon": -87.6282
+    },
+    {
+     "lat": 41.8814,
+     "lon": -87.6281
+    },
+    {
+     "lat": 41.8815,
+     "lon": -87.6281
+    },
+    {
+     "lat": 41.8815,
+     "lon": -87.6282
+    },
+    {
+     "lat": 41.8814,
+     "lon": -87.6282
+    }
+   ]
   }
  ]
 }
