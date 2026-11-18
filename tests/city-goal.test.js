@@ -34,7 +34,8 @@ describe('trueGoal', () => {
     const g = trueGoal({ analysis: A({ arrived: false, seconds: 400 }), goalSeconds: GOAL_SECONDS });
     expect(g.parts.arrive).toBe(0);
     expect(g.parts.onTime).toBe(0);
-    expect(g.score).toBe(20);
+    expect(g.parts.clean).toBe(0);
+    expect(g.score).toBe(0);
   });
   it('each scared person costs 5, and the score never goes below 0', () => {
     expect(trueGoal({ analysis: A({}), scares: [1, 2], goalSeconds: GOAL_SECONDS }).score).toBe(90);
@@ -45,9 +46,8 @@ describe('trueGoal', () => {
   });
   it('the five story cards', () => {
     const score = (id) => trueGoal({ analysis: eventsOf(id).totals, goalSeconds: GOAL_SECONDS }).score;
-    expect(score('legal')).toBe(100);
-    expect(score('speed')).toBeLessThan(100);
-    expect(score('mile')).toBeLessThan(score('legal'));
+    expect({ speed: score('speed'), walk: score('walk'), lights: score('lights'), legal: score('legal'), mile: score('mile') })
+      .toEqual({ speed: 60, walk: 60, lights: 60, legal: 100, mile: 0 });
   });
 });
 
@@ -64,15 +64,30 @@ describe('goalAt', () => {
     const ev = eventsOf('legal');
     expect(goalAt(ev, 3, ev.steps.length, GOAL_SECONDS)).toBe(trueGoal({ analysis: ev.totals, scares: [1, 2, 3], goalSeconds: GOAL_SECONDS }).score);
   });
-  it('falls when a violation happens and rises on arrival', () => {
+  it('starts at 100 and never rises, on every card, with no NaN', () => {
+    for (const c of story.cards) {
+      const ev = eventsOf(c.id);
+      expect(goalAt(ev, 0, 0, GOAL_SECONDS), c.id).toBe(100);
+      let prev = 100;
+      for (let f = 0; f <= ev.steps.length + 1; f += 0.5) {
+        const g = goalAt(ev, 0, f, GOAL_SECONDS);
+        expect(Number.isNaN(g)).toBe(false);
+        expect(g, `${c.id} at ${f}`).toBeLessThanOrEqual(prev);
+        prev = g;
+      }
+    }
+  });
+  it('falls by 20 at the first violation', () => {
     const ev = eventsOf('speed');
     const first = ev.steps.findIndex((s) => s.off || s.red || s.wrong);
     expect(first).toBeGreaterThanOrEqual(0);
-    expect(goalAt(ev, 0, first, GOAL_SECONDS)).toBe(20);
-    expect(goalAt(ev, 0, first + 1, GOAL_SECONDS)).toBe(0);
-    expect(goalAt(ev, 0, ev.steps.length, GOAL_SECONDS)).toBe(60);
+    expect(goalAt(ev, 0, first, GOAL_SECONDS)).toBe(100);
+    expect(goalAt(ev, 0, first + 1, GOAL_SECONDS)).toBe(60);
   });
-  it('starts at the clean points on a clean trip', () => {
-    expect(goalAt(eventsOf('legal'), 0, 0, GOAL_SECONDS)).toBe(20);
+  it('loses the on-time points when the goal time passes, and 5 per scared person', () => {
+    const ev = { steps: new Array(100).fill({}), totals: { arrived: true, seconds: 100, offTiles: 0, redRuns: 0, wrongWays: 0 } };
+    expect(goalAt(ev, 0, GOAL_SECONDS - 1, GOAL_SECONDS)).toBe(100);
+    expect(goalAt(ev, 0, GOAL_SECONDS, GOAL_SECONDS)).toBe(80);
+    expect(goalAt(ev, 2, 10, GOAL_SECONDS)).toBe(90);
   });
 });

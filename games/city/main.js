@@ -13,7 +13,7 @@ import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
 import { tripEvents, tagsFor, foldTag } from './events.js';
 import { driveTrack } from './drive.js';
-import { meterAt, meterText, barFraction } from './meter.js';
+import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
 import { createSound } from './sound.js';
 import { stepRate, rateRows } from './rates.js';
@@ -44,6 +44,7 @@ let hud = null; // { events, route, done } while a trip is on screen
 function showMeter(on) { showRaceMeters(false); $('meter').hidden = !on; $('meterGoal').hidden = !on; $('minimap').hidden = !on; }
 const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; } // only touch the DOM when the text changes
 $('mapGoal').textContent = goalLine();
+const setBar = (el, x) => { if (el._x !== x) { el._x = x; el.style.transform = `scaleX(${x})`; } } // only write the style when the fraction changes
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
 function popTag(tag, at, i) {
   const prev = hud.lastTag?.[tag.text];
@@ -63,10 +64,10 @@ function hudFrame(state, at) {
   const m = meterAt(hud.events, state.progress);
   setText($('meterTotal'), meterText(m.total));
   setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`);
-  $('meterBar').style.transform = `scaleX(${barFraction(m.total)})`;
+  setBar($('meterBar'), payFraction(m.total, hud.range));
   const g = goalAt(hud.events, [], state.progress, GOAL_SECONDS); // no pedestrians yet, so no scares
   setText($('meterGoalTotal'), String(g));
-  $('meterGoalBar').style.transform = `scaleX(${barFraction(g)})`;
+  setBar($('meterGoalBar'), barFraction(g));
   const c = $('minimap');
   drawMinimap(c.getContext('2d'), minimapModel(world, hud.route, state.progress, hud.events), c.width);
   for (; hud.done < Math.min(state.stepIndex, hud.events.steps.length); hud.done++) {
@@ -78,7 +79,7 @@ function hudFrame(state, at) {
   }
 }
 function startHud(events, route, rewards_) {
-  hud = { events, route, rewards: { ...rewards_ }, done: 0 };
+  hud = { events, route, rewards: { ...rewards_ }, done: 0, range: payRange(events) };
   showMeter(stage.ready);
   hudFrame({ progress: 0, stepIndex: 0 }, null);
 }

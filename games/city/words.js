@@ -6,7 +6,7 @@ export const LESSON = 'The reward is the only thing the taxi wants: it does what
 export const INFO = {
   reward: 'The reward is everything the taxi cares about. Each slider is money it earns or loses on a trip, and it learns to make the total as big as it can.',
   goal: `Fix the taxi: write a reward that gets a legal trip under ${GOAL_SECONDS} seconds. Legal means no park, no red lights, no wrong way.`,
-  meters: 'Pay is what the taxi earns under your reward. What the city wanted is the real goal: 60 for arriving, 20 for being on time, 20 for a clean trip, minus 5 for each person scared. When the two drift apart, the taxi is doing what you paid for, not what you meant.',
+  meters: 'Pay is what the taxi earns under your reward. What the city wanted is the real goal: 60 for arriving, 20 for being on time, 20 for a clean trip that arrives, minus 5 for each person scared. During the drive it shows the best score still possible, so it only falls. When the two drift apart, the taxi is doing what you paid for, not what you meant.',
   map: 'The map is a few blocks of the real Chicago Loop, from OpenStreetMap. The taxi drives on streets, and cuts across parks if it pays.',
 };
 
