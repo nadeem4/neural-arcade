@@ -63,7 +63,8 @@
    "tags": {
     "highway": "residential",
     "oneway": "-1",
-    "name": "Back Lane"
+    "name": "Back Lane",
+    "lanes": "2"
    },
    "geometry": [
     {
@@ -238,7 +239,8 @@
    "id": 12,
    "tags": {
     "building": "yes",
-    "building:levels": "4"
+    "building:levels": "4",
+    "roof:shape": "gabled"
    },
    "geometry": [
     {
@@ -546,6 +548,240 @@
     "man_made": "tower",
     "name": "Other Tower"
    }
+  },
+  {
+   "type": "way",
+   "id": 27,
+   "tags": {
+    "building:part": "yes",
+    "height": "20",
+    "min_height": "10",
+    "roof:shape": "hipped",
+    "building:colour": "#aa5533",
+    "building:material": "brick"
+   },
+   "geometry": [
+    {
+     "lat": 41.881079,
+     "lon": -87.628261
+    },
+    {
+     "lat": 41.881079,
+     "lon": -87.628116
+    },
+    {
+     "lat": 41.881187,
+     "lon": -87.628116
+    },
+    {
+     "lat": 41.881187,
+     "lon": -87.628261
+    },
+    {
+     "lat": 41.881079,
+     "lon": -87.628261
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 28,
+   "tags": {
+    "highway": "footway",
+    "footway": "crossing"
+   },
+   "geometry": [
+    {
+     "lat": 41.88054,
+     "lon": -87.628792
+    },
+    {
+     "lat": 41.880648,
+     "lon": -87.628792
+    }
+   ]
+  },
+  {
+   "type": "node",
+   "id": 29,
+   "tags": {
+    "highway": "crossing"
+   },
+   "lat": 41.88036,
+   "lon": -87.628188
+  },
+  {
+   "type": "node",
+   "id": 30,
+   "tags": {
+    "highway": "street_lamp"
+   },
+   "lat": 41.880989,
+   "lon": -87.629275
+  },
+  {
+   "type": "node",
+   "id": 31,
+   "tags": {
+    "highway": "street_lamp"
+   },
+   "lat": 41.882698,
+   "lon": -87.626376
+  },
+  {
+   "type": "node",
+   "id": 32,
+   "tags": {
+    "natural": "tree"
+   },
+   "lat": 41.881079,
+   "lon": -87.629034
+  },
+  {
+   "type": "node",
+   "id": 33,
+   "tags": {
+    "natural": "tree"
+   },
+   "lat": 41.881124,
+   "lon": -87.62901
+  },
+  {
+   "type": "node",
+   "id": 34,
+   "tags": {
+    "natural": "tree"
+   },
+   "lat": 41.883597,
+   "lon": -87.625168
+  },
+  {
+   "type": "way",
+   "id": 35,
+   "tags": {
+    "railway": "rail",
+    "bridge": "yes"
+   },
+   "geometry": [
+    {
+     "lat": 41.88018,
+     "lon": -87.63
+    },
+    {
+     "lat": 41.88018,
+     "lon": -87.628551
+    },
+    {
+     "lat": 41.880216,
+     "lon": -87.627222
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 36,
+   "tags": {
+    "railway": "rail"
+   },
+   "geometry": [
+    {
+     "lat": 41.88009,
+     "lon": -87.63
+    },
+    {
+     "lat": 41.88009,
+     "lon": -87.628792
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 37,
+   "tags": {
+    "railway": "rail",
+    "tunnel": "yes"
+   },
+   "geometry": [
+    {
+     "lat": 41.880045,
+     "lon": -87.63
+    },
+    {
+     "lat": 41.880045,
+     "lon": -87.628792
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 38,
+   "tags": {
+    "railway": "subway",
+    "bridge": "yes",
+    "layer": "2",
+    "operator": "Chicago Transit Authority",
+    "name": "Loop L"
+   },
+   "geometry": [
+    {
+     "lat": 41.8815,
+     "lon": -87.629
+    },
+    {
+     "lat": 41.8815,
+     "lon": -87.6285
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 39,
+   "tags": {
+    "railway": "subway",
+    "tunnel": "yes",
+    "layer": "-2"
+   },
+   "geometry": [
+    {
+     "lat": 41.8817,
+     "lon": -87.629
+    },
+    {
+     "lat": 41.8817,
+     "lon": -87.6285
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 40,
+   "tags": {
+    "building": "yes",
+    "building:part": "yes",
+    "height": "120 ft"
+   },
+   "geometry": [
+    {
+     "lat": 41.8814,
+     "lon": -87.6282
+    },
+    {
+     "lat": 41.8814,
+     "lon": -87.6281
+    },
+    {
+     "lat": 41.8815,
+     "lon": -87.6281
+    },
+    {
+     "lat": 41.8815,
+     "lon": -87.6282
+    },
+    {
+     "lat": 41.8814,
+     "lon": -87.6282
+    }
+   ]
   }
  ]
 }
