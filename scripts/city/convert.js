@@ -4,6 +4,14 @@
 // The input (default scripts/city/data/chicago-overpass.json) is git-ignored; it is produced by
 // `node scripts/city/fetch-overpass.mjs` (the query and fetch date are recorded in that script's header).
 //
+// Besides the grid, each building carries h (metres: height tag, else building:levels x 3.5, else a guess from its
+// footprint), minH, levels, part (a building:part, never painted on the grid), roof (flat, gabled, hipped or
+// pyramidal), colour and material (null when untagged). Each road carries lanes, cls (highway class) and name.
+// Extra arrays: sidewalks [{pts, w}], crossings [{x, y, angle, w}] (angle = bearing of travel across the road,
+// degrees 0 to 179; w = length across the road), signalHeads [{x, y, dir}] (dir = bearing of the nearest road,
+// degrees 0 to 179), lamps and trees [[x, y]], rail [{pts, h}] (h = 8 m for a bridge or layer 1 and up, else 0).
+// None of these change kind, oneway, signals, pickup or dropoff.
+//
 // Output coordinates are metres east/north of the bbox south-west corner, rounded to 0.1.
 // Grid: cell (col, row) has its centre at x = (col + 0.5) * cellM, y = (rows - 1 - row + 0.5) * cellM,
 // so row 0 is the north edge (north = row - 1, as the sim expects).
@@ -18,8 +26,9 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const EARTH_R = 6371000;
-const DEFAULT_HEIGHT = 12; // metres, when a building has no height or levels
 const LEVEL_HEIGHT = 3.5; // metres per building:levels
+const ROOFS = ['flat', 'gabled', 'hipped', 'pyramidal'];
+const ELEVATED_RAIL_H = 8; // metres, deck height of a bridge or layer>=1 railway
 const LANE_WIDTH = 3.5; // metres per lane, when the way has a lanes tag
 const MIN_HALF_CELLS = 0.75;
 
@@ -133,12 +142,48 @@ function onewayRows(roads, kind, cols, rows, cellM) {
   return out.map((row) => row.join(''));
 }
 
-function buildingHeight(tags) {
+// Metres: the height tag, else building:levels x 3.5, else a guess from the footprint area (m2).
+export function estimateHeight(tags, footprintArea) {
   const h = parseFloat(tags.height);
   if (h > 0) return round1(h);
   const levels = parseFloat(tags['building:levels']);
   if (levels > 0) return round1(levels * LEVEL_HEIGHT);
-  return DEFAULT_HEIGHT;
+  return footprintArea < 400 ? 9 : footprintArea < 1500 ? 18 : 30;
+}
+
+// Everything a building carries beyond its ring, in a fixed key order. Missing tags are null (minH 0).
+function buildingOf(ring, tags, part) {
+  const minH = parseFloat(tags.min_height);
+  const levels = parseInt(tags['building:levels'], 10);
+  return {
+    ring,
+    h: estimateHeight(tags, ringArea(ring)),
+    minH: minH > 0 ? round1(minH) : 0,
+    levels: levels > 0 ? levels : null,
+    part,
+    roof: ROOFS.includes(tags['roof:shape']) ? tags['roof:shape'] : 'flat',
+    colour: tags['building:colour'] ?? null,
+    material: tags['building:material'] ?? null,
+  };
+}
+
+// Compass bearing of the segment a to b in degrees, folded to [0, 180) (x east, y north).
+const bearing180 = (a, b) => Math.round((((Math.atan2(b[0] - a[0], b[1] - a[1]) * 180) / Math.PI) % 180 + 180) % 180) % 180;
+
+// The road segment nearest a point: its bearing and the road's width.
+function nearestRoad(roads, x, y) {
+  let best = null;
+  let bestD = Infinity;
+  for (const road of roads) {
+    for (let i = 0; i + 1 < road.pts.length; i++) {
+      const d = distToSegment(x, y, road.pts[i], road.pts[i + 1]);
+      if (d < bestD) {
+        bestD = d;
+        best = { dir: bearing180(road.pts[i], road.pts[i + 1]), w: road.w };
+      }
+    }
+  }
+  return best;
 }
 
 function roadWidth(tags, cls) {
@@ -183,6 +228,7 @@ export function convert(osm, config) {
   const cols = Math.ceil(width / cellM);
   const rows = Math.ceil(height / cellM);
   const toPts = (geom) => geom.map((p) => project(p.lat, p.lon, bbox));
+  const onMap = (x, y) => x >= 0 && x <= width && y >= 0 && y <= height;
   const touchesMap = (pts) =>
     Math.max(...pts.map((p) => p[0])) >= 0 && Math.min(...pts.map((p) => p[0])) <= width &&
     Math.max(...pts.map((p) => p[1])) >= 0 && Math.min(...pts.map((p) => p[1])) <= height;
@@ -196,37 +242,49 @@ export function convert(osm, config) {
     return pts.length >= 2 && touchesMap(pts) ? pts : null;
   };
 
+  const wayCrossings = [];
+  const lamps = [], trees = [], crossingNodes = [], crossings = [], rail = [];
   const buildings = [], roads = [], paths = [], sidewalks = [], parks = [], water = [], plazas = [], fences = [];
   const signalPts = [];
   for (const el of osm.elements) {
     const t = el.tags ?? {};
     if (el.type === 'node') {
-      if (t.highway === 'traffic_signals') signalPts.push(project(el.lat, el.lon, bbox));
+      const p = project(el.lat, el.lon, bbox);
+      if (t.highway === 'traffic_signals') signalPts.push(p);
+      else if (t.highway === 'street_lamp' && onMap(...p)) lamps.push(p);
+      else if (t.natural === 'tree' && onMap(...p)) trees.push(p);
+      else if (t.highway === 'crossing' && onMap(...p)) crossingNodes.push(p);
     } else if (el.type === 'relation') {
       if (!t.building) continue;
       for (const m of el.members ?? []) {
         if ((m.role !== 'outer' && m.role !== 'outline') || !m.geometry) continue;
         const ring = ringOf(m.geometry);
-        if (ring) buildings.push({ ring, h: buildingHeight(t) });
+        if (ring) buildings.push(buildingOf(ring, t, false));
       }
     } else if (el.geometry) {
       const hw = (t.highway ?? '').replace('_link', '');
       if (!t.building && underground(t)) continue;
-      if (t.building) {
+      if (t.building || t['building:part']) {
         const ring = ringOf(el.geometry);
-        if (ring) buildings.push({ ring, h: buildingHeight(t) });
+        if (ring) buildings.push(buildingOf(ring, t, !t.building));
+      } else if (t.railway === 'rail' || t.railway === 'light_rail') {
+        const pts = lineOf(el.geometry);
+        const up = (t.bridge && t.bridge !== 'no') || parseInt(t.layer, 10) > 0;
+        if (pts) rail.push({ pts, h: up ? ELEVATED_RAIL_H : 0 });
       } else if (ROAD_WIDTH[hw]) {
         const pts = lineOf(el.geometry);
-        if (pts) roads.push({ pts, w: roadWidth(t, hw), oneway: oneWayOf(t) });
+        if (pts) roads.push({ pts, w: roadWidth(t, hw), oneway: oneWayOf(t), lanes: parseInt(t.lanes, 10) > 0 ? parseInt(t.lanes, 10) : null, cls: hw, name: t.name ?? null });
       } else if (PATH_WIDTH[hw] && t.area === 'yes') {
         const ring = ringOf(el.geometry);
         if (ring) plazas.push(ring);
       } else if (PATH_WIDTH[hw]) {
         const pts = lineOf(el.geometry);
         if (!pts) continue;
-        // sidewalks and crossings shape the grid but are not emitted (keeps chicago.json small)
-        if (t.footway === 'sidewalk' || t.footway === 'crossing') sidewalks.push({ pts, w: PATH_WIDTH[hw] });
-        else paths.push({ pts, w: PATH_WIDTH[hw] });
+        // sidewalks and crossings shape the grid (as footpaths) and are emitted separately below
+        if (t.footway === 'sidewalk') sidewalks.push({ pts, w: PATH_WIDTH[hw] });
+        else if (t.footway === 'crossing') {
+          wayCrossings.push(pts);
+        } else paths.push({ pts, w: PATH_WIDTH[hw] });
       } else if (t['area:highway'] === 'footway') {
         const ring = ringOf(el.geometry);
         if (ring) plazas.push(ring);
@@ -244,13 +302,12 @@ export function convert(osm, config) {
   }
 
   const kind = rasterise(
-    { parks, plazas, paths: [...paths, ...sidewalks], roads, fences, water, buildings: buildings.map((b) => b.ring) },
+    { parks, plazas, paths: [...paths, ...sidewalks, ...wayCrossings.map((pts) => ({ pts, w: PATH_WIDTH.footway }))], roads, fences, water, buildings: buildings.filter((b) => !b.part).map((b) => b.ring) },
     cols, rows, cellM,
   );
   const oneway = onewayRows(roads, kind, cols, rows, cellM);
 
   const cellOf = (x, y) => [Math.floor(x / cellM), rows - 1 - Math.floor(y / cellM)];
-  const onMap = (x, y) => x >= 0 && x <= width && y >= 0 && y <= height;
   const roadCell = (label, p) => {
     const [x, y] = project(p.lat, p.lon, bbox);
     if (!onMap(x, y)) throw new Error(`${label} (${p.lat}, ${p.lon}) is outside the bbox`);
@@ -288,6 +345,25 @@ export function convert(osm, config) {
   }
   signals.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
 
+  // Crossings: centre, direction of travel across the road (bearing, 0 to 179) and length across it.
+  // Mapped crossing ways come first; a crossing node within 6 m of one is the same crossing.
+  for (const pts of wayCrossings) {
+    const a = pts[0];
+    const b = pts[pts.length - 1];
+    crossings.push({ x: round1((a[0] + b[0]) / 2), y: round1((a[1] + b[1]) / 2), angle: bearing180(a, b), w: round1(lineLength(pts)) });
+  }
+  for (const [x, y] of crossingNodes) {
+    if (crossings.some((c) => Math.hypot(c.x - x, c.y - y) < 6)) continue;
+    const road = nearestRoad(roads, x, y);
+    if (road) crossings.push({ x, y, angle: (road.dir + 90) % 180, w: road.w });
+  }
+  // Signal heads: every mapped signal on the map, with the bearing of the road beside it.
+  const signalHeads = [];
+  for (const [x, y] of signalPts) {
+    const road = onMap(x, y) && nearestRoad(roads, x, y);
+    if (road) signalHeads.push({ x, y, dir: road.dir });
+  }
+
   const landmarks = [];
   for (const name of config.landmarks ?? []) {
     const el = osm.elements.find((e) => e.tags?.name === name);
@@ -316,6 +392,12 @@ export function convert(osm, config) {
     dropoff,
     buildings,
     roads,
+    sidewalks,
+    crossings,
+    signalHeads,
+    lamps,
+    trees,
+    rail,
     parks: emitParks,
     paths: emitPaths,
     water,

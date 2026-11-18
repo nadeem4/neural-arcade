@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-import { convert, project, rasterise } from '../scripts/city/convert.js';
+import { convert, project, rasterise, estimateHeight } from '../scripts/city/convert.js';
 
 const config = JSON.parse(
   readFileSync(new URL('../scripts/city/chicago.config.json', import.meta.url), 'utf8'),
@@ -70,6 +70,8 @@ const miniConfig = (over = {}) => ({
   lightPeriod: 8,
   ...over,
 });
+const ringAreaOf = (b) =>
+  Math.abs(b.ring.reduce((s, p, i) => s + p[0] * b.ring[(i + 1) % b.ring.length][1] - b.ring[(i + 1) % b.ring.length][0] * p[1], 0)) / 2;
 const kindAt = (city, c, r) => city.kind[r][c];
 const buildingAt = (city, x, y) =>
   city.buildings.find((b) => {
@@ -115,7 +117,8 @@ describe('convert', () => {
     expect(JSON.stringify(again)).toBe(JSON.stringify(city));
     expect(Object.keys(city)).toEqual([
       'id', 'name', 'bbox', 'cellM', 'lightPeriod', 'cols', 'rows', 'kind', 'oneway', 'signals', 'pickup',
-      'dropoff', 'buildings', 'roads', 'parks', 'paths', 'water', 'landmarks', 'size',
+      'dropoff', 'buildings', 'roads', 'sidewalks', 'crossings', 'signalHeads', 'lamps', 'trees', 'rail',
+      'parks', 'paths', 'water', 'landmarks', 'size',
     ]);
   });
 
@@ -157,10 +160,79 @@ describe('convert', () => {
     expect(kindAt(city, 10, 9)).toBe('f'); // footway over the park
   });
 
-  it('gives buildings a height: height tag, else levels * 3.5, else 12 m', () => {
+  it('estimates height from height, levels, then footprint', () => {
+    expect(estimateHeight({ height: '30' }, 100)).toBe(30);
+    expect(estimateHeight({ height: '12.5 m' }, 100)).toBe(12.5);
+    expect(estimateHeight({ 'building:levels': '4' }, 5000)).toBe(14);
+    expect(estimateHeight({}, 100)).toBe(9);
+    expect(estimateHeight({}, 800)).toBe(18);
+    expect(estimateHeight({}, 5000)).toBe(30);
     expect(buildingAt(city, 150, 126).h).toBe(30);
     expect(buildingAt(city, 215, 170).h).toBe(14); // 4 levels
-    expect(buildingAt(city, 80, 30).h).toBe(12); // neither tag
+    expect(buildingAt(city, 80, 30).h).toBe(estimateHeight({}, ringAreaOf(buildingAt(city, 80, 30))));
+  });
+
+  it('keeps building tags and marks parts', () => {
+    const b2 = buildingAt(city, 215, 170);
+    expect(b2).toMatchObject({ levels: 4, roof: 'gabled', part: false, minH: 0, colour: null, material: null });
+    expect(Object.keys(b2)).toEqual(['ring', 'h', 'minH', 'levels', 'part', 'roof', 'colour', 'material']);
+    const part = city.buildings.find((b) => b.part);
+    expect(part).toMatchObject({
+      h: 20, minH: 10, levels: null, part: true, roof: 'hipped', colour: '#aa5533', material: 'brick',
+    });
+    expect(city.buildings.filter((b) => b.part)).toHaveLength(1);
+    expect(buildingAt(city, 80, 30)).toMatchObject({ roof: 'flat', part: false });
+  });
+
+  it('parts do not change the grid', () => {
+    expect(kindAt(city, 12, 9)).toBe('b');
+    expect(kindAt(city, 12, 10)).toBe('r');
+  });
+
+  it('roads carry lanes class and name', () => {
+    const named = city.roads.find((r) => r.name === 'Test Ave');
+    expect(named).toMatchObject({ cls: 'primary', lanes: null, w: 14 });
+    expect(Object.keys(named)).toEqual(['pts', 'w', 'oneway', 'lanes', 'cls', 'name']);
+    const lane = city.roads.find((r) => r.name === 'Back Lane');
+    expect(lane).toMatchObject({ cls: 'residential', lanes: 2, w: 7, oneway: -1 });
+    expect(city.roads.find((r) => r.cls === 'service')).toMatchObject({ name: null });
+  });
+
+  it('emits sidewalks as lines with a width', () => {
+    expect(city.sidewalks).toHaveLength(1);
+    expect(city.sidewalks[0]).toMatchObject({ w: 2 });
+    expect(city.sidewalks[0].pts).toHaveLength(2);
+  });
+
+  it('emits crossings from ways and nodes: centre, angle across the road, length', () => {
+    expect(city.crossings).toHaveLength(2);
+    const [fromWay, fromNode] = city.crossings;
+    expect(fromWay.x).toBeCloseTo(100, 0);
+    expect(fromWay.y).toBeCloseTo(66, 0);
+    expect(fromWay.angle).toBe(0); // runs north-south
+    expect(fromWay.w).toBeCloseTo(12, 0);
+    expect(fromNode.x).toBeCloseTo(150, 0);
+    expect(fromNode.y).toBeCloseTo(40, 0);
+    expect(fromNode.angle).toBe(90); // road B runs north-south, so the crossing runs east-west
+    expect(fromNode.w).toBe(12);
+  });
+
+  it('signal heads carry the bearing of the nearest road', () => {
+    expect(city.signalHeads).toHaveLength(2);
+    for (const h of city.signalHeads) expect(Object.keys(h)).toEqual(['x', 'y', 'dir']);
+    expect(city.signalHeads[0].dir).toBe(0); // off-road signal nearest road B (north-south)
+  });
+
+  it('lamps and trees keep only points on the map', () => {
+    expect(city.lamps).toEqual([[60, 110]]);
+    expect(city.trees).toEqual([[80, 120], [82, 125]]);
+  });
+
+  it('rail keeps surface and elevated lines, skips tunnels, h is the deck height', () => {
+    expect(city.rail).toHaveLength(2);
+    expect(city.rail[0]).toMatchObject({ h: 8 });
+    expect(city.rail[0].pts).toHaveLength(3);
+    expect(city.rail[1]).toMatchObject({ h: 0 });
   });
 
   it('closes unclosed rings and turns multipolygon outer rings into buildings', () => {
@@ -170,8 +242,8 @@ describe('convert', () => {
     const unclosed = buildingAt(city, 175, 30);
     expect(unclosed.ring).toHaveLength(5);
     const multi = buildingAt(city, 112, 207);
-    expect(multi.h).toBe(12);
-    expect(city.buildings).toHaveLength(5); // the inner ring is not a building
+    expect(multi.h).toBe(estimateHeight({}, ringAreaOf(multi)));
+    expect(city.buildings.filter((b) => !b.part)).toHaveLength(5); // the inner ring is not a building
   });
 
   it('keeps roads and footpaths as vector geometry', () => {
@@ -269,10 +341,22 @@ describe('convert', () => {
 
 describe('committed chicago.json', () => {
   const file = new URL('../games/city/chicago.json', import.meta.url);
-  it('chicago.json is under 300 KB, parses and keeps the config light period', () => {
-    expect(statSync(file).size).toBeLessThan(300 * 1024);
+  it('chicago.json is under 500 KB, parses and keeps the config light period', () => {
+    expect(statSync(file).size).toBeLessThan(500 * 1024);
     const city = JSON.parse(readFileSync(file, 'utf8'));
     expect(city.kind).toHaveLength(city.rows);
     expect(city.lightPeriod).toBe(config.lightPeriod);
+  });
+});
+
+describe('fetch-overpass buildQuery', () => {
+  it('asks for building parts, rail, lamps, trees, crossings and sidewalks', async () => {
+    const { buildQuery } = await import('../scripts/city/fetch-overpass.mjs');
+    const q = buildQuery([1, 2, 3, 4]);
+    for (const part of [
+      'way["building:part"]', 'way[railway]', 'node[highway=street_lamp]', 'node[natural=tree]',
+      'node[highway=crossing]', 'way[footway=sidewalk]', 'way[footway=crossing]',
+    ]) expect(q).toContain(part);
+    expect(q).toContain('(1,2,3,4)');
   });
 });
