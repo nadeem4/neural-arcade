@@ -53,17 +53,135 @@ export function uncoveredRoadCells(city) {
   return out;
 }
 
-// All the asphalt: a ribbon per road and a square for each road cell the ribbons miss.
+const nearestOnRoads = (x, y, roads) => {
+  let best = null, bd = Infinity;
+  for (const r of roads) for (let k = 0; k < r.pts.length - 1; k++) {
+    const [p, q] = [r.pts[k], r.pts[k + 1]], dx = q[0] - p[0], dy = q[1] - p[1], l2 = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, ((x - p[0]) * dx + (y - p[1]) * dy) / l2)), px = p[0] + dx * t, py = p[1] + dy * t, d = Math.hypot(x - px, y - py);
+    if (d < bd) { bd = d; best = [px, py]; }
+  }
+  return best;
+};
+
+// A one-lane strip for each uncovered road cell, from the nearest point on a road to a little past the cell centre. Cached per city.
+const PATCH_W = 7, PATCH_OVER = 2, patchCache = new WeakMap();
+export function roadPatches(city) {
+  if (patchCache.has(city)) return patchCache.get(city);
+  const out = [];
+  for (const [c, r] of uncoveredRoadCells(city)) {
+    const [cx, cz] = cellCentre(c, r, city), cy = -cz, q = nearestOnRoads(cx, cy, city.roads ?? []);
+    if (!q) continue;
+    const d = Math.hypot(cx - q[0], cy - q[1]) || 1;
+    out.push({ pts: [q, [cx + ((cx - q[0]) / d) * PATCH_OVER, cy + ((cy - q[1]) / d) * PATCH_OVER]], w: PATCH_W });
+  }
+  patchCache.set(city, out);
+  return out;
+}
+
+// All the asphalt: a ribbon per road and a one-lane strip for each road cell the ribbons miss.
 export function buildAsphalt(city, y = Y_ROAD) {
   const positions = [], indices = [];
   for (const r of city.roads ?? []) ribbon(r.pts, roadWidth(r) / 2, y, positions, indices);
-  const h = city.cellM / 2;
-  for (const [c, r] of uncoveredRoadCells(city)) {
-    const [x, z] = cellCentre(c, r, city), base = positions.length / 3;
-    positions.push(x - h, y, z - h, x + h, y, z - h, x + h, y, z + h, x - h, y, z + h);
-    indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-  }
+  for (const r of roadPatches(city)) ribbon(r.pts, r.w / 2, y, positions, indices);
   return finishFlat(positions, indices);
+}
+
+// Sidewalks with the parts removed that run inside a road ribbon, or that would cover a road cell centre (where the taxi drives).
+// Each walk is sampled every STEP_W metres; samples that fail are dropped and the rest are rejoined into pieces of two or more points.
+const STEP_W = 2, WALK_MARGIN = 1, HASH = 32;
+export function clipWalks(walks, city) {
+  const roads = [...(city.roads ?? []), ...roadPatches(city)], hash = new Map();
+  roads.forEach((r, i) => {
+    const hw = roadWidth(r) / 2;
+    for (let k = 0; k < r.pts.length - 1; k++) {
+      const [p, q] = [r.pts[k], r.pts[k + 1]];
+      for (let gx = Math.floor((Math.min(p[0], q[0]) - hw) / HASH); gx <= Math.floor((Math.max(p[0], q[0]) + hw) / HASH); gx++) {
+        for (let gy = Math.floor((Math.min(p[1], q[1]) - hw) / HASH); gy <= Math.floor((Math.max(p[1], q[1]) + hw) / HASH); gy++) {
+          const key = gx * 100003 + gy;
+          if (!hash.has(key)) hash.set(key, []);
+          hash.get(key).push([i, k]);
+        }
+      }
+    }
+  });
+  const cellHash = new Map();
+  for (let r = 0; r < city.rows; r++) for (let c = 0; c < city.cols; c++) {
+    if (city.kind[r][c] !== 'r') continue;
+    const [x, z] = cellCentre(c, r, city), key = c * 100003 + (city.rows - 1 - r);
+    cellHash.set(key, [x, -z]);
+  }
+  const blocked = (x, y, w) => {
+    for (const [i, k] of hash.get(Math.floor(x / HASH) * 100003 + Math.floor(y / HASH)) ?? []) {
+      if (segDist(x, y, roads[i].pts[k], roads[i].pts[k + 1]) < roadWidth(roads[i]) / 2) return true;
+    }
+    const gx = Math.floor(x / city.cellM), gy = Math.floor(y / city.cellM), reach = w / 2 + WALK_MARGIN;
+    for (let i = gx - 1; i <= gx + 1; i++) for (let j = gy - 1; j <= gy + 1; j++) {
+      const c = cellHash.get(i * 100003 + j);
+      if (c && Math.hypot(x - c[0], y - c[1]) < reach) return true;
+    }
+    return false;
+  };
+  const out = [];
+  for (const walk of walks ?? []) {
+    if (!walk.pts?.length) continue;
+    const s = [walk.pts[0]];
+    for (let i = 0; i < walk.pts.length - 1; i++) {
+      const [p, q] = [walk.pts[i], walk.pts[i + 1]], n = Math.max(1, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / STEP_W));
+      for (let k = 1; k <= n; k++) s.push(k === n ? q : [p[0] + ((q[0] - p[0]) * k) / n, p[1] + ((q[1] - p[1]) * k) / n]);
+    }
+    let run = [];
+    const flush = () => { if (run.length > 1) out.push({ ...walk, pts: run }); run = []; };
+    for (const pt of s) { if (blocked(pt[0], pt[1], walk.w)) flush(); else run.push(pt); }
+    flush();
+  }
+  return out;
+}
+
+// A white stop line across the approach lanes, STOP_BACK metres before each signal along every road through (or ending at) it.
+// Right-hand traffic: a two-way road gets the right-hand half for each direction, a one-way road the full width. A signal with no road within STOP_MATCH metres gets none.
+const STOP_BACK = 8, STOP_MATCH = 3, STOP_T = 0.5;
+const pointAlong = (pts, at) => { // the point `at` metres along the polyline, and the travel direction there
+  let run = 0;
+  for (let k = 0; k < pts.length - 1; k++) {
+    const l = Math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]);
+    if (l && (at <= run + l || k === pts.length - 2)) {
+      const f = Math.min(1, Math.max(0, (at - run) / l));
+      return [pts[k][0] + (pts[k + 1][0] - pts[k][0]) * f, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * f, (pts[k + 1][0] - pts[k][0]) / l, (pts[k + 1][1] - pts[k][1]) / l];
+    }
+    run += l;
+  }
+  return null;
+};
+export function buildStopLines(heads, roads) {
+  const P = [], I = [];
+  for (const h of heads ?? []) {
+    for (const r of roads) {
+      const pts = r.pts;
+      let arc = 0, bd = Infinity, total = 0;
+      for (let k = 0; k < pts.length - 1; k++) {
+        const [p, q] = [pts[k], pts[k + 1]], dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy), l2 = l * l || 1;
+        const t = Math.max(0, Math.min(1, ((h.x - p[0]) * dx + (h.y - p[1]) * dy) / l2)), d = Math.hypot(h.x - p[0] - dx * t, h.y - p[1] - dy * t);
+        if (d < bd) { bd = d; arc = total + l * t; }
+        total += l;
+      }
+      if (bd > STOP_MATCH) continue;
+      const hw = roadWidth(r) / 2, oneWay = r.oneway === 1 || r.oneway === -1;
+      for (const dir of [1, -1]) { // travelling along the stored points (1) or against them (-1)
+        if ((r.oneway === 1 && dir === -1) || (r.oneway === -1 && dir === 1)) continue;
+        const at = dir === 1 ? arc - STOP_BACK : arc + STOP_BACK;
+        if (at < 0.5 || at > total - 0.5) continue; // too short to approach from this side
+        const f = pointAlong(pts, at);
+        if (!f) continue;
+        const [px, py] = f, dx = f[2] * dir, dy = f[3] * dir, rx = dy, ry = -dx; // travel direction and its right-hand side (x east, y north)
+        const from = oneWay ? -(hw - 0.2) : CENTRE_GAP + 0.15, to = hw - 0.2, base = P.length / 3;
+        for (const [lat, along] of [[from, -1], [to, -1], [to, 1], [from, 1]]) {
+          P.push(px + rx * lat + dx * along * STOP_T / 2, Y_MARK, -(py + ry * lat + dy * along * STOP_T / 2));
+        }
+        I.push(base, base + 1, base + 2, base, base + 2, base + 3);
+      }
+    }
+  }
+  return finishFlat(P, I);
 }
 
 // ---- marks ----

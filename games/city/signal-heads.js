@@ -1,10 +1,10 @@
 // Traffic-signal heads, pure (no DOM, no three.js): a pole at each mapped signal, an arm reaching over the road and a housing with a red, an amber and a green lamp
 // on both faces. The lamp colours come from signals.js headState, so a head shows what the sim does. Map metres in, world (y up, north is -z) out.
 import { linearRgb } from './buildings-model.js';
-import { Y_ROAD } from './street-model.js';
+import { Y_ROAD, roadWidth } from './street-model.js';
 import { headAxis } from './signals.js';
 
-const POLE_H = 9, POLE_W = 0.5, ARM_W = 0.3, ARM_MAX = 4, BOX_ALONG = 1.1, BOX_ACROSS = 1.3, BOX_H = 3.4, LAMP = 0.8, LAMP_OUT = 0.04;
+const POLE_H = 9, POLE_W = 0.5, ARM_W = 0.3, ARM_MAX = 7, KERB_GAP = 0.6, BOX_ALONG = 1.1, BOX_ACROSS = 1.3, BOX_H = 3.4, LAMP = 0.8, LAMP_OUT = 0.04;
 const COLOURS = {
   red: { on: linearRgb('#FF3B30'), off: linearRgb('#4A1512') },
   amber: { on: linearRgb('#FFB020'), off: linearRgb('#4A3A10') },
@@ -18,14 +18,18 @@ const segNearest = (px, py, a, b) => {
   return [a[0] + dx * t, a[1] + dy * t];
 };
 
-// Where the parts go: the pole at the mapped point, the arm toward the nearest road (unit a, length armLen, at most ARM_MAX),
-// the housing at the arm's end facing along the road (unit u, bearing dir).
+// Where the parts go: the pole, the arm toward the road (unit a, length armLen) and the housing at the arm's end facing along the road (unit u, bearing dir).
+// Most mapped heads sit on the carriageway centre line: their pole is moved sideways to just beyond the kerb and the arm reaches back over the road.
 export function headPlacement({ x, y, dir }, roads) {
   const th = (dir * Math.PI) / 180, ux = Math.sin(th), uy = Math.cos(th);
-  let best = null, bd = Infinity;
+  let best = null, bd = Infinity, road = null;
   for (const r of roads) for (let k = 0; k < r.pts.length - 1; k++) {
     const q = segNearest(x, y, r.pts[k], r.pts[k + 1]), d = Math.hypot(q[0] - x, q[1] - y);
-    if (d < bd) { bd = d; best = q; }
+    if (d < bd) { bd = d; best = q; road = r; }
+  }
+  if (best && road && bd < roadWidth(road) / 2) {
+    const nx = -uy, ny = ux, side = (x - best[0]) * nx + (y - best[1]) * ny < 0 ? -1 : 1, off = roadWidth(road) / 2 + KERB_GAP;
+    return { x: best[0] + nx * side * off, y: best[1] + ny * side * off, ux, uy, ax: -nx * side, ay: -ny * side, armLen: Math.min(off, ARM_MAX) };
   }
   let ax = -uy, ay = ux, armLen = 0;
   if (best && bd > 0.5) { ax = (best[0] - x) / bd; ay = (best[1] - y) / bd; armLen = Math.min(bd, ARM_MAX); }

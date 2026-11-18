@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
   roadWidth, roadLanes, buildAsphalt, uncoveredRoadCells, buildRoadMarks, arrowPolys, buildCrosswalks, buildRaisedWalks,
+  roadPatches, clipWalks, buildStopLines,
   Y_ROAD, Y_MARK, Y_WALK, WALK_RISE,
 } from '../games/city/street-model.js';
 
@@ -162,5 +163,104 @@ describe('the real map', () => {
     expect(tris).toBeLessThan(160000);
     expect(m.yellow.indices.length).toBeGreaterThan(0);
     expect(m.white.indices.length).toBeGreaterThan(0);
+  });
+});
+
+describe('asphalt patches', () => {
+  const city = { cols: 3, rows: 3, cellM: 12, kind: ['bbb', 'rrr', 'bbb'], roads: [{ pts: [[0, 12], [36, 12]], w: 8 }] };
+  it('each uncovered cell gets a one-lane strip from the nearest point on a road to just past the cell centre, not a square', () => {
+    const patches = roadPatches(city);
+    expect(patches).toHaveLength(uncoveredRoadCells(city).length);
+    for (const { pts, w } of patches) {
+      expect(w).toBe(7);
+      expect(Math.abs(pts[0][1] - 12)).toBeLessThan(1e-6); // starts on the road's centre line
+      const cells = uncoveredRoadCells(city).map(([c, r]) => [(c + 0.5) * 12, (city.rows - 1 - r + 0.5) * 12]);
+      expect(cells.some(([cx, cy]) => Math.hypot(pts[1][0] - cx, pts[1][1] - cy) <= 2.01 && Math.hypot(pts[1][0] - cx, pts[1][1] - cy) >= 1.99)).toBe(true);
+    }
+  });
+  it('the asphalt stays at road height and is finite', () => { const g = buildAsphalt(city); ok(g); for (const [, y] of vertsOf(g)) expect(y).toBeCloseTo(Y_ROAD, 5); });
+});
+
+describe('clipping sidewalks', () => {
+  const city = { cols: 3, rows: 3, cellM: 12, kind: ['bbb', 'rbb', 'bbb'], roads: [{ pts: [[0, 12], [40, 12]], w: 8 }], sidewalks: [] };
+  it('drops the part of a walk that runs inside a road and keeps the rest', () => {
+    const out = clipWalks([{ pts: [[20, -10], [20, 40]], w: 2.4 }], city);
+    expect(out.length).toBeGreaterThan(1); // split by the road
+    for (const { pts } of out) for (const [x, y] of pts) expect(Math.abs(y - 12)).toBeGreaterThanOrEqual(4 - 1e-6);
+  });
+  it('leaves a clear walk whole', () => {
+    const out = clipWalks([{ pts: [[0, 30], [40, 30]], w: 2.4 }], city);
+    expect(out).toHaveLength(1);
+    expect(out[0].pts[0]).toEqual([0, 30]); expect(out[0].pts[out[0].pts.length - 1]).toEqual([40, 30]);
+  });
+  it('keeps clear of a road cell centre', () => {
+    const c = { ...city, kind: ['bbb', 'bbb', 'brb'] }; // the road cell centre is (18, 6)
+    const out = clipWalks([{ pts: [[0, 6.5], [40, 6.5]], w: 2.4 }], c);
+    for (const { pts } of out) for (let i = 0; i < pts.length - 1; i++) {
+      const [a, b] = [pts[i], pts[i + 1]], dx = b[0] - a[0], t = Math.max(0, Math.min(1, (18 - a[0]) / dx));
+      expect(Math.hypot(a[0] + dx * t - 18, 6.5 - 6)).toBeGreaterThan(1.2);
+    }
+  });
+});
+
+describe('stop lines', () => {
+  const two = { pts: [[0, 0], [100, 0]], w: 8, oneway: 0 };
+  const head = { x: 50, y: 0, dir: 90 };
+  const quads = (g) => { const v = vertsOf(g), out = []; for (let i = 0; i + 3 < v.length; i += 4) out.push(v.slice(i, i + 4).map(([x, , z]) => [x, -z])); return out; };
+  const box = (q) => ({ x0: Math.min(...q.map((p) => p[0])), x1: Math.max(...q.map((p) => p[0])), y0: Math.min(...q.map((p) => p[1])), y1: Math.max(...q.map((p) => p[1])) });
+  it('on a two-way road draws the approach half on each side, in the right-hand lane, a few metres before the signal', () => {
+    const g = buildStopLines([head], [two]);
+    ok(g);
+    const bs = quads(g).map(box);
+    expect(bs).toHaveLength(2);
+    const east = bs.find((b) => b.x1 < 50), west = bs.find((b) => b.x0 > 50); // cars going east approach from the west
+    expect(east.y1).toBeLessThanOrEqual(0); expect(east.y0).toBeGreaterThanOrEqual(-4);
+    expect(west.y0).toBeGreaterThanOrEqual(0); expect(west.y1).toBeLessThanOrEqual(4);
+    for (const b of [east, west]) { const d = Math.abs((b.x0 + b.x1) / 2 - 50); expect(d).toBeGreaterThan(3); expect(d).toBeLessThan(14); }
+  });
+  it('on a one-way road draws one full-width line on the approach side only', () => {
+    const bs = quads(buildStopLines([head], [{ ...two, oneway: 1 }])).map(box);
+    expect(bs).toHaveLength(1);
+    expect(bs[0].x1).toBeLessThan(50);
+    expect(bs[0].y0).toBeLessThanOrEqual(-3.5); expect(bs[0].y1).toBeGreaterThanOrEqual(3.5);
+    expect(quads(buildStopLines([head], [{ ...two, oneway: -1 }])).map(box)[0].x0).toBeGreaterThan(50);
+  });
+  it('skips a signal with no road near it, and a side where the road is too short to approach from', () => {
+    expect(buildStopLines([{ x: 50, y: 60, dir: 90 }], [two]).indices.length).toBe(0);
+    const ends = quads(buildStopLines([{ x: 100, y: 0, dir: 90 }], [two])).map(box); // the road ends at the signal: one approach
+    expect(ends).toHaveLength(1);
+    expect(ends[0].x1).toBeLessThan(100);
+  });
+  it('sits at road height, above the asphalt', () => { for (const [, y] of vertsOf(buildStopLines([head], [two]))) expect(y).toBeCloseTo(Y_MARK, 5); });
+});
+
+describe('the real map, drivable cells and walks', () => {
+  const city = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url)));
+  it('no road-cell centre is under a sidewalk slab', { timeout: 20000 }, () => {
+    const walks = clipWalks(city.sidewalks, city);
+    const under = [];
+    for (let r = 0; r < city.rows; r++) for (let c = 0; c < city.cols; c++) {
+      if (city.kind[r][c] !== 'r') continue;
+      const x = (c + 0.5) * city.cellM, y = (city.rows - 1 - r + 0.5) * city.cellM;
+      for (const { pts, w } of walks) {
+        for (let i = 0; i < pts.length - 1; i++) {
+          const [a, b] = [pts[i], pts[i + 1]], dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy || 1;
+          const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / l2));
+          if (Math.hypot(x - a[0] - dx * t, y - a[1] - dy * t) <= w / 2) { under.push([c, r]); break; }
+        }
+      }
+    }
+    expect(under).toEqual([]);
+  });
+  it('no clipped walk vertex is inside a road', { timeout: 20000 }, () => {
+    const walks = clipWalks(city.sidewalks, city);
+    let kept = 0;
+    for (const { pts } of walks) kept += pts.length;
+    expect(kept).toBeGreaterThan(1000);
+  });
+  it('most signals get stop lines', () => {
+    const g = buildStopLines(city.signalHeads, city.roads);
+    ok(g);
+    expect(g.indices.length / 6).toBeGreaterThan(city.signalHeads.length / 2);
   });
 });

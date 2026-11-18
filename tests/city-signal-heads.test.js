@@ -39,8 +39,15 @@ describe('placement', () => {
     expect(p.armLen).toBeLessThanOrEqual(8);
     expect(Math.abs(p.ux)).toBeCloseTo(1, 5); // faces east and west
   });
-  it('a head on the carriageway has no arm', () => {
-    expect(headPlacement({ x: 50, y: 0, dir: 90 }, roads).armLen).toBe(0);
+  it('a head mapped on the carriageway gets its pole beside the road and an arm reaching back over it', () => {
+    for (const y of [0, 1.2, -2]) {
+      const p = headPlacement({ x: 50, y, dir: 90 }, roads);
+      expect(Math.abs(p.y)).toBeGreaterThanOrEqual(5 + 0.6 - 1e-6); // beyond the kerb: road is 10 m wide
+      expect(p.armLen).toBeGreaterThan(0);
+      expect(Math.sign(p.ay)).toBe(-Math.sign(p.y)); // the arm points back toward the centre line
+      expect(p.y + p.ay * p.armLen).toBeLessThan(5); // and the housing hangs over the carriageway
+      expect(Math.abs(p.y + p.ay * p.armLen)).toBeLessThan(5);
+    }
   });
 });
 

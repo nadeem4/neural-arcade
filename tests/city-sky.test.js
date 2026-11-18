@@ -29,6 +29,13 @@ describe('neutral daylight (no orange cast)', () => {
     expect(br - bb).toBeGreaterThan(0);
     expect(br - bb).toBeLessThan(0x40); // a pale warm band, not orange
   });
+  it('the haze (fog and lower dome) is a light blue and the sky fill from above is near neutral, so shade is not blue', () => {
+    const [r, , b] = rgb(skyColours().haze);
+    expect(b - r).toBeGreaterThan(10);
+    expect(Math.min(r, b)).toBeGreaterThan(0xB0);
+    const [hr, , hb] = rgb(skyColours().hemiSky);
+    expect(hb - hr).toBeLessThanOrEqual(0x14);
+  });
   it('the fill from below is neutral grey, so shaded faces keep detail without a tint', () => {
     const [r, g, b] = rgb(skyColours().hemiGround);
     expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThanOrEqual(0x14);

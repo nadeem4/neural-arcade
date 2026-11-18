@@ -2,6 +2,8 @@ import { mulberry32 } from '../../engine/rng.js';
 import { buildingSpec, drawnBuildings, roofBoxes, linearRgb } from './buildings-model.js';
 
 // Pure geometry for the 3D city: map metres in (x east, y north), typed arrays out (y up, north is -z).
+// Layer heights, bottom to top, so nothing fights: ground -0.5, water 0.2, parks 0.4, footpaths 0.6, road 0.8, road marks and stop lines 1.0,
+// zebra crossings 1.05, raised sidewalks 1.1 (road + 0.3), heat overlay 1.2. The street ones are named in street-model.js.
 
 const open = (ring) => {
   const r = ring.slice();
