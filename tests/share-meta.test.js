@@ -27,7 +27,7 @@ const pages = [
   ...GAMES.flatMap(g => {
     // a game with a video uses share.png; one without may use its shot.jpg
     const banners = g.youtube ? [`games/${g.id}/share.png`] : [`games/${g.id}/share.png`, `games/${g.id}/shot.jpg`];
-    return g.id === 'treasure-room' ? [[`${g.path}index.html`, banners]] : [[`${g.path}index.html`, banners], [`${g.writeup}index.html`, banners]]; // its write-up lands in TR5
+    return [[`${g.path}index.html`, banners], [`${g.writeup}index.html`, banners]];
   }),
 ];
 
@@ -37,7 +37,7 @@ const meta = (html, key, name) => attr(html, 'meta', key, name)?.match(/content=
 
 describe('share and SEO tags', () => {
   it('covers every page, including each game and its write-up', () => {
-    expect(pages.length).toBe(5 + GAMES.length * 2 - 1 + CONCEPT_PAGES.length); // minus Treasure Room's write-up until TR5
+    expect(pages.length).toBe(5 + GAMES.length * 2 + CONCEPT_PAGES.length);
   });
 
   for (const [file, allowed] of pages) {

@@ -17,7 +17,7 @@ describe('games data', () => {
     for (const g of GAMES) {
       expect(existsSync(new URL('../' + g.path, import.meta.url)), g.path).toBe(true);
       expect(existsSync(new URL('../' + g.shot, import.meta.url)), g.shot).toBe(true);
-      if (g.id !== 'treasure-room') expect(existsSync(new URL('../' + g.writeup + 'index.html', import.meta.url)), g.writeup).toBe(true); // its write-up lands in TR5
+      expect(existsSync(new URL('../' + g.writeup + 'index.html', import.meta.url)), g.writeup).toBe(true);
     }
   });
   it('category exists in CATEGORIES', () => {
