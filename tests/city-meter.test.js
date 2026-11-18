@@ -2,13 +2,27 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
-import { meterAt } from '../games/city/meter.js';
+import { meterAt, barFraction, METER_SCALE } from '../games/city/meter.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const world = loadWorld(read('chicago.json'));
 const card = read('story.json').cards.find((c) => c.id === 'walk');
 const ev = tripEvents(world, card.rewards, card.route);
 const n = ev.steps.length;
+
+describe('barFraction: both meters share one scale', () => {
+  it('maps 0 to 0 and the full scale to 1, clamped', () => {
+    expect(METER_SCALE).toBe(100);
+    expect(barFraction(0)).toBe(0);
+    expect(barFraction(METER_SCALE)).toBe(1);
+    expect(barFraction(-30)).toBe(0);
+    expect(barFraction(800)).toBe(1);
+    expect(barFraction(50)).toBe(0.5);
+  });
+  it('a bigger number is a longer bar on either meter', () => {
+    expect(barFraction(60)).toBeGreaterThan(barFraction(20));
+  });
+});
 
 describe('meterAt', () => {
   it('starts at zero', () => {

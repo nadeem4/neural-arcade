@@ -5,14 +5,15 @@ import { SUN, MOON } from '../../assets/site.js';
 import { SEED, EPISODES, GOAL_SECONDS } from './presets.js';
 import { loadWorld } from './sim.js';
 import { createJobs, trainInChunks } from './jobs.js';
-import { INFO, goalReached, shareLine } from './words.js';
+import { INFO, goalReached, shareLine, goalLine } from './words.js';
+import { goalAt } from './goal.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
 import { tripEvents, tagsFor, foldTag } from './events.js';
 import { driveTrack } from './drive.js';
-import { meterAt, meterText } from './meter.js';
+import { meterAt, meterText, barFraction } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
 import { createSound } from './sound.js';
 import { stepRate, rateRows } from './rates.js';
@@ -40,7 +41,9 @@ const sound = createSound({ muted: loadMuted(), reducedMotion: !motionAllowed() 
 let rec = null; // record mode (?record=1): { now, tags } while frames are stepped by seek(ms)
 let hud = null; // { events, route, done } while a trip is on screen
 
-function showMeter(on) { showRaceMeters(false); $('meter').hidden = !on; $('minimap').hidden = !on; }
+function showMeter(on) { showRaceMeters(false); $('meter').hidden = !on; $('meterGoal').hidden = !on; $('minimap').hidden = !on; }
+const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; } // only touch the DOM when the text changes
+$('mapGoal').textContent = goalLine();
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
 function popTag(tag, at, i) {
   const prev = hud.lastTag?.[tag.text];
@@ -58,8 +61,12 @@ function popTag(tag, at, i) {
 function hudFrame(state, at) {
   if (!hud) return;
   const m = meterAt(hud.events, state.progress);
-  $('meterTotal').textContent = meterText(m.total);
-  $('meterCounts').textContent = `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`;
+  setText($('meterTotal'), meterText(m.total));
+  setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`);
+  $('meterBar').style.transform = `scaleX(${barFraction(m.total)})`;
+  const g = goalAt(hud.events, [], state.progress, GOAL_SECONDS); // no pedestrians yet, so no scares
+  setText($('meterGoalTotal'), String(g));
+  $('meterGoalBar').style.transform = `scaleX(${barFraction(g)})`;
   const c = $('minimap');
   drawMinimap(c.getContext('2d'), minimapModel(world, hud.route, state.progress, hud.events), c.width);
   for (; hud.done < Math.min(state.stepIndex, hud.events.steps.length); hud.done++) {

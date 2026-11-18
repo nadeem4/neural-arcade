@@ -17,6 +17,10 @@ export function meterAt(events, f) {
   return { total, counts, seconds: whole };
 }
 
+// Pay and "What the city wanted" share one 0 to 100 scale, so a pair that drifts apart reads at a glance.
+export const METER_SCALE = 100;
+export const barFraction = (v) => Math.max(0, Math.min(1, v / METER_SCALE));
+
 // The big number: whole, with a real minus sign (a gain gets a plus).
 export function meterText(total) {
   const n = Math.round(total);

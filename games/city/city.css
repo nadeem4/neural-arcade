@@ -54,6 +54,15 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .meter-total { font-size: 34px; font-weight: 700; line-height: 1; color: var(--hud-taxi); }
 .meter-label { font-size: 12px; opacity: .75; }
 .meter-counts { font-size: 12px; color: var(--hud-route); }
+.meter-name { font-size: 12px; font-weight: 600; letter-spacing: .02em; }
+/* Pay and What the city wanted share one 0 to 100 scale (meter.js barFraction), so the two bars read side by side. */
+.meter-bar { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .18); overflow: hidden; }
+.meter-bar i { display: block; height: 100%; width: 100%; transform-origin: left; transform: scaleX(0); background: var(--hud-taxi); }
+.meter-goal .meter-total { color: var(--hud-route); }
+.meter-goal .meter-bar i { background: var(--hud-route); }
+.chip-goal, #info-meters { pointer-events: auto; }
+.play:not([data-screen="map"]) .chip-goal { display: none; }
+.play[data-screen="racing"] .meter-goal, .play[data-screen="raced"] .meter-goal, .meter-b .meter-bar { display: none; }
 .minimap { position: absolute; top: 60px; right: 12px; width: 120px; height: 120px; border-radius: 50%; background: var(--hud); border: 2px solid var(--hud-route); pointer-events: none; }
 .minimap[hidden] { display: none; }
 #labels span.tag { padding: 4px 10px; border-radius: 999px; font: 700 15px "Space Grotesk", var(--sans); background: var(--hud); animation: tag-pop 1.3s ease-out forwards; }
@@ -150,6 +159,9 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .minimap { top: 60px; right: 8px; width: 84px; height: 84px; }
   .meter { min-width: 120px; padding: 8px 12px; }
   .meter-total { font-size: 26px; }
+  .meter-goal { padding: 6px 12px; }
+  .meter-goal .meter-total { font-size: 20px; }
+  .meter-goal .meter-counts { display: none; } /* keeps the second meter small so the map stays visible */
   .ratecard, .endcard { top: auto; left: 8px; right: 8px; width: auto; transform: none; padding: 12px 14px; gap: 8px; }
   .ratecard { bottom: 80px; max-height: 35svh; }
   .endcard { bottom: 80px; max-height: 35svh; display: flex; flex-direction: column; }

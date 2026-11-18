@@ -66,13 +66,23 @@
       <button class="info" type="button" aria-expanded="false" aria-controls="info-map" aria-label="Explain the map" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
       <button class="btn chase" type="button" id="garage" aria-expanded="false" aria-controls="garageDrawer">Garage · <span id="garageCount">0</span></button>
       <p class="info-text" id="info-map" data-info="map" hidden></p>
+      <button class="info" type="button" aria-expanded="false" aria-controls="info-meters" aria-label="Explain Pay and what the city wanted" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
+      <p class="info-text" id="info-meters" data-info="meters" hidden></p>
     </div>
 
     <div class="hud">
       <div class="meter" id="meter" aria-hidden="true" hidden>
+        <span class="meter-name" id="meterName">Pay</span>
         <span class="meter-total" id="meterTotal">0</span>
         <span class="meter-label" id="meterLabel">earned this trip</span>
         <span class="meter-counts" id="meterCounts"></span>
+        <span class="meter-bar"><i id="meterBar"></i></span>
+      </div>
+      <div class="meter meter-goal" id="meterGoal" aria-hidden="true" hidden>
+        <span class="meter-name">What the city wanted</span>
+        <span class="meter-total" id="meterGoalTotal">0</span>
+        <span class="meter-counts">out of 100</span>
+        <span class="meter-bar"><i id="meterGoalBar"></i></span>
       </div>
       <div class="meter meter-b" id="meterB" aria-hidden="true" hidden>
         <span class="meter-total" id="meterBTotal">0</span>
@@ -81,6 +91,7 @@
       </div>
     </div>
     <div class="notes">
+      <p class="chip chip-goal" id="mapGoal"></p>
       <p class="chip" id="status" aria-live="polite"></p>
       <p class="chip" id="stageNote"></p>
     </div>
