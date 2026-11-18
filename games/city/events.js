@@ -46,3 +46,18 @@ export function foldTag(prev, tag, i) {
   const count = prev && prev.text === tag.text && i - prev.i <= 1 ? prev.count + 1 : 1;
   return { text: tag.text, kind: tag.kind, count, i, label: count > 1 ? `${tag.text} ×${count}` : tag.text };
 }
+
+// Floating tags sit in fixed vertical slots above the taxi, one tag height apart, so two live tags never overlap each other
+// (or the taxi: slot 0 is already above it). `tags` is the live tags: each { slot } keeps its slot, one without a slot takes
+// the lowest free one. Returns new objects. Pure.
+export const TAG_SLOT_PX = 32;
+export function layoutTags(tags) {
+  const used = new Set(tags.filter((t) => t.slot !== undefined).map((t) => t.slot));
+  return tags.map((t) => {
+    if (t.slot !== undefined) return { ...t };
+    let slot = 0;
+    while (used.has(slot)) slot++;
+    used.add(slot);
+    return { ...t, slot };
+  });
+}

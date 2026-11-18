@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { buildReceipt } from '../games/city/receipt.js';
-import { tripEvents, tagsFor } from '../games/city/events.js';
+import { tripEvents, tagsFor, layoutTags, TAG_SLOT_PX } from '../games/city/events.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const world = loadWorld(read('chicago.json'));
@@ -64,5 +64,28 @@ describe('tagsFor', () => {
   it('shows a fare tag on arrival, and a zero-rate fine without an amount', () => {
     expect(tagsFor(step({ done: true }), R)).toEqual([{ text: '+100 fare', kind: 'pay' }]);
     expect(tagsFor(step({ red: true }), { ...R, red: 0 })).toEqual([{ text: 'red light run', kind: 'fine' }]);
+  });
+});
+
+describe('layoutTags', () => {
+  it('three tags on one step get three different slots, lowest first', () => {
+    const out = layoutTags([{}, {}, {}]);
+    expect(out.map((t) => t.slot)).toEqual([0, 1, 2]);
+  });
+  it('a tag that already has a slot keeps it, and a newcomer takes the lowest free slot', () => {
+    const out = layoutTags([{ slot: 1 }, {}]);
+    expect(out.map((t) => t.slot)).toEqual([1, 0]);
+    expect(layoutTags([{ slot: 0 }, { slot: 1 }, {}])[2].slot).toBe(2);
+  });
+  it('a freed slot is used again, and no two live tags ever share one', () => {
+    let live = layoutTags([{}, {}, {}]);
+    live = live.filter((t) => t.slot !== 1);          // the middle tag has expired
+    live = layoutTags([...live, {}, {}]);
+    const slots = live.map((t) => t.slot);
+    expect(new Set(slots).size).toBe(slots.length);
+    expect(slots).toContain(1);
+  });
+  it('slots are a whole tag-height apart on screen so tags never overlap', () => {
+    expect(TAG_SLOT_PX).toBeGreaterThanOrEqual(30);
   });
 });
