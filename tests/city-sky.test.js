@@ -1,14 +1,48 @@
 import { describe, it, expect } from 'vitest';
-import { skyColours, fogFor, windowPattern, heatOpacity } from '../games/city/sky.js';
+import { skyColours, sunDirection, sunUv, cloudLayout, fogFor, windowPattern, heatOpacity } from '../games/city/sky.js';
 
 describe('skyColours', () => {
-  it('gives a different gradient for dark and light', () => {
-    const d = skyColours(true), l = skyColours(false);
-    expect(d.top).not.toBe(l.top);
-    expect(d.bottom).not.toBe(l.bottom);
+  it('is one fixed late-afternoon palette, whatever the page theme', () => {
+    expect(skyColours()).toEqual(skyColours());
+    for (const k of ['top', 'bottom', 'sun', 'sunGlow']) expect(skyColours()[k]).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
-  it('dark is the dusk blue to warm glow of the mockup', () => {
-    expect(skyColours(true)).toMatchObject({ top: '#3D5A80', bottom: '#E9A86B' });
+  it('the horizon is warmer (redder) than the zenith', () => {
+    const red = (h) => parseInt(h.slice(1, 3), 16), blue = (h) => parseInt(h.slice(5, 7), 16);
+    const { top, bottom } = skyColours();
+    expect(red(bottom) - blue(bottom)).toBeGreaterThan(red(top) - blue(top));
+  });
+});
+
+describe('sunDirection', () => {
+  it('is constant, unit length and above the horizon but low', () => {
+    const d = sunDirection();
+    expect(sunDirection()).toEqual(d);
+    expect(Math.hypot(...d)).toBeCloseTo(1, 6);
+    expect(d[1]).toBeGreaterThan(0.2);
+    expect(d[1]).toBeLessThan(0.6);
+  });
+});
+
+describe('sunUv', () => {
+  it('puts the zenith at the top and the horizon halfway down', () => {
+    expect(sunUv([0, 1, 0]).v).toBeCloseTo(0, 6);
+    expect(sunUv([1, 0, 0]).v).toBeCloseTo(0.5, 6);
+  });
+  it('stays inside the sky half of the texture', () => {
+    const { u, v } = sunUv(sunDirection());
+    expect(u).toBeGreaterThanOrEqual(0); expect(u).toBeLessThan(1);
+    expect(v).toBeGreaterThan(0); expect(v).toBeLessThan(0.5);
+  });
+});
+
+describe('cloudLayout', () => {
+  it('is deterministic and has the requested count', () => {
+    expect(cloudLayout(6)).toEqual(cloudLayout(6));
+    expect(cloudLayout(6)).toHaveLength(6);
+    expect(cloudLayout(0)).toEqual([]);
+  });
+  it('keeps clouds above the horizon with a positive size', () => {
+    for (const c of cloudLayout(6)) { expect(c.dir[1]).toBeGreaterThan(0.1); expect(Math.hypot(...c.dir)).toBeCloseTo(1, 6); expect(c.size).toBeGreaterThan(0); }
   });
 });
 
