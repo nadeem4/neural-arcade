@@ -1,4 +1,5 @@
 import { isLegal, goalReached } from './words.js';
+import { FIELDS } from './reward.js';
 
 // Names for kept taxis, from which fines are zero on the rate card. Pure.
 const STRIPES = {
@@ -44,7 +45,7 @@ export function noteFor(a) {
   ].filter(Boolean).join(', ');
 }
 
-const CHIPS = [['fare', 'Fare', '+'], ['time', 'Second', '−'], ['off', 'Park', '−'], ['red', 'Red', '−'], ['wrong', 'Wrong way', '−'], ['perTile', 'Per tile', '+']];
+const CHIPS = FIELDS.map(f => [f.key, f.chip, f.sign === '-' ? '−' : '+']);
 
 // The rate chips on a card: only the rates that are not zero.
 export const rateChips = rewards => CHIPS.filter(([k]) => rewards[k]).map(([k, label, sign]) => `${label} ${sign}${rewards[k]}`);
