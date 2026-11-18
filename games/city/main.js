@@ -9,6 +9,7 @@ import { INFO, goalReached, shareLine } from './words.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
+import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
 import { tripEvents, tagsFor, foldTag } from './events.js';
 import { driveTrack } from './drive.js';
 import { meterAt, meterText } from './meter.js';
@@ -36,6 +37,7 @@ const say = text => { $('status').textContent = text; };
 const MUTE_KEY = 'rc-muted';
 const loadMuted = () => { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; } };
 const sound = createSound({ muted: loadMuted(), reducedMotion: !motionAllowed() });
+let rec = null; // record mode (?record=1): { now, tags } while frames are stepped by seek(ms)
 let hud = null; // { events, route, done } while a trip is on screen
 
 function showMeter(on) { showRaceMeters(false); $('meter').hidden = !on; $('minimap').hidden = !on; }
@@ -49,6 +51,7 @@ function popTag(tag, at, i) {
   span.className = `tag ${tag.kind}`; span.textContent = run.label;
   span.style.left = at.x + 'px'; span.style.top = at.y + 'px';
   span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
+  if (rec) { rec.tags = rec.tags.filter(t => t.span !== span); rec.tags.push({ span, born: rec.now }); return; } // expiry follows seek time, not the wall clock
   clearTimeout(span._t); span._t = setTimeout(() => span.remove(), 1400);
 }
 // One frame of the drive: the meter and minimap follow the taxi; each tile it finishes can fire tags and a blip.
@@ -393,7 +396,21 @@ function setupChase() {
   });
 }
 
+// Record mode: ?record=1&card=<id>&fps=<n>. The stage is frame-stepped through window.__rc.seek(ms).
+async function startRecord(cfg) {
+  const rc = window.__rc;
+  if (!stage.ready) return;
+  rewards = cardRewards(cfg.card); showRates();
+  await train({ ...rewards });
+  if (!trip) { rc.failure = 'training failed'; return; }
+  await new Promise(r => setTimeout(r, 150)); // the heat map is throttled to 100 ms: let its last update land before frames are captured
+  rc.totalMs = tripMs(trip.track.total);
+}
+
 async function start() {
+  let recCfg = null;
+  try { recCfg = parseRecord(location.search); } catch (e) { window.__rc = { ready: false, error: e.message, totalMs: 0, fps: 0, seek() {} }; }
+  if (recCfg) { document.body.classList.add('rc-record'); rec = { now: 0, tags: [] }; }
   $('lamp').innerHTML = SUN + MOON;
   wireLamp($('lamp'), () => {});
   build();
@@ -406,8 +423,12 @@ async function start() {
     // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
     const webgl = webglAvailable();
     const scene = webgl ? await import('./scene.js').catch(() => null) : null;
-    const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone(), labels: $('labels'), onChaseOff: () => { $('chase').setAttribute('aria-pressed', 'false'); if (!motionAllowed()) { $('chase').disabled = true; $('chase').title = 'Off because your device asks for reduced motion.'; } } }) : null;
+    const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone(), labels: $('labels'), manualClock: !!recCfg, onChaseOff: () => { $('chase').setAttribute('aria-pressed', 'false'); if (!motionAllowed()) { $('chase').disabled = true; $('chase').title = 'Off because your device asks for reduced motion.'; } } }) : null;
     stage = chooseStage($('stage'), city, { webgl, make3d });
+    if (recCfg) {
+      const frameStage = { ready: stage.ready, renderAt(ms) { rec.now = ms; stage.renderAt(ms); const keep = pruneTags(rec.tags, ms); rec.tags.filter(t => !keep.includes(t)).forEach(t => t.span.remove()); rec.tags = keep; } };
+      window.__rc = recordApi({ stage: frameStage, fps: recCfg.fps });
+    }
   } catch {
     say('The map did not load. Reload the page to try again.');
     return;
@@ -417,5 +438,6 @@ async function start() {
   setupChase();
   go('none'); // the map screen: the rate card and TRAIN & DRIVE
   showGarage(false);
+  if (recCfg) await startRecord(recCfg);
 }
 start();

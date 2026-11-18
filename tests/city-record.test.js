@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseRecord, tripMs, frameCount, frameMs, pruneTags } from '../games/city/record.js';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { parseRecord, tripMs, frameCount, frameMs, pruneTags, recordApi, cardRewards } from '../games/city/record.js';
 import { SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
 
 describe('parseRecord', () => {
@@ -18,6 +18,13 @@ describe('parseRecord', () => {
   });
 });
 
+describe('cardRewards', () => {
+  it('copies the preset rewards', () => {
+    expect(cardRewards('walk')).toMatchObject({ fare: 100, off: 20 });
+    expect(cardRewards('walk')).not.toBe(cardRewards('walk'));
+  });
+});
+
 describe('timing', () => {
   it('tripMs adds the swoop and pullback', () => {
     expect(tripMs(16000)).toBe(16000 + SWOOP_MS + PULLBACK_MS);
@@ -33,5 +40,31 @@ describe('pruneTags', () => {
   it('drops tags that are lifeMs old or older', () => {
     const tags = [{ born: 0 }, { born: 900 }, { born: 1500 }];
     expect(pruneTags(tags, 1500)).toEqual([{ born: 900 }, { born: 1500 }]);
+  });
+});
+
+describe('recordApi', () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+  const stage = () => ({ ready: true, renderAt: vi.fn(() => ({ phase: 'drive', done: false })) });
+  it('seek renders the stage at that time', () => {
+    const st = stage();
+    recordApi({ stage: st, totalMs: 9000, fps: 30 }).seek(500);
+    expect(st.renderAt).toHaveBeenCalledWith(500);
+  });
+  it('is ready only once totalMs is above 0', () => {
+    expect(recordApi({ stage: stage(), totalMs: 0, fps: 30 }).ready).toBe(false);
+    const rc = recordApi({ stage: stage(), totalMs: 0, fps: 30 });
+    rc.totalMs = 9000;
+    expect(rc.ready).toBe(true);
+    expect(rc.error).toBeNull();
+  });
+  it('reports WebGL and reduced motion as errors, and is not ready then', () => {
+    const noGl = recordApi({ stage: { ready: false }, totalMs: 9000, fps: 30 });
+    expect(noGl.error).toMatch(/WebGL/);
+    expect(noGl.ready).toBe(false);
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const rm = recordApi({ stage: stage(), totalMs: 9000, fps: 30 });
+    expect(rm.error).toMatch(/reduced motion/);
+    expect(rm.ready).toBe(false);
   });
 });

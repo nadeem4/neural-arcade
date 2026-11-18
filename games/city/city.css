@@ -242,3 +242,12 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .bay.empty { display: none; }
 }
 #labels span.race-tag { padding: 3px 9px; border-radius: 999px; font: 700 13px "Space Grotesk", var(--sans); background: var(--hud); }
+
+/* Record mode (?record=1): only the stage, meter, minimap and tags, frame-stepped by window.__rc.seek(ms). */
+body.rc-record .citybar, body.rc-record footer, body.rc-record main > :not(#play),
+body.rc-record .ratecard, body.rc-record #bar, body.rc-record #endcard, body.rc-record #garageDrawer, body.rc-record #raceBar,
+body.rc-record #raceBanner, body.rc-record #toast, body.rc-record .notes, body.rc-record .topright { display: none !important; }
+body.rc-record { margin: 0; overflow: hidden; }
+body.rc-record .play { position: fixed; inset: 0; width: 100vw; height: 100vh; min-height: 0; }
+body.rc-record #stage { width: 100vw; height: 100vh; }
+body.rc-record #labels span.tag { animation: none; transform: translate(-50%, -140%); }
