@@ -7,7 +7,7 @@ const WIN_COLS = 8, WIN_ROWS = 16, WIN_W = 3, WIN_H = 3.5; // windows 3 m apart,
 const LIT = '#F4C76B';
 
 // Late-afternoon tuning, all in one place.
-export const EXPOSURE = 1.0, ENV_INTENSITY = 0.55, HEMI_INTENSITY = 0.35, SUN_INTENSITY = 2.4, CLOUD_OPACITY = 0.8, CLOUD_TINT = '#FFF1E0', WINDOW_GLOW = 0.6;
+export const EXPOSURE = 1.0, ENV_INTENSITY = 0.9, HEMI_INTENSITY = 0.6, SUN_INTENSITY = 3.0, CLOUD_OPACITY = 0.8, CLOUD_TINT = '#FFF1E0', WINDOW_GLOW = 0.6;
 
 // The sky: an inside-out sphere painted once with the gradient and a glow where the sun is, plus a few cloud sprites on it.
 // The same dome (alone in its own scene) feeds PMREMGenerator.fromScene, so the light on the city matches the sky above it.
