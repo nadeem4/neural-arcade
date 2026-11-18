@@ -86,8 +86,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
 
   scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -0.5, cz), mats.ground, { receive: true }));
   scene.add(meshOf(geoOf(buildFlats(city.water ?? [], 0.2)), mats.water));
-  scene.add(meshOf(geoOf(buildFlats(city.parks ?? [], 0.4)), mats.park));
-  scene.add(meshOf(geoOf(buildRoadStrips(city.paths ?? [], 0.6)), mats.walk));
+  scene.add(meshOf(geoOf(buildFlats(city.parks ?? [], 0.4)), mats.park, { receive: true }));
+  scene.add(meshOf(geoOf(buildRoadStrips(city.paths ?? [], 0.6)), mats.walk, { receive: true }));
   scene.add(meshOf(geoOf(buildRoadStrips(city.roads ?? [], 0.8)), mats.road, { receive: true }));
   scene.add(meshOf(geoOf(buildLaneMarks(city.roads ?? [], 1.0)), mats.mark));
   scene.add(meshOf(geoOf(buildBuildings(city.buildings ?? [])), mats.building, { cast: true, receive: true }));
