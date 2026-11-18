@@ -38,7 +38,7 @@ describe('treasure room deep links', () => {
 });
 
 describe('treasure room input after the episode', () => {
-  it('ignores the AI taking over a finished episode, and moves while the AI plays', () => {
+  it('ignores your moves once the AI has taken over', () => {
     const ai = reduce(initial(), { type: 'handover' });
     expect(reduce(ai, { type: 'move', action: 3 })).toEqual(ai);
   });

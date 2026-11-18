@@ -9,7 +9,17 @@ export const cellAt = (size, room, px, py) => {
 
 export const tagTone = reward => (reward > 0 ? 'good' : reward <= -10 ? 'bad' : 'step');
 
-const TONE = { good: '#2a9d4b', bad: '#e5533f', step: '#888' };
+const token = (name, fallback) => {
+  try { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback; }
+  catch { return fallback; }
+};
+
+// Tags sit on a white tile: step is the muted ink, bad the red token; no green token exists, so good keeps a dark green (as in grid.js).
+// On the treasure or pit tile the tag is plain ink, because green or red text would vanish on a green or red tile.
+const tagColor = (tone, onEnd) => {
+  if (onEnd) return token('--ink', '#222');
+  return tone === 'good' ? '#1b7a37' : tone === 'bad' ? token('--red', '#e5533f') : token('--ink-2', '#4a515b');
+};
 
 // opts: { cell, agent, values, policy, hover, tags: [{ x, y, text, tone }] }
 export function drawRoom(ctx, room, opts = {}) {
@@ -19,7 +29,7 @@ export function drawRoom(ctx, room, opts = {}) {
   ctx.textBaseline = 'middle';
   ctx.font = `700 ${Math.round(cell * 0.3)}px sans-serif`;
   for (const t of tags) {
-    ctx.fillStyle = TONE[t.tone] ?? TONE.step;
+    ctx.fillStyle = tagColor(t.tone, 'TX'.includes(room.cells[t.y][t.x]));
     ctx.fillText(t.text, t.x * cell + cell / 2, t.y * cell + cell * 0.12);
   }
 }

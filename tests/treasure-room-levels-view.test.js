@@ -46,7 +46,6 @@ describe('level 1 reduce', () => {
 });
 
 describe('level 2 log', () => {
-  const entry = r => ({ pos: START, action: RIGHT, reward: r });
   it('keeps the last 8 lines, each from logLine', () => {
     let log = [];
     for (let i = 0; i < 12; i++) log = appendLog(log, { pos: { x: i % 5, y: 0 }, action: RIGHT, reward: -1 });
@@ -59,6 +58,5 @@ describe('level 2 log', () => {
     expect(tagsFor({ pos: { x: 4, y: 3 }, reward: 10 })[0]).toMatchObject({ text: '+10', tone: 'good' });
     expect(tagsFor({ pos: { x: 2, y: 2 }, reward: -10 })[0]).toMatchObject({ text: '−10', tone: 'bad' });
     expect(tagsFor(null)).toEqual([]);
-    expect(entry(0)).toBeTruthy();
   });
 });

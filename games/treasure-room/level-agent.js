@@ -72,9 +72,11 @@ export function mountPlay(ui, { handover, onStep, onRestart } = {}) {
   pads.forEach(b => on(b, 'click', () => move(Number(b.dataset.move))));
   on(handBtn, 'click', handOver);
   on(restartBtn, 'click', () => { stop(); s = initial(); onRestart?.(); ui.say(''); paint(); });
+  // Arrow keys play only while you drive: not once the episode is over or the AI has the robot, and not from the level links or a form control.
   on(document, 'keydown', e => {
     if (!(e.key in KEYS) || e.metaKey || e.ctrlKey || e.altKey) return;
-    e.preventDefault();
+    if (s.done || s.mode !== 'you' || e.target.closest?.('#levels, input, select, textarea')) return;
+    e.preventDefault(); // stops the page scrolling under the arrow
     move(KEYS[e.key]);
   });
   on(ui.canvas, 'click', e => {
