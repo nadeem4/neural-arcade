@@ -251,3 +251,5 @@ body.rc-record { margin: 0; overflow: hidden; }
 body.rc-record .play { position: fixed; inset: 0; width: 100vw; height: 100vh; min-height: 0; }
 body.rc-record #stage { width: 100vw; height: 100vh; }
 body.rc-record #labels span.tag { animation: none; transform: translate(-50%, -140%); }
+body.rc-record .play[data-screen="done"] .meter:not([hidden]) { display: grid; } /* the last frame keeps the final total */
+body.rc-record .play[data-screen="done"] .minimap:not([hidden]) { display: block; }

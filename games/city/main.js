@@ -403,7 +403,6 @@ async function startRecord(cfg) {
   rewards = cardRewards(cfg.card); showRates();
   await train({ ...rewards });
   if (!trip) { rc.failure = 'training failed'; return; }
-  await new Promise(r => setTimeout(r, 150)); // the heat map is throttled to 100 ms: let its last update land before frames are captured
   rc.totalMs = tripMs(trip.track.total);
 }
 
@@ -430,6 +429,7 @@ async function start() {
       window.__rc = recordApi({ stage: frameStage, fps: recCfg.fps });
     }
   } catch {
+    if (recCfg) window.__rc = { ready: false, error: 'map did not load', totalMs: 0, fps: recCfg.fps, seek() {} };
     say('The map did not load. Reload the page to try again.');
     return;
   }

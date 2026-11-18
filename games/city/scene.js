@@ -416,6 +416,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     ready: true,
     setHeat(visits) {
       heatLatest = visits;
+      if (manualClock) { applyHeat(); return; } // record mode: apply at once, no throttle
       const wait = 100 - (performance.now() - heatAt);
       if (wait <= 0) { if (heatTimer) clearTimeout(heatTimer); applyHeat(); } else if (!heatTimer) heatTimer = setTimeout(applyHeat, wait);
     },
