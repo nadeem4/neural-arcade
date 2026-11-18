@@ -176,7 +176,8 @@ describe('signal-text contrast', () => {
 });
 
 const PAGES = ['runner', 'racer', 'teach', 'balance'];
-describe.each(PAGES)('game page contract (%s)', id => {
+const GAME_PAGES = [...PAGES, 'treasure-room']; // TR5 adds its How it works page and moves it into PAGES
+describe.each(GAME_PAGES)('game page contract (%s)', id => {
   const html = read(`games/${id}/index.html`);
   const entry = GAMES.find(g => g.id === id);
   const everywhere = html + headerHtml('../../', 'games') + footerHtml() + videoHtml(entry);
@@ -232,7 +233,7 @@ describe.each(PAGES)('game page contract (%s)', id => {
     expect(html).toContain('assets/game-page.js');
     expect(html).toContain(`href="${id}.css"`);
     expect(html).not.toContain('arcade.css');
-    for (const o of PAGES.filter(o => o !== id)) expect(html, o).not.toContain(`${o}.css`);
+    for (const o of GAME_PAGES.filter(o => o !== id)) expect(html, o).not.toContain(`${o}.css`);
   });
   it('uses no coloured side stripes in its css', () => {
     for (const f of ['assets/game.css', `games/${id}/${id}.css`]) {
@@ -311,7 +312,7 @@ describe('game page specifics', () => {
     expect(css).toMatch(/--amber-ink:\s*var\(--signal-text\)/);
   });
   it('no stylesheet uses a custom property that nothing defines', () => {
-    const files = ['assets/studio.css', 'assets/game.css', ...PAGES.map(i => `games/${i}/${i}.css`)];
+    const files = ['assets/studio.css', 'assets/game.css', ...GAME_PAGES.map(i => `games/${i}/${i}.css`)];
     const all = files.map(read).join('\n');
     const defined = new Set([...all.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
     defined.add('--row-gap'); // set inline on the family tree svg

@@ -43,3 +43,9 @@ export function levelFromUrl(search = '', hash = '') {
   const q = new URLSearchParams(search).get('level');
   return parse(q) ?? parse(hash.replace(/^#/, '')) ?? 1;
 }
+
+// The level nav: only levels that are built, with the current one marked (an unbuilt current falls back to the first built).
+export function navModel(built, current) {
+  const now = built.includes(current) ? current : built[0];
+  return built.map(n => ({ n, href: `?level=${n}`, title: levelByN(n).title, current: n === now }));
+}

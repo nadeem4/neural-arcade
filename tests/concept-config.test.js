@@ -34,7 +34,7 @@ describe('concept config', () => {
     expect(game('balance').where.pid).toBe('Its "A PID with three dials" mode: tune P, I and D yourself, then let evolution tune them.');
   });
   it('maze and runner have a where sentence per use', () => {
-    for (const id of ['maze', 'runner']) {
+    for (const id of ['maze', 'runner', 'treasure-room']) {
       const g = game(id);
       for (const u of g.uses) expect(g.where[u]?.length, `${id}.${u}`).toBeGreaterThan(0);
     }

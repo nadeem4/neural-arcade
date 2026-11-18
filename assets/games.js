@@ -76,6 +76,24 @@ export const GAMES = [
     },
     added: '2026-11-16', shot: 'games/city/shot.jpg', path: 'games/city/', writeup: 'games/city/how-it-works/', youtube: null, demo: null,
   },
+  {
+    // levels (optional): concept id -> the level of this game that teaches it, for deep links like games/treasure-room/?level=3
+    id: 'treasure-room', title: 'Treasure Room', category: 'reinforcement-learning',
+    lesson: 'One small room, six ideas: an agent, state-action-reward, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.',
+    learnsBy: 'Agent, reward, return, policy, value',
+    goesWrongWhen: 'The floor turns icy and the best plan changes',
+    uses: ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'],
+    where: {
+      agent: 'The robot is the agent and the room is the environment: all it gets back is where it is and a reward.',
+      'state-action-reward': 'Every move is logged as a state, an action and a reward, and the game is a list of these.',
+      return: 'Add up the rewards on a route, and lower the discount to watch far-away treasure lose its pull.',
+      policy: 'Put an arrow on every tile: that set of arrows is the policy.',
+      value: 'Sweep the room and each tile gets a number for how good it is to stand there.',
+      mdp: 'Turn the floor icy so moves slip, and the best plan changes.',
+    },
+    levels: { agent: 1, 'state-action-reward': 2, return: 3, policy: 4, value: 5, mdp: 6 },
+    added: '2026-11-18', shot: 'games/treasure-room/shot.jpg', path: 'games/treasure-room/', writeup: 'games/treasure-room/how-it-works/', youtube: null, demo: null,
+  },
 ];
 
 export const gameById = id => GAMES.find(g => g.id === id);

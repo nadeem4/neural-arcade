@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treasure Room · Neural Arcade</title>
+<meta name="description" content="One small room, six ideas: an agent, state-action-reward, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.">
+<link rel="canonical" href="https://arcade.codewithnk.com/games/treasure-room/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Treasure Room · Neural Arcade">
+<meta property="og:description" content="One small room, six ideas: an agent, state-action-reward, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.">
+<meta property="og:url" content="https://arcade.codewithnk.com/games/treasure-room/">
+<meta property="og:image" content="https://arcade.codewithnk.com/games/treasure-room/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Treasure Room: a small grid with a robot, a treasure, a pit and a few walls">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Treasure Room · Neural Arcade">
+<meta name="twitter:description" content="One small room, six ideas: an agent, state-action-reward, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/games/treasure-room/share.png">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/game.css">
+<link rel="stylesheet" href="treasure-room.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body data-game="treasure-room">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i" viewBox="0 0 256 256"><path fill="currentColor" d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol></svg>
+
+<header data-site="games"></header>
+
+<main class="wrap game">
+  <div class="head">
+    <div>
+      <div class="crumb" id="crumb"></div>
+      <h1>Treasure Room</h1>
+      <p class="lead lesson">One small room, six ideas: an agent, state-action-reward, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.</p>
+    </div>
+    <nav class="switch" aria-label="On this page">
+      <a href="#play" aria-current="true">Play</a>
+      <a href="#watch" id="switchWatch" hidden>Watch</a>
+      <a href="#how">How it works</a>
+    </nav>
+  </div>
+
+  <dl class="brief" aria-label="The experiment">
+    <div><dt>The setup</dt><dd>A five-by-five room with a robot, a treasure worth +10, a pit worth -10 and a few walls. Every step costs 1, even a bump into a wall.</dd></div>
+    <div><dt>The rule</dt><dd>You drive the robot first. Then the AI takes over, and all it is ever told is where it stands and the reward it just got. Each level switches on one more idea.</dd></div>
+    <div><dt>Watch for</dt><dd>On level 1, the AI never sees the room itself, only its position and a reward. On level 2, every step lands in the log as a state, an action and a reward.</dd></div>
+  </dl>
+
+  <nav class="levels" id="levels" aria-label="Levels"></nav>
+
+  <section class="play" id="play" aria-label="The game">
+    <div class="stage">
+      <div class="stage-head"><span class="live"><i></i><b>The room</b></span>
+        <span class="stage-tools"><button class="info" type="button" aria-expanded="false" aria-controls="info-room" aria-label="Explain the room" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></span></div>
+      <p class="info-text" id="info-room" data-info="room" hidden></p>
+      <div class="stage-body">
+        <canvas id="stage" role="img" aria-label="A five by five room. The robot starts on the left, the treasure is at the bottom right, there is a pit in the middle and two walls."></canvas>
+      </div>
+      <p class="say" id="say" aria-live="off"></p>
+      <dl class="readouts">
+        <div><dt>Steps</dt><dd class="num" id="steps">0</dd></div>
+        <div><dt>Score</dt><dd class="num" id="score">0</dd></div>
+      </dl>
+    </div>
+
+    <aside class="panel" id="levelPanel" aria-label="Controls">
+      <section>
+        <h2><span id="levelTitle"></span></h2>
+        <p id="levelBrief"></p>
+        <p class="lesson-line" id="status"></p>
+      </section>
+      <section data-levels="1" aria-labelledby="sh">
+        <h2><span id="sh">What the AI sees</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-sees" aria-label="Explain what the AI sees" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-sees" data-info="ai" hidden></p>
+        <output class="sees" id="sees">Nothing yet</output>
+        <div class="arrows" aria-hidden="true"><span id="arrowOut">action &rarr;</span><span id="arrowBack">&larr; position and reward</span></div>
+      </section>
+      <section data-levels="2" aria-labelledby="lh" hidden>
+        <h2><span id="lh">Log</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-log" aria-label="Explain the log" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-log" data-info="log" hidden></p>
+        <ol class="log" id="log" aria-live="off"></ol>
+      </section>
+      <section class="controls" aria-labelledby="ph">
+        <h2><span id="ph">Move</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rewards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-reward" data-info="reward" hidden></p>
+        <div class="pad" role="group" aria-labelledby="ph">
+          <button type="button" data-move="0" aria-label="Up">&uarr;</button>
+          <button type="button" data-move="2" aria-label="Left">&larr;</button>
+          <button type="button" data-move="1" aria-label="Down">&darr;</button>
+          <button type="button" data-move="3" aria-label="Right">&rarr;</button>
+        </div>
+        <div class="row-btns">
+          <button class="btn primary" type="button" id="handover">Let the AI play</button>
+          <button class="btn" type="button" id="restart">Restart</button>
+          <button class="info" type="button" aria-expanded="false" aria-controls="info-restart" aria-label="Explain restart" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
+        </div>
+        <p class="info-text" id="info-restart" data-info="restart" hidden></p>
+      </section>
+    </aside>
+  </section>
+
+  <div class="moral">
+    <div><small>The lesson</small><p>Six small ideas, one room: the AI only ever knows what the room tells it.</p></div>
+    <a class="btn" href="#how">Why it works</a>
+  </div>
+
+  <section class="more" aria-label="Watch and read">
+    <div class="watch" id="watchCol" hidden>
+      <h2>Watch it learn</h2>
+      <p>A short narrated explainer of this room.</p>
+      <div id="watchBox"></div>
+    </div>
+    <div class="read" id="how">
+      <h2>How it works</h2>
+      <p>The illustrated write-up of this game.</p>
+      <a class="btn primary" id="writeup" href="how-it-works/">Read How it works</a>
+    </div>
+  </section>
+
+  <section class="uses" id="uses" aria-labelledby="usesTitle" hidden>
+    <h2 id="usesTitle">Words this game uses</h2>
+    <div class="chips" id="usesChips"></div>
+  </section>
+
+  <section class="more-from" id="moreFrom" aria-labelledby="moreTitle" hidden>
+    <h2 id="moreTitle">More from the arcade</h2>
+    <div class="tiles" id="moreTiles"></div>
+  </section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="../../assets/game-page.js"></script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
