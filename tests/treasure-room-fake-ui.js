@@ -29,6 +29,6 @@ export function fakeUi() {
     room: ROOM,
     draw(o) { drawn.push(o); },
     cellAt: () => null,
-    say() {}, readout() {}, sees() {}, setLog() {}, flash() {},
+    said: [], say(t) { this.said.push(t); }, readout() {}, sees() {}, setLog() {}, flash() {},
   };
 }

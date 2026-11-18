@@ -31,17 +31,19 @@ function paintTreasure(ctx, room, cell, scale) {
   }
 }
 
-// One dashed line per route; the second route gets a finer dash so the two can be told apart.
+// One dashed line per route; the second route is drawn faint so the two can be told apart.
 function paintGhost(ctx, paths, cell) {
   ctx.strokeStyle = token('--signal', '#ff5a1f');
   ctx.lineWidth = 3;
   paths.forEach((path, k) => {
     if (path.length < 2) return;
-    ctx.setLineDash(k ? [2, 5] : [6, 5]);
+    ctx.globalAlpha = k ? 0.35 : 1; // the first route is the current one; the second is faint
+    ctx.setLineDash([6, 5]);
     ctx.beginPath();
     path.forEach((c, i) => ctx[i ? 'lineTo' : 'moveTo'](c.x * cell + cell / 2, c.y * cell + cell / 2));
     ctx.stroke();
   });
+  ctx.globalAlpha = 1;
   ctx.setLineDash([]);
   ctx.lineWidth = 1;
 }

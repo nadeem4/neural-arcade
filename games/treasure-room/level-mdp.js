@@ -11,7 +11,7 @@ const pct = p => Math.round(p * 100);
 
 export function tagNote(tag, { slip = SLIP, gamma = 0.9 } = {}) {
   return {
-    states: 'States: the 25 tiles of the room, each one a place the robot can be.',
+    states: 'States: every open tile of the room is a place the robot can be.',
     actions: 'Actions: up, down, left or right, chosen on every tile.',
     rewards: 'Rewards: -1 for every step, +10 for the treasure, -10 for the pit.',
     slip: `Slip chance: a move works ${pct(1 - 2 * slip)}% of the time and slips to each side ${pct(slip)}% of the time.`,
@@ -47,6 +47,13 @@ export function simulateTrips(room, policy, { slipEach, n, seed }) {
   return { treasure, pit, meanTotal: sum / n };
 }
 
+// One plain sentence from the two results: fewer pit falls wins, then the higher mean score; otherwise say they matched.
+export function tripsVerdict(dry, icy) {
+  if (dry.pit !== icy.pit) return dry.pit > icy.pit ? 'On ice, the plan made for ice fell in the pit less.' : 'This time the dry plan fell in the pit less.';
+  if (dry.meanTotal !== icy.meanTotal) return dry.meanTotal < icy.meanTotal ? 'On ice, the plan made for ice scored higher.' : 'This time the dry plan scored higher.';
+  return 'This time both plans did the same.';
+}
+
 export function mount(ui) {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ac = new AbortController(), on = (t, ev, fn) => t.addEventListener(ev, fn, { signal: ac.signal });
@@ -59,15 +66,15 @@ export function mount(ui) {
   const busy = () => timer !== null || lighting !== null;
 
   function paintTags() {
-    $('#tags').innerHTML = TAGS.map((t, i) => `<li${i < lit ? ' class="lit"' : ''}><b>${LABEL[t]}</b><span>${tagNote(t, { slip: SLIP, gamma: GAMMA })}</span></li>`).join('');
+    $('#tags').innerHTML = TAGS.map((t, i) => `<li${i < lit ? ' class="lit"' : ''}><span>${tagNote(t, { slip: SLIP, gamma: GAMMA })}</span></li>`).join('');
   }
   function paint() {
-    ui.draw({ ice: onIce, ghost: [dry.cells, icy.cells], agent, tags });
+    ui.draw({ ice: onIce, ghost: onIce ? [icy.cells, dry.cells] : [dry.cells, icy.cells], agent, tags });
     $('#dry').setAttribute('aria-pressed', String(!onIce));
     $('#icy').setAttribute('aria-pressed', String(onIce));
     $('#floorNote').textContent = onIce
-      ? `Icy floor: a move works ${pct(1 - 2 * SLIP)}% of the time. The AI plans the long way round, away from the pit (value ${icy.startValue.toFixed(1)}).`
-      : `Dry floor: every move works. The AI takes the short way, past the pit (value ${dry.startValue.toFixed(1)}).`;
+      ? `Icy: the AI goes the long way, away from the pit (value ${icy.startValue.toFixed(1)}).`
+      : `Dry: the AI goes the short way, past the pit (value ${dry.startValue.toFixed(1)}).`;
     for (const id of ['#dry', '#icy', '#walkPlan', '#trips', '#showMdp']) $(id).disabled = busy();
     paintTags();
   }
@@ -103,7 +110,7 @@ export function mount(ui) {
     const a = simulateTrips(room, dry.policy, { slipEach: SLIP, n: 20, seed: trips });
     const b = simulateTrips(room, icy.policy, { slipEach: SLIP, n: 20, seed: trips++ });
     $('#tripsOut').textContent = `Dry plan on ice: ${a.treasure} treasure, ${a.pit} pit.\nIcy plan on ice: ${b.treasure} treasure, ${b.pit} pit.`;
-    ui.say('On ice, the plan made for ice does better.');
+    ui.say(tripsVerdict(a, b));
   }
   function showMdp() {
     stop();

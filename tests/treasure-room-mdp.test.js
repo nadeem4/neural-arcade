@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ROOM, START, SLIP, valueIteration, greedyPolicy } from '../games/treasure-room/sim.js';
-import { TAGS, tagNote, compareRoutes, simulateTrips, mount } from '../games/treasure-room/level-mdp.js';
+import { TAGS, tagNote, compareRoutes, simulateTrips, tripsVerdict, mount } from '../games/treasure-room/level-mdp.js';
 import { LEVELS, navModel } from '../games/treasure-room/levels.js';
 import { fakeUi } from './treasure-room-fake-ui.js';
 
@@ -55,8 +55,62 @@ describe('tags', () => {
   });
 });
 
+describe('tripsVerdict', () => {
+  it('says which plan did better from the counts, and says so when they tie', () => {
+    expect(tripsVerdict({ pit: 3, meanTotal: -1 }, { pit: 0, meanTotal: 2 })).toMatch(/made for ice/);
+    expect(tripsVerdict({ pit: 0, meanTotal: 2 }, { pit: 3, meanTotal: -1 })).toMatch(/dry plan/);
+    expect(tripsVerdict({ pit: 1, meanTotal: 2 }, { pit: 1, meanTotal: 2 })).toMatch(/same/i);
+  });
+});
+
 describe('level 6 view and wiring', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
+  it('toggling the floor swaps which route is drawn strong (first) and which faint (second)', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    const { dry, icy } = compareRoutes(ROOM, 0.9, SLIP);
+    expect(ui.last().ghost).toEqual([dry.cells, icy.cells]);
+    ui.click('#icy');
+    expect(ui.last().ghost).toEqual([icy.cells, dry.cells]);
+    ui.click('#dry');
+    expect(ui.last().ghost).toEqual([dry.cells, icy.cells]);
+    view.destroy();
+  });
+  it('Run 20 trips shows both count lines and a verdict', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    ui.click('#trips');
+    const out = ui.panel.querySelector('#tripsOut').textContent;
+    expect(out).toMatch(/Dry plan on ice: \d+ treasure, \d+ pit/);
+    expect(out).toMatch(/Icy plan on ice: \d+ treasure, \d+ pit/);
+    expect(ui.said.at(-1).length).toBeGreaterThan(10);
+    view.destroy();
+  });
+  it('a hidden tab pauses the walk: the robot does not move until the tab is back', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    vi.stubGlobal('document', { hidden: true });
+    const ui = fakeUi();
+    const view = mount(ui);
+    ui.click('#walkPlan');
+    vi.advanceTimersByTime(5000);
+    expect(ui.last().agent).toEqual(START);
+    document.hidden = false;
+    vi.advanceTimersByTime(5000);
+    expect(ui.last().agent).not.toEqual(START);
+    view.destroy();
+  });
+  it('the tag list names each part once, and the states note does not count walls', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    ui.click('#showMdp');
+    expect(ui.panel.querySelector('#tags').innerHTML).not.toMatch(/<b>/);
+    expect(tagNote('states')).not.toMatch(/25/);
+    view.destroy();
+  });
   it('with reduced motion, Show the MDP lights all five tags at once', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const ui = fakeUi();

@@ -1,6 +1,6 @@
 // Level 5 (value): sweep to spread worth outward from the treasure, see it as numbers and heat, then walk uphill to it.
 import { ACTIONS, stateId } from '../../assets/grid.js';
-import { ROOM, START, sweepOnce } from './sim.js';
+import { ROOM, START, REWARD, sweepOnce } from './sim.js';
 import { gammaHint } from './words.js';
 
 const BEAT = 400;   // ms between steps of the walk
@@ -56,6 +56,9 @@ export function mount(ui) {
   const room = ui.room, slider = $('#valueGamma');
   const blank = () => new Array(room.w * room.h).fill(0);
   let gamma = Number(slider.value) || 0.9, values = blank(), sweeps = 0, marks = [], agent = START, timer = null;
+  let settleAt = sweepsToSettle(room, gamma); // changes only with the discount
+  // Score after n steps of the uphill walk: each step costs REWARD.step, and arriving at the treasure pays REWARD.treasure instead of the last cost.
+  const scoreAt = (n, arrived) => REWARD.step * n + (arrived ? REWARD.treasure - REWARD.step : 0);
 
   const stop = () => { clearInterval(timer); timer = null; };
   const busy = () => timer !== null;
@@ -64,8 +67,7 @@ export function mount(ui) {
     ui.draw({ values, heat: heatOf(values, room), marks, agent });
     $('#valueGammaOut').textContent = gamma.toFixed(2);
     $('#valueGammaHint').textContent = gammaHint(gamma);
-    const settled = sweeps > 0 && sweepsToSettle(room, gamma) <= sweeps;
-    $('#sweepInfo').textContent = settled ? `Settled after ${sweepsToSettle(room, gamma)} sweeps` : `Sweep ${sweeps}`;
+    $('#sweepInfo').textContent = sweeps > 0 && settleAt <= sweeps ? `Settled after ${settleAt} sweeps` : `Sweep ${sweeps}`;
     for (const id of ['#sweep', '#sweep10', '#walkUp', '#resetSweeps']) $(id).disabled = busy();
   }
   function sweep() {
@@ -91,18 +93,18 @@ export function mount(ui) {
     const finish = () => {
       stop();
       ui.say(w.outcome === 'treasure' ? `Walked uphill to the treasure in ${w.path.length - 1} steps.`
-        : sweeps === 0 || w.path.length === 1 ? 'No value here yet: sweep first.' : 'No tile next to the robot is better yet: sweep some more.');
+        : sweeps === 0 ? 'No value here yet: sweep first.' : 'No tile next to the robot is better yet: sweep some more.');
       paint();
     };
     agent = START;
     ui.readout(0, 0);
-    if (reduceMotion || w.path.length === 1) { agent = w.path.at(-1); ui.readout(w.path.length - 1, w.outcome === 'treasure' ? 12 - w.path.length : 0); finish(); return; }
+    if (reduceMotion || w.path.length === 1) { agent = w.path.at(-1); ui.readout(w.path.length - 1, scoreAt(w.path.length - 1, w.outcome === 'treasure')); finish(); return; }
     let i = 0;
     timer = setInterval(() => {
       if (document.hidden) return;
       agent = w.path[++i];
       ui.flash();
-      ui.readout(i, w.outcome === 'treasure' && i === w.path.length - 1 ? 12 - w.path.length : -i);
+      ui.readout(i, scoreAt(i, w.outcome === 'treasure' && i === w.path.length - 1));
       if (i >= w.path.length - 1) finish(); else paint();
     }, BEAT);
     paint();
@@ -113,7 +115,7 @@ export function mount(ui) {
   on($('#sweep10'), 'click', () => sweepMany(10));
   on($('#walkUp'), 'click', walkUp);
   on($('#resetSweeps'), 'click', reset);
-  on(slider, 'input', () => { gamma = Number(slider.value); reset(); });
+  on(slider, 'input', () => { gamma = Number(slider.value); settleAt = sweepsToSettle(room, gamma); reset(); });
 
   ui.readout(0, 0);
   paint();

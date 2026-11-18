@@ -81,5 +81,5 @@
 .tags li.lit span { display: block; }
 
 @media (max-width: 640px) {
-  #valueGammaHint, #floorNote { display: none; }
+  #valueGammaHint { display: none; }
 }

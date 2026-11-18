@@ -70,6 +70,32 @@ describe('level 5 view', () => {
     expect(ui.last().agent).not.toEqual(START);
     view.destroy();
   });
+  it('walking uphill with no sweeps says sweep first; after a few sweeps it says no neighbour is better yet', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    ui.click('#walkUp');
+    expect(ui.said.at(-1)).toMatch(/sweep first/);
+    ui.click('#sweep'); ui.click('#sweep');
+    ui.click('#walkUp');
+    expect(ui.said.at(-1)).toBe('No tile next to the robot is better yet: sweep some more.');
+    view.destroy();
+  });
+  it('a hidden tab pauses the uphill walk', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    vi.stubGlobal('document', { hidden: false });
+    const ui = fakeUi();
+    const view = mount(ui);
+    ui.click('#sweep10');
+    vi.advanceTimersByTime(3000);
+    ui.click('#walkUp');
+    document.hidden = true;
+    vi.advanceTimersByTime(5000);
+    expect(ui.last().agent).toEqual(START);
+    view.destroy();
+    vi.useRealTimers();
+  });
   it('mounts on a fake page, draws, and removes every listener on destroy', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: false }));
     const ui = fakeUi();
