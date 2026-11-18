@@ -17,9 +17,13 @@ export function stateValue(q, s) {
 // Largest Q in state s; ties are broken with rng (a unique best needs no draw).
 export function bestAction(q, s, rng) {
   const best = stateValue(q, s);
-  const tied = [];
-  for (let a = 0; a < q.nActions; a++) if (qValue(q, s, a) === best) tied.push(a);
-  return tied.length === 1 ? tied[0] : tied[Math.floor(rng() * tied.length)];
+  let count = 0, first = 0;
+  for (let a = 0; a < q.nActions; a++) {
+    if (qValue(q, s, a) === best) { if (count++ === 0) first = a; }
+  }
+  if (count === 1) return first;
+  let k = Math.floor(rng() * count);
+  for (let a = 0; a < q.nActions; a++) if (qValue(q, s, a) === best && k-- === 0) return a;
 }
 
 // With chance epsilon take a random action, otherwise the best one.

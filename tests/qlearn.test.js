@@ -93,3 +93,12 @@ describe('chooseAction', () => {
     for (const p of share(counts, 4000)) { expect(p).toBeGreaterThan(0.2); expect(p).toBeLessThan(0.3); }
   });
 });
+
+describe('bestAction with NaN in the Q-table', () => {
+  it('ends and returns undefined instead of looping forever', async () => {
+    const { createQTable, bestAction } = await import('../engine/qlearn.js');
+    const q = createQTable(1, 3);
+    q.v.fill(NaN);
+    expect(bestAction(q, 0, () => 0.5)).toBeUndefined();
+  });
+});

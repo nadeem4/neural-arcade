@@ -23,11 +23,12 @@ export function runEpisode(agent, rewards, hyper, epsilon) {
   let reward = 0;
   let arrived = false;
   let steps = 0;
+  const res = {};
   while (steps < STEP_CAP && !arrived) {
     const s = cell * period + (steps % period);
     visits[cell] += 1;
     const a = chooseAction(q, s, epsilon, rng);
-    const res = stepWorld(world, rewards, cell, steps, a);
+    stepWorld(world, rewards, cell, steps, a, res);
     steps++;
     update(q, s, a, res.r, res.cell2 * period + (steps % period), res.done, params);
     reward += res.r;
