@@ -3,13 +3,15 @@ import { DEFAULT_REWARDS } from './presets.js';
 import { isLegal } from './words.js';
 
 export const FIELDS = [
-  { key: 'fare', label: 'Fare for arriving', sign: '+' },
-  { key: 'time', label: 'Cost per second', sign: '-' },
-  { key: 'off', label: 'Fine per park or footpath tile', sign: '-' },
-  { key: 'red', label: 'Fine per red light run', sign: '-' },
-  { key: 'wrong', label: 'Fine per wrong-way move', sign: '-' },
-  { key: 'perTile', label: 'Pay per tile driven', sign: '+' },
+  { key: 'fare', label: 'Fare for arriving', sign: '+', chip: 'Fare' },
+  { key: 'time', label: 'Cost per second', sign: '-', chip: 'Second' },
+  { key: 'off', label: 'Fine per park or footpath tile', sign: '-', chip: 'Park' },
+  { key: 'red', label: 'Fine per red light run', sign: '-', chip: 'Red' },
+  { key: 'wrong', label: 'Fine per wrong-way move', sign: '-', chip: 'Wrong way' },
+  { key: 'perTile', label: 'Pay per tile driven', sign: '+', chip: 'Per tile' },
 ];
+
+export const RATE_KEYS = FIELDS.map(f => f.key);
 
 // A fresh copy of the starting reward: what Reset puts back.
 export const defaultRewards = () => ({ ...DEFAULT_REWARDS });
