@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-import { convert, project, rasterise } from '../scripts/city/convert.js';
+import { convert, project, rasterise, estimateHeight } from '../scripts/city/convert.js';
 
 const config = JSON.parse(
   readFileSync(new URL('../scripts/city/chicago.config.json', import.meta.url), 'utf8'),
@@ -70,6 +70,8 @@ const miniConfig = (over = {}) => ({
   lightPeriod: 8,
   ...over,
 });
+const ringAreaOf = (b) =>
+  Math.abs(b.ring.reduce((s, p, i) => s + p[0] * b.ring[(i + 1) % b.ring.length][1] - b.ring[(i + 1) % b.ring.length][0] * p[1], 0)) / 2;
 const kindAt = (city, c, r) => city.kind[r][c];
 const buildingAt = (city, x, y) =>
   city.buildings.find((b) => {
@@ -115,7 +117,8 @@ describe('convert', () => {
     expect(JSON.stringify(again)).toBe(JSON.stringify(city));
     expect(Object.keys(city)).toEqual([
       'id', 'name', 'bbox', 'cellM', 'lightPeriod', 'cols', 'rows', 'kind', 'oneway', 'signals', 'pickup',
-      'dropoff', 'buildings', 'roads', 'parks', 'paths', 'water', 'landmarks', 'size',
+      'dropoff', 'buildings', 'roads', 'sidewalks', 'crossings', 'signalHeads', 'lamps', 'trees', 'rail',
+      'parks', 'paths', 'water', 'landmarks', 'size',
     ]);
   });
 
@@ -157,10 +160,102 @@ describe('convert', () => {
     expect(kindAt(city, 10, 9)).toBe('f'); // footway over the park
   });
 
-  it('gives buildings a height: height tag, else levels * 3.5, else 12 m', () => {
+  it('estimates height from height, levels, then footprint', () => {
+    expect(estimateHeight({ height: '30' }, 100)).toBe(30);
+    expect(estimateHeight({ height: '12.5 m' }, 100)).toBe(12.5);
+    expect(estimateHeight({ 'building:levels': '4' }, 5000)).toBe(14);
+    expect(estimateHeight({}, 100)).toBe(12);
+    expect(estimateHeight({}, 800)).toBe(20);
+    expect(estimateHeight({}, 5000)).toBe(32);
     expect(buildingAt(city, 150, 126).h).toBe(30);
     expect(buildingAt(city, 215, 170).h).toBe(14); // 4 levels
-    expect(buildingAt(city, 80, 30).h).toBe(12); // neither tag
+    expect(buildingAt(city, 80, 30).h).toBe(estimateHeight({}, ringAreaOf(buildingAt(city, 80, 30))));
+  });
+
+  it('reads heights in feet as metres', () => {
+    expect(estimateHeight({ height: '120 ft' }, 100)).toBe(36.6);
+    expect(estimateHeight({ height: "120'" }, 100)).toBe(36.6);
+    expect(estimateHeight({ height: "10'6\"" }, 100)).toBe(3.2);
+    expect(estimateHeight({ height: '12.5 m' }, 100)).toBe(12.5);
+  });
+
+  it('keeps building tags and marks parts', () => {
+    const b2 = buildingAt(city, 215, 170);
+    expect(b2).toMatchObject({ levels: 4, roof: 'gabled', part: false, minH: 0, colour: null, material: null });
+    expect(Object.keys(b2)).toEqual(['ring', 'h', 'minH', 'levels', 'part', 'hasParts', 'roof', 'colour', 'material']);
+    const part = city.buildings.find((b) => b.part);
+    expect(part).toMatchObject({
+      h: 20, minH: 10, levels: null, part: true, roof: 'hipped', colour: '#aa5533', material: 'brick',
+    });
+    expect(city.buildings.filter((b) => b.part)).toHaveLength(2);
+    // a way tagged building and building:part is a part, and feet become metres
+    const both = city.buildings.find((b) => b.part && b.h === 36.6);
+    expect(both).toMatchObject({ part: true, hasParts: false });
+    expect(buildingAt(city, 80, 30)).toMatchObject({ roof: 'flat', part: false });
+  });
+
+  it('marks outlines that contain a part, and only those', () => {
+    expect(buildingAt(city, 150, 126).hasParts).toBe(true); // b1 holds the hipped part
+    expect(buildingAt(city, 215, 170).hasParts).toBe(false);
+    expect(buildingAt(city, 80, 30).hasParts).toBe(false);
+    expect(city.buildings.filter((b) => b.hasParts)).toHaveLength(1);
+  });
+
+  it('a way tagged building and building:part still paints the grid', () => {
+    expect(kindAt(city, 12, 6)).toBe('b'); // cell centre (150, 162) is inside the ring at x 149 to 157, y 155 to 167
+  });
+
+  it('parts do not change the grid', () => {
+    expect(kindAt(city, 12, 9)).toBe('b');
+    expect(kindAt(city, 12, 10)).toBe('r');
+  });
+
+  it('roads carry lanes class and name', () => {
+    const named = city.roads.find((r) => r.name === 'Test Ave');
+    expect(named).toMatchObject({ cls: 'primary', lanes: null, w: 14 });
+    expect(Object.keys(named)).toEqual(['pts', 'w', 'oneway', 'lanes', 'cls', 'name']);
+    const lane = city.roads.find((r) => r.name === 'Back Lane');
+    expect(lane).toMatchObject({ cls: 'residential', lanes: 2, w: 7, oneway: -1 });
+    expect(city.roads.find((r) => r.cls === 'service')).toMatchObject({ name: null });
+  });
+
+  it('emits sidewalks as lines with a width', () => {
+    expect(city.sidewalks).toHaveLength(1);
+    expect(city.sidewalks[0]).toMatchObject({ w: 2 });
+    expect(city.sidewalks[0].pts).toHaveLength(2);
+  });
+
+  it('emits crossings from ways and nodes: centre, angle across the road, length', () => {
+    expect(city.crossings).toHaveLength(2);
+    const [fromWay, fromNode] = city.crossings;
+    expect(fromWay.x).toBeCloseTo(100, 0);
+    expect(fromWay.y).toBeCloseTo(66, 0);
+    expect(fromWay.angle).toBe(0); // runs north-south
+    expect(fromWay.w).toBeCloseTo(12, 0);
+    expect(fromNode.x).toBeCloseTo(150, 0);
+    expect(fromNode.y).toBeCloseTo(40, 0);
+    expect(fromNode.angle).toBe(90); // road B runs north-south, so the crossing runs east-west
+    expect(fromNode.w).toBe(12);
+  });
+
+  it('signal heads carry the bearing of the nearest road', () => {
+    expect(city.signalHeads).toHaveLength(2);
+    for (const h of city.signalHeads) expect(Object.keys(h)).toEqual(['x', 'y', 'dir']);
+    expect(city.signalHeads[0].dir).toBe(0); // off-road signal nearest road B (north-south)
+  });
+
+  it('lamps and trees keep only points on the map', () => {
+    expect(city.lamps).toEqual([[60, 110]]);
+    expect(city.trees).toEqual([[80, 120], [82, 125]]);
+  });
+
+  it('rail keeps surface, elevated rail and the elevated subway L, skips tunnels', () => {
+    expect(city.rail).toHaveLength(3);
+    expect(city.rail[0]).toMatchObject({ h: 8, elevated: true });
+    expect(city.rail[0].pts).toHaveLength(3);
+    expect(city.rail[1]).toMatchObject({ h: 0, elevated: false });
+    expect(city.rail[2]).toMatchObject({ h: 8, elevated: true }); // railway=subway, bridge=yes, layer=2
+    expect(Object.keys(city.rail[2])).toEqual(['pts', 'h', 'elevated']);
   });
 
   it('closes unclosed rings and turns multipolygon outer rings into buildings', () => {
@@ -170,8 +265,8 @@ describe('convert', () => {
     const unclosed = buildingAt(city, 175, 30);
     expect(unclosed.ring).toHaveLength(5);
     const multi = buildingAt(city, 112, 207);
-    expect(multi.h).toBe(12);
-    expect(city.buildings).toHaveLength(5); // the inner ring is not a building
+    expect(multi.h).toBe(estimateHeight({}, ringAreaOf(multi)));
+    expect(city.buildings.filter((b) => !b.part)).toHaveLength(5); // the inner ring is not a building
   });
 
   it('keeps roads and footpaths as vector geometry', () => {
@@ -269,10 +364,24 @@ describe('convert', () => {
 
 describe('committed chicago.json', () => {
   const file = new URL('../games/city/chicago.json', import.meta.url);
-  it('chicago.json is under 300 KB, parses and keeps the config light period', () => {
-    expect(statSync(file).size).toBeLessThan(300 * 1024);
+  it('chicago.json is under 500 KB, parses and keeps the config light period', () => {
+    expect(statSync(file).size).toBeLessThan(500 * 1024);
     const city = JSON.parse(readFileSync(file, 'utf8'));
     expect(city.kind).toHaveLength(city.rows);
     expect(city.lightPeriod).toBe(config.lightPeriod);
+  });
+});
+
+describe('fetch-overpass buildQuery', () => {
+  it('asks for building parts, rail, lamps, trees, crossings and sidewalks', async () => {
+    const { buildQuery } = await import('../scripts/city/fetch-overpass.mjs');
+    const q = buildQuery([1, 2, 3, 4]);
+    for (const part of [
+      'way["building:part"]', 'way[railway~"^(rail|light_rail|subway)$"]', 'node[highway=street_lamp]', 'node[natural=tree]',
+      'node[highway=crossing]', 'way[highway]', // way[highway] already covers sidewalks and crossings
+    ]) expect(q).toContain(part);
+    expect(q).not.toContain('way[railway]');
+    expect(q).not.toContain('way[footway=');
+    expect(q).toContain('(1,2,3,4)');
   });
 });
