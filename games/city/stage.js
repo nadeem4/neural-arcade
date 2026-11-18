@@ -1,4 +1,4 @@
-// The Stage interface: { ready, setHeat(visits), playTrip({ track, events, onFrame, onDone }), playRace({ race, onFrame, onDone }), clearRoute(), setChase(on), setShot(name), skipTrip(), setMapView(on), destroy() }.
+// The Stage interface: { ready, setHeat(visits), playTrip({ track, events, onFrame, onDone }), playRace({ race, onFrame, onDone }), clearRoute(), setChase(on), setShot(name), skipTrip(), renderAt(ms), setMapView(on), destroy() }.
 // scene.js supplies the 3D stage; this file holds the choice between it and the message-only fallback.
 export const NO_WEBGL = '3D view needs WebGL. The reward and receipt still work.';
 
@@ -22,6 +22,7 @@ export function createFallbackStage(el, message) {
     setChase() {},
     setShot() {},
     skipTrip() {},
+    renderAt() { return { phase: 'map', done: true }; },
     setMapView() {},
     destroy() {},
   };
