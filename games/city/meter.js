@@ -17,6 +17,19 @@ export function meterAt(events, f) {
   return { total, counts, seconds: whole };
 }
 
+// "What the city wanted" is a score out of 100, so its bar is 0 to 100.
+export const METER_SCALE = 100;
+export const barFraction = (v) => Math.max(0, Math.min(1, v / METER_SCALE));
+
+// Pay has no fixed top (a trip can climb to 800 or dip below 0), so its bar runs over the trip's own range,
+// found once per trip from the whole route: at least 0 to 100, wider if the trip goes past either end.
+export function payRange(events) {
+  let lo = 0, hi = METER_SCALE, t = 0;
+  for (const s of events.steps) { t += s.delta; lo = Math.min(lo, t); hi = Math.max(hi, t); }
+  return { lo, hi };
+}
+export const payFraction = (v, { lo, hi }) => Math.max(0, Math.min(1, (v - lo) / (hi - lo)));
+
 // The big number: whole, with a real minus sign (a gain gets a plus).
 export function meterText(total) {
   const n = Math.round(total);

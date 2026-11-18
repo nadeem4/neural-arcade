@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildReceipt, verdictOf, nextStepOf } from '../games/city/receipt.js';
-import { LESSON, INFO, isLegal, goalReached, shareLine } from '../games/city/words.js';
+import { LESSON, INFO, isLegal, goalReached, shareLine, goalLine } from '../games/city/words.js';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { GOAL_SECONDS, DEFAULT_REWARDS } from '../games/city/presets.js';
 
@@ -72,10 +72,16 @@ describe('verdictOf', () => {
   });
 });
 
+describe('goalLine', () => {
+  it('states the goal before training, with the seconds from GOAL_SECONDS', () => {
+    expect(goalLine()).toBe(`Goal: arrive in ${GOAL_SECONDS} s, legally`);
+  });
+});
+
 describe('words', () => {
   it('has the lesson and the three info texts', () => {
     expect(LESSON).toBe('The reward is the only thing the taxi wants: it does what you pay it for, not what you meant.');
-    for (const k of ['reward', 'goal', 'map']) expect(INFO[k].length).toBeGreaterThan(10);
+    for (const k of ['reward', 'goal', 'map', 'meters']) expect(INFO[k].length).toBeGreaterThan(10);
   });
 
   it('isLegal needs arrival and no fines', () => {

@@ -11,7 +11,7 @@ const mainPath = 'games/city/main.js';
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 const tag = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 
-const IDS = ['announce', 'play', 'about', 'rateCard', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'share', 'shareText', 'copy', 'reset', 'chase', 'labels', 'meter', 'meterTotal', 'meterCounts', 'minimap', 'mute', 'garage', 'garageCount', 'garageDrawer', 'garageList', 'garageClose', 'garageEmpty', 'bar', 'barDrive', 'viewToggle', 'driveProgress', 'skip', 'endcard', 'endTitle', 'endFlag', 'endTime', 'endGoal', 'endEarned', 'endVerdict', 'endEdit', 'endKeep', 'endAgain', 'toast'];
+const IDS = ['announce', 'play', 'about', 'rateCard', 'stage', 'stageNote', 'status', 'train', 'progress', 'receipt', 'share', 'shareText', 'copy', 'reset', 'chase', 'labels', 'meter', 'meterTotal', 'meterCounts', 'meterGoal', 'meterGoalTotal', 'meterBar', 'meterGoalBar', 'mapGoal', 'minimap', 'mute', 'garage', 'garageCount', 'garageDrawer', 'garageList', 'garageClose', 'garageEmpty', 'bar', 'barDrive', 'viewToggle', 'driveProgress', 'skip', 'endcard', 'endTitle', 'endFlag', 'endTime', 'endGoal', 'endEarned', 'endVerdict', 'endEdit', 'endKeep', 'endAgain', 'toast'];
 
 describe('city page markup', () => {
   it('has every id main.js will look up', () => {
@@ -42,6 +42,13 @@ describe('city page markup', () => {
       expect(tag(id), id).toMatch(/\shidden[\s>]/);
     }
     expect(tag('minimap')).toMatch(/^<canvas /);
+    expect(tag('meterGoal')).toContain('aria-hidden="true"');
+    expect(tag('meterGoal')).toMatch(/\shidden[\s>]/);
+    expect(tag('meterGoal')).not.toContain('aria-live');
+    expect(html).toContain('What the city wanted');
+    expect(html).toContain('>Pay<');
+    expect(tag('mapGoal')).toMatch(/^<p /);
+    expect(read('games/city/main.js')).toContain('goalLine()');
     expect(tag('mute')).toContain('aria-pressed="false"');
     expect(rules('.minimap')).toContain('border-radius: 50%');
     expect(css).toContain('prefers-reduced-motion');
