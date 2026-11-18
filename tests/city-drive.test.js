@@ -37,7 +37,7 @@ describe('stateAt', () => {
     let prev = stateAt(track, 0);
     for (let ms = dt; ms <= track.total; ms += dt) {
       const s = stateAt(track, ms);
-      expect(Math.hypot(s.x - prev.x, s.z - prev.z)).toBeLessThan(city.cellM * 2.8 * dt / track.tickMs + 1e-6);
+      expect(Math.hypot(s.x - prev.x, s.z - prev.z)).toBeLessThan(city.cellM * 1.5 * dt / track.tickMs + 1e-6);
       prev = s;
     }
   });

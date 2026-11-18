@@ -3,10 +3,12 @@
 import * as THREE from './vendor/three.module.min.js';
 import { taxiParts, wheelAngle, steerAngle } from './taxi-model.js';
 import { ENV_INTENSITY } from './scene-look.js';
+import { ROAD_Y, MARK_Y } from './scene-math.js';
 
 const BRAKE_ON = '#FF2A2A', BRAKE_OFF = '#7A1F1F';
 export const TAXI_SCALE = 1.5; // metres to scene units: the 4.2 m model becomes a car about half a 12 m tile wide
-export const TAXI_Y = 0.1;     // the tyres rest just above the road surface (0.05), not floating
+export const TAXI_Y = ROAD_Y;  // the tyres rest on the road surface
+export const SHADOW_Y = MARK_Y + 0.1; // the shadow's height in the scene: just above the lane marks, so neither hides it
 
 // A side profile [[z, y], ...] pushed across `width`, with a rounded edge. Shape x is the car's z, so it is turned to face +z.
 function extrudeGeometry(profile, width) {
@@ -19,13 +21,16 @@ function extrudeGeometry(profile, width) {
 }
 
 // A soft dark oval under the car: a radial gradient on a flat plane, so the car sits on the road instead of hovering.
-function contactShadow() {
+function shadowMaterial() {
   const c = document.createElement('canvas'); c.width = c.height = 64;
   const x = c.getContext('2d'), grad = x.createRadialGradient(32, 32, 4, 32, 32, 32);
   grad.addColorStop(0, 'rgba(0,0,0,0.55)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
   x.fillStyle = grad; x.fillRect(0, 0, 64, 64);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 5.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, toneMapped: false }));
-  m.rotation.x = -Math.PI / 2; m.position.y = 0.02; m.renderOrder = 2; m.userData.flat = true; // flat: casts no shadow itself
+  return new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, toneMapped: false });
+}
+function contactShadow(material) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 5.6), material);
+  m.rotation.x = -Math.PI / 2; m.position.y = (SHADOW_Y - TAXI_Y) / TAXI_SCALE; m.renderOrder = 2; m.userData.flat = true; // flat: casts no shadow itself
   return m;
 }
 
@@ -66,7 +71,7 @@ export function createTaxiMaker(tint = null) {
         if (p.kind !== 'extrude') m.position.set(...p.pos); // a profile is already placed in car coordinates
         g.add(m);
       }
-      g.add(contactShadow());
+      g.add(contactShadow((cache.shadow ??= shadowMaterial()))); // one texture and material for every car this maker makes
       g.scale.setScalar(TAXI_SCALE);
       return g;
     },
@@ -75,6 +80,6 @@ export function createTaxiMaker(tint = null) {
       const spin = wheelAngle(distance ?? 0), steer = steerAngle(curvature ?? 0);
       for (const w of wheels) { w.spin.rotation.x = spin; if (w.steer) w.steer.rotation.y = steer; }
     },
-    dispose() { for (const m of [...Object.values(cache), ...brakeMats]) m.dispose(); },
+    dispose() { for (const m of [...Object.values(cache), ...brakeMats]) { m.map?.dispose(); m.dispose(); } },
   };
 }

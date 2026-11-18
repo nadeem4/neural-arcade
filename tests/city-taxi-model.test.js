@@ -87,3 +87,28 @@ describe('record-mode determinism', () => {
     }
   });
 });
+
+describe('heights come from the one road height', () => {
+  const src = (f) => readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8');
+  it('the tyres rest on the road, and the shadow sits above the lane marks', async () => {
+    const { ROAD_Y, MARK_Y } = await import('../games/city/scene-math.js');
+    const { TAXI_Y, SHADOW_Y } = await import('../games/city/scene-taxi.js');
+    expect(TAXI_Y).toBe(ROAD_Y);
+    expect(MARK_Y).toBeGreaterThan(ROAD_Y);
+    expect(SHADOW_Y).toBeGreaterThan(MARK_Y);
+  });
+  it('scene.js draws the roads and marks at those heights, not literals', () => {
+    const s = src('scene.js');
+    expect(s).toMatch(/buildRoadStrips\(city\.roads \?\? \[\], ROAD_Y\)/);
+    expect(s).toMatch(/buildLaneMarks\(city\.roads \?\? \[\], MARK_Y\)/);
+  });
+});
+
+describe('the contact shadow is made once per maker', () => {
+  it('builds its texture and material in the cache and frees the texture on dispose', () => {
+    const s = readFileSync(new URL('../games/city/scene-taxi.js', import.meta.url), 'utf8');
+    expect(s.match(/new THREE\.CanvasTexture/g)).toHaveLength(1);
+    expect(s).toMatch(/cache\.shadow \?\?= shadowMaterial\(\)/);
+    expect(s).toMatch(/m\.map\?\.dispose\(\)/);
+  });
+});

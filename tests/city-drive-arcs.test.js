@@ -30,14 +30,14 @@ describe('corner arcs', () => {
   it('heading changes smoothly across every corner', () => {
     const s = sample(10);
     let worst = 0;
-    for (let k = 1; k < s.length; k++) if (s[k].speed > 1) worst = Math.max(worst, angle(s[k].heading, s[k - 1].heading)); // a car stopped for a U-turn spins on the spot
+    for (let k = 1; k < s.length; k++) if (s[k].speed > 1 && !track.segs[s[k].stepIndex]?.uturn) worst = Math.max(worst, angle(s[k].heading, s[k - 1].heading)); // a car stopped for a U-turn spins on the spot
     expect(worst).toBeLessThan(0.12);
   });
   it('never slides sideways: while moving, the direction of travel matches the heading', () => {
     const s = sample(10);
     for (let k = 1; k < s.length; k++) {
       const dx = s[k].x - s[k - 1].x, dz = s[k].z - s[k - 1].z;
-      if (Math.hypot(dx, dz) < 0.05) continue; // stopped or nearly
+      if (Math.hypot(dx, dz) < 0.05 || track.segs[s[k].stepIndex]?.uturn) continue; // stopped, or turning round while pulling away from rest
       expect(angle(Math.atan2(dx, dz), s[k].heading)).toBeLessThan(0.35);
     }
   });
@@ -71,4 +71,26 @@ describe('corner arcs', () => {
   it('is a pure function of ms', () => {
     expect(stateAt(track, 3333)).toEqual(stateAt(track, 3333));
   });
+});
+
+describe('speed on the walk and mile cards (many U-turns)', () => {
+  for (const id of ['walk', 'mile']) {
+    it(`${id}: exit speed is continuous at every tick boundary, and peak speed stays within a start-from-rest hop`, () => {
+      const c = read('story.json').cards.find((x) => x.id === id);
+      const fr = routeFrames(world, city.cellM, c.route);
+      const t = driveTrack(fr, tripEvents(world, c.rewards, c.route));
+      const cruise = city.cellM / (t.tickMs / 1000);
+      let peak = 0, uturns = 0;
+      t.segs.forEach((g, i) => {
+        const n = t.segs[i + 1];
+        if (g.uturn) uturns++;
+        if (g.wait || !n || n.wait || !g.m1 || !n.m0) return;
+        const before = stateAt(t, (i + 1) * t.tickMs - 1e-6).speed, after = stateAt(t, (i + 1) * t.tickMs).speed;
+        expect(Math.abs(before - after)).toBeLessThan(0.01);
+      });
+      for (let ms = 0; ms <= t.total; ms += 5) peak = Math.max(peak, stateAt(t, ms).speed);
+      expect(peak / cruise).toBeLessThan(1.55); // 1.5 is a hop from rest to rest; a U-turn exit into a cruise is about 1.33
+      if (id === 'mile') expect(uturns).toBeGreaterThan(20);
+    });
+  }
 });

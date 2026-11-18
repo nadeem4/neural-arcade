@@ -58,6 +58,7 @@ function popTag(tag, at, i) {
     span = document.createElement('span'); $('labels').append(span);
     const live = Object.values(hud.lastTag ?? {}).filter((t) => t.span.isConnected).map((t) => ({ slot: t.slot }));
     slot = layoutTags([...live, {}]).at(-1).slot;
+    for (const t of Object.values(hud.lastTag ?? {})) if (t.slot === slot && t.span.isConnected) { t.span.remove(); if (rec) rec.tags = rec.tags.filter((x) => x.span !== t.span); } // all slots busy: the oldest tag gives way
   }
   hud.lastTag = { ...hud.lastTag, [tag.text]: { ...run, span, slot } };
   span.className = `tag ${tag.kind}`; span.textContent = run.label;

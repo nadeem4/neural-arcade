@@ -3,7 +3,7 @@
 // and a stop for every wait (red lights and the like). Presentation only: it never changes what the sim decided.
 import { tickMsFor } from './playback.js';
 
-const TURN_IN = 0.45;  // a U-turn (no arc is possible): stop, swing round on the spot for the first 45% of the tile, then drive off
+const TURN_IN = 0.45;  // a U-turn (no arc is possible): stop, then swing round while pulling away from rest (the first 45% of the tile)
 
 const smooth = (u) => u * u * (3 - 2 * u);
 const diff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a)); // shortest signed turn from a to b
@@ -31,6 +31,7 @@ function cornerAt(P, h1, h2, prev, next) {
   const C = [S[0] + d2[0] * R, S[1] + d2[1] * R];
   return { th, R, h1, C, r0: [S[0] - C[0], S[1] - C[1]], len: Math.abs(th) * R };
 }
+// At a corner tick boundary the taxi is on the arc's middle, about 0.21 cell from the cell centre but still inside the cell.
 // The point and heading a fraction t (0..1) round the arc.
 function arcAt(c, t) {
   const [rx, rz] = rot(c.r0[0], c.r0[1], c.th * t);
@@ -127,15 +128,14 @@ export function stateAt(track, ms) {
   if (s.wait) {
     return { x: a.x, z: a.z, heading: towards(s.from, s.to, smooth(u)), facing: s.to, speed: 0, braking: true, curvature: 0, dist: s.dist0, stepIndex: i, progress: i, tick: a.tick, done: false };
   }
-  // A U-turn has no arc: the car stands and swings round for the first part of the tile, then drives off.
+  // A U-turn has no arc: the car yaws round while creeping away from rest, so it barely moves while it points the wrong way.
   const turning = s.uturn && u < TURN_IN;
-  const w = s.uturn ? (u - TURN_IN) / (1 - TURN_IN) : u; // how far through the driving part
-  const [f, df] = turning ? [0, 0] : ease(w, s.m0, s.m1);
+  const [f, df] = ease(u, s.m0, s.m1); // the whole tile is driven, so a U-turn exit peaks like any start from rest (about 1.33 x cruise)
   const p = pathAt(s.path, f * s.path.len);
   const heading = turning ? towards(s.h0, s.h1, smooth(u / TURN_IN)) : p.heading;
   return {
     x: p.x, z: p.z, heading, facing: s.h1,
-    speed: Math.abs(df) * s.path.len / (tickMs * (s.uturn ? 1 - TURN_IN : 1) / 1000),
+    speed: Math.abs(df) * s.path.len / (tickMs / 1000),
     braking: turning || (s.m1 === 0 && u > 0.5),
     curvature: p.curvature, dist: s.dist0 + f * s.path.len,
     stepIndex: i, progress: i + f, tick: a.tick, done: false,

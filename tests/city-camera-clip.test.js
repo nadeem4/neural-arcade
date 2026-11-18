@@ -4,7 +4,7 @@ import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames, chaseCamera } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
-import { clipCamera, pinFade, CHASE, MIN_CAM_DIST } from '../games/city/scene-math.js';
+import { clipCamera, clipEased, cellHeights, pinFade, CHASE, MIN_CAM_DIST, ROAD_Y } from '../games/city/scene-math.js';
 
 // A tiny world: 8 columns x 5 rows, 10 m cells. Row 0 is the north edge, z = -(rows - 1 - r + 0.5) * cellM.
 // Row 2 is a road; rows 0-1 are buildings from column 3 on; everything else is road.
@@ -18,8 +18,13 @@ const solidAt = (w, cm, x, z) => {
   const [c, r] = cellOf(w, x, z, cm);
   return c >= 0 && c < w.cols && r >= 0 && r < w.rows && w.kind[r * w.cols + c] === 3;
 };
-const blocked = (w, cm, a, b) => { // any building cell on the segment a -> b (x, z)
-  for (let i = 0; i <= 200; i++) if (solidAt(w, cm, a[0] + (b[0] - a[0]) * i / 200, a[2] + (b[2] - a[2]) * i / 200)) return true;
+const heightOfCell = (w, cm, x, z) => { const [c, r] = cellOf(w, x, z, cm); return w.height ? w.height[r * w.cols + c] || 12 : 40; };
+const blocked = (w, cm, a, b) => { // the segment a -> b (x, y, z) passes through a building below its roof
+  for (let i = 0; i <= 200; i++) {
+    const x = a[0] + (b[0] - a[0]) * i / 200, z = a[2] + (b[2] - a[2]) * i / 200, y = a[1] + (b[1] - a[1]) * i / 200;
+    const deep = [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]].every(([ox, oz]) => solidAt(w, cm, x + ox, z + oz)); // a graze of a cell corner is not "inside"
+    if (deep && y < heightOfCell(w, cm, x, z)) return true;
+  }
   return false;
 };
 
@@ -53,12 +58,61 @@ describe('clipCamera', () => {
     expect(out.clipped).toBe(false);
     expect(out.pos).toEqual([45, 200, zOfRow(0)]);
   });
+  it('uses the real building height: a camera above a low building is left alone, one below a tall roof is pulled in', () => {
+    const low = { ...world, height: new Float32Array(cols * rows).fill(5) }, tall = { ...world, height: new Float32Array(cols * rows).fill(60) };
+    const cam = [45, 30, zOfRow(0)], target = [45, 1, zOfRow(2)];
+    expect(clipCamera(cam, target, low, cellM, 2).clipped).toBe(false); // the line clears a 5 m roof
+    expect(clipCamera(cam, target, tall, cellM, 2).clipped).toBe(true); // but not a 60 m one
+  });
   it('is pure: the same inputs give the same camera, and the inputs are not changed', () => {
     const target = [45, 1, zOfRow(2)], cam = [45, 8, zOfRow(0)];
     const a = clipCamera(cam, target, world, cellM, 2);
     expect(clipCamera(cam, target, world, cellM, 2)).toEqual(a);
     expect(cam).toEqual([45, 8, zOfRow(0)]);
   });
+});
+
+describe('clipEased', () => {
+  const at = (ms) => ({ pos: [45, 8, zOfRow(4) - ms * 0.02 + 0], target: [45, 1, zOfRow(4)] }); // never near a wall
+  const walk = (ms) => ({ pos: [45, 8, -23 - ms * 0.01], target: [45, 1, -5 - ms * 0.01] }); // drives north along row 2, camera behind it: the north wall of row 1 is reached at about 700 ms
+  it('leaves an open street alone', () => {
+    const out = clipEased(at, 0, world, cellM);
+    expect(out.clipped).toBe(false);
+    expect(out.pos[1]).toBe(8);
+  });
+  it('starts pulling in before the wall is reached and never jumps between nearby frames', () => {
+    const plain = (ms) => clipCamera(walk(ms).pos, walk(ms).target, world, cellM, 2).pos;
+    let first = -1;
+    for (let ms = 0; ms < 2000; ms += 50) if (clipCamera(walk(ms).pos, walk(ms).target, world, cellM, 2).clipped) { first = ms; break; }
+    expect(first).toBeGreaterThan(500); // the plain clip only starts here
+    expect(clipEased(walk, first - 400, world, cellM).clipped).toBe(true); // the eased one has already started
+    expect(plain(0)).toEqual(walk(0).pos);
+    let prev = clipEased(walk, 0, world, cellM).pos, worst = 0;
+    for (let ms = 10; ms < 2000; ms += 10) {
+      const p = clipEased(walk, ms, world, cellM).pos;
+      worst = Math.max(worst, Math.hypot(p[0] - prev[0], p[1] - prev[1], p[2] - prev[2]));
+      prev = p;
+    }
+    expect(worst).toBeLessThan(1);
+  });
+  it('is pure in ms', () => {
+    expect(clipEased(walk, 1234, world, cellM)).toEqual(clipEased(walk, 1234, world, cellM));
+  });
+});
+
+describe('cellHeights', () => {
+  it('gives each cell the tallest building over its centre, 0 elsewhere', () => {
+    const c = { cols: 4, rows: 3, cellM: 10, buildings: [{ ring: [[1, 1], [19, 1], [19, 19], [1, 19]], h: 30 }, { ring: [[11, 1], [19, 1], [19, 9], [11, 9]], h: 50 }, { ring: [[31, 21], [39, 21], [39, 29], [31, 29]] }] };
+    const h = cellHeights(c);
+    // row 2 is the south edge: y 0-10; row 0: y 20-30
+    expect(h[2 * 4 + 0]).toBe(30); expect(h[2 * 4 + 1]).toBe(50); expect(h[1 * 4 + 0]).toBe(30); expect(h[1 * 4 + 1]).toBe(30);
+    expect(h[0 * 4 + 3]).toBe(12); // no height in the map: 12 m
+    expect(h[0]).toBe(0);
+  });
+});
+
+describe('ROAD_Y', () => {
+  it('is the one road height: 0.8 m', () => { expect(ROAD_Y).toBe(0.8); });
 });
 
 describe('pinFade', () => {
@@ -72,7 +126,7 @@ describe('pinFade', () => {
 // The real map and the five preset routes: walk the chase camera through clipCamera at every 100 ms.
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const city = read('chicago.json');
-const realWorld = loadWorld(city);
+const realWorld = { ...loadWorld(city), height: cellHeights(city) };
 const story = read('story.json');
 
 describe('the chase camera on the real map, all five cards', () => {
@@ -82,11 +136,11 @@ describe('the chase camera on the real map, all five cards', () => {
       const track = driveTrack(frames, tripEvents(realWorld, card.rewards, card.route));
       for (let ms = 0; ms <= track.total; ms += 100) {
         const st = stateAt(track, ms);
-        const cam = chaseCamera(st, CHASE);
-        const out = clipCamera(cam.pos, [st.x, 1, st.z], realWorld, city.cellM, 2);
-        expect(solidAt(realWorld, city.cellM, out.pos[0], out.pos[2])).toBe(false);
-        expect(blocked(realWorld, city.cellM, out.pos, [st.x, 1, st.z])).toBe(false);
-        expect(out.pos[1]).toBeGreaterThan(0.9);
+        const at = (t) => { const q = stateAt(track, t); return { pos: chaseCamera(q, CHASE).pos, target: [q.x, ROAD_Y, q.z] }; };
+        const out = clipEased(at, ms, realWorld, city.cellM, { margin: 2, minY: ROAD_Y + 2.7 });
+        expect(blocked(realWorld, city.cellM, out.pos, [st.x, ROAD_Y, st.z])).toBe(false);
+        expect(blocked(realWorld, city.cellM, [out.pos[0], out.pos[1], out.pos[2]], [out.pos[0], out.pos[1], out.pos[2]])).toBe(false); // the camera itself is not inside a roof
+        expect(out.pos[1]).toBeGreaterThan(ROAD_Y + 2);
       }
     });
   }

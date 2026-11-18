@@ -49,14 +49,18 @@ export function foldTag(prev, tag, i) {
 
 // Floating tags sit in fixed vertical slots above the taxi, one tag height apart, so two live tags never overlap each other
 // (or the taxi: slot 0 is already above it). `tags` is the live tags: each { slot } keeps its slot, one without a slot takes
-// the lowest free one. Returns new objects. Pure.
+// the lowest free one. There are at most MAX_TAG_SLOTS: when all are taken, a newcomer reuses the slot of the oldest live
+// tag (the first in the list; that one is dropped by the caller). Returns new objects. Pure.
 export const TAG_SLOT_PX = 32;
+export const MAX_TAG_SLOTS = 3;
 export function layoutTags(tags) {
   const used = new Set(tags.filter((t) => t.slot !== undefined).map((t) => t.slot));
+  const oldest = tags.filter((t) => t.slot !== undefined).map((t) => t.slot); // oldest first
   return tags.map((t) => {
     if (t.slot !== undefined) return { ...t };
     let slot = 0;
-    while (used.has(slot)) slot++;
+    while (used.has(slot) && slot < MAX_TAG_SLOTS) slot++;
+    if (slot >= MAX_TAG_SLOTS) { slot = oldest.shift() ?? 0; oldest.push(slot); } // full: the oldest gives way
     used.add(slot);
     return { ...t, slot };
   });

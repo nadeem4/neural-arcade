@@ -67,7 +67,7 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 #labels span.tag { padding: 4px 10px; border-radius: 999px; font: 700 15px "Space Grotesk", var(--sans); background: var(--hud); animation: tag-pop 1.3s ease-out forwards; }
 #labels span.tag.fine { color: var(--hud-fine); }
 #labels span.tag.pay { color: var(--hud-pay); }
-@keyframes tag-pop { from { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 15% { opacity: 1; transform: translate(-50%, -140%) scale(1.1); } to { opacity: 0; transform: translate(-50%, -320%) scale(1); } }
+@keyframes tag-pop { from { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 15% { opacity: 1; transform: translate(-50%, -140%) scale(1.1); } to { opacity: 0; transform: translate(-50%, -160%) scale(1); } } /* rises 24px in all, less than a 32px slot, so tags never cross */
 @media (prefers-reduced-motion: reduce) { #labels span.tag { animation: none; } }
 
 
