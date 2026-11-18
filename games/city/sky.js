@@ -57,17 +57,6 @@ export function cloudLayout(count) {
   });
 }
 
-// rows of booleans (h rows, w columns): true is a lit window. Deterministic per key; 30% to 40% lit.
-export function windowPattern(seedKey, w, h) {
-  const rand = rng(seedKey), n = w * h;
-  const order = Array.from({ length: n }, (_, i) => i);
-  for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-  const lit = Math.round(n * (0.3 + 0.1 * rand()));
-  const grid = Array.from({ length: h }, () => new Array(w).fill(false));
-  for (const i of order.slice(0, lit)) grid[Math.floor(i / w)][i % w] = true;
-  return grid;
-}
-
 // The heat overlay: full on the map, fading out through the swoop, gone in the chase, back through the pullback.
 export function heatOpacity(phase, t) {
   const p = (ms) => Math.min(1, Math.max(0, t / ms));

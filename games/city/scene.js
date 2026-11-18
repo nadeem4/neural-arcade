@@ -9,8 +9,9 @@ import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { signalState, signalCorners } from './signals.js';
 import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
-import { createSky, lightRig, addWindows, EXPOSURE, ENV_INTENSITY, WINDOW_GLOW } from './scene-look.js';
+import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, WINDOW_GLOW } from './scene-look.js';
 import { tierFor } from './quality.js';
+import { applyFacade, buildingGeometry } from './facade.js';
 import { createTaxiMaker, TAXI_SCALE } from './scene-taxi.js';
 
 const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
@@ -90,8 +91,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   scene.add(meshOf(geoOf(buildRoadStrips(city.paths ?? [], 0.6)), mats.walk, { receive: true }));
   scene.add(meshOf(geoOf(buildRoadStrips(city.roads ?? [], 0.8)), mats.road, { receive: true }));
   scene.add(meshOf(geoOf(buildLaneMarks(city.roads ?? [], 1.0)), mats.mark));
-  scene.add(meshOf(geoOf(buildBuildings(city.buildings ?? [])), mats.building, { cast: true, receive: true }));
-  const windows = addWindows(mats.building, { cell: tier.windowCell, glow: WINDOW_GLOW });
+  scene.add(meshOf(buildingGeometry(buildBuildings(city.buildings ?? [], { roofBoxes: tier.roofBoxes })), mats.building, { cast: true, receive: true }));
+  applyFacade(mats.building, { detail: tier.facadeDetail, glow: WINDOW_GLOW });
 
   // Instanced trees: one cone each, shared geometry.
   const pos = treePositions(city.parks ?? [], TREE_SEED);
@@ -487,7 +488,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     setShot(name) { chase = name === 'chase' && motionAllowed(); },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      stopRoute(); taxiMaker.dispose(); taxiMakerB.dispose(); windows.dispose(); sky.dispose(); envTarget.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
+      stopRoute(); taxiMaker.dispose(); taxiMakerB.dispose(); sky.dispose(); envTarget.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
       for (const { span } of labels) span.remove();
       ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
       window.removeEventListener('blur', disengage);
