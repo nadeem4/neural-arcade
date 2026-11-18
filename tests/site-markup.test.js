@@ -175,7 +175,7 @@ describe('signal-text contrast', () => {
   });
 });
 
-const PAGES = ['runner', 'racer', 'teach', 'balance'];
+const PAGES = ['runner', 'racer', 'teach', 'balance', 'treasure-room'];
 describe.each(PAGES)('game page contract (%s)', id => {
   const html = read(`games/${id}/index.html`);
   const entry = GAMES.find(g => g.id === id);

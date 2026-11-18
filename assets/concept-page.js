@@ -10,8 +10,16 @@ export const videoHtml = concept => concept.youtube
   ? `<div class="video" data-youtube="${esc(concept.youtube)}" data-title="${esc(concept.title)}"><button class="video-play" type="button"><img src="https://i.ytimg.com/vi/${esc(concept.youtube)}/hqdefault.jpg" width="480" height="360" loading="lazy" alt=""><span class="video-label">${PLAY}Watch: ${esc(concept.title)}</span></button></div>`
   : '';
 
+// "Play this level": a link to the first game that has a level teaching this concept (games.js `levels`).
+export const playLevelHtml = (concept, games, base) => {
+  const g = games.find(x => x.levels?.[concept.id]);
+  if (!g) return '';
+  const n = g.levels[concept.id];
+  return `<p class="play-level"><a class="btn" href="${base}${g.path}?level=${n}">Play this level: ${esc(g.title)}, level ${n}</a></p>`;
+};
+
 export const gamesHtml = (concept, games, base) => games.length
-  ? '<h2>See it in the games</h2><div class="games">' + games.map(g =>
+  ? '<h2>See it in the games</h2>' + playLevelHtml(concept, games, base) + '<div class="games">' + games.map(g =>
     `<a class="game" href="${base}${g.path}"><h3>${esc(g.title)}</h3><p>${esc(g.lesson ?? '')}</p>${g.where?.[concept.id] ? `<p class="where">${esc(g.where[concept.id])}</p>` : ''}</a>`).join('') + '</div>'
   : '';
 

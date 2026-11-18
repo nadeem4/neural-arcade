@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treasure Room · How it works</title>
+<meta name="description" content="One small room, six ideas. See what an agent is, how a game becomes state, action and reward, how the discount shapes a return, what a policy is, how value spreads, and why an icy floor changes the best plan.">
+<link rel="canonical" href="https://arcade.codewithnk.com/games/treasure-room/how-it-works/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Treasure Room · How it works">
+<meta property="og:description" content="One small room, six ideas. See what an agent is, how a game becomes state, action and reward, how the discount shapes a return, what a policy is, how value spreads, and why an icy floor changes the best plan.">
+<meta property="og:url" content="https://arcade.codewithnk.com/games/treasure-room/how-it-works/">
+<meta property="og:image" content="https://arcade.codewithnk.com/games/treasure-room/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Treasure Room how it works: a small grid with a robot, a treasure, a pit and a few walls">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Treasure Room · How it works">
+<meta name="twitter:description" content="One small room, six ideas. See what an agent is, how a game becomes state, action and reward, how the discount shapes a return, what a policy is, how value spreads, and why an icy floor changes the best plan.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/games/treasure-room/share.png">
+<link rel="icon" href="../../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../../assets/studio.css">
+<link rel="stylesheet" href="../../../assets/story.css">
+<link rel="stylesheet" href="story.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body>
+<header data-site="games"></header>
+
+<main class="wrap story">
+  <header class="intro">
+    <p class="kicker">Treasure Room · How it works</p>
+    <h1>Six ideas in one small room</h1>
+    <p class="lede">A robot stands in a five by five room with a treasure, a pit and a few walls. The room never explains itself: it only says where the robot is and how many points it just got. From that alone, six ideas of reinforcement learning fall out, one level each.</p>
+    <p class="meta"><span>6 min read</span><a href="../">Try it live<svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a></p>
+  </header>
+
+  <section class="step">
+    <p class="num-tag">01</p>
+    <h2>The agent and the room</h2>
+    <p>The robot is the <em>agent</em>. The room is its <em>environment</em>. Each turn the agent sends one action, up, down, left or right, and the room sends back two things: the tile the robot is now on, and a reward. Nothing else crosses over.</p>
+    <p>The treasure pays +10, the pit costs 10, and every other step costs 1, even a bump into a wall. So wandering is never free.</p>
+    <figure class="fig" id="fig1">
+      <canvas id="canvasRoom" class="grid" role="img" aria-label="The room: the robot starts on the left, the treasure is on the right edge, a pit sits in the middle and two walls block the way"></canvas>
+      <figcaption><b>Fig. 1</b> The room, with the route the trained AI walks. It takes <span id="walkSteps"></span> steps and scores <span id="walkTotal"></span>. S is the start, T the treasure, X the pit and the dark tiles are walls.</figcaption>
+    </figure>
+    <p class="lesson"><small>The lesson</small>The AI only knows what the room tells it.</p>
+    <p><a href="../../../concepts/agent/">More on the agent</a> · <a href="../?level=1">Play level 1</a></p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">02</p>
+    <h2>State, action, reward</h2>
+    <p>Write down one step and you get three things: the <em>state</em> the robot was in, the <em>action</em> it took, and the <em>reward</em> that came back. Play a whole game and you have a list of them. That list is all the AI ever learns from.</p>
+    <figure class="fig" id="fig2">
+      <ol class="triples" id="triples"></ol>
+      <figcaption><b>Fig. 2</b> The steps of that same walk, written as state, action and reward. Only the last step pays.</figcaption>
+    </figure>
+    <p class="lesson"><small>The lesson</small>The game is a list of these: state, action, reward.</p>
+    <p><a href="../../../concepts/state-action-reward/">More on state, action, reward</a> · <a href="../?level=2">Play level 2</a></p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">03</p>
+    <h2>Return and the discount</h2>
+    <p>The <em>return</em> of a route is its rewards added up. Here the short way takes <span id="shortSteps"></span> steps and the detour takes <span id="detourSteps"></span>, so the short way keeps more of the treasure.</p>
+    <p>The <em>discount</em> shrinks each later reward by a number between 0 and 1 for every step it is away. Set it low and the treasure at the end of a walk is hardly worth anything: the AI turns greedy for now.</p>
+    <figure class="fig wide" id="fig3">
+      <div class="duo">
+        <canvas id="canvasRoutes" class="grid" role="img" aria-label="The room with two routes drawn on it: the short way along the top, and the longer detour round the bottom"></canvas>
+        <div class="tablewrap"><table class="returns">
+          <thead><tr><th scope="col">Discount</th><th scope="col">Short way</th><th scope="col">Detour</th><th scope="col">Treasure worth</th></tr></thead>
+          <tbody id="returnRows"></tbody>
+        </table></div>
+      </div>
+      <figcaption><b>Fig. 3</b> The same two routes at four discounts. The short way never loses. As the discount falls the treasure shrinks from +10 to almost nothing, and at 0.1 even the short way is a loss.</figcaption>
+    </figure>
+    <p class="lesson"><small>The lesson</small>Shorter paths win, and a low discount makes the AI greedy for now.</p>
+    <p><a href="../../../concepts/return/">More on return</a> · <a href="../?level=3">Play level 3</a></p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">04</p>
+    <h2>A policy is a rulebook</h2>
+    <p>A <em>policy</em> says what to do on each tile. In this room it is one arrow per tile. A rulebook of all-right arrows looks tidy and gets the robot nowhere. A good one points every tile the right way.</p>
+    <figure class="fig wide" id="fig4">
+      <div class="duo">
+        <div><p class="duo-label">All arrows right</p><canvas id="policyBad" class="grid" role="img" aria-label="Arrows pointing right on every tile. The robot never reaches the treasure."></canvas></div>
+        <div><p class="duo-label">Arrows after the AI fixes them</p><canvas id="policyFixed" class="grid" role="img" aria-label="Arrows after the AI fixes them. The robot reaches the treasure by the short way."></canvas></div>
+      </div>
+      <figcaption><b>Fig. 4</b> Two policies and the walk each one gives from the start, traced as a dashed line. The first never reaches the treasure. The second takes the short way in <span id="fixedSteps"></span> steps.</figcaption>
+    </figure>
+    <p class="lesson"><small>The lesson</small>A policy is: on this tile, do this.</p>
+    <p><a href="../../../concepts/policy/">More on policy</a> · <a href="../?level=4">Play level 4</a></p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">05</p>
+    <h2>Value spreads outward</h2>
+    <p>The <em>value</em> of a tile is the return the robot can expect if it stands there and plays well. Start with zero everywhere. One sweep lets every tile look at its neighbours and take the best one. The tile next to the treasure learns it is worth something, then the tile beside that, and the news spreads outward one step per sweep.</p>
+    <figure class="fig wide" id="fig5">
+      <div class="minis" id="sweepGrids"></div>
+      <p class="stepper"><button class="btn" type="button" id="stepThrough">Step through</button><span id="stepNote" aria-live="polite"></span></p>
+      <figcaption><b>Fig. 5</b> The value of each tile after 1, 2, 3, 5 and <span id="settleSweeps"></span> sweeps, at discount 0.9. A warmer tile is worth more. By the last grid nothing moves by more than 0.01 and the start tile settles at <span id="startValue"></span>.</figcaption>
+    </figure>
+    <p class="lesson"><small>The lesson</small>Value is how good it is to stand here.</p>
+    <p><a href="../../../concepts/value/">More on value</a> · <a href="../?level=5">Play level 5</a></p>
+  </section>
+
+  <section class="step">
+    <p class="num-tag">06</p>
+    <h2>The icy floor</h2>
+    <p>Everything so far assumed a move always works. Make the floor icy and a move works 80% of the time and slips to each side 10%. Now the pit is a real risk, and the plan changes.</p>
+    <p>Five parts describe such a world: the <em>states</em>, the <em>actions</em>, the <em>rewards</em>, the <em>slip chance</em> and the <em>discount</em>. Together they are a Markov decision process, or MDP.</p>
+    <figure class="fig wide" id="fig6">
+      <div class="duo">
+        <div><p class="duo-label">Dry floor</p><canvas id="planDry" class="grid" role="img" aria-label="The best route on a dry floor, passing next to the pit."></canvas></div>
+        <div><p class="duo-label">Icy floor</p><canvas id="planIcy" class="grid" role="img" aria-label="The best route on an icy floor, keeping away from the pit."></canvas></div>
+      </div>
+      <ul class="tallies">
+        <li>The dry plan passes next to the pit, with a start value of <span id="dryValue"></span>. Walked on ice <span class="n-trips"></span> times, it falls in <span id="dryPit"></span>.</li>
+        <li>The icy plan keeps away from the pit, with a start value of <span id="icyValue"></span>. Walked on ice <span class="n-trips"></span> times, it falls in <span id="icyPit"></span>.</li>
+      </ul>
+      <figcaption><b>Fig. 6</b> The best plan on a dry floor and on an icy one. The icy plan is longer and worth less, but far safer.</figcaption>
+    </figure>
+    <p class="lesson"><small>The lesson</small>The best plan changes once moves are uncertain.</p>
+    <p><a href="../../../concepts/mdp/">More on the MDP</a> · <a href="../?level=6">Play level 6</a></p>
+  </section>
+
+  <section class="step">
+    <h2>What it has and has not learned</h2>
+    <ul class="notes">
+      <li><b>Nothing here is trained.</b> The plans come from value iteration on a room the program already knows. A real learner has to find these numbers by trying.</li>
+      <li><b>It is one room.</b> Change the walls and every figure changes with it.</li>
+      <li><b>The figures come from one recorded run</b> (seed <span id="seed"></span>), so they are the same on every visit.</li>
+    </ul>
+  </section>
+
+  <section class="step finale">
+    <h2>Your turn</h2>
+    <p>The AI only knows what the room tells it.</p>
+    <p>On the live page, change the discount, redraw the arrows, and turn the floor icy.</p>
+    <a class="btn primary go" href="../"><span>Try it live</span><svg class="ic ic-arrow-right" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg></a>
+  </section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="../../../assets/story-page.js"></script>
+<script type="module" src="story.js"></script>
+</body>
+</html>

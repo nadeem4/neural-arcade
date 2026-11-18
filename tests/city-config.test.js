@@ -22,7 +22,7 @@ describe('Reward City listing', () => {
   });
   it('is listed after the maze in the reinforcement-learning category', () => {
     const ids = GAMES.filter(x => x.category === 'reinforcement-learning').map(x => x.id);
-    expect(ids).toEqual(['runner', 'maze', 'city']);
+    expect(ids).toEqual(['runner', 'maze', 'city', 'treasure-room']);
     expect(categoryModel(CATEGORIES, GAMES, 'reinforcement-learning').games.map(x => x.id)).toContain('city');
   });
   it('share.png is 1280x720', () => {

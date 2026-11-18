@@ -1,0 +1,85 @@
+/* Treasure Room only: the rest of the page comes from studio.css and assets/game.css. */
+
+.stage-body { display: block; padding: 14px; } /* studio.css makes it a two-column grid; here the room fills it */
+#stage { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; }
+.room { position: relative; width: min(100%, 56vh, 480px); margin: 0 auto; }
+.readouts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Level links above the stage. */
+.levels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.levels a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: 600 14px/1.5 var(--sans); text-decoration: none; }
+.levels a b { font-family: var(--mono); }
+.levels a[aria-current="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+
+/* The controls come first in the panel, so on a phone they sit right under the room. */
+.panel .controls { order: -1; }
+.lesson-line { margin: 0; font-weight: 600; }
+
+/* Four arrow buttons laid out as a cross. */
+.pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-areas: ". up ." "left down right"; gap: 8px; justify-content: center; }
+.pad button { min-height: 44px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: 600 20px/1.5 var(--sans); cursor: pointer; }
+.pad button:disabled { opacity: .5; cursor: default; }
+.pad [data-move="0"] { grid-area: up; }
+.pad [data-move="1"] { grid-area: down; }
+.pad [data-move="2"] { grid-area: left; }
+.pad [data-move="3"] { grid-area: right; }
+
+/* Level 1: what comes back to the AI, and the two arrows that light on every step. */
+.sees { display: block; padding: 10px 12px; border-radius: 8px; background: var(--track); font: 600 14px/1.5 var(--mono); }
+.arrows { display: flex; justify-content: space-between; gap: 8px; font: 600 13px/1.5 var(--sans); color: var(--ink-2); }
+.arrows .lit { color: var(--signal); }
+
+/* Level 2: the log is plain selectable text, one line per step. */
+.log { margin: 0; padding: 0; list-style: none; font: 500 13px/1.5 var(--mono); overflow-wrap: anywhere; }
+.log li { padding: 2px 0; border-bottom: 1px solid var(--line); }
+
+@media (max-width: 640px) {
+  .levels { flex-wrap: nowrap; overflow-x: auto; }
+  .levels a { flex: none; }
+}
+
+/* Phone fit: scrolled to Play, the room and the move pad share one 390x700 screen. */
+@media (max-width: 640px) {
+  .stage-body { padding: 8px; }
+  .room { width: min(100%, 40vh); }
+  .stage .say { min-height: 3em; padding: 8px 14px; }
+  #levelBrief, #gammaHint { display: none; }
+  .readouts div { padding: 8px 14px; }
+  .readouts dd { font-size: 18px; }
+  .panel section { padding: 12px 16px; gap: 10px; }
+}
+
+/* Level 3: route buttons, the discount slider and the sum. */
+.routes { display: flex; flex-wrap: wrap; gap: 8px; }
+.routes button { min-height: 44px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: 600 14px/1.5 var(--sans); cursor: pointer; }
+.routes .primary { background: var(--signal-fill); border-color: var(--signal-fill); color: var(--signal-ink); }
+.routes button:disabled { opacity: .5; cursor: default; }
+.gamma-row { display: flex; align-items: center; gap: 8px; font: 600 14px/1.5 var(--sans); }
+.gamma { display: block; width: 100%; min-height: 44px; margin: 0; accent-color: var(--signal); }
+.compare { display: block; font: 600 13px/1.5 var(--mono); overflow-wrap: anywhere; }
+.sum { display: block; white-space: pre-line; padding: 10px 12px; border-radius: 8px; background: var(--track); font: 600 13px/1.5 var(--mono); overflow-wrap: anywhere; }
+
+/* Level 4: one invisible button over each floor tile, for tap, keyboard and screen readers. */
+.tilegrid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); }
+.tilegrid[hidden] { display: none; }
+.tilegrid button { min-height: 44px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; }
+.tilegrid button:focus-visible { outline: 3px solid var(--signal); outline-offset: -3px; }
+.row-btns .btn { min-height: 44px; }
+
+/* Level 5: sweep counter and the colour key for the heat. */
+.sweep-info { display: block; font: 600 14px/1.5 var(--mono); }
+.heat-legend { display: flex; align-items: center; gap: 8px; margin: 0; font: 500 13px/1.5 var(--sans); color: var(--ink-2); }
+.heat-bar { flex: none; width: 56px; height: 12px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(90deg, var(--surface), var(--signal)); }
+
+/* Level 6: dry or icy toggle, trip counts, and the five tags that light one by one. */
+.btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.tags { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tags li { padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 12px; color: var(--ink-2); font: 500 13px/1.5 var(--sans); }
+.tags li b { display: block; font-weight: 600; }
+.tags li span { display: none; }
+.tags li.lit { border-color: var(--signal); color: var(--ink); }
+.tags li.lit span { display: block; }
+
+@media (max-width: 640px) {
+  #valueGammaHint { display: none; }
+}

@@ -107,8 +107,8 @@ describe('mdp page file', () => {
   it('leads with the definition from the config', () => {
     expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('mdp').definition);
   });
-  it('no game uses mdp, so its games section starts hidden', () => {
-    expect(GAMES.some(g => (g.uses || []).includes('mdp'))).toBe(false);
+  it('only Treasure Room uses mdp, and its games section starts hidden until the page fills it', () => {
+    expect(GAMES.filter(g => (g.uses || []).includes('mdp')).map(g => g.id)).toEqual(['treasure-room']);
     expect(html).toMatch(/<section id="games" hidden>/);
   });
 });
