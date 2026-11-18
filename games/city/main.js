@@ -27,7 +27,7 @@ import { renderRaceBar, showRaceMeters, updateRaceHud, showBanner } from './race
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
 
-let world = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
+let world = null, cityData = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
 let picks = [], raceRun = null; // garage ids picked for a race; the race on screen: { race, names, ended }
 let worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
 const pending = new Map(); // message id -> { resolve, reject, onProgress }
@@ -86,6 +86,7 @@ function viaWorker(req, onProgress) {
       try {
         worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
       } catch (e) { reject(e); return; }
+      worker.postMessage({ type: 'init', city: cityData });
       worker.onmessage = ({ data }) => {
         const p = pending.get(data.id);
         if (!p) return;
@@ -418,7 +419,7 @@ async function start() {
   enable(false);
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
-    world = loadWorld(city); cellM = city.cellM;
+    cityData = city; world = loadWorld(city); cellM = city.cellM; // the one map load: the worker gets it by message
     // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
     const webgl = webglAvailable();
     const scene = webgl ? await import('./scene.js').catch(() => null) : null;

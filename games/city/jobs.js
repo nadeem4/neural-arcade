@@ -4,14 +4,29 @@ import { analyzeRoute } from './sim.js';
 import { createAgent, trainEpisodes, greedyRoute } from './train.js';
 
 // runTrain(req, onProgress) -> Promise<result> is injected: the page passes a Worker wrapper.
+// The same request (seed, episodes, rewards) always trains to the same result, so the last CACHE_MAX are kept.
+const CACHE_MAX = 12;
+// route and analysis are shared across cache hits and must not be mutated.
+const copyOf = (res) => ({ ...res, visits: res.visits.slice() });
+
 export function createJobs(runTrain) {
   let current = 0;
+  const cache = new Map();
   return {
     start(req, onProgress = () => {}) {
       const id = ++current;
       const live = () => id === current;
+      const key = JSON.stringify([req.seed, req.episodes, req.rewards]);
+      if (cache.has(key)) return Promise.resolve(copyOf(cache.get(key)));
       return runTrain(req, (p) => { if (live()) onProgress(p); })
-        .then((res) => (live() ? res : null), (err) => { if (live()) throw err; return null; });
+        .then((res) => {
+          if (!live()) return null;
+          if (res && res.visits) {
+            cache.set(key, copyOf(res));
+            if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
+          }
+          return res;
+        }, (err) => { if (live()) throw err; return null; });
     },
     cancel() { current++; },
   };

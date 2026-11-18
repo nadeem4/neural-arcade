@@ -52,7 +52,8 @@ export function rewardsOf(partial) {
   return { ...DEFAULT_REWARDS, ...partial };
 }
 
-export function stepWorld(world, rewards, cell, tick, action) {
+// Pass `out` to reuse one result object across calls (the trainer does); without it a fresh one is returned.
+export function stepWorld(world, rewards, cell, tick, action, out = {}) {
   const { cols, rows, kind } = world;
   const a = ACTIONS[action];
   const row = Math.floor(cell / cols) + a.dr;
@@ -63,30 +64,39 @@ export function stepWorld(world, rewards, cell, tick, action) {
   const cell2 = moved ? target : cell;
   const off = moved && (kind[cell2] === FOOT || kind[cell2] === PARK);
   const red = moved && world.signal[cell2] === 1 && lightRed(world, tick, action);
-  const against = (o) => o >= 0 && (o + 2) % 4 === action;
-  const wrong = moved && (against(world.oneway[cell]) || against(world.oneway[cell2]));
+  const o1 = world.oneway[cell], o2 = world.oneway[cell2];
+  const wrong = moved && ((o1 >= 0 && (o1 + 2) % 4 === action) || (o2 >= 0 && (o2 + 2) % 4 === action));
   const done = moved && cell2 === world.goal;
-  const r = -rewards.time - (off ? rewards.off : 0) - (red ? rewards.red : 0)
+  out.cell2 = cell2;
+  out.r = -rewards.time - (off ? rewards.off : 0) - (red ? rewards.red : 0)
     - (wrong ? rewards.wrong : 0) + (moved ? rewards.perTile : 0) + (done ? rewards.fare : 0);
-  return { cell2, r, done, moved, off, red, wrong };
+  out.done = done; out.moved = moved; out.off = off; out.red = red; out.wrong = wrong;
+  return out;
+}
+
+export const newTotals = () => ({ arrived: false, seconds: 0, tiles: 0, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, reward: 0 });
+
+// Adds one stepWorld result to the trip totals; analyzeRoute and tripEvents both use it.
+export function tally(world, totals, s) {
+  totals.seconds++;
+  totals.reward += s.r;
+  if (s.moved) totals.tiles++;
+  if (s.off) totals.offTiles++;
+  if (s.moved && world.kind[s.cell2] === PARK) totals.parkTiles++;
+  if (s.red) totals.redRuns++;
+  if (s.wrong) totals.wrongWays++;
+  if (s.done) totals.arrived = true;
 }
 
 // Replays a route ({ cells, actions }, one action per second) and totals what happened.
 export function analyzeRoute(world, route, rewards) {
-  const { kind } = world;
-  const out = { arrived: false, seconds: 0, tiles: 0, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, reward: 0 };
+  const out = newTotals();
   let cell = route.cells[0];
   for (let t = 0; t < route.actions.length; t++) {
     const s = stepWorld(world, rewards, cell, t, route.actions[t]);
     cell = s.cell2;
-    out.seconds++;
-    out.reward += s.r;
-    if (s.moved) out.tiles++;
-    if (s.off) out.offTiles++;
-    if (s.moved && kind[s.cell2] === PARK) out.parkTiles++;
-    if (s.red) out.redRuns++;
-    if (s.wrong) out.wrongWays++;
-    if (s.done) { out.arrived = true; break; }
+    tally(world, out, s);
+    if (s.done) break;
   }
   return out;
 }
