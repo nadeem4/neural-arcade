@@ -2,13 +2,53 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
-import { meterAt } from '../games/city/meter.js';
+import { meterAt, barFraction, METER_SCALE, payRange, payFraction } from '../games/city/meter.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const world = loadWorld(read('chicago.json'));
 const card = read('story.json').cards.find((c) => c.id === 'walk');
 const ev = tripEvents(world, card.rewards, card.route);
 const n = ev.steps.length;
+
+describe('barFraction: both meters share one scale', () => {
+  it('maps 0 to 0 and the full scale to 1, clamped', () => {
+    expect(METER_SCALE).toBe(100);
+    expect(barFraction(0)).toBe(0);
+    expect(barFraction(METER_SCALE)).toBe(1);
+    expect(barFraction(-30)).toBe(0);
+    expect(barFraction(800)).toBe(1);
+    expect(barFraction(50)).toBe(0.5);
+  });
+  it('a bigger number is a longer bar on either meter', () => {
+    expect(barFraction(60)).toBeGreaterThan(barFraction(20));
+  });
+});
+
+describe('Pay bar scales to its own range', () => {
+  const mile = (() => { const c = read('story.json').cards.find((x) => x.id === 'mile'); return tripEvents(world, c.rewards, c.route); })();
+  it('the range always spans at least 0 to 100', () => {
+    expect(payRange({ steps: [{ delta: 5 }] })).toEqual({ lo: 0, hi: 100 });
+  });
+  it('a climbing trip ends at a full bar, and the bar never shrinks', () => {
+    const r = payRange(mile);
+    expect(r.hi).toBeGreaterThan(100);
+    let prev = 0;
+    for (let f = 0; f <= mile.steps.length; f++) {
+      const x = payFraction(meterAt(mile, f).total, r);
+      expect(x).toBeGreaterThanOrEqual(prev - 1e-9);
+      prev = x;
+    }
+    expect(prev).toBeCloseTo(1, 6);
+  });
+  it('negative pay never gives a negative fraction', () => {
+    const r = payRange({ steps: [{ delta: -40 }, { delta: -11 }, { delta: 60 }] });
+    expect(r).toEqual({ lo: -51, hi: 100 });
+    expect(payFraction(-51, r)).toBe(0);
+    expect(payFraction(-200, r)).toBe(0);
+    expect(payFraction(100, r)).toBe(1);
+    expect(payFraction(0, r)).toBeCloseTo(51 / 151, 9);
+  });
+});
 
 describe('meterAt', () => {
   it('starts at zero', () => {
