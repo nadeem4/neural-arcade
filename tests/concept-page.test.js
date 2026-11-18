@@ -86,8 +86,8 @@ describe('DOM helpers', () => {
     const els = { video: el(), games: el(), related: el() };
     mountConceptPage('mdp', '../../', { getElementById: id => els[id] ?? null });
     expect(els.video.innerHTML).toBe('');
-    expect(els.games.hidden).toBe(true);
-    expect(els.games.innerHTML).toBe('');
+    expect(els.games.hidden).toBe(false); // Treasure Room uses mdp
+    expect(els.games.innerHTML).toContain('Treasure Room');
   });
 
   it('wireTries applies the clicked preset state', () => {

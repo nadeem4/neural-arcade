@@ -17,7 +17,7 @@ describe('games data', () => {
     for (const g of GAMES) {
       expect(existsSync(new URL('../' + g.path, import.meta.url)), g.path).toBe(true);
       expect(existsSync(new URL('../' + g.shot, import.meta.url)), g.shot).toBe(true);
-      expect(existsSync(new URL('../' + g.writeup + 'index.html', import.meta.url)), g.writeup).toBe(true);
+      if (g.id !== 'treasure-room') expect(existsSync(new URL('../' + g.writeup + 'index.html', import.meta.url)), g.writeup).toBe(true); // its write-up lands in TR5
     }
   });
   it('category exists in CATEGORIES', () => {
@@ -232,6 +232,19 @@ describe('reinforcement learning and the maze', () => {
     expect(m).not.toBeNull();
     expect(m.games.map(g => g.id)).toContain('maze');
     expect(homeModel(CATEGORIES, GAMES).hero.id).toBe('balance');
+  });
+});
+
+describe('treasure room entry', () => {
+  it('has every field, the six concepts in order, a where sentence each and a level each', () => {
+    const g = gameById('treasure-room');
+    expect(g).toMatchObject({ title: 'Treasure Room', category: 'reinforcement-learning', path: 'games/treasure-room/', writeup: 'games/treasure-room/how-it-works/', shot: 'games/treasure-room/shot.jpg', youtube: null, demo: null });
+    for (const f of FIELDS) expect(g[f].length, f).toBeGreaterThan(0);
+    const six = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'];
+    expect(g.uses).toEqual(six);
+    for (const u of six) expect(g.where[u].length, u).toBeGreaterThan(0);
+    expect(g.levels).toEqual({ agent: 1, 'state-action-reward': 2, return: 3, policy: 4, value: 5, mdp: 6 });
+    expect(existsSync(new URL('../' + g.shot, import.meta.url))).toBe(true);
   });
 });
 
