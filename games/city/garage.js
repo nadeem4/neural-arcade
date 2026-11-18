@@ -1,4 +1,5 @@
 import { ACTIONS } from './sim.js';
+import { RATE_KEYS } from './reward.js';
 
 // The garage: up to four kept taxis, newest first. Pure, no DOM and no storage.
 // A kept taxi stores its rates, its greedy route and the analysis of that route, not the Q-table:
@@ -30,7 +31,6 @@ export const serialize = garage => JSON.stringify({ v: 1, taxis: garage.taxis })
 
 const isObj = x => x !== null && typeof x === 'object' && !Array.isArray(x);
 const isInt = (x, lo, hi) => Number.isInteger(x) && x >= lo && x < hi;
-const RATE_KEYS = ['fare', 'time', 'off', 'red', 'wrong', 'perTile'];
 export const MAX_ROUTE = 5000;
 
 // A taxi is replayable only if its route fits the map and the move list; storage can hold anything, so check before use.

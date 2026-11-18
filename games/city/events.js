@@ -1,6 +1,6 @@
 // What happens on each step of a trip, from the same stepWorld calls analyzeRoute makes. Pure, no DOM.
 // Every drive screen (meter, tags, minimap, sound) reads this and never re-runs the sim.
-import { stepWorld } from './sim.js';
+import { stepWorld, tally, newTotals } from './sim.js';
 
 const PARK = 2;
 
@@ -8,7 +8,7 @@ const PARK = 2;
 // `lines` names the receipt lines that fired: time, off, red, wrong, perTile, fare.
 // totals is the analyzeRoute result, so it equals the receipt's numbers.
 export function tripEvents(world, rewards, route) {
-  const totals = { arrived: false, seconds: 0, tiles: 0, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, reward: 0 };
+  const totals = newTotals();
   const steps = [];
   let cell = route.cells[0];
   for (let t = 0; t < route.actions.length; t++) {
@@ -23,14 +23,8 @@ export function tripEvents(world, rewards, route) {
     if (s.done) lines.push('fare');
     steps.push({ i: t, tick: t, from: cell, cell: s.cell2, moved: s.moved, off: s.off, park, red: s.red, wrong: s.wrong, done: s.done, delta: s.r, lines });
     cell = s.cell2;
-    totals.seconds++;
-    totals.reward += s.r;
-    if (s.moved) totals.tiles++;
-    if (s.off) totals.offTiles++;
-    if (park) totals.parkTiles++;
-    if (s.red) totals.redRuns++;
-    if (s.wrong) totals.wrongWays++;
-    if (s.done) { totals.arrived = true; break; }
+    tally(world, totals, s);
+    if (s.done) break;
   }
   return { steps, totals };
 }
