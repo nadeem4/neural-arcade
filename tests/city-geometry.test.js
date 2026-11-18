@@ -85,6 +85,11 @@ describe('buildBuildings: real heights, UVs, roofs, details', () => {
     const g = buildBuildings([full(0, 0, 10, 4, { h: 40, minH: 28 })]);
     expect(rangeOf(g, (i) => g.positions[i * 3 + 1])[0]).toBe(28);
   });
+  it('a lifted part has an underside facing down; a ground building does not', () => {
+    const down = (g) => { let n = 0; for (let i = 0; i < g.normals.length / 3; i++) if (g.normals[i * 3 + 1] < -0.9) n++; return n; };
+    expect(down(buildBuildings([full(0, 0, 10, 4, { h: 40, minH: 28 })]))).toBeGreaterThan(0);
+    expect(down(buildBuildings([full(0, 0, 10, 4, { h: 40 })]))).toBe(0);
+  });
   it('an outline with parts is skipped; its parts are drawn instead', () => {
     const g = buildBuildings([full(0, 0, 50, 50, { h: 99, hasParts: true }), full(0, 0, 10, 10, { h: 20, part: true })]);
     expect(rangeOf(g, (i) => g.positions[i * 3 + 1])[1]).toBe(20);

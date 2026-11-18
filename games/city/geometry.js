@@ -132,6 +132,11 @@ export function buildBuildings(buildings, { roofBoxes: withBoxes = true } = {}) 
       for (const [x, my] of r) vert(x, h, -my, [0, 1, 0], 0, 0, roofCol, NO_WIN, NO_FAC);
       indices.push(...tri.map((i) => base + i));
     }
+    if (minH > 0) { // a part held up in the air (a bridge between towers) shows its underside
+      const base = positions.length / 3;
+      for (const [x, my] of r) vert(x, minH, -my, [0, -1, 0], 0, 0, roofCol, NO_WIN, NO_FAC);
+      indices.push(...tri.map((i) => base + i));
+    }
     // Walls from minH to the eaves (plus the parapet), and the parapet's inner face.
     for (let i = 0; i < r.length; i++) {
       const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length];

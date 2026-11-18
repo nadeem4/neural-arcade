@@ -30,10 +30,16 @@ varying vec2 vWallUv;
 varying vec4 vFacA;
 varying vec4 vFacB;
 uniform float winGlow;
-float hash21(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }`)
+float hash21(vec2 p) { // Hoskins hash12: no sin, so it behaves the same on phone GPUs
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 float fWin = 0.0, fLit = 0.0;
 {
+  // Walls seen nearly edge-on, or windows smaller than a few pixels, go flat so nothing shimmers.
+  float graze = smoothstep(0.08, 0.3, abs(dot(normalize(vNormal), normalize(vViewPosition))));
   float bay = vFacA.x, flh = vFacA.y, fill = vFacA.z, seed = vFacA.w;
   float shopH = vFacB.x, winTop = vFacB.y, glassy = vFacB.z;
   float u = vWallUv.x, v = vWallUv.y;
@@ -42,22 +48,25 @@ float fWin = 0.0, fLit = 0.0;
   float ch = shop ? shopH : flh;
   vec2 cell = vec2(u / cw, v / ch);
   vec2 id = floor(cell), f = fract(cell);
-  float on = step(0.001, fill) * step((id.y + 1.0) * ch, winTop + 0.05);
+  float e = max(fwidth(cell.x), fwidth(cell.y));
+  float sharp = (1.0 - smoothstep(0.015, 0.06, e)) * graze; // 1 = full detail, 0 = flat average
+  float aa = max(fwidth(v), 0.02);
+  float topEdge = floor((winTop + 0.05) / ch) * ch; // no window rows above this height
+  float on = step(0.001, fill) * (1.0 - smoothstep(topEdge - aa, topEdge + aa, v));
   float wx = shop ? 0.86 : mix(0.38, 0.94, fill);
   float wy = shop ? 0.66 : mix(0.42, 0.86, fill);
   vec2 d = abs(f - vec2(0.5, shop ? 0.45 : 0.5)) - 0.5 * vec2(wx, wy);
-  float e = max(fwidth(cell.x), fwidth(cell.y));
   float inWin = 1.0 - smoothstep(-e, e, max(d.x, d.y));
-  inWin = mix(inWin, wx * wy, smoothstep(0.08, 0.35, e)) * on;
+  inWin = mix(wx * wy, inWin, sharp) * on;
   vec3 base = diffuseColor.rgb;
-  if (shop && on > 0.5) base *= 0.7; // darker ground-floor band
+  base *= 1.0 - 0.3 * on * sharp * (1.0 - smoothstep(shopH - aa, shopH + aa, v)); // darker ground-floor band, faded with distance
   ${detail >= 2 ? `base *= 0.93 + 0.14 * hash21(vec2(id.y, seed * 91.0)) * on;
-  base *= 1.0 - 0.14 * on * (1.0 - smoothstep(0.0, 0.06, f.y)) * (1.0 - smoothstep(0.0, 0.2, e));` : ''}
+  base *= 1.0 - 0.14 * on * (1.0 - smoothstep(0.0, 0.06, f.y)) * (1.0 - smoothstep(0.0, 0.2, e)) * graze;` : ''}
   vec3 glass = mix(base * 0.22 + vec3(0.012, 0.02, 0.032), vec3(0.07, 0.11, 0.16), glassy * 0.8);
   diffuseColor.rgb = mix(base, glass, inWin);
   fWin = inWin;
   float litFrac = shop ? 0.45 : 0.14;
-  fLit = mix(step(hash21(id + seed * 57.0), litFrac), litFrac, smoothstep(0.03, 0.18, e)) * inWin;
+  fLit = mix(litFrac, step(hash21(id + seed * 57.0), litFrac), sharp) * inWin;
 }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
 roughnessFactor = mix(roughnessFactor, 0.3, fWin);`)

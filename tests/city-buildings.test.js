@@ -98,6 +98,19 @@ describe('roofBoxes', () => {
       for (const [x, y] of box.corners) expect(inside(x, y, b.ring)).toBe(true);
     }
   });
+  it('on an L-shaped roof no box straddles the notch: centre and edge midpoints are inside too', () => {
+    const L = { ...sq(0, 0, 10), ring: [[0, 0], [60, 0], [60, 20], [20, 20], [20, 60], [0, 60], [0, 0]] };
+    let seen = 0;
+    for (let id = 0; id < 300; id++) {
+      for (const box of roofBoxes(L, id)) {
+        seen++;
+        const c = box.corners;
+        const pts = [[(c[0][0] + c[2][0]) / 2, (c[0][1] + c[2][1]) / 2], ...c.map((p, i) => [(p[0] + c[(i + 1) % 4][0]) / 2, (p[1] + c[(i + 1) % 4][1]) / 2])];
+        for (const [x, y] of [...c, ...pts]) expect(inside(x, y, L.ring)).toBe(true);
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
   it('small or pitched roofs get none', () => {
     expect(roofBoxes(sq(0, 0, 10), 5)).toEqual([]);
     expect(roofBoxes(sq(0, 0, 40, { roof: 'gabled' }), 5)).toEqual([]);

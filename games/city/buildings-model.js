@@ -113,7 +113,9 @@ export function roofBoxes(b, id) {
     const cx = x0 + rng() * (x1 - x0), cy = y0 + rng() * (y1 - y0);
     const w = 1.5 + rng() * 2.5, d = 1.5 + rng() * 2, h = 2 + rng() * (tall ? 3.5 : 1.5);
     if (centres.some(([px, py]) => Math.hypot(px - cx, py - cy) < 9)) continue;
-    if (!corners(cx, cy, w + 1.5, d + 1.5).every(([x, y]) => insideRing(x, y, ring))) continue; // a metre and a half clear of the parapet
+    const clear = corners(cx, cy, w + 1.5, d + 1.5); // a metre and a half clear of the parapet
+    const mids = clear.map((p, i) => [(p[0] + clear[(i + 1) % 4][0]) / 2, (p[1] + clear[(i + 1) % 4][1]) / 2]);
+    if (![...clear, ...mids, [cx, cy]].every(([x, y]) => insideRing(x, y, ring))) continue; // corners, edge midpoints and centre: not over a notch
     centres.push([cx, cy]);
     out.push({ corners: corners(cx, cy, w, d), h });
   }
