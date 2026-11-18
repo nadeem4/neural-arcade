@@ -46,16 +46,17 @@ describe('cheatsOf', () => {
   it('explains a park shortcut with seconds saved, pay worth and the fine', () => {
     const a = { ...legal, seconds: 50, offTiles: 3, parkTiles: 3, reward: 46 };
     expect(cheatsOf(R, a, honest)).toEqual([
-      { kind: 'park', reason: 'Park shortcut saved 14 s worth 14 pay; the fine was 20 for 3 tiles (60).' },
+      { kind: 'park', reason: 'Cut through the park 3 tiles; the fine was 20 for 3 tiles (60).' },
+      { kind: 'saved', reason: 'Together the cheats saved 14 s, worth 14 pay.' },
     ]);
   });
   it('says nothing fined it when the rate is zero', () => {
     const a = { ...legal, seconds: 50, offTiles: 3, parkTiles: 3 };
-    expect(cheatsOf({ ...R, off: 0 }, a, honest)[0].reason).toBe('Park shortcut saved 14 s worth 14 pay; nothing fined it.');
+    expect(cheatsOf({ ...R, off: 0 }, a, honest)[0].reason).toBe('Cut through the park 3 tiles; nothing fined it.');
   });
   it('lists every cheat the trip used, not just one', () => {
     const a = { ...legal, seconds: 50, offTiles: 4, parkTiles: 3, redRuns: 2, wrongWays: 1 };
-    expect(cheatsOf(R, a, honest).map(c => c.kind)).toEqual(['park', 'footpath', 'red', 'wrong']);
+    expect(cheatsOf(R, a, honest).map(c => c.kind)).toEqual(['park', 'footpath', 'red', 'wrong', 'saved']);
   });
   it('counts footpath tiles apart from park tiles', () => {
     const a = { ...legal, seconds: 70, offTiles: 4, parkTiles: 1 };
@@ -63,12 +64,25 @@ describe('cheatsOf', () => {
     expect(park.reason).toContain('1 tile (20)');
     expect(foot.reason).toContain('3 tiles (60)');
     expect(foot.reason).not.toContain('saved');
+    expect(foot.reason).toContain('Footpath');
   });
   it('red and wrong way use their own rates', () => {
     const red = cheatsOf(R, { ...legal, seconds: 55, redRuns: 2 }, honest)[0];
-    expect(red.reason).toBe('Ran 2 red lights and saved 9 s worth 9 pay; the fine was 30 each (60).');
+    expect(red.reason).toBe('Ran 2 red lights; the fine was 30 each (60).');
     const wrong = cheatsOf(R, { ...legal, seconds: 55, wrongWays: 1 }, honest)[0];
-    expect(wrong.reason).toBe('Went the wrong way 1 time and saved 9 s worth 9 pay; the fine was 30 each (30).');
+    expect(wrong.reason).toBe('Went the wrong way 1 time; the fine was 30 each (30).');
+  });
+  it('states the saving once when a park cheat and a wrong-way cheat appear together', () => {
+    const a = { ...legal, seconds: 37, offTiles: 16, parkTiles: 16, wrongWays: 2 };
+    const out = cheatsOf(R, a, honest);
+    expect(out[0].reason).toBe('Cut through the park 16 tiles; the fine was 20 for 16 tiles (320).');
+    expect(out[1].reason).toBe('Went the wrong way 2 times; the fine was 30 each (60).');
+    expect(out.filter(c => /saved/.test(c.reason))).toEqual([{ kind: 'saved', reason: 'Together the cheats saved 27 s, worth 27 pay.' }]);
+    expect(out.at(-1).kind).toBe('saved');
+  });
+  it('has no saving line when nothing was saved', () => {
+    const a = { ...legal, seconds: 70, redRuns: 1 };
+    expect(cheatsOf(R, a, honest).map(c => c.kind)).toEqual(['red']);
   });
   it('names circling for pay per tile, with the extra tiles and their pay', () => {
     const a = { arrived: false, seconds: 100, tiles: 90, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, reward: 170 };
@@ -82,7 +96,7 @@ describe('cheatsOf', () => {
   });
   it('works with no honest route', () => {
     const a = { ...legal, seconds: 50, offTiles: 3, parkTiles: 3 };
-    expect(cheatsOf(R, a, null)[0].reason).toBe('Park shortcut; the fine was 20 for 3 tiles (60).');
+    expect(cheatsOf(R, a, null)[0].reason).toBe('Cut through the park 3 tiles; the fine was 20 for 3 tiles (60).');
   });
 });
 
@@ -90,7 +104,7 @@ describe('endCardModel honest comparison', () => {
   it('adds the honest route, the cheats and the city score', () => {
     const m = endCardModel(rw, cheat, GOAL_SECONDS, honest);
     expect(m.honest).toEqual({ reward: 36, seconds: 64 });
-    expect(m.honestLine).toBe('Honest route earns 36, you earned 46');
+    expect(m.honestLine).toBe('Honest route earns 36 pay. You earned 46 pay.');
     expect(m.cheats).toEqual(cheatsOf(rw, cheat, honest));
     expect(m.city).toBe(60);
   });
@@ -101,7 +115,7 @@ describe('endCardModel honest comparison', () => {
   });
   it('shows an honest route that pays more than the cheat plainly', () => {
     const slow = { ...legal, offTiles: 4, parkTiles: 4, seconds: 90, reward: 10 };
-    expect(endCardModel(rw, slow, GOAL_SECONDS, honest).honestLine).toBe('Honest route earns 36, you earned 10');
+    expect(endCardModel(rw, slow, GOAL_SECONDS, honest).honestLine).toBe('Honest route earns 36 pay. You earned 10 pay.');
   });
   it('has no honest block when no legal route exists', () => {
     const m = endCardModel(rw, cheat, GOAL_SECONDS, null);

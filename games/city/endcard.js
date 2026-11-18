@@ -23,7 +23,7 @@ export function endCardModel(rewards, analysis, goal, honest = null) {
     lines,
     verdict: nextStepOf(rewards, analysis),
     honest: honest ? { reward: round1(honest.reward), seconds: honest.seconds } : null,
-    honestLine: honest ? `Honest route earns ${round1(honest.reward)}, you earned ${total}` : '',
+    honestLine: honest ? `Honest route earns ${round1(honest.reward)} pay. You earned ${total} pay.` : '',
     cheats: cheatsOf(rewards, analysis, honest),
     city: trueGoal({ analysis, goalSeconds: goal }).score,
     actions: ACTIONS,

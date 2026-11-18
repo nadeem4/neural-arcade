@@ -30,6 +30,13 @@ describe('legalRoute', () => {
   it('is no shorter than the straight-line distance', () => {
     expect(legalRoute(W).actions.length).toBeGreaterThanOrEqual(8);
   });
+  it('is the fastest legal route: exact steps on a tiny road, exact waits at a light', () => {
+    expect(legalRoute(line('rrr')).actions).toHaveLength(2);
+    const w = line('rrr', '...', [[1, 0]]);
+    const route = legalRoute(w);
+    expect(route.actions).toEqual([4, 4, 1, 1]); // two waits, then two steps
+    expect(analyzeRoute(w, route, R).seconds).toBe(4);
+  });
   it('waits for a green light when that is the only legal way', () => {
     const w = line('rrr', '...', [[1, 0]]);
     const a = analyzeRoute(w, legalRoute(w), R);

@@ -37,13 +37,18 @@ export function updateRaceHud(world, race, rs) {
   drawMinimap(ctx, model(1), c.width, COLOURS_B, { clear: false });
 }
 
+// The line under the result: each taxi's time and pay, and why a dead heat is not decided by pay.
+export function raceDetailOf(res, t, names) {
+  const line = (i) => `${names[i]}: ${t[i].arrived ? `${t[i].seconds} s` : 'did not arrive'}, earned ${signed(Math.round(t[i].reward * 10) / 10 + 0)}`;
+  const heat = res.winner === 'tie' && res.reason === 'time' && t[0].reward !== t[1].reward ? ' Same time, so nobody wins, even though one earned more.' : '';
+  return `${line(0)}. ${line(1)}.${heat}`;
+}
+
 // The result banner. It takes focus, so a keyboard or screen reader player lands on the result.
 export function showBanner(race, res, names) {
   const t = race.cars.map(c => c.events.totals);
   $('raceTitle').textContent = bannerLine(res, names);
-  const line = (i) => `${names[i]}: ${t[i].arrived ? `${t[i].seconds} s` : 'did not arrive'}, earned ${signed(Math.round(t[i].reward * 10) / 10 + 0)}`;
-  const heat = res.winner === 'tie' && res.reason === 'time' && t[0].reward !== t[1].reward ? ' Same time, so nobody wins, even though one earned more.' : '';
-  $('raceDetail').textContent = `${line(0)}. ${line(1)}.${heat}`;
+  $('raceDetail').textContent = raceDetailOf(res, t, names);
   $('raceBanner').hidden = false;
   $('raceBanner').focus({ preventScroll: true });
   return $('raceTitle').textContent;

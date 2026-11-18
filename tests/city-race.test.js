@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { raceTracks, raceStateAt, result, bannerLine, raceBarLine, leaderBlips, togglePick, MAX_PICK } from '../games/city/race.js';
+import { raceDetailOf } from '../games/city/race-view.js';
 
 const read = f => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const city = read('chicago.json');
@@ -151,5 +152,20 @@ describe('togglePick', () => {
     p = togglePick(p, 'b'); expect(p).toEqual(['a', 'b']);
     expect(togglePick(p, 'c')).toEqual(['b', 'c']);
     expect(togglePick(p, 'a')).toEqual(['b']);
+  });
+});
+
+describe('raceDetailOf', () => {
+  const names = ['Speedy', 'Legal'];
+  it('explains a dead heat on time with different rewards', () => {
+    const t = [T(true, 40, 50), T(true, 40, 90)];
+    const text = raceDetailOf(result(fake(...t)), t, names);
+    expect(text).toBe('Speedy: 40 s, earned +50. Legal: 40 s, earned +90. Same time, so nobody wins, even though one earned more.');
+  });
+  it('adds nothing when the rewards match or someone won', () => {
+    const same = [T(true, 40, 70), T(true, 40, 70)];
+    expect(raceDetailOf(result(fake(...same)), same, names)).not.toContain('Same time');
+    const won = [T(true, 30, 50), T(true, 40, 90)];
+    expect(raceDetailOf(result(fake(...won)), won, names)).not.toContain('Same time');
   });
 });

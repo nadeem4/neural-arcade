@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { behaviourNames } from '../games/city/naming.js';
 import { createGarage, keep, remove, serialize, parse, validTaxi } from '../games/city/garage.js';
 
 const entry = (n, over = {}) => ({
@@ -78,3 +79,14 @@ describe('validating stored taxis', () => {
   });
 });
 
+
+describe('an old garage', () => {
+  it('renames an Anything goes taxi to a behaviour name and loses no taxi', () => {
+    const old = serialize({ max: 4, taxis: [entry(2, { name: 'Anything goes' }), entry(1, { name: 'Anything goes' })] });
+    const g = parse(old);
+    const renamed = behaviourNames(g.taxis);
+    expect(renamed).toHaveLength(2);
+    expect(renamed.map(t => t.name)).toEqual(['By the book 2', 'By the book']);
+    expect(renamed.map(t => t.name)).not.toContain('Anything goes');
+  });
+});

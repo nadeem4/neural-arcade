@@ -189,6 +189,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .endcard .big { font-size: 28px; }
   .end-stats { gap: 18px; order: 2; }
   .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 14px; } .end-honest { order: 3; font-size: 13px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
+  .end-honest ul { max-height: 22svh; overflow-y: auto; }
   .end-actions .btn, .end-actions .go { height: 40px; padding: 0 12px; font-size: 13px; }
 }
 #train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--hud-taxi) 35%, transparent); }
