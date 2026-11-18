@@ -58,7 +58,10 @@
         <span class="stage-tools"><button class="info" type="button" aria-expanded="false" aria-controls="info-room" aria-label="Explain the room" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></span></div>
       <p class="info-text" id="info-room" data-info="room" hidden></p>
       <div class="stage-body">
-        <canvas id="stage" role="img" aria-label="A five by five room. The robot starts on the left, the treasure is at the bottom right, there is a pit in the middle and two walls."></canvas>
+        <div class="room">
+          <canvas id="stage" role="img" aria-label="A five by five room. The robot starts on the left, the treasure is at the bottom right, there is a pit in the middle and two walls."></canvas>
+          <div class="tilegrid" id="tiles" data-levels="4" hidden></div>
+        </div>
       </div>
       <p class="say" id="say" aria-live="off"></p>
       <dl class="readouts">
@@ -84,7 +87,34 @@
         <p class="info-text" id="info-log" data-info="log" hidden></p>
         <ol class="log" id="log" aria-live="off"></ol>
       </section>
-      <section class="controls" aria-labelledby="ph">
+      <section class="controls" data-levels="3" aria-labelledby="rh" hidden>
+        <h2><span id="rh">Route and discount</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-route" aria-label="Explain routes" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-route" data-info="route" hidden></p>
+        <div class="routes" id="routes" role="group" aria-label="Routes">
+          <button type="button" data-route="short">Short way</button>
+          <button type="button" data-route="detour">Detour</button>
+          <button type="button" data-route="pit">Risky way</button>
+          <button type="button" id="clear">Draw my own</button>
+          <button type="button" id="walk" class="primary">Walk it</button>
+        </div>
+        <label class="gamma-row" for="gamma">Discount <output id="gammaOut">0.90</output>
+          <button class="info" type="button" aria-expanded="false" aria-controls="info-gamma" aria-label="Explain the discount" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></label>
+        <p class="info-text" id="info-gamma" data-info="gamma" hidden></p>
+        <input class="gamma" type="range" id="gamma" min="0.1" max="1" step="0.05" value="0.9">
+        <p id="gammaHint"></p>
+        <output class="sum" id="sum"></output>
+        <output class="compare" id="compare"></output>
+      </section>
+      <section class="controls" data-levels="4" aria-labelledby="ah" hidden>
+        <h2><span id="ah">Arrows</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-arrows" aria-label="Explain the arrows" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-arrows" data-info="arrows" hidden></p>
+        <div class="row-btns">
+          <button class="btn primary" type="button" id="go">Go</button>
+          <button class="btn" type="button" id="fix">Let the AI fix it</button>
+          <button class="btn" type="button" id="resetArrows">Reset arrows</button>
+        </div>
+      </section>
+      <section class="controls" data-levels="1 2" aria-labelledby="ph">
         <h2><span id="ph">Move</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rewards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-reward" data-info="reward" hidden></p>
         <div class="pad" role="group" aria-labelledby="ph">

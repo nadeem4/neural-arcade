@@ -89,6 +89,15 @@ describe('treasure room page markup', () => {
   it('marks each panel part with the levels that show it', () => {
     expect(html).toMatch(/data-levels="1"/);
     expect(html).toMatch(/data-levels="2"/);
+    expect(html).toMatch(/data-levels="3"/);
+    expect(html).toMatch(/data-levels="4"/);
+  });
+  it('lists levels 3 and 4 in the nav once they are built', () => {
+    expect(navModel([1, 2, 3, 4], 4).filter(n => n.current)).toHaveLength(1);
+    expect(navModel([1, 2, 3, 4], 3).map(n => n.href)).toEqual(['?level=1', '?level=2', '?level=3', '?level=4']);
+  });
+  it('has the level 3 and 4 controls', () => {
+    for (const id of ['routes', 'gamma', 'walk', 'go', 'fix', 'resetArrows', 'tiles', 'sum']) expect(html).toContain(`id="${id}"`);
   });
 });
 
