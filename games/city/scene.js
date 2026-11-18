@@ -8,8 +8,9 @@ import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js
 import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { signalState, signalCorners } from './signals.js';
-import { skyColours, fogFor, heatOpacity } from './sky.js';
-import { createSky, addWindows } from './scene-look.js';
+import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
+import { createSky, lightRig, addWindows, EXPOSURE, ENV_INTENSITY, WINDOW_GLOW } from './scene-look.js';
+import { tierFor } from './quality.js';
 import { createTaxiMaker, TAXI_SCALE } from './scene-taxi.js';
 
 const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
@@ -42,9 +43,12 @@ export function createScene(el, city, opts = {}) {
 }
 
 function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, phone ? 1.5 : 2));
-  renderer.shadowMap.enabled = !phone; // shadows are a desktop-only extra
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const tier = tierFor({ phone, reducedMotion: !motionAllowed() });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, tier.pixelRatio));
+  renderer.shadowMap.enabled = true; // both tiers have shadows; phones a smaller map with the cheaper filter
+  renderer.shadowMap.type = tier.softShadows ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = EXPOSURE;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   const canvas = renderer.domElement;
   el.replaceChildren(canvas);
 
@@ -52,43 +56,33 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const colors = readColors(getComputedStyle(document.documentElement));
   const mats = {};
   for (const key of ['road', 'walk', 'park', 'water', 'building', 'ground', 'leaf']) {
-    mats[key] = new THREE.MeshStandardMaterial({ color: colors[key], roughness: 0.85, side: THREE.DoubleSide });
+    mats[key] = new THREE.MeshStandardMaterial({ color: colors[key], roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: ENV_INTENSITY });
   }
   mats.building.side = THREE.FrontSide; // so the chase cam sees through a wall it passes
   mats.mark = new THREE.MeshBasicMaterial({ color: colors.mark, side: THREE.DoubleSide });
   mats.pin = new THREE.MeshStandardMaterial({ color: colors.pin, emissive: colors.pin, emissiveIntensity: 0.5 });
   mats.pad = new THREE.MeshBasicMaterial({ color: colors.accent });
 
-  const dark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
-  const sky = createSky(skyColours(dark()));
+  const sky = createSky({ radius, cx, cz, cloudCount: tier.cloudCount });
   const scene = new THREE.Scene();
-  scene.background = sky.texture;
-  scene.fog = new THREE.Fog(skyColours(dark()).bottom, radius * 1.4, radius * 6);
-  scene.add(new THREE.HemisphereLight('#BFD4FF', '#20242C', 0.9));
-  const sun = new THREE.DirectionalLight('#FFE8CC', 1.1);
-  sun.position.set(cx + radius, radius * 1.5, cz + radius * 0.6);
-  sun.target.position.set(cx, 0, cz);
-  scene.add(sun, sun.target);
-  // Desktop shadows: one directional light whose shadow box covers the city on the map and a patch around the taxi in the chase.
-  const SUN_OFFSET = [radius, radius * 1.5, radius * 0.6];
+  scene.add(sky.group);
+  const envTarget = sky.environment(renderer);
+  scene.environment = envTarget.texture;
+  scene.fog = new THREE.Fog(skyColours().bottom, radius * 1.4, radius * 6);
+  const sun = lightRig(scene, tier);
+  // One directional light: the same direction on the map and in the chase; its shadow box covers the city on the map and a patch around the taxi in the chase.
   let shadowFocus = null;
   const focusShadow = (chaseOn, x = cx, z = cz) => {
-    if (phone) return;
-    const cam = sun.shadow.camera, half = chaseOn ? 160 : radius, k = chaseOn ? 300 / Math.hypot(...SUN_OFFSET) : 1;
-    sun.target.position.set(x, 0, z);
-    sun.position.set(x + SUN_OFFSET[0] * k, SUN_OFFSET[1] * k, z + SUN_OFFSET[2] * k);
+    const p = sunPlacement({ chase: chaseOn, radius, cx, cz, x, z }), cam = sun.shadow.camera;
+    sun.target.position.set(...p.target);
+    sun.position.set(...p.position);
     if (shadowFocus !== chaseOn) {
-      Object.assign(cam, { left: -half, right: half, top: half, bottom: -half, near: 1, far: chaseOn ? 700 : radius * 4 });
+      Object.assign(cam, { left: -p.half, right: p.half, top: p.half, bottom: -p.half, near: 1, far: p.far });
       cam.updateProjectionMatrix();
       shadowFocus = chaseOn;
     }
   };
-  if (!phone) {
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.6;
-    focusShadow(false);
-  }
+  focusShadow(false);
 
   scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -0.5, cz), mats.ground, { receive: true }));
   scene.add(meshOf(geoOf(buildFlats(city.water ?? [], 0.2)), mats.water));
@@ -97,7 +91,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   scene.add(meshOf(geoOf(buildRoadStrips(city.roads ?? [], 0.8)), mats.road, { receive: true }));
   scene.add(meshOf(geoOf(buildLaneMarks(city.roads ?? [], 1.0)), mats.mark));
   scene.add(meshOf(geoOf(buildBuildings(city.buildings ?? [])), mats.building, { cast: true, receive: true }));
-  const windows = addWindows(mats.building, { phone, glow: dark() ? 1 : 0.35 });
+  const windows = addWindows(mats.building, { cell: tier.windowCell, glow: WINDOW_GLOW });
 
   // Instanced trees: one cone each, shared geometry.
   const pos = treePositions(city.parks ?? [], TREE_SEED);
@@ -180,7 +174,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   heatGeo.setAttribute('position', new THREE.BufferAttribute(hPos, 3));
   heatGeo.setAttribute('color', new THREE.BufferAttribute(hCol, 3));
   heatGeo.setIndex(new THREE.BufferAttribute(hIdx, 1));
-  mats.heat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  mats.heat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }); // not tone mapped, so the heat stays as readable as its colours
   const heatMesh = new THREE.Mesh(heatGeo, mats.heat);
   heatMesh.frustumCulled = false; heatMesh.renderOrder = 1;
   scene.add(heatMesh);
@@ -297,11 +291,10 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   canvas.addEventListener('pointerleave', disengage);
   window.addEventListener('blur', disengage);
 
-  // The light/dark lamp changes data-theme: recolour the sky and pads (cheap) and draw once.
+  // The light/dark lamp changes data-theme: only the pad follows it (cheap); the sky and light stay late afternoon.
   const recolour = () => {
     const c = readColors(getComputedStyle(document.documentElement));
-    const sc = skyColours(dark());
-    sky.repaint(sc); scene.fog.color.set(sc.bottom); windows.setGlow(dark() ? 1 : 0.35); mats.pad.color.set(c.accent);
+    mats.pad.color.set(c.accent);
     draw();
   };
   const mo = new MutationObserver(recolour);
@@ -494,7 +487,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     setShot(name) { chase = name === 'chase' && motionAllowed(); },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      stopRoute(); taxiMaker.dispose(); taxiMakerB.dispose(); windows.dispose(); sky.texture.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
+      stopRoute(); taxiMaker.dispose(); taxiMakerB.dispose(); windows.dispose(); sky.dispose(); envTarget.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
       for (const { span } of labels) span.remove();
       ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
       window.removeEventListener('blur', disengage);

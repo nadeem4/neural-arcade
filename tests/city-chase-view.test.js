@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { treesToHide } from '../games/city/scene-math.js';
+import { sunPlacement } from '../games/city/sky.js';
 import { foldTag } from '../games/city/events.js';
 import { meterText } from '../games/city/meter.js';
 
@@ -44,5 +45,20 @@ describe('meterText', () => {
     expect(meterText(12.4)).toBe('+12');
     expect(meterText(0)).toBe('0');
     expect(meterText(-0.2)).toBe('0');
+  });
+});
+
+describe('sunPlacement', () => {
+  const base = { radius: 1000, cx: 500, cz: 500 };
+  const map = sunPlacement({ ...base, chase: false }), chase = sunPlacement({ ...base, chase: true, x: 800, z: 300 });
+  const dir = (p) => { const v = p.position.map((a, i) => a - p.target[i]); const l = Math.hypot(...v); return v.map((a) => a / l); };
+  it('lights map and chase from the same direction', () => {
+    dir(map).forEach((a, i) => expect(a).toBeCloseTo(dir(chase)[i], 6));
+  });
+  it('covers the city on the map and a patch around the taxi in the chase', () => {
+    expect(map.half).toBe(1000);
+    expect(chase.half).toBeLessThan(map.half);
+    expect(chase.target).toEqual([800, 0, 300]);
+    expect(map.target).toEqual([500, 0, 500]);
   });
 });
