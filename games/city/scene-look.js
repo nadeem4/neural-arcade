@@ -1,5 +1,6 @@
 // three.js glue for the street's look: the sky dome with sun glow and clouds, environment light, the light rig, and lit windows on the buildings. Everything is painted at runtime.
 import * as THREE from './vendor/three.module.min.js';
+import { domeRadius } from './scene-math.js';
 import { windowPattern, skyColours, sunDirection, sunUv, cloudLayout } from './sky.js';
 
 const WIN_COLS = 8, WIN_ROWS = 16, WIN_W = 3, WIN_H = 3.5; // windows 3 m apart, floors 3.5 m: a repeat is 24 m wide and 56 m tall
@@ -28,13 +29,15 @@ export function createSky({ radius, cx, cz, cloudCount }) {
   }
   const map = new THREE.CanvasTexture(canvas);
   map.colorSpace = THREE.SRGBColorSpace;
-  const domeR = radius * 8;
+  const domeR = domeRadius(radius);
   const mat = new THREE.MeshBasicMaterial({ map, side: THREE.BackSide, fog: false, depthWrite: false });
   const geo = new THREE.SphereGeometry(domeR, 32, 16);
   const dome = new THREE.Mesh(geo, mat);
   dome.position.set(cx, 0, cz); dome.renderOrder = -2;
   const envScene = new THREE.Scene();
-  envScene.add(new THREE.Mesh(geo, mat));
+  const envDome = new THREE.Mesh(geo, mat);
+  envDome.scale.setScalar(1 / domeR); // unit radius, so it sits inside PMREM's near/far range
+  envScene.add(envDome);
 
   const cc = document.createElement('canvas');
   cc.width = cc.height = 128;
@@ -58,7 +61,7 @@ export function createSky({ radius, cx, cz, cloudCount }) {
   // Environment lighting from the dome: call once with the renderer, after the dome is built.
   const environment = (renderer) => {
     const pm = new THREE.PMREMGenerator(renderer);
-    const rt = pm.fromScene(envScene, 0.04);
+    const rt = pm.fromScene(envScene, 0.04, 0.1, 10);
     pm.dispose();
     return rt;
   };
@@ -107,5 +110,5 @@ export function addWindows(mat, { cell, glow }) {
         vec2 wuv = vec2(dot(vWp.xz, vec2(-wn.z, wn.x)) / ${(WIN_COLS * WIN_W).toFixed(1)}, vWp.y / ${(WIN_ROWS * WIN_H).toFixed(1)});
         totalEmissiveRadiance += texture2D(winMap, wuv).rgb * wall * winGlow;`);
   };
-  return { setGlow(v) { uniforms.winGlow.value = v; }, dispose() { map.dispose(); } };
+  return { dispose() { map.dispose(); } };
 }

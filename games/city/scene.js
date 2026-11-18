@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, readColors, treesToHide } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, treesToHide } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -60,7 +60,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   }
   mats.building.side = THREE.FrontSide; // so the chase cam sees through a wall it passes
   mats.mark = new THREE.MeshBasicMaterial({ color: colors.mark, side: THREE.DoubleSide });
-  mats.pin = new THREE.MeshStandardMaterial({ color: colors.pin, emissive: colors.pin, emissiveIntensity: 0.5 });
+  mats.pin = new THREE.MeshStandardMaterial({ color: colors.pin, emissive: colors.pin, emissiveIntensity: 0.5, envMapIntensity: ENV_INTENSITY });
   mats.pad = new THREE.MeshBasicMaterial({ color: colors.accent });
 
   const sky = createSky({ radius, cx, cz, cloudCount: tier.cloudCount });
@@ -68,7 +68,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   scene.add(sky.group);
   const envTarget = sky.environment(renderer);
   scene.environment = envTarget.texture;
-  scene.fog = new THREE.Fog(skyColours().bottom, radius * 1.4, radius * 6);
+  scene.fog = new THREE.Fog(skyColours().bottom);
   const sun = lightRig(scene, tier);
   // One directional light: the same direction on the map and in the chase; its shadow box covers the city on the map and a patch around the taxi in the chase.
   let shadowFocus = null;
@@ -135,7 +135,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const world = loadWorld(city);
   const GREEN = '#22C55E', RED = '#EF4444';
   mats.post = new THREE.MeshStandardMaterial({ color: '#8A93A3', roughness: 0.8 });
-  mats.lamp = new THREE.MeshBasicMaterial({ color: GREEN });
+  mats.lamp = new THREE.MeshBasicMaterial({ color: GREEN, toneMapped: false });
   if (signals.length) {
     const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 0.7, 12, 6).translate(0, 6, 0), mats.post, signals.length);
     const lamps = new THREE.InstancedMesh(new THREE.SphereGeometry(1.8, 10, 8), mats.lamp, signals.length);
@@ -181,11 +181,11 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
 
   // Taxi and trail materials (their geometry is made per route and disposed in clearRoute).
   const taxiMaker = createTaxiMaker();
-  mats.trail = new THREE.LineBasicMaterial({ color: TINTS[0].route });
-  mats.trailB = new THREE.LineBasicMaterial({ color: TINTS[1].route });
+  mats.trail = new THREE.LineBasicMaterial({ color: TINTS[0].route, toneMapped: false });
+  mats.trailB = new THREE.LineBasicMaterial({ color: TINTS[1].route, toneMapped: false });
   const taxiMakerB = createTaxiMaker(TINTS[1]); // the second car of a race, tinted pink
 
-  const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, radius * 10);
+  const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, cameraFar(radius));
   const view = { yaw: 0.6, pitch: 0.95, dist: radius * 1.25 };
   let queued = 0, dead = false;
   let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;

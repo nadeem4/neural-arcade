@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { treesToHide } from '../games/city/scene-math.js';
+import { treesToHide, clampDistance, domeRadius, cameraFar } from '../games/city/scene-math.js';
 import { sunPlacement } from '../games/city/sky.js';
 import { foldTag } from '../games/city/events.js';
 import { meterText } from '../games/city/meter.js';
@@ -60,5 +60,12 @@ describe('sunPlacement', () => {
     expect(chase.half).toBeLessThan(map.half);
     expect(chase.target).toEqual([800, 0, 300]);
     expect(map.target).toEqual([500, 0, 500]);
+  });
+});
+
+describe('camera far plane', () => {
+  it('covers the farthest orbit camera plus the sky dome radius', () => {
+    const r = 1000;
+    expect(cameraFar(r)).toBeGreaterThan(clampDistance(Infinity, r) + domeRadius(r));
   });
 });

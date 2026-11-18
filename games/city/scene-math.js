@@ -4,7 +4,11 @@ export const MAX_PITCH = 1.45; // just short of straight down
 
 export const clampPitch = (p) => Math.min(MAX_PITCH, Math.max(MIN_PITCH, p));
 // Camera distance from the city centre, between 0.4 and 3 city radii.
-export const clampDistance = (d, radius) => Math.min(radius * 3, Math.max(radius * 0.4, d));
+const MAX_DIST = 3, DOME = 6;
+export const clampDistance = (d, radius) => Math.min(radius * MAX_DIST, Math.max(radius * 0.4, d));
+// The sky dome is centred on the city; the far plane must reach its far side from the farthest orbit camera.
+export const domeRadius = (radius) => radius * DOME;
+export const cameraFar = (radius) => (radius * MAX_DIST + domeRadius(radius)) * 1.1;
 
 const FIXED = {
   road: '#4B5565', walk: '#6B7689', park: '#2E5E3E', water: '#2F5E8A', mark: '#C9D1DB',
