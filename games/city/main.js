@@ -67,7 +67,7 @@ function hudFrame(state, at) {
     const step = hud.events.steps[hud.done];
     const tags = tagsFor(step, hud.rewards);
     tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }, hud.done));
-    sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
+    if (!rec) sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
   }
 }
 function startHud(events, route, rewards_) {

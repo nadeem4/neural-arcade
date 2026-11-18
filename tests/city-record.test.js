@@ -58,6 +58,12 @@ describe('recordApi', () => {
     expect(rc.ready).toBe(true);
     expect(rc.error).toBeNull();
   });
+  it('reports a training failure as its own message', () => {
+    const rc = recordApi({ stage: stage(), totalMs: 0, fps: 30 });
+    rc.failure = 'training failed';
+    expect(rc.error).toBe('training failed');
+    expect(rc.ready).toBe(false);
+  });
   it('reports WebGL and reduced motion as errors, and is not ready then', () => {
     const noGl = recordApi({ stage: { ready: false }, totalMs: 9000, fps: 30 });
     expect(noGl.error).toMatch(/WebGL/);

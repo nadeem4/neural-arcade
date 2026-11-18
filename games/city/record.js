@@ -32,7 +32,12 @@ export const pruneTags = (tags, nowMs, lifeMs = 1400) => tags.filter(t => nowMs 
 export function recordApi({ stage, totalMs = 0, fps = 30 }) {
   return {
     totalMs, fps, failure: null,
-    get error() { return this.failure ?? !stage.ready ? 'record mode needs WebGL' : !motionAllowed() ? 'record mode does not work under reduced motion' : null; },
+    get error() {
+      if (this.failure) return this.failure;
+      if (!stage.ready) return 'record mode needs WebGL';
+      if (!motionAllowed()) return 'record mode does not work under reduced motion';
+      return null;
+    },
     get ready() { return this.error === null && this.totalMs > 0; },
     seek(ms) { stage.renderAt(ms); },
   };
