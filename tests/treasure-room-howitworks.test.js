@@ -39,6 +39,21 @@ describe('treasure room how it works page', () => {
     sections.forEach((s, i) => expect(s).toContain(`../../../concepts/${LEVELS[i].concept}/`));
   });
 
+  it('links each step to play its level', () => {
+    sections.forEach((s, i) => expect(s).toContain(`href="../?level=${i + 1}"`));
+  });
+
+  it('has a Try it live link to the game and no status words', () => {
+    expect(html).toContain('<a class="btn primary go" href="../">');
+    expect(html).toMatch(/<a href="\.\.\/">Try it live/);
+    expect(html).not.toMatch(/coming soon|TBD/i);
+  });
+
+  it('pins the finale lesson', () => {
+    const finale = html.split('<section class="step finale">')[1];
+    expect(finale).toContain(`<p>${LEVELS[0].lesson}</p>`);
+  });
+
   it('carries its share tags', () => {
     expect(html).toContain(`<link rel="canonical" href="${URL_}how-it-works/">`);
     expect(html).toContain(`<meta property="og:url" content="${URL_}how-it-works/">`);
@@ -49,7 +64,10 @@ describe('treasure room how it works page', () => {
   it('labels every canvas for screen readers', () => {
     const canvases = html.match(/<canvas[^>]*>/g);
     expect(canvases.length).toBeGreaterThan(0);
-    for (const c of canvases) expect(c).toContain('role="img"');
+    for (const c of canvases) {
+      expect(c).toContain('role="img"');
+      expect(c).toMatch(/aria-label="[^"]+"/);
+    }
   });
 
   it('story.js reads the recorded run and shows the sweeps the story records', () => {

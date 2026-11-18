@@ -56,8 +56,8 @@ describe('the recorded run behind the Treasure Room write-up', () => {
     for (let i = 1; i < counts.length; i++) expect(counts[i]).toBeGreaterThanOrEqual(counts[i - 1]);
     expect(counts.at(-1)).toBeGreaterThan(counts[0]);
     const last = snaps.at(-1);
-    const want = valueIteration(ROOM, { gamma: S.value.gamma, sweeps: last.sweep });
-    last.values.forEach((v, i) => expect(v).toBeCloseTo(want[i], 3));
+    const want = valueIteration(ROOM, { gamma: S.value.gamma });
+    last.values.forEach((v, i) => expect(Math.abs(v - want[i])).toBeLessThan(0.01));
   });
 
   it('on a dry floor the plan hugs the pit, on ice it does not, and ice makes the dry plan fall in more', () => {

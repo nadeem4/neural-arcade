@@ -46,7 +46,7 @@
       <figcaption><b>Fig. 1</b> The room, with the route the trained AI walks. It takes <span id="walkSteps"></span> steps and scores <span id="walkTotal"></span>. S is the start, T the treasure, X the pit and the dark tiles are walls.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>The AI only knows what the room tells it.</p>
-    <p><a href="../../../concepts/agent/">More on the agent</a></p>
+    <p><a href="../../../concepts/agent/">More on the agent</a> · <a href="../?level=1">Play level 1</a></p>
   </section>
 
   <section class="step">
@@ -58,7 +58,7 @@
       <figcaption><b>Fig. 2</b> The steps of that same walk, written as state, action and reward. Only the last step pays.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>The game is a list of these: state, action, reward.</p>
-    <p><a href="../../../concepts/state-action-reward/">More on state, action, reward</a></p>
+    <p><a href="../../../concepts/state-action-reward/">More on state, action, reward</a> · <a href="../?level=2">Play level 2</a></p>
   </section>
 
   <section class="step">
@@ -77,7 +77,7 @@
       <figcaption><b>Fig. 3</b> The same two routes at four discounts. The short way never loses. As the discount falls the treasure shrinks from +10 to almost nothing, and at 0.1 even the short way is a loss.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>Shorter paths win, and a low discount makes the AI greedy for now.</p>
-    <p><a href="../../../concepts/return/">More on return</a></p>
+    <p><a href="../../../concepts/return/">More on return</a> · <a href="../?level=3">Play level 3</a></p>
   </section>
 
   <section class="step">
@@ -86,13 +86,13 @@
     <p>A <em>policy</em> says what to do on each tile. In this room it is one arrow per tile. A rulebook of all-right arrows looks tidy and gets the robot nowhere. A good one points every tile the right way.</p>
     <figure class="fig wide" id="fig4">
       <div class="duo">
-        <div><p class="duo-label">All arrows right</p><canvas id="policyBad" class="grid" role="img" aria-label=""></canvas></div>
-        <div><p class="duo-label">Arrows after the AI fixes them</p><canvas id="policyFixed" class="grid" role="img" aria-label=""></canvas></div>
+        <div><p class="duo-label">All arrows right</p><canvas id="policyBad" class="grid" role="img" aria-label="Arrows pointing right on every tile. The robot never reaches the treasure."></canvas></div>
+        <div><p class="duo-label">Arrows after the AI fixes them</p><canvas id="policyFixed" class="grid" role="img" aria-label="Arrows after the AI fixes them. The robot reaches the treasure by the short way."></canvas></div>
       </div>
       <figcaption><b>Fig. 4</b> Two policies and the walk each one gives from the start, traced as a dashed line. The first never reaches the treasure. The second takes the short way in <span id="fixedSteps"></span> steps.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>A policy is: on this tile, do this.</p>
-    <p><a href="../../../concepts/policy/">More on policy</a></p>
+    <p><a href="../../../concepts/policy/">More on policy</a> · <a href="../?level=4">Play level 4</a></p>
   </section>
 
   <section class="step">
@@ -105,7 +105,7 @@
       <figcaption><b>Fig. 5</b> The value of each tile after 1, 2, 3, 5 and <span id="settleSweeps"></span> sweeps, at discount 0.9. A warmer tile is worth more. By the last grid nothing moves by more than 0.01 and the start tile settles at <span id="startValue"></span>.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>Value is how good it is to stand here.</p>
-    <p><a href="../../../concepts/value/">More on value</a></p>
+    <p><a href="../../../concepts/value/">More on value</a> · <a href="../?level=5">Play level 5</a></p>
   </section>
 
   <section class="step">
@@ -115,8 +115,8 @@
     <p>Five parts describe such a world: the <em>states</em>, the <em>actions</em>, the <em>rewards</em>, the <em>slip chance</em> and the <em>discount</em>. Together they are a Markov decision process, or MDP.</p>
     <figure class="fig wide" id="fig6">
       <div class="duo">
-        <div><p class="duo-label">Dry floor</p><canvas id="planDry" class="grid" role="img" aria-label=""></canvas></div>
-        <div><p class="duo-label">Icy floor</p><canvas id="planIcy" class="grid" role="img" aria-label=""></canvas></div>
+        <div><p class="duo-label">Dry floor</p><canvas id="planDry" class="grid" role="img" aria-label="The best route on a dry floor, passing next to the pit."></canvas></div>
+        <div><p class="duo-label">Icy floor</p><canvas id="planIcy" class="grid" role="img" aria-label="The best route on an icy floor, keeping away from the pit."></canvas></div>
       </div>
       <ul class="tallies">
         <li>The dry plan passes next to the pit, with a start value of <span id="dryValue"></span>. Walked on ice <span class="n-trips"></span> times, it falls in <span id="dryPit"></span>.</li>
@@ -125,7 +125,7 @@
       <figcaption><b>Fig. 6</b> The best plan on a dry floor and on an icy one. The icy plan is longer and worth less, but far safer.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>The best plan changes once moves are uncertain.</p>
-    <p><a href="../../../concepts/mdp/">More on the MDP</a></p>
+    <p><a href="../../../concepts/mdp/">More on the MDP</a> · <a href="../?level=6">Play level 6</a></p>
   </section>
 
   <section class="step">
