@@ -3,14 +3,18 @@ import { loadWorld } from './sim.js';
 import { trainInChunks } from './jobs.js';
 
 // The page loads chicago.json once and posts it in an 'init' message; a train that arrives first waits for it.
-let resolveWorld;
-const worldPromise = new Promise((r) => { resolveWorld = r; });
+let resolveWorld, rejectWorld;
+const worldPromise = new Promise((res, rej) => { resolveWorld = res; rejectWorld = rej; });
+worldPromise.catch(() => {}); // a train reports the failure; this stops an unhandled rejection
 
 let latest = 0;
 const post = (msg) => self.postMessage(msg, msg.visits ? [msg.visits.buffer] : []);
 
 self.onmessage = async ({ data }) => {
-  if (data.type === 'init') { resolveWorld(loadWorld(data.city)); return; }
+  if (data.type === 'init') {
+    try { resolveWorld(loadWorld(data.city)); } catch (err) { rejectWorld(err); }
+    return;
+  }
   if (data.type !== 'train') return;
   const { id, seed, rewards, episodes } = data;
   latest = id;

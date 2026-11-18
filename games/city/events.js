@@ -4,7 +4,6 @@ import { stepWorld, tally, newTotals } from './sim.js';
 
 const PARK = 2;
 
-
 // steps[i]: { i, tick, from, cell, moved, off, park, red, wrong, done, delta, lines }.
 // `lines` names the receipt lines that fired: time, off, red, wrong, perTile, fare.
 // totals is the analyzeRoute result, so it equals the receipt's numbers.

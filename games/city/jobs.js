@@ -6,6 +6,7 @@ import { createAgent, trainEpisodes, greedyRoute } from './train.js';
 // runTrain(req, onProgress) -> Promise<result> is injected: the page passes a Worker wrapper.
 // The same request (seed, episodes, rewards) always trains to the same result, so the last CACHE_MAX are kept.
 const CACHE_MAX = 12;
+// route and analysis are shared across cache hits and must not be mutated.
 const copyOf = (res) => ({ ...res, visits: res.visits.slice() });
 
 export function createJobs(runTrain) {

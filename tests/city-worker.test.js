@@ -20,6 +20,27 @@ afterEach(() => { delete globalThis.self; delete globalThis.fetch; });
 const fresh = async () => { vi.resetModules(); await import('../games/city/worker.js'); return globalThis.self.onmessage; };
 const msgs = (type, id) => posted.map((p) => p.m).filter((m) => m.type === type && (id === undefined || m.id === id));
 
+describe('worker errors', () => {
+  it('a map that fails to load makes a train post an error', async () => {
+    const onmessage = await fresh();
+    await onmessage({ data: { type: 'init', city: null } });
+    await onmessage(train(3));
+    expect(msgs('error', 3).length).toBe(1);
+    expect(msgs('done').length).toBe(0);
+  });
+
+  it('training that throws posts an error', async () => {
+    vi.resetModules();
+    vi.doMock('../games/city/jobs.js', () => ({ trainInChunks: async () => { throw new Error('boom'); } }));
+    await import('../games/city/worker.js');
+    const onmessage = globalThis.self.onmessage;
+    await onmessage(init);
+    await onmessage(train(5));
+    vi.doUnmock('../games/city/jobs.js');
+    expect(msgs('error', 5)[0].message).toBe('boom');
+  });
+});
+
 describe('worker', () => {
   it('trains on the map posted in init, never fetches, echoes the id and transfers visits', async () => {
     const onmessage = await fresh();

@@ -23,7 +23,7 @@ export function bestAction(q, s, rng) {
   }
   if (count === 1) return first;
   let k = Math.floor(rng() * count);
-  for (let a = 0; ; a++) if (qValue(q, s, a) === best && k-- === 0) return a;
+  for (let a = 0; a < q.nActions; a++) if (qValue(q, s, a) === best && k-- === 0) return a;
 }
 
 // With chance epsilon take a random action, otherwise the best one.
