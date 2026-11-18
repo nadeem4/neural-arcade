@@ -3,7 +3,7 @@
 export const ARRIVE_POINTS = 60;   // it got there
 export const ON_TIME_POINTS = 20;  // and under the goal time, legally
 export const CLEAN_POINTS = 20;    // arrived with no park, red-light or wrong-way moves
-export const SCARE_COST = 5;       // per scared person (pedestrians arrive in a later slice)
+export const SCARE_COST = 5;       // per scared person (people.js)
 
 const clamp0 = (n) => Math.max(0, n);
 const countOf = (s) => (Array.isArray(s) ? s.length : s | 0);

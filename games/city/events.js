@@ -29,13 +29,15 @@ export function tripEvents(world, rewards, route) {
   return { steps, totals };
 }
 
-// The floating tags for one step: fines in orange, the fare in green. Time and pay per tile are too frequent to tag.
-export function tagsFor(step, rewards) {
+// The floating tags for one step: fines in orange, the fare in green, and "scared N" when the taxi frightened N people (people.js).
+// Time and pay per tile are too frequent to tag.
+export function tagsFor(step, rewards, scared = 0) {
   const tags = [];
   const fine = (rate, name) => tags.push({ text: rate > 0 ? `-${rate} ${name}` : name, kind: 'fine' });
   if (step.off) fine(rewards.off, step.park ? 'park tile' : 'footpath tile');
   if (step.red) fine(rewards.red, 'red light run');
   if (step.wrong) fine(rewards.wrong, 'wrong way');
+  if (scared) tags.push({ text: `scared ${scared}`, kind: 'fine' });
   if (step.done) tags.push({ text: `+${rewards.fare} fare`, kind: 'pay' });
   return tags;
 }

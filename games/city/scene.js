@@ -13,6 +13,7 @@ import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, WINDOW_GLOW } from './sce
 import { tierFor } from './quality.js';
 import { applyFacade, buildingGeometry } from './facade.js';
 import { createTaxiMaker, TAXI_SCALE } from './scene-taxi.js';
+import { createPeopleLayer } from './scene-people.js';
 
 const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
@@ -191,6 +192,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   let queued = 0, dead = false;
   let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;
   let taxiB = null, trailB = null, trailPtsB = null; // the second car of a race
+  let peopleLayer = null; // the pedestrians of the trip on screen (scene-people.js)
   let raceTags = []; // two name tags over the cars (DOM, in the label layer), alive for a race
   const RACE_SCALE = 2.5; // both cars are drawn bigger in a race so they read from the high camera
   const clearRaceTags = () => { raceTags.forEach(s => s.remove()); raceTags = []; };
@@ -341,6 +343,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const place = (st) => {
     placeCar(taxi, trail, trailPts, taxiMaker, play.track.frames, st);
     play.state = st;
+    peopleLayer?.update(st.progress);
     setLights(st.tick, st.facing); // the lamp follows the move being made, not the eased heading
   };
   // A race: both cars on one clock. The lamp shows the leader's direction (the lights are the same for both).
@@ -394,6 +397,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     if (trail) { scene.remove(trail); trail.geometry.dispose(); trail = null; }
     if (taxiB) { scene.remove(taxiB); taxiB.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); taxiB = null; }
     if (trailB) { scene.remove(trailB); trailB.geometry.dispose(); trailB = null; }
+    if (peopleLayer) { peopleLayer.dispose(); peopleLayer = null; }
   };
 
   // Idle: the lights follow a slow clock (not under reduced motion).
@@ -415,7 +419,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (wait <= 0) { if (heatTimer) clearTimeout(heatTimer); applyHeat(); } else if (!heatTimer) heatTimer = setTimeout(applyHeat, wait);
     },
     // track: drive.js driveTrack; events: events.js tripEvents (the page reads those; the stage only needs the track).
-    playTrip({ track, onFrame, onDone } = {}) {
+    playTrip({ track, people, onFrame, onDone } = {}) {
       stopRoute();
       const frames = track.frames;
       taxi = taxiMaker.make();
@@ -426,6 +430,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       tg.setAttribute('position', new THREE.BufferAttribute(trailPts, 3));
       trail = new THREE.Line(tg, mats.trail); trail.frustumCulled = false;
       scene.add(taxi, trail);
+      if (people) peopleLayer = createPeopleLayer(scene, people, { phone, seed: people.seed });
       play = { track, onFrame, onDone, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
       if (!motionAllowed()) { // no animation: the end state with the whole trail and the final numbers
         const end = stateAt(track, track.total);

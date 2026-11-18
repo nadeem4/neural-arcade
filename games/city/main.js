@@ -12,6 +12,7 @@ import { webglAvailable, chooseStage } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
 import { tripEvents, tagsFor, foldTag } from './events.js';
+import { bakePeople, peopleTier } from './people.js';
 import { driveTrack } from './drive.js';
 import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
@@ -29,6 +30,8 @@ import { LADDER_KEY, cardFor, matchStep, parseRan, markRan, ladderModel } from '
 import { buildLadder, updateLadder } from './ladder-view.js';
 
 const $ = id => document.getElementById(id);
+const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
+const peopleFor = events => bakePeople(world, cityData, events, { seed: SEED, ...peopleTier({ phone: isPhone() }) }); // the people of one trip; they only react, never change pay or training
 const signed = n => (n > 0 ? '+' : '') + n;
 
 let world = null, cityData = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
@@ -68,7 +71,7 @@ function hudFrame(state, at) {
   setText($('meterTotal'), meterText(m.total));
   setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`);
   setBar($('meterBar'), payFraction(m.total, hud.range));
-  const g = goalAt(hud.events, [], state.progress, GOAL_SECONDS); // no pedestrians yet, so no scares
+  const g = goalAt(hud.events, hud.people.scaresAt(Math.floor(state.progress)), state.progress, GOAL_SECONDS);
   setText($('meterGoalTotal'), String(g));
   setBar($('meterGoalBar'), barFraction(g));
   const c = $('minimap');
@@ -76,13 +79,13 @@ function hudFrame(state, at) {
   for (; hud.done < Math.min(state.stepIndex, hud.events.steps.length); hud.done++) {
     if (!at || hud.skipped) continue; // the end jump under reduced motion, or Skip: no tags, no sound
     const step = hud.events.steps[hud.done];
-    const tags = tagsFor(step, hud.rewards);
+    const tags = tagsFor(step, hud.rewards, hud.people.scares.filter(s => s.tick === hud.done).length);
     tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }, hud.done));
     if (!rec) sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
   }
 }
-function startHud(events, route, rewards_) {
-  hud = { events, route, rewards: { ...rewards_ }, done: 0, range: payRange(events) };
+function startHud(events, route, rewards_, people) {
+  hud = { events, route, people, rewards: { ...rewards_ }, done: 0, range: payRange(events) };
   showMeter(stage.ready);
   hudFrame({ progress: 0, stepIndex: 0 }, null);
 }
@@ -132,7 +135,7 @@ async function runTrain(req, onProgress) {
 const jobs = createJobs(runTrain);
 
 // ---------- Screens: map (rate card), training, driving, done (end card) ----------
-let screen = 'map', trip = null; // trip: { rewards, analysis, events, route, track, ended } for the trip on screen
+let screen = 'map', trip = null; // trip: { rewards, analysis, events, route, track, people, ended } for the trip on screen
 let toastTimer = 0;
 function toast(text) {
   const t = $('toast');
@@ -189,7 +192,7 @@ function showStage() {
 
 // ---------- The end card ----------
 function showEnd(t) {
-  const m = endCardModel(t.rewards, t.analysis, GOAL_SECONDS, honestReward(world, t.rewards));
+  const m = endCardModel(t.rewards, t.analysis, GOAL_SECONDS, honestReward(world, t.rewards), t.people.scares.length);
   $('endTitle').textContent = `TRIP DONE · TRY ${t.tries}`;
   const flag = $('endFlag');
   flag.textContent = m.timeOk ? 'Legal and on time' : m.legal ? 'Legal, but slow' : 'Not legal';
@@ -211,6 +214,7 @@ function showEnd(t) {
   $('endHonest').hidden = !m.honest;
   $('endHonestLine').textContent = m.honestLine;
   $('endCity').textContent = `What the city wanted: ${m.city} out of 100`;
+  $('endScared').textContent = m.scaredLine; $('endScared').hidden = !m.scaredLine;
   $('endCheats').replaceChildren(...m.cheats.map(c => { const li = document.createElement('li'); li.textContent = c.reason; return li; }));
   const fixed = goalReached(t.analysis);
   shareText = fixed ? shareLine(t.tries, t.analysis) : '';
@@ -230,9 +234,9 @@ function drive(t) {
   hud = null; raceRun = null;
   $('viewToggle').setAttribute('aria-pressed', 'false'); stage.setMapView(false);
   $('driveProgress').value = 0;
-  startHud(t.events, t.route, t.rewards);
+  startHud(t.events, t.route, t.rewards, t.people);
   t.ended = false;
-  stage.playTrip({ track: t.track, events: t.events, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onDone() { finish(t, 'arrived'); } });
+  stage.playTrip({ track: t.track, events: t.events, people: t.people, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onDone() { finish(t, 'arrived'); } });
 }
 async function train(req) {
   const progress = $('progress');
@@ -252,7 +256,7 @@ async function train(req) {
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events);
-    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, ended: false };
+    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), ended: false };
     go('trained');
     drive(trip);
   } catch {
@@ -309,7 +313,7 @@ function driveKept(taxi) {
   rewards = { ...taxi.rewards };
   const events = tripEvents(world, taxi.rewards, taxi.route);
   const track = driveTrack(routeFrames(world, cellM, taxi.route), events);
-  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, ended: false };
+  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), ended: false };
   raceRun = null; stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
   go('replay');
   drive(trip);
