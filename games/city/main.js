@@ -20,7 +20,8 @@ import { stepRate, rateRows } from './rates.js';
 import { nextScreen, canToggleView } from './screens.js';
 import { endCardModel } from './endcard.js';
 import { createGarage, keep, remove, serialize, parse, validTaxi } from './garage.js';
-import { nameFor, uniqueName, noteFor } from './naming.js';
+import { nameFor, behaviourNames, uniqueName, noteFor } from './naming.js';
+import { honestReward } from './honest.js';
 import { renderGarage } from './garage-view.js';
 import { raceTracks, raceStateAt, result, togglePick, leaderBlips } from './race.js';
 import { renderRaceBar, showRaceMeters, updateRaceHud, showBanner } from './race-view.js';
@@ -174,7 +175,7 @@ function showStage() {
 
 // ---------- The end card ----------
 function showEnd(t) {
-  const m = endCardModel(t.rewards, t.analysis, GOAL_SECONDS);
+  const m = endCardModel(t.rewards, t.analysis, GOAL_SECONDS, honestReward(world, t.rewards));
   $('endTitle').textContent = `TRIP DONE · TRY ${t.tries}`;
   const flag = $('endFlag');
   flag.textContent = m.timeOk ? 'Legal and on time' : m.legal ? 'Legal, but slow' : 'Not legal';
@@ -193,6 +194,10 @@ function showEnd(t) {
     ...m.lines.map(l => row('row', l.detail ? `${l.label}: ${l.detail}` : l.label, signed(l.amount))),
     row('row total', 'Total', signed(m.earned)));
   $('endVerdict').textContent = m.verdict;
+  $('endHonest').hidden = !m.honest;
+  $('endHonestLine').textContent = m.honestLine;
+  $('endCity').textContent = `What the city wanted: ${m.city} out of 100`;
+  $('endCheats').replaceChildren(...m.cheats.map(c => { const li = document.createElement('li'); li.textContent = c.reason; return li; }));
   const fixed = goalReached(t.analysis);
   shareText = fixed ? shareLine(t.tries, t.analysis) : '';
   $('shareText').textContent = shareText; $('share').hidden = !fixed;
@@ -245,7 +250,10 @@ const GARAGE_KEY = 'rc-garage-v1';
 let garage = createGarage();
 // Read once the map is loaded, so a stored route can be checked against it.
 function loadGarage() {
-  try { garage = parse(localStorage.getItem(GARAGE_KEY), { cellCount: world.cols * world.rows }); } catch { /* storage blocked: the garage lasts this visit */ }
+  try {
+    garage = parse(localStorage.getItem(GARAGE_KEY), { cellCount: world.cols * world.rows });
+    garage = { ...garage, taxis: behaviourNames(garage.taxis) }; // older garages carry rate-card names
+  } catch { /* storage blocked: the garage lasts this visit */ }
 }
 const saveGarage = () => { try { localStorage.setItem(GARAGE_KEY, serialize(garage)); } catch { /* storage blocked */ } };
 // Focus goes to the first DRIVE (or Close when empty) on open, and to the Garage button when the player closes it; auto-closes leave focus alone.
@@ -268,7 +276,7 @@ function showGarage(open, focusIndex) {
   if (open && focusIndex !== undefined) (driveButtons()[focusIndex] ?? driveButtons().pop() ?? $('garageClose')).focus();
 }
 function keepTrip(t) {
-  const name = uniqueName(nameFor(t.rewards), garage.taxis.map(x => x.name));
+  const name = uniqueName(nameFor(t.analysis), garage.taxis.map(x => x.name));
   garage = keep(garage, {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, tries: t.tries,
     rewards: { ...t.rewards }, route: t.route, analysis: t.analysis,
