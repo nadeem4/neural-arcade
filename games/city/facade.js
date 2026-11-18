@@ -39,7 +39,7 @@ float hash21(vec2 p) { // Hoskins hash12: no sin, so it behaves the same on phon
 float fWin = 0.0, fLit = 0.0;
 {
   // Walls seen nearly edge-on, or window cells under about 2-3 px, go flat so nothing shimmers.
-  float graze = smoothstep(0.04, 0.15, abs(dot(normalize(vNormal), normalize(vViewPosition))));
+  float graze = smoothstep(0.06, 0.2, abs(dot(normalize(vNormal), normalize(vViewPosition))));
   float bay = vFacA.x, flh = vFacA.y, fill = vFacA.z, seed = vFacA.w;
   float shopH = vFacB.x, winTop = vFacB.y, glassy = vFacB.z;
   float u = vWallUv.x, v = vWallUv.y;
@@ -49,7 +49,7 @@ float fWin = 0.0, fLit = 0.0;
   vec2 cell = vec2(u / cw, v / ch);
   vec2 id = floor(cell), f = fract(cell);
   float e = max(fwidth(cell.x), fwidth(cell.y));
-  float sharp = (1.0 - smoothstep(0.2, 0.45, e)) * graze; // 1 = full detail, 0 = flat average
+  float sharp = (1.0 - smoothstep(0.15, 0.35, e)) * graze; // 1 = full detail, 0 = flat average
   float aa = max(fwidth(v), 0.02);
   float topEdge = floor((winTop + 0.05) / ch) * ch; // no window rows above this height
   float on = step(0.001, fill) * (1.0 - smoothstep(topEdge - aa, topEdge + aa, v));
