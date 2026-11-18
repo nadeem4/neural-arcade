@@ -5,6 +5,7 @@ export const TONES = {
   fine: { freq: 220, ms: 180, type: 'square' },
   red: { freq: 140, ms: 260, type: 'sawtooth' },
   fare: { freq: 880, ms: 320, type: 'triangle' },
+  horn: { freq: 410, ms: 140, type: 'square' }, // another car's short honk when the taxi breaks a rule beside it
 };
 
 const defaultFactory = () => new (globalThis.AudioContext || globalThis.webkitAudioContext)();
