@@ -109,6 +109,55 @@ describe('rasterise', () => {
   });
 });
 
+describe('rasterise bridges and rail', () => {
+  // 5 x 3 grid, cellM 12: row 1 is y 12..24, centre y 18. A fence runs north to south through column 2 (x 30).
+  const fence = [{ pts: [[30, 0], [30, 36]] }];
+  const road = [[0, 18], [60, 18]];
+  it('a plain road is cut by a fence, a bridge road is not', () => {
+    expect(rasterise({ roads: [{ pts: road, w: 8 }], fences: fence }, 5, 3, 12)[1]).toBe('rrxrr');
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], fences: fence }, 5, 3, 12)[1]).toBe('rrrrr');
+  });
+  it('a bridge road wins over water and rail below it, but not over a building', () => {
+    const lake = [[24, 0], [36, 0], [36, 36], [24, 36], [24, 0]];
+    const rail = [{ pts: [[30, 0], [30, 36]] }];
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], water: [lake], rail }, 5, 3, 12)[1]).toBe('rrrrr');
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], buildings: [lake] }, 5, 3, 12)[1]).toBe('rrbrr');
+  });
+  it('railway on the ground or in a cut is solid, a plain road over it too, a bridge road is not', () => {
+    const rail = [{ pts: [[30, 0], [30, 36]] }];
+    expect(rasterise({ rail }, 5, 3, 12).map((r) => r[2])).toEqual(['x', 'x', 'x']);
+    expect(rasterise({ roads: [{ pts: road, w: 8 }], rail }, 5, 3, 12)[1]).toBe('rrxrr');
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], rail }, 5, 3, 12)[1]).toBe('rrrrr');
+  });
+});
+
+describe('convert bridges, tunnels and the rail cut', () => {
+  // Own tiny map: a fence and a railway run north to south at x 78 and x 102; roads cross east to west.
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const extra = [
+    way(9001, { barrier: 'fence' }, [[78, 90], [78, 160]]),
+    way(9002, { railway: 'rail' }, [[102, 90], [102, 160]]),
+    way(9003, { highway: 'secondary', bridge: 'yes', layer: '1' }, [[60, 112], [130, 112]]), // over both
+    way(9004, { highway: 'secondary' }, [[60, 124], [130, 124]]), // plain road, level with both
+    way(9005, { highway: 'secondary', layer: '1' }, [[60, 136], [130, 136]]), // layer 1 alone is a bridge
+    way(9006, { highway: 'secondary', tunnel: 'yes', layer: '-1' }, [[60, 148], [130, 148]]), // underneath
+  ];
+  const city = convert({ elements: [...osm.elements, ...extra] }, miniConfig());
+  const rowOf = (y) => city.rows - 1 - Math.floor(y / 12);
+  it('a bridge road stays road over a fence and a railway; a plain road is cut by them', () => {
+    for (const x of [78, 102]) expect(kindAt(city, Math.floor(x / 12), rowOf(112))).toBe('r');
+    expect(kindAt(city, 6, rowOf(124))).toBe('x');
+    expect(kindAt(city, 8, rowOf(124))).toBe('x');
+    expect(kindAt(city, 6, rowOf(136))).toBe('r'); // layer >= 1 counts as a bridge
+  });
+  it('a tunnel road paints nothing: the fence above it stays solid', () => {
+    expect(kindAt(city, 6, rowOf(148))).toBe('x');
+  });
+  it('the railway cells away from any bridge are solid, whatever they were before', () => {
+    expect(kindAt(city, 8, rowOf(96))).toBe('x');
+  });
+});
+
 describe('convert', () => {
   const city = convert(osm, miniConfig());
 

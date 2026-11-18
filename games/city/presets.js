@@ -15,12 +15,12 @@ export const RANGES = {
 
 // Training values. SEED is the fixed seed the game page and the write-up's recorded story train with.
 export const SEED = 1;
-export const EPISODES = 20000;
-export const STEP_CAP = 400;
-export const HYPER = { alpha: 0.5, gamma: 0.99, eps0: 1, eps1: 0.05, decayEpisodes: 10000 };
+export const EPISODES = 60000;
+export const STEP_CAP = 250;
+export const HYPER = { alpha: 0.9, gamma: 0.99, eps0: 1, eps1: 0.05, decayEpisodes: 40000 };
 
-// "Fix the taxi: a legal trip under GOAL_SECONDS s": the legal route's seconds plus 10%, up to a multiple of 5.
-export const GOAL_SECONDS = 175;
+// "Fix the taxi: a legal trip under GOAL_SECONDS s": the honest route's seconds plus 10%, up to a multiple of 5.
+export const GOAL_SECONDS = 155;
 
 const FINES = { off: 20, red: 30, wrong: 30 };
 export const PRESETS = [
@@ -40,7 +40,7 @@ export const PRESETS = [
 export function checkPromise(id, a, legalTiles) {
   const clean = a.offTiles === 0 && a.redRuns === 0 && a.wrongWays === 0;
   switch (id) {
-    case 'speed': return a.arrived && a.parkTiles > 0;
+    case 'speed': return a.arrived && a.offTiles > 0;
     case 'walk': return a.arrived && a.offTiles === 0 && a.redRuns > 0;
     case 'lights': return a.arrived && a.offTiles === 0 && a.redRuns === 0 && a.wrongWays > 0;
     case 'legal': return a.arrived && clean;

@@ -13,8 +13,8 @@ function hash(f64) {
 }
 
 const CITY = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
-// Re-captured on purpose for RV1b (solid trees and the longer trip change the map, not the learning code).
-const GOLDEN = { q: "aa37880d", visits: "27b430a5", len: 400, route: "f56b251d" };
+// Re-captured on purpose for RV1b (solid trees, the bridge and rail rules, the new trip and its tuned HYPER and STEP_CAP).
+const GOLDEN = { q: "f5670493", visits: "a946d853", len: 250, route: "b9ef9647" };
 
 describe('golden training run', () => {
   it('seed 1, 1500 episodes: same Q-table and same greedy route as before the efficiency change', () => {

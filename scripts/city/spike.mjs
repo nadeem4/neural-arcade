@@ -1,6 +1,6 @@
 // Usage: node scripts/city/spike.mjs [--pair pickupCol,pickupRow,dropCol,dropRow]
 // --pair tries another pickup and drop-off cell pair without touching the map, to compare candidate trips.
-// The RC0 gate: trains every try card on the real map (games/city/chicago.json) for seeds 1, 2 and 3
+// The RC0 gate: trains every try card on the real map (games/city/chicago.json) for seeds 1 to 13
 // and checks each shows the behaviour its card promises, within 1,500 ms of training per card.
 //
 // Tune loop, in this order, re-running this script after each change:
@@ -11,15 +11,16 @@
 //
 // It also checks the map itself: the park shortcut exists at street level (a route through park or
 // footpath cells is shorter in steps than the best legal road route), at least one signal and one
-// one-way street lie on the legal route, and GOAL_SECONDS is the legal route's seconds plus 10%,
+// one-way street lie on the legal route, and GOAL_SECONDS is the honest route's seconds plus 10%,
 // rounded up to a multiple of 5.
 import { readFileSync } from 'node:fs';
 import { loadWorld, stepWorld, rewardsOf, analyzeRoute } from '../../games/city/sim.js';
+import { legalRoute } from '../../games/city/honest.js';
 import { createAgent, trainEpisodes, greedyRoute } from '../../games/city/train.js';
 import { EPISODES, HYPER, PRESETS, GOAL_SECONDS, checkPromise } from '../../games/city/presets.js';
 
 const MAX_MS = 1500;
-const SEEDS = [1, 2, 3];
+const SEEDS = Array.from({ length: 13 }, (_, i) => i + 1);
 const city = JSON.parse(readFileSync(new URL('../../games/city/chicago.json', import.meta.url), 'utf8'));
 const pair = process.argv.indexOf('--pair') > 0 ? process.argv[process.argv.indexOf('--pair') + 1].split(',').map(Number) : null;
 if (pair) { city.pickup = [pair[0], pair[1]]; city.dropoff = [pair[2], pair[3]]; }
@@ -60,8 +61,10 @@ const check = (ok, msg) => { if (!ok) failures.push(msg); };
 console.log(`map ${city.cols}x${city.rows}, light period ${world.period}, ${EPISODES} episodes`);
 const anySteps = fewestSteps(() => true);
 const legalSteps = fewestSteps((s) => world.kind[s.cell2] === ROAD && !s.wrong);
-console.log(`fewest steps: any ground ${anySteps}, legal road ${legalSteps}`);
-check(anySteps > 0 && legalSteps > 0 && anySteps < legalSteps, 'the park shortcut is not shorter than the legal road route');
+// the shortcut a cheat takes: road, park or footpath in the legal direction (no wrong-way move)
+const cutSteps = fewestSteps((s) => !s.wrong);
+console.log(`fewest steps: any ground ${anySteps}, legal road ${legalSteps}, park or footpath, no wrong way ${cutSteps}`);
+check(cutSteps > 0 && legalSteps > 0 && cutSteps < legalSteps, 'the park or footpath shortcut is not shorter than the legal road route');
 
 const rows = [];
 for (const seed of SEEDS) {
@@ -76,9 +79,11 @@ for (const seed of SEEDS) {
     const cells = legal.route.cells;
     check(cells.some((c) => world.signal[c]), 'no signal on the legal route');
     check(cells.some((c) => world.oneway[c] >= 0), 'no one-way street on the legal route');
-    const goal = Math.ceil((legal.a.seconds * 1.1) / 5) * 5;
-    console.log(`legal route: ${legal.a.seconds} s, so GOAL_SECONDS should be ${goal}`);
-    check(legal.a.arrived && GOAL_SECONDS === goal, `GOAL_SECONDS is ${GOAL_SECONDS}, expected ${goal}`);
+    const honest = analyzeRoute(world, legalRoute(world), rewardsOf({}));
+    const goal = Math.ceil((honest.seconds * 1.1) / 5) * 5;
+    console.log(`honest route (honest.js): ${honest.seconds} s, ${honest.tiles} tiles; trained legal card: ${legal.a.seconds} s; GOAL_SECONDS should be ${goal}`);
+    check(honest.arrived && legal.a.arrived && legal.a.seconds <= GOAL_SECONDS, 'the legal card does not arrive under GOAL_SECONDS');
+    check(GOAL_SECONDS === goal, `GOAL_SECONDS is ${GOAL_SECONDS}, expected ${goal}`);
   }
 }
 

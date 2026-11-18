@@ -3,8 +3,8 @@
   "name": "Chicago Loop",
   "bbox": [41.874, -87.628, 41.886, -87.617],
   "cellM": 12,
-  "pickup": { "lat": 41.877399, "lon": -87.624449 },
-  "dropoff": { "lat": 41.878479, "lon": -87.620825 },
+  "pickup": { "lat": 41.88598, "lon": -87.619231 },
+  "dropoff": { "lat": 41.875889, "lon": -87.62155 },
   "landmarks": ["Cloud Gate", "Buckingham Fountain"],
   "lightPeriod": 8
 }
