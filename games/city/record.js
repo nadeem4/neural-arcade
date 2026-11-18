@@ -21,7 +21,7 @@ export const cardRewards = (id) => ({ ...PRESETS.find(p => p.id === id).rewards 
 // Whole trip: the track plus the intro swoop and outro pullback.
 export const tripMs = (trackTotalMs) => trackTotalMs + SWOOP_MS + PULLBACK_MS;
 
-export const frameCount = (totalMs, fps) => Math.floor((totalMs / 1000) * fps) + 1;
+export const frameCount = (totalMs, fps) => Math.floor((totalMs * fps) / 1000) + 1;
 
 export const frameMs = (i, fps) => (i * 1000) / fps;
 

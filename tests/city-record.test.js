@@ -31,6 +31,7 @@ describe('timing', () => {
   });
   it('frameCount and frameMs', () => {
     expect(frameCount(1000, 30)).toBe(31);
+    expect(frameCount(290, 100)).toBe(30);
     expect(frameMs(30, 30)).toBe(1000);
     expect(frameMs(1, 30)).toBeCloseTo(1000 / 30);
   });
