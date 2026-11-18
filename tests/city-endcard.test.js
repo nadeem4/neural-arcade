@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { endCardModel } from '../games/city/endcard.js';
-import { buildReceipt, nextStepOf, cheatsOf } from '../games/city/receipt.js';
+import { buildReceipt, nextStepOf, hintOf, cheatsOf } from '../games/city/receipt.js';
 import { GOAL_SECONDS } from '../games/city/presets.js';
 
 const rw = { fare: 100, time: 1, off: 0, red: 0, wrong: 0, perTile: 0 };
@@ -14,11 +14,18 @@ describe('endCardModel', () => {
     expect(m.timeOk).toBe(true);
     expect(m.legal).toBe(true);
   });
-  it('a loophole trip is not ok however fast, and uses the verdict text verbatim', () => {
+  it('a loophole trip is not ok however fast, and uses the hint text verbatim', () => {
     const m = endCardModel(rw, cheat, GOAL_SECONDS);
     expect(m.timeOk).toBe(false);
     expect(m.legal).toBe(false);
-    expect(m.verdict).toBe(nextStepOf(rw, cheat));
+    expect(m.verdict).toBe(hintOf(rw, cheat));
+    expect(m.verdict).toBe(nextStepOf(rw, cheat)); // one cheat: the single-cheat advice
+  });
+  it('a trip with two cheats names both in its hint, beside the cheat list', () => {
+    const two = { ...cheat, redRuns: 1 };
+    const m = endCardModel(rw, two, GOAL_SECONDS, null);
+    expect(m.verdict).toBe('It used 2 loopholes. Add or raise the park and footpath and red-light fines.');
+    expect(m.cheats.map(c => c.kind)).toEqual(['park', 'red']);
   });
   it('a slow legal trip is not ok', () => {
     expect(endCardModel(rw, { ...legal, seconds: GOAL_SECONDS + 5 }, GOAL_SECONDS).timeOk).toBe(false);

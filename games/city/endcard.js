@@ -1,5 +1,5 @@
 // What the end card shows, from the reward and the trip. Wording comes from receipt.js and words.js.
-import { buildReceipt, nextStepOf, cheatsOf } from './receipt.js';
+import { buildReceipt, hintOf, cheatsOf } from './receipt.js';
 import { isLegal } from './words.js';
 import { trueGoal } from './goal.js';
 
@@ -21,7 +21,7 @@ export function endCardModel(rewards, analysis, goal, honest = null) {
     legal,
     earned: total,
     lines,
-    verdict: nextStepOf(rewards, analysis),
+    verdict: hintOf(rewards, analysis),
     honest: honest ? { reward: round1(honest.reward), seconds: honest.seconds } : null,
     honestLine: honest ? `Honest route earns ${round1(honest.reward)} pay. You earned ${total} pay.` : '',
     cheats: cheatsOf(rewards, analysis, honest),

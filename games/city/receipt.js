@@ -1,4 +1,4 @@
-// The trip receipt and the one-sentence verdict, from the reward and analyzeRoute's result.
+// The trip receipt, the cheat list and what to try next, from the reward and analyzeRoute's result.
 import { GOAL_SECONDS } from './presets.js';
 
 const round1 = (n) => Math.round(n * 10) / 10 + 0; // + 0 turns -0 into 0
@@ -24,10 +24,10 @@ export function verdictOf(rewards, a) {
     if (rewards.perTile > 0 && a.seconds > 0 && a.tiles >= a.seconds / 2) {
       return 'It earns more by driving than by delivering, so it never drops the passenger off.';
     }
-    if (rewards.fare <= 0) return 'It never arrived. Nothing pays it for the drop-off, so it has no reason to go there.';
+    if (rewards.fare <= 0) return 'It never arrived. Nothing pays for the drop-off, so nothing pays it to go there.';
     const fines = rewards.off * a.offTiles + rewards.red * a.redRuns + rewards.wrong * a.wrongWays;
     return fines >= rewards.fare
-      ? 'It never arrived. The fines outweigh the fare, so not driving looks like the best deal.'
+      ? 'It never arrived. The fines outweigh the fare, so not driving pays best.'
       : 'It never arrived.';
   }
   const tail = rewards.off > 0 ? 'the fine costs less than the time it saves.' : 'nobody fined that.';
@@ -77,4 +77,11 @@ export function nextStepOf(rewards, a) {
   if (a.redRuns > 0) return cheat('It ran red lights.', rewards.red, 'red-light');
   if (a.wrongWays > 0) return cheat('It went the wrong way down a one-way street.', rewards.wrong, 'wrong-way');
   return a.seconds < GOAL_SECONDS ? 'Clean, fast and legal. That is a fixed taxi.' : 'Legal, but not fast enough. Try a higher cost per second.';
+}
+
+// What to try next on the end card. One cheat: nextStepOf's line. Several fine cheats: all of them named, not only the first.
+export function hintOf(rewards, a) {
+  const fined = [a.offTiles && 'park and footpath', a.redRuns && 'red-light', a.wrongWays && 'wrong-way'].filter(Boolean);
+  if (!a.arrived || fined.length < 2) return nextStepOf(rewards, a);
+  return `It used ${fined.length} loopholes. Add or raise the ${fined.slice(0, -1).join(', ')} and ${fined.at(-1)} fines.`;
 }

@@ -49,6 +49,12 @@
     <aside class="ratecard" id="rateCard" aria-label="Rate card">
       <h2><span id="rcTitle">Rate card</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the reward" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
       <p class="info-text" id="info-reward" data-info="reward" hidden></p>
+      <section class="ladder" aria-labelledby="ladderTitle">
+        <h3 id="ladderTitle">Five steps <button class="info" type="button" aria-expanded="false" aria-controls="info-ladder" aria-label="Explain the five steps" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h3>
+        <p class="info-text" id="info-ladder" data-info="ladder" hidden></p>
+        <ol class="steps" id="ladderSteps" aria-label="Five rate cards, in order"></ol>
+        <p class="ladder-note" id="ladderNote" aria-live="polite"><b id="ladderHead"></b><span id="ladderText"></span></p>
+      </section>
       <div class="rates">
         <div class="rate" data-field="fare"><span class="rate-label" id="fareLabel"><span class="long">Fare for arriving</span><span class="short" aria-hidden="true">Fare for arriving</span></span><span class="stepper"><button class="rstep" type="button" id="fareDec" aria-label="Lower fare for arriving" aria-describedby="fareLabel">&minus;</button><output class="num" id="fareOut" aria-live="off"></output><button class="rstep" type="button" id="fareInc" aria-label="Raise fare for arriving" aria-describedby="fareLabel">+</button></span></div>
         <div class="rate" data-field="time"><span class="rate-label" id="timeLabel"><span class="long">Cost per second</span><span class="short" aria-hidden="true">Cost per second</span></span><span class="stepper"><button class="rstep" type="button" id="timeDec" aria-label="Lower cost per second" aria-describedby="timeLabel">&minus;</button><output class="num" id="timeOut" aria-live="off"></output><button class="rstep" type="button" id="timeInc" aria-label="Raise cost per second" aria-describedby="timeLabel">+</button></span></div>
@@ -150,34 +156,21 @@
     </section>
     <p class="toast" id="toast" role="status" hidden></p>
   </section>
-        <section aria-labelledby="rh">
-          <h2><span id="rh">Last trip</span></h2>
-          <div class="receipt" id="receipt" aria-live="off"></div>
-        </section>
-        <section aria-labelledby="gh">
-          <h2><span id="gh">Your goal</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-goal" aria-label="Explain the goal" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
-          <p class="info-text" id="info-goal" data-info="goal" hidden></p>
-          <p class="goal-line" id="goal"></p>
-          <p class="share-line" id="share" hidden><output id="shareText"></output> <button class="btn" type="button" id="copy">Copy</button></p>
-        </section>
-      </div>
-    </aside>
-  </section>
 
   <div class="wrap game" id="about">
     <div class="head">
       <div class="crumb" id="crumb"></div>
-      <p class="lead lesson">A taxi learns to cross the real Chicago Loop, and you write its reward. It does what you pay it for, not what you meant. Teaches reward design.</p>
+      <p class="lead lesson">A taxi learns to cross the real Chicago Loop, and you write its reward. The taxi does what you paid for, not what you meant. Teaches reward design.</p>
     </div>
 
     <dl class="brief" aria-label="The experiment">
       <div><dt>The setup</dt><dd>A taxi on a map of the Chicago Loop. It starts at the pickup and has to reach the drop-off. Buildings and water block it. Parks and footpaths do not.</dd></div>
-      <div><dt>The rule</dt><dd>It knows nothing at first. It tries trips and keeps whatever earned the most reward. You set the reward: the fare, the clock, and a fine for each way of cheating.</dd></div>
-      <div><dt>Watch for</dt><dd>With only the clock on, it drives across the park. Fine that, and it runs red lights. Fine those, and it goes the wrong way. Then fix it: a legal trip that is still fast.</dd></div>
+      <div><dt>The rule</dt><dd>It starts by trying trips at random and keeps the ones that earned the most pay. You write the rate card: the fare, the clock, and a fine for each way of cheating.</dd></div>
+      <div><dt>Watch for</dt><dd>With only the clock on, it drives across the park. Fine that, and it runs red lights. Fine those, and it goes the wrong way. Then fix it: a legal trip that is still fast. The five steps on the rate card walk you through it.</dd></div>
     </dl>
 
     <div class="moral">
-      <div><small>The lesson</small><p>The reward is the only thing the taxi wants: it does what you pay it for, not what you meant.</p></div>
+      <div><small>The lesson</small><p>The taxi does what you paid for, not what you meant.</p></div>
       <a class="btn" href="#how" id="whyLink">Why it works</a>
     </div>
 
