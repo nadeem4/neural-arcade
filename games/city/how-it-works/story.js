@@ -93,12 +93,14 @@ for (const c of M.fig3) {
 }
 
 // ---------- Fig. 4: legal against paid by the mile ----------
-for (const c of [M.fig4.legal, M.fig4.loop]) {
+for (const c of [M.fig4.loop, M.fig4.legal]) {
   const cv = mk($('endings'), `The route after the reward "${nameOf(c.id)}". ${c.verdict}`, caption(c));
   add(() => drawMap(cv, M.fig1, { dim: 0.55, route: c.polyline }));
 }
 
 $('seed').textContent = S.seed;
+const counts = M.fig2.snapshots.map(sn => sn.episode.toLocaleString('en'));
+$('snaps').textContent = `${counts.slice(0, -1).join(', ')} and ${counts.at(-1)}`;
 
 // ---------- Redraw on resize and theme change ----------
 const redraw = () => draws.forEach(fn => fn());

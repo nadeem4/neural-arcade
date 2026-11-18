@@ -149,6 +149,20 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .toast { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 4; margin: 0; padding: 10px 16px; border-radius: 12px; background: var(--navy); color: #E8EDF4; font: 600 14px var(--sans); }
 .toast[hidden] { display: none; }
 
+/* The ladder: five numbered steps and a note on the one loaded. One row, so it stays small in the phone sheet. */
+.ladder { display: grid; gap: 8px; }
+.ladder h3 { display: flex; align-items: center; justify-content: space-between; margin: 0; font: 700 13px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
+.ladder .info { margin: 0; color: #E8EDF4; }
+.steps { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.steps li { flex: 1; }
+.step { position: relative; width: 100%; height: 40px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 16px "Space Grotesk", var(--sans); cursor: pointer; }
+.step[aria-current="step"] { border-color: var(--hud-taxi); color: var(--hud-taxi); box-shadow: inset 0 0 0 1px var(--hud-taxi); }
+.step.ticked::after { content: "\2713"; position: absolute; top: 1px; right: 5px; font-size: 11px; line-height: 1; color: var(--hud-pay); }
+.step:disabled { opacity: .35; cursor: not-allowed; }
+.step:focus-visible { outline: 2px solid var(--hud-taxi); outline-offset: 3px; }
+.ladder-note { margin: 0; font-size: 13.5px; line-height: 1.4; color: #C5CEDA; }
+.ladder-note b { display: block; margin-bottom: 2px; font: 700 16px/1.3 "Space Grotesk", var(--sans); color: #F2F6FA; }
+
 /* What each screen shows. */
 .play[data-screen="driving"] .ratecard, .play[data-screen="done"] .ratecard, .play[data-screen="racing"] .ratecard, .play[data-screen="raced"] .ratecard,
 .play[data-screen="driving"] #train, .play[data-screen="done"] #train, .play[data-screen="racing"] #train, .play[data-screen="raced"] #train { display: none; }
@@ -179,6 +193,10 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .stepper { justify-content: space-between; }
   .rate output { font-size: 18px; }
   .rstep { width: 44px; height: 36px; }
+  .ladder { gap: 6px; }
+  .step { height: 44px; }
+  .ladder-note { font-size: 13px; }
+  .ladder-note b { font-size: 15px; }
   .gbar { left: 8px; right: 8px; bottom: 8px; transform: none; justify-content: center; }
   .gbar .go { flex: 1; }
   .bar-drive { flex: 1; gap: 8px; }
