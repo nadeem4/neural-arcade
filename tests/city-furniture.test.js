@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { furnitureTier } from '../games/city/quality.js';
 import {
-  hash01, treeSpecs, crownBlobs, lampSpecs, railSegments, railColumns, columnLegs, railParts, clearanceFromRoads,
+  hash01, treeSpecs, crownBlobs, lampSpecs, railSegments, pairRails, railColumns, columnLegs, railParts, clearanceFromRoads,
 } from '../games/city/street-furniture.js';
 
 const city = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
@@ -67,6 +67,23 @@ describe('railSegments', () => {
   });
 });
 
+describe('railSegments at a bend', () => {
+  it('lengthens both segments so the outer deck edge has no notch', () => {
+    const plain = railSegments([[0, 0], [10, 0], [10, 10]]);
+    const wide = railSegments([[0, 0], [10, 0], [10, 10]], 2.4);
+    expect(wide[0].len).toBeGreaterThan(plain[0].len + 2);
+    expect(wide[1].len).toBeGreaterThan(plain[1].len + 2);
+    // the outer corner of the deck (10 + 2.4, +2.4 on the outside) lies inside the first box
+    const s = wide[0], u = (12.4 - s.x) * Math.cos(s.yaw), v = (2.4 - s.z) * 1; // yaw 0: box spans x, and z across
+    expect(Math.abs(u)).toBeLessThanOrEqual(s.len / 2 + 1e-6);
+    expect(Math.abs(v - 0)).toBeLessThanOrEqual(2.4 + 1e-6);
+  });
+  it('a straight run is not lengthened', () => {
+    const a = railSegments([[0, 0], [10, 0], [20, 0]], 2.4);
+    expect(a[0].len).toBeCloseTo(10.4);
+  });
+});
+
 describe('railColumns', () => {
   const straight = [[0, 0], [100, 0]];
   it('spaces columns about 20 m apart along the line', () => {
@@ -88,15 +105,57 @@ describe('railColumns', () => {
     expect(Math.hypot(a[0] - b[0], a[1] - b[1])).toBeCloseTo(2 * k.lat);
     expect(tx).toBeCloseTo(0.6); expect(tz).toBeCloseTo(-0.8);
   });
-  it('real L: columns stay near the line and almost all legs are off the driving lanes', () => {
-    let legs = 0, off = 0;
-    for (const r of city.rail.filter((q) => q.elevated)) {
-      for (const k of railColumns(r.pts, city.roads)) {
-        for (const [x, z] of columnLegs(k)) { legs++; if (clearanceFromRoads(x, z, city.roads) >= 0) off++; }
+  it('drops a column whose legs cannot clear a road the line crosses', () => {
+    const wide = [{ pts: [[50, -200], [50, 200]], w: 60 }]; // a 60 m wide road under the line: no leg can stand clear nearby
+    const c = railColumns(straight, wide, { spacing: 20 });
+    expect(c.length).toBeLessThan(5);
+    for (const k of c) for (const [x, z] of columnLegs(k)) expect(clearanceFromRoads(x, z, wide)).toBeGreaterThanOrEqual(0);
+  });
+  it('real L: no leg of any column stands in a driving lane, and columns are never more than 40 m apart on a straight', () => {
+    let legs = 0;
+    for (const r of pairRails(city.rail)) {
+      if (!r.elevated) continue;
+      for (const k of railColumns(r.pts, city.roads, { sep: r.sep })) {
+        for (const [x, z] of columnLegs(k)) { legs++; expect(clearanceFromRoads(x, z, city.roads)).toBeGreaterThanOrEqual(0); }
       }
     }
     expect(legs).toBeGreaterThan(200);
-    expect(off / legs).toBeGreaterThan(0.8);
+  });
+});
+
+describe('pairRails', () => {
+  const two = (d) => [
+    { pts: [[0, 0], [100, 0]], h: 8, elevated: true },
+    { pts: [[0, d], [100, d]], h: 8, elevated: true },
+  ];
+  it('joins two parallel elevated ways into one centreline with their gap', () => {
+    const out = pairRails(two(4));
+    expect(out).toHaveLength(1);
+    expect(out[0].sep).toBeCloseTo(4, 0);
+    for (const [, y] of out[0].pts) expect(y).toBeCloseTo(2, 0);
+  });
+  it('leaves far apart, ground and different-height ways alone', () => {
+    expect(pairRails(two(30))).toHaveLength(2);
+    expect(pairRails(two(4).map((r, i) => ({ ...r, h: 8 + i })))).toHaveLength(2);
+    expect(pairRails(two(4).map((r) => ({ ...r, elevated: false, h: 0 })))).toHaveLength(2);
+    expect(pairRails(two(30)).every((r) => !r.sep)).toBe(true);
+  });
+  it('real map: the L pairs (0,27), (1,11), (8,12), (9,15), (10,14), (24,25), (28,29), (3,26), (6,7) and every item is used once', () => {
+    const out = pairRails(city.rail);
+    const paired = out.filter((r) => r.ways.length === 2).map((r) => r.ways.join(','));
+    for (const w of ['0,27', '1,11', '8,12', '9,15', '10,14', '24,25', '28,29', '3,26', '6,7']) expect(paired).toContain(w);
+    expect(out.flatMap((r) => r.ways).sort((a, b) => a - b)).toEqual(city.rail.map((_, i) => i));
+  });
+  it('real map: no two decks of different items overlap on the same plane', () => {
+    const decks = pairRails(city.rail).flatMap((r, ri) => railParts(r, city.roads).filter((p) => p.colour === 'deck').map((p) => ({ ...p, ri })));
+    const inside = (a, b) => { // is a's centre inside b's footprint, shrunk a little
+      const dx = a.x - b.x, dz = a.z - b.z, c = Math.cos(b.yaw), s = Math.sin(b.yaw);
+      const u = dx * c - dz * s, v = dx * s + dz * c; // z axis of the box is the track's -z direction
+      return Math.abs(u) < b.sx / 2 - 0.5 && Math.abs(v) < b.sz / 2 - 0.5;
+    };
+    let hits = 0;
+    for (const a of decks) for (const b of decks) if (a.ri !== b.ri && Math.abs(a.y - b.y) < 0.05 && inside(a, b)) hits++;
+    expect(hits).toBe(0); // lines that cross at one data height are lifted apart
   });
 });
 
@@ -110,13 +169,20 @@ describe('railParts', () => {
     expect(Math.max(...by('rail').map((p) => p.y))).toBeGreaterThan(8);
     expect(by('deck')[0].y).toBeLessThanOrEqual(8);
   });
+  it('a paired line draws one wide deck and four rails', () => {
+    const parts = railParts({ pts: [[0, 0], [40, 0]], h: 8, elevated: true, sep: 4 }, []);
+    const by = (c) => parts.filter((p) => p.colour === c);
+    expect(by('deck')).toHaveLength(1);
+    expect(by('deck')[0].sz).toBeGreaterThan(4 + 4);
+    expect(by('rail')).toHaveLength(4);
+  });
   it('ground line: a track bed and two rails, no structure', () => {
     const parts = railParts({ pts: [[0, 0], [40, 0]], h: 0, elevated: false }, []);
     expect(parts.map((p) => p.colour).sort()).toEqual(['bed', 'rail', 'rail']);
     expect(Math.max(...parts.map((p) => p.y))).toBeLessThan(1);
   });
   it('the whole L is finite and in one modest instance count', () => {
-    const all = city.rail.flatMap((r) => railParts(r, city.roads));
+    const all = pairRails(city.rail).flatMap((r) => railParts(r, city.roads));
     expect(all.length).toBeGreaterThan(500); expect(all.length).toBeLessThan(4000);
     for (const p of all) for (const v of [p.x, p.y, p.z, p.yaw, p.sx, p.sy, p.sz]) expect(Number.isFinite(v)).toBe(true);
   });
@@ -139,6 +205,13 @@ describe('scene wiring', () => {
     expect(scene).toMatch(/buildFurniture\(/);
     expect(scene).toMatch(/furniture\.dispose\(\)/);
     expect(scene).not.toMatch(/ConeGeometry/);
+  });
+  it('draws the paired L, hides lamps, trees and L parts near the chase camera, and disposes every instanced mesh', () => {
+    expect(furn).toContain('pairRails(');
+    expect(furn).toContain('treesToHide(');
+    expect(furn).toContain('for (const m of meshes) m.dispose()');
+    expect(furn.split('= hider(').length - 1).toBe(3); // lamps, trees and the L
+    expect(scene).not.toContain("'leaf']");
   });
   it('the lamp heads glow untoned on desktop; nothing random or timed', () => {
     expect(furn).toMatch(/emissive/);

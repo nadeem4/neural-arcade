@@ -55,7 +55,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const { cx, cz, radius } = cityBounds(city);
   const colors = readColors(getComputedStyle(document.documentElement));
   const mats = {};
-  for (const key of ['road', 'walk', 'park', 'water', 'building', 'ground', 'leaf']) {
+  for (const key of ['road', 'walk', 'park', 'water', 'building', 'ground']) {
     mats[key] = new THREE.MeshStandardMaterial({ color: colors[key], roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: ENV_INTENSITY });
   }
   mats.building.side = THREE.FrontSide; // so the chase cam sees through a wall it passes
