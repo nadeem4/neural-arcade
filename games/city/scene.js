@@ -35,13 +35,13 @@ function geoOf({ positions, normals, indices }) {
 
 export function createScene(el, city, opts = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: !opts.phone, powerPreference: 'high-performance' });
-  try { return build(el, city, renderer, !!opts.phone, opts.labels ?? null, opts.onChaseOff); } catch (e) {
+  try { return build(el, city, renderer, !!opts.phone, opts.labels ?? null, opts.onChaseOff, !!opts.manualClock); } catch (e) {
     renderer.dispose(); renderer.domElement.remove();
     throw e;
   }
 }
 
-function build(el, city, renderer, phone, labelEl, onChaseOff) {
+function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, phone ? 1.5 : 2));
   renderer.shadowMap.enabled = !phone; // shadows are a desktop-only extra
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -372,9 +372,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
     return { x: cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width, y: cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height };
   };
-  const tickLoop = (now) => {
-    loopId = 0;
-    if (dead || !play) return;
+  // One frame at time `now`. Every time-dependent value here (elapsed, taxi, camera, lights tick, head bob) derives from `now`, so a manual clock gives pure frames.
+  const frame = (now) => {
+    if (dead || !play) return 'map';
     const intro = play.swoop ? SWOOP_MS : 0;
     const elapsed = now - play.t0;
     const { phase, t } = timeline(play.track.total, elapsed, { swoop: play.swoop });
@@ -385,8 +385,12 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
     play.onFrame?.(st, play.race ? null : taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
-    if (phase === 'map') { finish(); return; }
-    loopId = requestAnimationFrame(tickLoop);
+    if (phase === 'map') finish();
+    return phase;
+  };
+  const tickLoop = (now) => {
+    loopId = 0;
+    if (frame(now) !== 'map' && play) loopId = requestAnimationFrame(tickLoop);
   };
   const stopRoute = () => {
     if (loopId) cancelAnimationFrame(loopId);
@@ -399,7 +403,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
   };
 
   // Idle: the lights follow a slow clock (not under reduced motion).
-  const clock = setInterval(() => {
+  const clock = manualClock ? 0 : setInterval(() => { // a manual clock never reads wall-clock time
     if (play || dead || document.hidden || !motionAllowed()) return;
     if (setLights(Math.floor(performance.now() / 1500))) draw();
   }, 500);
@@ -437,6 +441,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
         finish();
         return;
       }
+      if (manualClock) { play.t0 = 0; return; } // renderAt(ms) drives the frames
       play.t0 = performance.now();
       loopId = requestAnimationFrame(tickLoop);
     },
@@ -470,8 +475,14 @@ function build(el, city, renderer, phone, labelEl, onChaseOff) {
         finish();
         return;
       }
+      if (manualClock) { play.t0 = 0; return; }
       play.t0 = performance.now();
       loopId = requestAnimationFrame(tickLoop);
+    },
+    // Render the playing trip at ms (manualClock only). done is true once the trip has ended.
+    renderAt(ms) {
+      const phase = frame(ms);
+      return { phase, done: phase === 'map' };
     },
     // Skip to the end of the drive: the taxi jumps to its last tile and the camera pulls back.
     skipTrip() { if (play) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
