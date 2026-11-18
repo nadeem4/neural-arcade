@@ -63,18 +63,21 @@ export function qValue(room, values, pos, action, gamma, slip = 0) {
   return q;
 }
 
+// One Bellman sweep: every floor tile takes the best action's value from the tiles next to it. The input is not changed.
+export function sweepOnce(room, values, { gamma, slip = 0 }) {
+  const next = values.slice();
+  for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
+    if (!isFloor(room, x, y)) continue;
+    let best = -Infinity;
+    for (let a = 0; a < 4; a++) best = Math.max(best, qValue(room, values, { x, y }, a, gamma, slip));
+    next[stateId(room, { x, y })] = best;
+  }
+  return next;
+}
+
 export function valueIteration(room, { gamma, slip = 0, sweeps = 200 }) {
   let v = new Array(room.w * room.h).fill(0);
-  for (let i = 0; i < sweeps; i++) {
-    const next = v.slice();
-    for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
-      if (!isFloor(room, x, y)) continue;
-      let best = -Infinity;
-      for (let a = 0; a < 4; a++) best = Math.max(best, qValue(room, v, { x, y }, a, gamma, slip));
-      next[stateId(room, { x, y })] = best;
-    }
-    v = next;
-  }
+  for (let i = 0; i < sweeps; i++) v = sweepOnce(room, v, { gamma, slip });
   return v;
 }
 

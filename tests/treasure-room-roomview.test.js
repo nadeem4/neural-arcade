@@ -48,4 +48,21 @@ describe('treasure room view helpers', () => {
     drawRoom(c, ROOM, { cell: 60, marks: [{ x: 1, y: 1 }, { x: 2, y: 1 }] });
     expect(c.calls.strokeRect.length - base.calls.strokeRect.length).toBe(2);
   });
+  it('draws heat as one tint per floor tile that has any, an icy sheen on every floor tile, and two ghost routes as two lines', () => {
+    const base = stub();
+    drawRoom(base, ROOM, { cell: 60 });
+    const heat = new Array(25).fill(0);
+    heat[0] = 1; heat[1] = 0.5;
+    const a = stub();
+    drawRoom(a, ROOM, { cell: 60, heat });
+    expect(a.calls.fillRect.length - base.calls.fillRect.length).toBe(2);
+    const floor = ROOM.cells.flat().filter(c => !'TX#'.includes(c)).length;
+    const b = stub();
+    drawRoom(b, ROOM, { cell: 60, ice: true });
+    expect(b.calls.fillRect.length - base.calls.fillRect.length).toBe(floor);
+    const p = [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }];
+    const c = stub();
+    drawRoom(c, ROOM, { cell: 60, ghost: [p, p] });
+    expect(c.calls.lineTo).toHaveLength(4);
+  });
 });

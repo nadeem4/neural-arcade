@@ -65,3 +65,21 @@
 .tilegrid button { min-height: 44px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; }
 .tilegrid button:focus-visible { outline: 3px solid var(--signal); outline-offset: -3px; }
 .row-btns .btn { min-height: 44px; }
+
+/* Level 5: sweep counter and the colour key for the heat. */
+.sweep-info { display: block; font: 600 14px/1.5 var(--mono); }
+.heat-legend { display: flex; align-items: center; gap: 8px; margin: 0; font: 500 13px/1.5 var(--sans); color: var(--ink-2); }
+.heat-bar { flex: none; width: 56px; height: 12px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(90deg, var(--surface), var(--signal)); }
+
+/* Level 6: dry or icy toggle, trip counts, and the five tags that light one by one. */
+.btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.tags { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tags li { padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 12px; color: var(--ink-2); font: 500 13px/1.5 var(--sans); }
+.tags li b { display: block; font-weight: 600; }
+.tags li span { display: none; }
+.tags li.lit { border-color: var(--signal); color: var(--ink); }
+.tags li.lit span { display: block; }
+
+@media (max-width: 640px) {
+  #valueGammaHint { display: none; }
+}
