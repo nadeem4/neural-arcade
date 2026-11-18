@@ -5,7 +5,7 @@ import { createTraffic, taxiOf, newPoses, carColour } from './traffic.js';
 
 const TRAFFIC_SEED = 1;       // every drive on the same route shows the same cars
 export const CAR_SCALE = 1.5; // the same metres-to-scene scale as the taxi
-const CAR_Y = 1;              // the taxi's height: wheel bottoms sit here
+const CAR_Y = 0.8;            // wheel bottoms sit on the road surface. replace with ROAD_Y from scene-math.js
 const TAIL_DIM = 0.3, TAIL_BRAKE = 1; // linear brightness of the red lamps
 const FLASH_HZ = 6;           // headlamp flash rate while a car is braking hard
 
@@ -88,7 +88,7 @@ export function createTrafficLayer({ tier }) {
       this.begin(createTraffic(world, { seed: TRAFFIC_SEED, count: max, cellM, taxi: taxiOf(events) }));
     },
     stop() { traffic = null; group.visible = false; },
-    // The cars at `tf` ticks into the trip. onHonk(h) is called once for each near miss the clock has passed. No allocation.
+    // The cars at `tf` ticks into the trip. onHonk(h) is called at most once a frame, for the newest near miss within a tick of the clock. No allocation.
     update(tf, onHonk) {
       if (!traffic) return;
       traffic.posesAt(tf, poses);
@@ -110,7 +110,9 @@ export function createTrafficLayer({ tier }) {
       }
       if (onHonk) {
         const honks = traffic.nearMisses(), k = Math.floor(Math.max(0, tf));
-        while (honkIdx < honks.length && honks[honkIdx].tick <= k) onHonk(honks[honkIdx++]);
+        let fresh = null; // one horn a frame; a honk more than a tick behind the clock (a background tab) is dropped
+        while (honkIdx < honks.length && honks[honkIdx].tick <= k) { const h = honks[honkIdx++]; if (k - h.tick <= 1) fresh = h; }
+        if (fresh) onHonk(fresh);
       }
     },
     dispose() { for (const g of geos) g.dispose(); bodyMat.dispose(); lampMat.dispose(); for (const m of meshes) m.dispose(); },

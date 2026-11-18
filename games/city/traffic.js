@@ -101,6 +101,16 @@ export function createTraffic(world, { seed = 1, count = 40, cellM = 12, taxi = 
   for (let i = 0; i < n; i++) { const o = optionsOf(cell[i], -1); dir[i] = o[Math.floor(rng() * o.length)]; }
   const idle = new Uint8Array(n), lastHonk = new Int32Array(n).fill(-1000);
   const occ = new Int32Array(N).fill(-1);
+  // Where a car stuck in the taxi's way is put: main-road cells more than 3 cells from every cell of the route, with no car beside them.
+  const away = [];
+  for (let c = 0; c < N; c++) if (mask[c] && inMain(c) && !taxiCells.some((t) => Math.abs(Math.floor(c / cols) - Math.floor(t / cols)) <= 3 && Math.abs((c % cols) - (t % cols)) <= 3)) away.push(c);
+  const roomAround = (c) => {
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+      const r = Math.floor(c / cols) + dr, q = (c % cols) + dc;
+      if (r >= 0 && r < rows && q >= 0 && q < cols && occ[r * cols + q] >= 0) return false;
+    }
+    return true;
+  };
   const snaps = [{ cell: cell.slice(), dir: dir.slice(), moved: new Uint8Array(n), alarm: new Uint8Array(n) }];
   const honks = [];
 
@@ -118,6 +128,7 @@ export function createTraffic(world, { seed = 1, count = 40, cellM = 12, taxi = 
     const ahead = []; for (let j = 1; j <= EVAC_TICKS; j++) ahead.push(taxiAt(k + j));
     const rule = taxi ? taxi.alarm(k) : false;
     const rec = snaps[k], moved = rec.moved, alarm = rec.alarm, done = new Uint8Array(n);
+    occ.fill(-1);
     for (let i = 0; i < n; i++) occ[cell[i]] = i;
     for (let i = 0; i < n; i++) {
       if (intent[i] < 0) choose(i);
@@ -134,28 +145,37 @@ export function createTraffic(world, { seed = 1, count = 40, cellM = 12, taxi = 
       return to;
     };
     const go = (i, a, to) => { cell[i] = to; dir[i] = a; moved[i] = 1; done[i] = 1; intent[i] = -1; };
-    let again = true;
-    while (again) {
-      again = false;
-      for (let i = 0; i < n; i++) {
-        if (done[i]) continue;
-        const evac = ahead.includes(cell[i]); // the taxi will pass here soon: any legal way out will do
-        const tries = evac ? [intent[i], ...optionsOf(cell[i], -1).filter((a) => a !== intent[i])] : [intent[i]];
-        for (const a of tries) {
-          const to = canGo(i, a);
-          if (to < 0) continue;
-          const j = occ[to];
-          const from = cell[i];
-          if (j < 0) { occ[from] = -1; go(i, a, to); occ[to] = i; again = true; break; }
-          if (!done[j] && intent[j] === (a + 2) % 4 && canGo(j, intent[j]) === from) { // head-on: the two pass each other in their own lanes
-            const aj = intent[j];
-            go(i, a, to); go(j, aj, from); occ[to] = i; occ[from] = j; again = true; break;
-          }
+    // A car only moves into a cell that was empty when the tick began: occ keeps every car's old cell until the tick ends,
+    // so a follower never enters the cell its leader is leaving (their boxes would overlap). Head-on pairs may swap.
+    for (let i = 0; i < n; i++) {
+      if (done[i]) continue;
+      const evac = ahead.includes(cell[i]); // the taxi will pass here soon: any legal way out will do
+      const tries = evac ? [intent[i], ...optionsOf(cell[i], -1).filter((a) => a !== intent[i])] : [intent[i]];
+      for (const a of tries) {
+        const to = canGo(i, a);
+        if (to < 0) continue;
+        const j = occ[to], from = cell[i];
+        if (j < 0) { go(i, a, to); occ[to] = i; break; }
+        if (!done[j] && dir[i] === a && dir[j] === intent[j] && intent[j] === (a + 2) % 4 && canGo(j, intent[j]) === from) { // head-on and both already straight: they pass in their own lanes
+          const aj = intent[j];
+          go(i, a, to); go(j, aj, from); occ[to] = i; occ[from] = j; break;
         }
       }
     }
+    // A car still standing where the taxi is or will be next (queued at a red, boxed in) is put on a free cell away from the route.
     for (let i = 0; i < n; i++) {
-      occ[cell[i]] = -1;
+      if (cell[i] !== t1 && cell[i] !== t2) continue;
+      const start = Math.floor(rng() * (away.length || 1));
+      for (let q = 0; q < away.length; q++) {
+        const c = away[(start + q) % away.length];
+        if (!roomAround(c)) continue;
+        occ[cell[i]] = -1; cell[i] = c; occ[c] = i;
+        const o = optionsOf(c, -1); dir[i] = o[Math.floor(rng() * o.length)];
+        intent[i] = -1; idle[i] = 0; moved[i] = 0;
+        break;
+      }
+    }
+    for (let i = 0; i < n; i++) {
       idle[i] = moved[i] ? 0 : idle[i] + 1;
       if (idle[i] >= STUCK_TICKS) { intent[i] = -1; idle[i] = 0; } // stuck: pick another way
     }
@@ -169,7 +189,8 @@ export function createTraffic(world, { seed = 1, count = 40, cellM = 12, taxi = 
     count: n, seed,
     snap(t) { bakeTo(t); return snaps[t]; },
     bakeTo,
-    nearMisses(upTo = Infinity) { return honks.filter((h) => h.tick < upTo); },
+    // With no argument, the live list of every honk baked so far (no copy, so a per-frame call allocates nothing); do not change it.
+    nearMisses(upTo = Infinity) { return upTo === Infinity ? honks : honks.filter((h) => h.tick < upTo); },
     // Fills `out` (newPoses) with every car at time `tf` ticks: eased between cells, right-hand lane, turning early.
     posesAt(tf, out) {
       const k = Math.max(0, Math.floor(tf)), u = Math.max(0, tf) - k;

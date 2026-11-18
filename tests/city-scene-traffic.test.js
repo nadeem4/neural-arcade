@@ -83,18 +83,23 @@ describe('traffic layer: per frame', () => {
     expect(new Set(ca.map((v) => v.toFixed(3))).size).toBeGreaterThan(3);
     a.layer.dispose(); b.layer.dispose();
   });
-  it('reports each honk once, as the clock passes it', () => {
+  it('honks at most once a frame, and drops honks more than a tick old', () => {
     const w = loadWorld({ cols: 12, rows: 1, cellM: 12, lightPeriod: 8, kind: ['r'.repeat(12)], oneway: ['.'.repeat(12)], signals: [], pickup: [0, 0], dropoff: [11, 0] });
-    const tier = trafficTier({ phone: false });
-    const layer = createTrafficLayer({ tier, cellM: 12 });
-    const traffic = createTraffic(w, { seed: 2, count: 8, cellM: 12, taxi: taxiOf({ steps: [{ red: false, wrong: true, from: 5, cell: 4 }, { red: false, wrong: true, from: 4, cell: 3 }] }) });
-    layer.begin(traffic);
-    const got = [];
-    for (let f = 0; f < 6; f += 0.25) layer.update(f, (h) => got.push(h));
-    for (let f = 5; f >= 0; f -= 0.25) layer.update(f, (h) => got.push(h));
-    expect(got.length).toBeGreaterThan(0);
-    expect(got.length).toBe(traffic.nearMisses().length);
+    const mk = () => {
+      const layer = createTrafficLayer({ tier: trafficTier({ phone: false }), cellM: 12 });
+      layer.begin(createTraffic(w, { seed: 2, count: 8, cellM: 12, taxi: taxiOf({ steps: [{ red: false, wrong: true, from: 5, cell: 4 }, { red: false, wrong: true, from: 4, cell: 3 }] }) }));
+      return layer;
+    };
+    const layer = mk();
+    let total = 0;
+    for (let f = 0; f < 6; f += 0.25) { let calls = 0; layer.update(f, () => { calls++; }); expect(calls).toBeLessThanOrEqual(1); total += calls; }
+    expect(total).toBeGreaterThan(0);
     layer.dispose();
+    const late = mk(); // a background tab: the clock jumps far past the honks
+    late.update(0, () => {});
+    let stale = 0; late.update(40, () => { stale++; });
+    expect(stale).toBe(0);
+    late.dispose();
   });
 });
 

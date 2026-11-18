@@ -4,6 +4,8 @@ import { loadWorld, lightRed, analyzeRoute, rewardsOf } from '../games/city/sim.
 import { HYPER } from '../games/city/presets.js';
 import { createAgent, trainEpisodes } from '../games/city/train.js';
 import { tripEvents } from '../games/city/events.js';
+import { routeFrames } from '../games/city/playback.js';
+import { driveTrack, stateAt } from '../games/city/drive.js';
 import { createTraffic, taxiOf, trafficTier, nearMissCount, newPoses, LANE_M } from '../games/city/traffic.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
@@ -21,6 +23,18 @@ const strip = (cols, { signalAt = -1, oneway = '' } = {}) => loadWorld({
   signals: signalAt >= 0 ? [[signalAt, 0]] : [], pickup: [0, 0], dropoff: [cols - 1, 0],
 });
 const TICKS = 80;
+
+// Two oriented car boxes (2.85 x 6.3 m, forward = (sin h, cos h)) overlap, by the separating-axis test.
+const HW = 1.425, HL = 3.15;
+const boxesOverlap = (ax, az, ah, bx, bz, bh) => {
+  const dx = bx - ax, dz = bz - az;
+  if (dx * dx + dz * dz > 49) return false;
+  for (const h of [ah, bh]) for (const [ux, uz] of [[Math.sin(h), Math.cos(h)], [Math.cos(h), -Math.sin(h)]]) {
+    const r = (hh) => HL * Math.abs(Math.sin(hh) * ux + Math.cos(hh) * uz) + HW * Math.abs(Math.cos(hh) * ux - Math.sin(hh) * uz);
+    if (Math.abs(dx * ux + dz * uz) >= r(ah) + r(bh)) return false;
+  }
+  return true;
+};
 
 describe('traffic is deterministic', () => {
   it('same seed and taxi give the same cars at every tick and the same poses', () => {
@@ -116,8 +130,8 @@ describe('cars react to the taxi', () => {
     for (let n = 0; n <= 50; n++) for (const c of t.snap(n).cell) expect(c).not.toBe(9);
     expect(Math.max(...t.snap(50).cell)).toBeLessThan(9);
   });
-  it('no car drives into the taxi: none enters its cell or the next two, and no moving car comes within 3 m of it, on every card', () => {
-    const cm = 12, centre = (c) => [(c % world.cols + 0.5) * cm, -(world.rows - 1 - Math.floor(c / world.cols) + 0.5) * cm];
+  it('no car drives into the taxi: none enters its cell or the next two, on every card', () => {
+    const cm = 12;
     for (const c of cards) {
       const taxi = taxiFor(c.id);
       const t = createTraffic(world, { seed: 11, count: 60, cellM: cm, taxi });
@@ -127,15 +141,35 @@ describe('cars react to the taxi', () => {
         if (t.snap(k).cell[i] === t.snap(k - 1).cell[i]) continue;
         for (const j of [-1, 0, 1]) expect(t.snap(k).cell[i]).not.toBe(taxi.cells[Math.min(n, Math.max(0, k + j))]);
       }
+    }
+  });
+  it('no car box ever overlaps the taxi box, stopped cars included, on the real drive of every card', () => {
+    for (const c of cards) {
+      const events = tripEvents(world, c.rewards, c.route);
+      const track = driveTrack(routeFrames(world, 12, c.route), events);
+      const t = createTraffic(world, { seed: 1, count: 40, cellM: 12, taxi: taxiOf(events) });
       const p = newPoses(t.count);
-      let gap = Infinity;
-      for (let f = 0; f < n; f += 0.25) {
-        const k = Math.floor(f), u = f - k, [ax, az] = centre(taxi.cells[k]), [bx, bz] = centre(taxi.cells[Math.min(n, k + 1)]);
-        const tx = ax + (bx - ax) * u, tz = az + (bz - az) * u;
-        t.posesAt(f, p);
-        for (let i = 0; i < t.count; i++) if (!p.braking[i]) gap = Math.min(gap, Math.hypot(p.x[i] - tx, p.z[i] - tz)); // a car already stopped at a red light in the taxi's lane cannot get out of its way
+      let hits = 0;
+      for (let ms = 0; ms <= track.total; ms += track.tickMs / 4) {
+        const s = stateAt(track, ms);
+        t.posesAt(ms / track.tickMs, p);
+        for (let i = 0; i < t.count; i++) if (boxesOverlap(s.x, s.z, s.heading, p.x[i], p.z[i], p.h[i])) hits++;
       }
-      expect(gap).toBeGreaterThanOrEqual(3);
+      expect(hits, c.id).toBe(0);
+    }
+  });
+  it('no two car boxes overlap, on every card', () => {
+    for (const c of cards) {
+      const events = tripEvents(world, c.rewards, c.route);
+      const track = driveTrack(routeFrames(world, 12, c.route), events);
+      const t = createTraffic(world, { seed: 1, count: 40, cellM: 12, taxi: taxiOf(events) });
+      const p = newPoses(t.count);
+      let hits = 0;
+      for (let ms = 0; ms <= track.total; ms += track.tickMs / 4) {
+        t.posesAt(ms / track.tickMs, p);
+        for (let i = 0; i < t.count; i++) for (let j = i + 1; j < t.count; j++) if (boxesOverlap(p.x[i], p.z[i], p.h[i], p.x[j], p.z[j], p.h[j])) hits++;
+      }
+      expect(hits, c.id).toBe(0);
     }
   });
   it('cars near a taxi going the wrong way brake hard and honk once; a calm taxi causes none', () => {
