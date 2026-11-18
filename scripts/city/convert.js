@@ -15,12 +15,14 @@
 // up, with h its deck height: layer x 4 m, 8 m for a bridge with no layer; else false and 0). Rail is railway=rail,
 // light_rail or subway above ground (tunnels are skipped): the Chicago L is railway=subway, bridge=yes, layer=2,
 // so it is the elevated entries.
-// None of these change kind, oneway, signals, pickup or dropoff.
+// None of these change oneway, signals, pickup or dropoff (trees only harden footpath and park cells; see below).
 //
 // Output coordinates are metres east/north of the bbox south-west corner, rounded to 0.1.
 // Grid: cell (col, row) has its centre at x = (col + 0.5) * cellM, y = (rows - 1 - row + 0.5) * cellM,
 // so row 0 is the north edge (north = row - 1, as the sim expects).
 // Cell kinds, highest priority first: b building, w water, x fence, r road, f footpath/plaza, p park.
+// Tree rule: after that, a footpath or park cell holding 3 or more trees becomes x (solid, like a fence); a road
+// cell never does, and tree points stay in `trees` so a renderer can keep single trees off the driven route.
 // Railway is not masked: the spec's sunken Grant Park rail cut is left drivable because no card route
 // reaches it (routes stay north of Monroe on the Millennium Park deck). Re-check if pickup/dropoff move.
 // Ground that no feature covers is 'f' (open pavement: drivable, but fined like a footpath).
@@ -128,6 +130,19 @@ export function rasterise(features, cols, rows, cellM) {
   for (const ring of features.water ?? []) paintArea('w', ring);
   for (const ring of features.buildings ?? []) paintArea('b', ring);
   return grid.map((row) => row.join(''));
+}
+
+// A footpath or park cell holding at least minTrees trees is solid ('x', like a fence): a taxi cannot drive through
+// a stand of trees. Roads, buildings and water keep their kind; tree points are never moved or dropped.
+export const TREES_SOLID = 3;
+export function solidTrees(kind, trees, cols, rows, cellM, minTrees = TREES_SOLID) {
+  const count = new Map();
+  for (const [x, y] of trees) {
+    const c = Math.floor(x / cellM);
+    const r = rows - 1 - Math.floor(y / cellM);
+    if (c >= 0 && c < cols && r >= 0 && r < rows) count.set(r * cols + c, (count.get(r * cols + c) ?? 0) + 1);
+  }
+  return kind.map((row, r) => [...row].map((ch, c) => ((ch === 'f' || ch === 'p') && count.get(r * cols + c) >= minTrees ? 'x' : ch)).join(''));
 }
 
 // One-way direction ('N','E','S','W' or '.') per cell; only road cells carry one.
@@ -340,10 +355,10 @@ export function convert(osm, config) {
     if (!b.part && centroids.some(([x, y]) => pointInRing(x, y, b.ring))) b.hasParts = true;
   }
 
-  const kind = rasterise(
+  const kind = solidTrees(rasterise(
     { parks, plazas, paths: [...paths, ...sidewalks, ...wayCrossings.map((pts) => ({ pts, w: PATH_WIDTH.footway }))], roads, fences, water, buildings: footprints },
     cols, rows, cellM,
-  );
+  ), trees, cols, rows, cellM);
   const oneway = onewayRows(roads, kind, cols, rows, cellM);
 
   const cellOf = (x, y) => [Math.floor(x / cellM), rows - 1 - Math.floor(y / cellM)];

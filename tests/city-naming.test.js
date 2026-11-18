@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { nameFor, uniqueName, stripeFor, noteFor, rateChips } from '../games/city/naming.js';
+import { GOAL_SECONDS } from '../games/city/presets.js';
 
 const R = (o = {}) => ({ fare: 100, time: 1, off: 20, red: 30, wrong: 30, perTile: 0, ...o });
 
@@ -43,7 +44,7 @@ const A = (o = {}) => ({ arrived: true, seconds: 60, offTiles: 0, redRuns: 0, wr
 describe('noteFor', () => {
   it('says what the trip did in one line', () => {
     expect(noteFor(A())).toBe('Legal trip: goal met');
-    expect(noteFor(A({ seconds: 90 }))).toBe('Legal, but over the goal');
+    expect(noteFor(A({ seconds: GOAL_SECONDS + 15 }))).toBe('Legal, but over the goal');
     expect(noteFor(A({ offTiles: 9, redRuns: 1 }))).toBe('9 park tiles, 1 red run');
     expect(noteFor(A({ wrongWays: 2 }))).toBe('2 wrong-way moves');
     expect(noteFor(A({ arrived: false }))).toBe('Never arrived');

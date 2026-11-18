@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-import { convert, project, rasterise, estimateHeight } from '../scripts/city/convert.js';
+import { convert, project, rasterise, estimateHeight, solidTrees } from '../scripts/city/convert.js';
 
 const config = JSON.parse(
   readFileSync(new URL('../scripts/city/chicago.config.json', import.meta.url), 'utf8'),
@@ -383,5 +383,34 @@ describe('fetch-overpass buildQuery', () => {
     expect(q).not.toContain('way[railway]');
     expect(q).not.toContain('way[footway=');
     expect(q).toContain('(1,2,3,4)');
+  });
+});
+
+describe('solidTrees', () => {
+  // 3 x 1 strip, cellM 10, rows 1: cell c has x in [10c, 10c+10], y in [0, 10].
+  const trees3 = [[1, 1], [2, 2], [3, 3]];
+  it('a cell with 3 trees becomes x, with 2 trees it is unchanged', () => {
+    expect(solidTrees(['fpf'], [...trees3, [11, 1], [12, 2]], 3, 1, 10, 3)).toEqual(['xpf']);
+  });
+  it('road cells never turn solid, and so do buildings and water stay as they are', () => {
+    expect(solidTrees(['rbw'], [...trees3, ...trees3.map(([x, y]) => [x + 10, y]), ...trees3.map(([x, y]) => [x + 20, y])], 3, 1, 10, 3)).toEqual(['rbw']);
+  });
+  it('counts the 3 trees in the cell, not 3 trees in the map', () => {
+    expect(solidTrees(['fff'], [[1, 1], [11, 1], [21, 1]], 3, 1, 10, 3)).toEqual(['fff']);
+  });
+});
+
+describe('the real map', () => {
+  const real = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
+  it('no footpath or park cell holds 3 or more trees, and the trees are all kept', () => {
+    const n = new Map();
+    for (const [x, y] of real.trees) {
+      const k = (real.rows - 1 - Math.floor(y / real.cellM)) * real.cols + Math.floor(x / real.cellM);
+      n.set(k, (n.get(k) ?? 0) + 1);
+    }
+    for (const [k, count] of n) {
+      if (count >= 3) expect(['f', 'p']).not.toContain(real.kind[Math.floor(k / real.cols)][k % real.cols]);
+    }
+    expect(real.trees.length).toBe(4128);
   });
 });

@@ -1,4 +1,5 @@
-// Usage: node scripts/city/spike.mjs
+// Usage: node scripts/city/spike.mjs [--pair pickupCol,pickupRow,dropCol,dropRow]
+// --pair tries another pickup and drop-off cell pair without touching the map, to compare candidate trips.
 // The RC0 gate: trains every try card on the real map (games/city/chicago.json) for seeds 1, 2 and 3
 // and checks each shows the behaviour its card promises, within 1,500 ms of training per card.
 //
@@ -20,6 +21,8 @@ import { EPISODES, HYPER, PRESETS, GOAL_SECONDS, checkPromise } from '../../game
 const MAX_MS = 1500;
 const SEEDS = [1, 2, 3];
 const city = JSON.parse(readFileSync(new URL('../../games/city/chicago.json', import.meta.url), 'utf8'));
+const pair = process.argv.indexOf('--pair') > 0 ? process.argv[process.argv.indexOf('--pair') + 1].split(',').map(Number) : null;
+if (pair) { city.pickup = [pair[0], pair[1]]; city.dropoff = [pair[2], pair[3]]; }
 const world = loadWorld(city);
 const ROAD = 0;
 
