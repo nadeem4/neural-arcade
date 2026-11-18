@@ -26,7 +26,6 @@
 .receipt .row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
 .receipt .row span:first-child { color: var(--ink-2); }
 .receipt .total { margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-weight: 700; }
-.goal-line { margin: 0; font-weight: 600; }
 .share-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; }
 .share-line[hidden] { display: none; }
 .share-line output { flex: 1 1 14em; min-width: 0; font: 500 14px var(--mono); overflow-wrap: anywhere; }
@@ -209,6 +208,15 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 14px; } .end-honest { order: 3; font-size: 13px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
   .end-honest ul { max-height: 22svh; overflow-y: auto; }
   .end-actions .btn, .end-actions .go { height: 40px; padding: 0 12px; font-size: 13px; }
+}
+/* Phone ladder: one row of five 44 px steps, the current step's title and one line under it; roomy taps for Reset and (i). */
+@media (max-width: 600px) {
+  .steps { gap: 4px; }
+  .step { min-width: 44px; }
+  .ladder-note { overflow: hidden; }
+  .ladder-note b, .ladder-note span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ratecard .link { min-height: 40px; padding: 10px 0; }
+  .ratecard .info { min-width: 40px; min-height: 40px; }
 }
 #train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--hud-taxi) 35%, transparent); }
 

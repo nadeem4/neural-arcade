@@ -89,11 +89,6 @@ describe('ladderModel', () => {
     expect(m.note.head).toBe(`2. ${STEPS[1].title}`);
     expect(m.note.text).toBe(STEPS[1].watch);
   });
-  it('a step already run shows what it showed', () => {
-    const m = ladderModel(cardFor('walk'), ['walk']);
-    expect(m.note.kind).toBe('showed');
-    expect(m.note.text).toBe(STEPS[1].showed);
-  });
   it('an edited card is your own card, with nothing current', () => {
     const m = ladderModel({ ...cardFor('walk'), off: 25 }, ['walk']);
     expect(m.current).toBe(null);

@@ -156,6 +156,7 @@ function go(event) {
 
 // ---------- The ladder: five steps, each loads a rate card; the steps the player has run are ticked ----------
 let ran = [], ladderButtons = null;
+const ladderRuns = {}; // step id -> { analysis, honest } of its last run this page session
 const loadRan = () => { try { ran = parseRan(localStorage.getItem(LADDER_KEY)); } catch { /* storage blocked: ticks last this visit */ } };
 const saveRan = () => { try { localStorage.setItem(LADDER_KEY, JSON.stringify(ran)); } catch { /* storage blocked */ } };
 function pickStep(id) {
@@ -166,7 +167,7 @@ function pickStep(id) {
 
 // ---------- The rate card ----------
 function showRates() {
-  if (ladderButtons) updateLadder(ladderButtons, { head: $('ladderHead'), text: $('ladderText') }, ladderModel(rewards, ran), screen === 'training');
+  if (ladderButtons) updateLadder(ladderButtons, { head: $('ladderHead'), text: $('ladderText') }, ladderModel(rewards, ran, ladderRuns), screen === 'training');
   for (const r of rateRows(rewards)) {
     const out = $(r.key + 'Out');
     out.textContent = r.text; out.className = `num tone-${r.tone}`;
@@ -247,7 +248,7 @@ async function train(req) {
     progress.hidden = true; say('');
     session = recordTry(session, res.analysis);
     const step = matchStep(req);
-    if (step && !rec) { ran = markRan(ran, step); saveRan(); } // the step counts only if the card was not edited
+    if (step && !rec) { ran = markRan(ran, step); saveRan(); ladderRuns[step] = { analysis: res.analysis, honest: honestReward(world, req) }; } // the step counts only if the card was not edited
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events);

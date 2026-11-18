@@ -23,6 +23,7 @@ export function updateLadder(buttons, els, model, busy) {
     if (s.current) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
     b.disabled = busy;
   }
-  els.head.textContent = model.note.head;
-  els.text.textContent = model.note.text;
+  // The note is a live region: write only what changed, so a stepper nudge that changes nothing says nothing.
+  if (els.head.textContent !== model.note.head) els.head.textContent = model.note.head;
+  if (els.text.textContent !== model.note.text) els.text.textContent = model.note.text;
 }
