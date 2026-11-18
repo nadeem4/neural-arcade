@@ -4,7 +4,7 @@ import { ACTIONS, makeGrid, stateId } from '../assets/grid.js';
 import {
   REWARD, ROOM, START, SLIP, step, transitions, adjacentToPit,
   valueIteration, qValue, greedyPolicy, runPolicy, pathActions,
-  discounted, returnOf, treasureWorth, bestPathCells,
+  discounted, returnOf, treasureWorth, bestPathCells, sweepOnce,
 } from '../games/treasure-room/sim.js';
 
 const UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3;
@@ -183,5 +183,35 @@ describe('treasure room: runs and returns', () => {
     expect(discounted([1, 1, 10], 0.5)).toEqual([1, 0.5, 2.5]);
     expect(returnOf([1, 1, 10], 0.5)).toBe(4);
     expect(treasureWorth(4, 0.9)).toBeCloseTo(6.561, 3);
+  });
+});
+
+describe('sweepOnce', () => {
+  const zeros = () => new Array(ROOM.w * ROOM.h).fill(0);
+  it('from zeros: a tile next to the treasure is worth 10, a plain floor tile is worth -1 (a step, nothing known yet)', () => {
+    const v = sweepOnce(ROOM, zeros(), { gamma: 0.9 });
+    const T = find('T');
+    expect(v[stateId(ROOM, { x: T.x - 1, y: T.y })]).toBe(10);
+    expect(v[stateId(ROOM, { x: 0, y: 0 })]).toBe(-1);
+  });
+  it('leaves its input unchanged', () => {
+    const v = zeros();
+    sweepOnce(ROOM, v, { gamma: 0.9 });
+    expect(v).toEqual(zeros());
+  });
+  it('n sweeps equal valueIteration with n sweeps, with and without slip', () => {
+    for (const slip of [0, 0.1]) {
+      let v = zeros();
+      for (let i = 0; i < 200; i++) v = sweepOnce(ROOM, v, { gamma: 0.9, slip });
+      const ref = valueIteration(ROOM, { gamma: 0.9, slip, sweeps: 200 });
+      v.forEach((x, i) => expect(x).toBeCloseTo(ref[i], 6));
+    }
+  });
+  it('spreads outward: the count of tiles worth more than a plain step never shrinks over sweeps 1..8', () => {
+    let v = zeros();
+    const spread = [];
+    for (let i = 0; i < 8; i++) { v = sweepOnce(ROOM, v, { gamma: 0.9 }); spread.push(v.filter(x => x > -1).length); }
+    for (let i = 1; i < spread.length; i++) expect(spread[i]).toBeGreaterThanOrEqual(spread[i - 1]);
+    expect(spread.at(-1)).toBeGreaterThan(spread[0]);
   });
 });

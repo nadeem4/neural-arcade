@@ -31,15 +31,32 @@ function paintTreasure(ctx, room, cell, scale) {
   }
 }
 
-function paintGhost(ctx, path, cell) {
+// One dashed line per route; the second route gets a finer dash so the two can be told apart.
+function paintGhost(ctx, paths, cell) {
   ctx.strokeStyle = token('--signal', '#ff5a1f');
   ctx.lineWidth = 3;
-  ctx.setLineDash([6, 5]);
-  ctx.beginPath();
-  path.forEach((c, i) => ctx[i ? 'lineTo' : 'moveTo'](c.x * cell + cell / 2, c.y * cell + cell / 2));
-  ctx.stroke();
+  paths.forEach((path, k) => {
+    if (path.length < 2) return;
+    ctx.setLineDash(k ? [2, 5] : [6, 5]);
+    ctx.beginPath();
+    path.forEach((c, i) => ctx[i ? 'lineTo' : 'moveTo'](c.x * cell + cell / 2, c.y * cell + cell / 2));
+    ctx.stroke();
+  });
   ctx.setLineDash([]);
   ctx.lineWidth = 1;
+}
+
+// Heat: a signal-coloured tint on each floor tile, stronger the higher its 0..1 heat. Ice: a faint wash on every floor tile.
+function paintTint(ctx, room, cell, color, alphaOf) {
+  ctx.fillStyle = color;
+  for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
+    if ('TX#'.includes(room.cells[y][x])) continue;
+    const a = alphaOf(y * room.w + x);
+    if (a <= 0) continue;
+    ctx.globalAlpha = a;
+    ctx.fillRect(x * cell, y * cell, cell, cell);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function paintMark(ctx, m, cell) {
@@ -50,12 +67,15 @@ function paintMark(ctx, m, cell) {
 }
 
 // opts: { cell, agent, values, policy, hover, tags: [{ x, y, text, tone }],
-//         ghost: [{ x, y }] a dashed route line, marks: [{ x, y }] outlined tiles, treasureScale: 0..1 size of a disc on the treasure }
+//         heat: number[] 0..1 per tile, ice: true for the frosted floor,
+//         ghost: [{ x, y }] a dashed route line (or an array of two such routes), marks: [{ x, y }] outlined tiles, treasureScale: 0..1 size of a disc on the treasure }
 export function drawRoom(ctx, room, opts = {}) {
-  const { cell = 48, tags = [], ghost = [], marks = [], treasureScale } = opts;
+  const { cell = 48, tags = [], ghost = [], marks = [], treasureScale, heat, ice } = opts;
   drawGrid(ctx, room, opts);
   if (treasureScale !== undefined) paintTreasure(ctx, room, cell, treasureScale);
-  if (ghost.length > 1) paintGhost(ctx, ghost, cell);
+  if (heat) paintTint(ctx, room, cell, token('--signal', '#ff5a1f'), i => heat[i] * 0.5);
+  if (ice) paintTint(ctx, room, cell, token('--ink-2', '#4a515b'), () => 0.18);
+  if (ghost.length > 1) paintGhost(ctx, Array.isArray(ghost[0]) ? ghost : [ghost], cell);
   for (const m of marks) paintMark(ctx, m, cell);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

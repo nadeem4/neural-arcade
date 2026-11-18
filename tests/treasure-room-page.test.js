@@ -91,6 +91,8 @@ describe('treasure room page markup', () => {
     expect(html).toMatch(/data-levels="2"/);
     expect(html).toMatch(/data-levels="3"/);
     expect(html).toMatch(/data-levels="4"/);
+    expect(html).toMatch(/data-levels="5"/);
+    expect(html).toMatch(/data-levels="6"/);
   });
   it('lists levels 3 and 4 in the nav once they are built', () => {
     expect(navModel([1, 2, 3, 4], 4).filter(n => n.current)).toHaveLength(1);

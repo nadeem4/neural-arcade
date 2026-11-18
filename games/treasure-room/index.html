@@ -114,6 +114,41 @@
           <button class="btn" type="button" id="resetArrows">Reset arrows</button>
         </div>
       </section>
+      <section class="controls" data-levels="5" aria-labelledby="vh" hidden>
+        <h2><span id="vh">Sweep the values</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-sweep" aria-label="Explain sweeping" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-sweep" data-info="sweep" hidden></p>
+        <div class="row-btns">
+          <button class="btn primary" type="button" id="sweep">Sweep</button>
+          <button class="btn" type="button" id="sweep10">Sweep x10</button>
+          <button class="btn" type="button" id="walkUp">Walk uphill</button>
+          <button class="btn" type="button" id="resetSweeps">Reset</button>
+        </div>
+        <output class="sweep-info" id="sweepInfo">Sweep 0</output>
+        <label class="gamma-row" for="valueGamma">Discount <output id="valueGammaOut">0.90</output>
+          <button class="info" type="button" aria-expanded="false" aria-controls="info-vgamma" aria-label="Explain the discount" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></label>
+        <p class="info-text" id="info-vgamma" data-info="gamma" hidden></p>
+        <input class="gamma" type="range" id="valueGamma" min="0.1" max="1" step="0.05" value="0.9">
+        <p id="valueGammaHint"></p>
+        <p class="heat-legend"><i class="heat-bar" aria-hidden="true"></i> faint = worse, bright = better</p>
+      </section>
+      <section class="controls" data-levels="6" aria-labelledby="mh" hidden>
+        <h2><span id="mh">The icy floor</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-ice" aria-label="Explain the icy floor" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-ice" data-info="ice" hidden></p>
+        <div class="row-btns">
+          <button class="btn" type="button" id="dry" aria-pressed="true">Dry floor</button>
+          <button class="btn" type="button" id="icy" aria-pressed="false">Icy floor</button>
+          <button class="btn primary" type="button" id="walkPlan">Walk the plan</button>
+        </div>
+        <p id="floorNote"></p>
+        <div class="row-btns">
+          <button class="btn" type="button" id="trips">Run 20 trips</button>
+          <button class="btn" type="button" id="showMdp">Show the MDP</button>
+          <button class="info" type="button" aria-expanded="false" aria-controls="info-tags" aria-label="Explain the five parts" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
+        </div>
+        <p class="info-text" id="info-tags" data-info="tags" hidden></p>
+        <output class="sum" id="tripsOut"></output>
+        <ul class="tags" id="tags"></ul>
+      </section>
       <section class="controls" data-levels="1 2" aria-labelledby="ph">
         <h2><span id="ph">Move</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rewards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-reward" data-info="reward" hidden></p>
