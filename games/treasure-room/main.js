@@ -7,17 +7,19 @@ import { INFO } from './words.js';
 import { drawRoom, cellAt } from './room-view.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
+import * as levelReturn from './level-return.js';
+import * as levelPolicy from './level-policy.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('stage'), ctx = canvas.getContext('2d');
 const arrows = [$('arrowOut'), $('arrowBack')];
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const views = { 1: levelAgent, 2: levelTriples }; // the levels built so far; the nav lists only these
+const views = { 1: levelAgent, 2: levelTriples, 3: levelReturn, 4: levelPolicy }; // the levels built so far; the nav lists only these
 const built = Object.keys(views).map(Number);
 let view = null, size = { dpr: 1, w: 0 };
 
 const ui = {
-  canvas, room: ROOM, panel: $('levelPanel'),
+  canvas, room: ROOM, panel: $('levelPanel'), tiles: $('tiles'),
   draw(opts) {
     ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
     ctx.clearRect(0, 0, size.w, size.w);

@@ -1,7 +1,8 @@
 /* Treasure Room only: the rest of the page comes from studio.css and assets/game.css. */
 
 .stage-body { display: block; padding: 14px; } /* studio.css makes it a two-column grid; here the room fills it */
-#stage { display: block; width: min(100%, 56vh, 480px); aspect-ratio: 1; margin: 0 auto; border-radius: 8px; }
+#stage { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; }
+.room { position: relative; width: min(100%, 56vh, 480px); margin: 0 auto; }
 .readouts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* Level links above the stage. */
@@ -40,9 +41,26 @@
 /* Phone fit: scrolled to Play, the room and the move pad share one 390x700 screen. */
 @media (max-width: 640px) {
   .stage-body { padding: 8px; }
-  #stage { width: min(100%, 40vh); }
+  .room { width: min(100%, 40vh); }
   .stage .say { min-height: 3em; padding: 8px 14px; }
+  #levelBrief, #gammaHint { display: none; }
   .readouts div { padding: 8px 14px; }
   .readouts dd { font-size: 18px; }
   .panel section { padding: 12px 16px; gap: 10px; }
 }
+
+/* Level 3: route buttons, the discount slider and the sum. */
+.routes { display: flex; flex-wrap: wrap; gap: 8px; }
+.routes button { min-height: 44px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: 600 14px/1.5 var(--sans); cursor: pointer; }
+.routes .primary { background: var(--signal-fill); border-color: var(--signal-fill); color: var(--signal-ink); }
+.routes button:disabled { opacity: .5; cursor: default; }
+.gamma-row { display: flex; align-items: center; gap: 8px; font: 600 14px/1.5 var(--sans); }
+.gamma { display: block; width: 100%; min-height: 44px; margin: 0; accent-color: var(--signal); }
+.sum { display: block; white-space: pre-line; padding: 10px 12px; border-radius: 8px; background: var(--track); font: 600 13px/1.5 var(--mono); overflow-wrap: anywhere; }
+
+/* Level 4: one invisible button over each floor tile, for tap, keyboard and screen readers. */
+.tilegrid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); }
+.tilegrid[hidden] { display: none; }
+.tilegrid button { min-height: 44px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; }
+.tilegrid button:focus-visible { outline: 3px solid var(--signal); outline-offset: -3px; }
+.row-btns .btn { min-height: 44px; }

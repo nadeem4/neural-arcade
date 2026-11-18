@@ -35,4 +35,17 @@ describe('treasure room view helpers', () => {
     expect(b.calls.arc).toHaveLength(1);
     expect(b.calls.fillText.some(c => c[0] === '−1')).toBe(true);
   });
+  it('draws a ghost route as a line, a shrunk treasure as one circle, and marks as extra outlines', () => {
+    const base = stub();
+    drawRoom(base, ROOM, { cell: 60 });
+    const a = stub();
+    drawRoom(a, ROOM, { cell: 60, ghost: [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }] });
+    expect(a.calls.lineTo).toHaveLength(2);
+    const b = stub();
+    drawRoom(b, ROOM, { cell: 60, treasureScale: 0.5 });
+    expect(b.calls.arc).toHaveLength(1);
+    const c = stub();
+    drawRoom(c, ROOM, { cell: 60, marks: [{ x: 1, y: 1 }, { x: 2, y: 1 }] });
+    expect(c.calls.strokeRect.length - base.calls.strokeRect.length).toBe(2);
+  });
 });

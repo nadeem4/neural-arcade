@@ -21,10 +21,42 @@ const tagColor = (tone, onEnd) => {
   return tone === 'good' ? '#1b7a37' : tone === 'bad' ? token('--red', '#e5533f') : token('--ink-2', '#4a515b');
 };
 
-// opts: { cell, agent, values, policy, hover, tags: [{ x, y, text, tone }] }
+function paintTreasure(ctx, room, cell, scale) {
+  ctx.fillStyle = token('--surface', '#fff');
+  for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
+    if (room.cells[y][x] !== 'T') continue;
+    ctx.beginPath();
+    ctx.arc(x * cell + cell / 2, y * cell + cell * 0.58, cell * 0.28 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function paintGhost(ctx, path, cell) {
+  ctx.strokeStyle = token('--signal', '#ff5a1f');
+  ctx.lineWidth = 3;
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  path.forEach((c, i) => ctx[i ? 'lineTo' : 'moveTo'](c.x * cell + cell / 2, c.y * cell + cell / 2));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.lineWidth = 1;
+}
+
+function paintMark(ctx, m, cell) {
+  ctx.strokeStyle = token('--signal', '#ff5a1f');
+  ctx.lineWidth = 4;
+  ctx.strokeRect(m.x * cell + 2, m.y * cell + 2, cell - 4, cell - 4);
+  ctx.lineWidth = 1;
+}
+
+// opts: { cell, agent, values, policy, hover, tags: [{ x, y, text, tone }],
+//         ghost: [{ x, y }] a dashed route line, marks: [{ x, y }] outlined tiles, treasureScale: 0..1 size of a disc on the treasure }
 export function drawRoom(ctx, room, opts = {}) {
-  const { cell = 48, tags = [] } = opts;
+  const { cell = 48, tags = [], ghost = [], marks = [], treasureScale } = opts;
   drawGrid(ctx, room, opts);
+  if (treasureScale !== undefined) paintTreasure(ctx, room, cell, treasureScale);
+  if (ghost.length > 1) paintGhost(ctx, ghost, cell);
+  for (const m of marks) paintMark(ctx, m, cell);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `700 ${Math.round(cell * 0.3)}px sans-serif`;
