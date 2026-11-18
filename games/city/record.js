@@ -1,0 +1,25 @@
+// Pure helpers for ?record=1 frame-stepped capture.
+import { PRESETS } from './presets.js';
+import { SWOOP_MS, PULLBACK_MS } from './director.js';
+
+// Parse the query string. Returns null when not recording, else { card, fps }.
+export function parseRecord(search) {
+  const q = new URLSearchParams(search);
+  if (q.get('record') !== '1') return null;
+  const card = q.get('card');
+  if (!card) throw new Error('record mode needs ?card=<id>');
+  if (!PRESETS.some(p => p.id === card)) throw new Error(`unknown card: ${card}`);
+  const fps = q.has('fps') ? Number(q.get('fps')) : 30;
+  if (!(fps > 0)) throw new Error(`bad fps: ${q.get('fps')}`);
+  return { card, fps };
+}
+
+// Whole trip: the track plus the intro swoop and outro pullback.
+export const tripMs = (trackTotalMs) => trackTotalMs + SWOOP_MS + PULLBACK_MS;
+
+export const frameCount = (totalMs, fps) => Math.floor((totalMs / 1000) * fps) + 1;
+
+export const frameMs = (i, fps) => (i * 1000) / fps;
+
+// Keep tags younger than lifeMs (the game's tag lifetime in main.js popTag).
+export const pruneTags = (tags, nowMs, lifeMs = 1400) => tags.filter(t => nowMs - t.born < lifeMs);
