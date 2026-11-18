@@ -51,6 +51,12 @@ export function frames(room, route, gamma) {
   })];
 }
 
+// The treasure tile's label: what the treasure is worth from the start, given the route length and the discount.
+export const worthTags = (room, steps, gamma) => room.cells.flatMap((row, y) => row.flatMap((c, x) => (c === 'T'
+  ? [{ x, y, text: `+${Math.round(treasureWorth(steps, gamma) * 10) / 10} here`, tone: 'good' }] : [])));
+
+export const compare = (room, gamma) => ROUTES.map(r => `${r.label} ${fmt(scoreRoute(room, r, gamma).total)}`).join(' · ');
+
 export function mount(ui) {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ac = new AbortController(), on = (t, ev, fn) => t.addEventListener(ev, fn, { signal: ac.signal });
@@ -59,14 +65,16 @@ export function mount(ui) {
   let route = ROUTES[0], gamma = Number(slider.value) || 0.9, timer = null, walk = null, at = 0;
 
   const stop = () => { clearInterval(timer); timer = null; };
+  // How far the treasure is from the start along this route; a route that never reaches it is judged by the short way.
   const distance = s => (s.outcome === 'treasure' ? s.steps : ROUTES[0].actions.length);
 
   function paint() {
     const s = scoreRoute(ui.room, route, gamma), shown = walk ? at : s.steps;
     const f = walk ? walk[at] : null;
     ui.draw({
-      agent: f ? f.pos : START, ghost: s.cells, tags: f?.tag ? [f.tag] : [], treasureScale: treasureScale(distance(s), gamma),
+      agent: f ? f.pos : START, ghost: s.cells, tags: [...(f?.tag ? [f.tag] : []), ...worthTags(ui.room, distance(s), gamma)], treasureScale: treasureScale(distance(s), gamma),
     });
+    $('#compare').textContent = compare(ui.room, gamma);
     $('#gammaOut').textContent = gamma.toFixed(2);
     $('#gammaHint').textContent = gammaHint(gamma);
     $('#sum').textContent = s.steps

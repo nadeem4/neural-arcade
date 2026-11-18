@@ -30,14 +30,13 @@ export function setArrow(policy, room, cell, action) {
 export const fixPolicy = (room, gamma) => greedyPolicy(room, valueIteration(room, { gamma }), { gamma });
 
 // The floor tiles whose arrow differs (walls, treasure and pit are -1 in both, so they never show).
-export const diffCells = (a, b) => b.flatMap((v, i) => (v !== a[i] ? [{ x: i % ROOM.w, y: Math.floor(i / ROOM.w) }] : []));
+export const diffCells = (a, b, w = ROOM.w) => b.flatMap((v, i) => (v !== a[i] ? [{ x: i % w, y: Math.floor(i / w) }] : []));
 
 export function verdict(run) {
   const n = run.trace.length;
   if (run.outcome === 'treasure') return `The robot reached the treasure in ${n} steps. Score ${run.total}.`;
   if (run.outcome === 'pit') return `The robot walked into the pit after ${n} steps. Score ${run.total}.`;
-  const seen = new Set(run.trace.map(t => `${t.pos.x},${t.pos.y}`));
-  return seen.size < n ? 'The robot is going round in circles and never reaches the treasure.' : 'The robot ran out of steps.';
+  return 'Stuck or going round in circles: the robot never reaches the treasure.';
 }
 
 const label = (policy, room, { x, y }) => `tile ${x},${y}: arrow ${NAMES[policy[stateId(room, { x, y })]]}`;
@@ -62,7 +61,7 @@ export function mount(ui) {
   }
   function paint() {
     ui.draw({ policy, agent, marks });
-    for (const b of [$('#go'), $('#fix'), $('#resetArrows')]) b.disabled = busy();
+    for (const b of [$('#go'), $('#fix')]) b.disabled = busy(); // Reset stays live: it stops a walk
   }
   function edit(cell, action) {
     if (busy()) return;

@@ -28,7 +28,7 @@ describe('level 3 routes', () => {
   });
   it('shorter paths win at every discount from 0.5 up', () => {
     for (const g of [0.5, 0.9, 1]) {
-      expect(scoreRoute(ROOM, short, g).total).toBeGreaterThanOrEqual(scoreRoute(ROOM, detour, g).total);
+      expect(scoreRoute(ROOM, short, g).total).toBeGreaterThan(scoreRoute(ROOM, detour, g).total);
     }
   });
   it('at discount 0.1 the treasure is hardly worth the walk, so even the best route scores below 0', () => {
@@ -86,6 +86,28 @@ describe('level 3 view', () => {
     expect(ui.drawn.length).toBeGreaterThan(0);
     view.destroy();
     expect(ui.listenerCount()).toBe(0);
+  });
+  it('tags the treasure tile with its worth from the current distance', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    const tag = ui.last().tags.find(t => t.x === 4 && t.y === 3);
+    expect(tag.text).toBe('+5.3 here');
+    ui.panel.querySelector('#gamma').value = '0.5';
+    ui.input('#gamma');
+    expect(ui.last().tags.find(t => t.x === 4 && t.y === 3).text).toBe('+0.2 here');
+    view.destroy();
+  });
+  it('compares all three routes at the current discount, rebuilt when the slider moves', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    const el = ui.panel.querySelector('#compare');
+    expect(el.textContent).toBe('Short way 1.81 · Detour −0.43 · Risky way −10');
+    ui.panel.querySelector('#gamma').value = '0.1';
+    ui.input('#gamma');
+    expect(el.textContent).toMatch(/^Short way −1.11 · Detour −1.11 · Risky way −1.2$/);
+    view.destroy();
   });
   it('with reduced motion Walk it finishes at once', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));

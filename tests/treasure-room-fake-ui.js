@@ -21,6 +21,7 @@ export function fakeUi() {
   return {
     drawn, last: () => drawn.at(-1),
     listenerCount: () => listeners,
+    input(sel) { for (const fn of get(sel).handlers.input ?? []) fn({ target: get(sel) }); },
     click(sel) { for (const fn of get(sel).handlers.click ?? []) fn({ target: get(sel), preventDefault() {} }); },
     panel: { querySelector: get, querySelectorAll: () => [] },
     tiles: get('#tiles'),

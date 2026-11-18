@@ -41,11 +41,11 @@ describe('level 4 policy logic', () => {
   });
   it('verdict says treasure, pit, circles or out of steps in plain words', () => {
     expect(verdict(runPolicy(ROOM, fixPolicy(ROOM, 0.9)))).toMatch(/treasure/i);
-    expect(verdict(runPolicy(ROOM, initialPolicy(ROOM)))).toMatch(/circles/i);
+    expect(verdict(runPolicy(ROOM, initialPolicy(ROOM)))).toMatch(/stuck or going round in circles/i);
     const toPit = initialPolicy(ROOM);
     toPit[id(START.x, START.y)] = 3; toPit[id(1, 1)] = 3; toPit[id(2, 1)] = 1;
     expect(verdict(runPolicy(ROOM, toPit))).toMatch(/pit/i);
-    expect(verdict({ outcome: 'timeout', trace: [{ pos: { x: 0, y: 0 } }, { pos: { x: 1, y: 0 } }] })).toMatch(/steps/i);
+    expect(verdict({ outcome: 'timeout', trace: [{ pos: { x: 0, y: 0 } }, { pos: { x: 1, y: 0 } }] })).toMatch(/stuck or going round in circles/i);
   });
 });
 
