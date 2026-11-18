@@ -1,13 +1,15 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
-import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
+import { buildBuildings, buildRoadStrips, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
 import { clampPitch, clampDistance, cameraFar, readColors, treesToHide } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
 import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
-import { signalState, signalCorners } from './signals.js';
+import { headState } from './signals.js';
+import { buildAsphalt, buildRoadMarks, buildCrosswalks, buildRaisedWalks } from './street-model.js';
+import { buildSignalHeads, paintLamps } from './signal-heads.js';
 import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
 import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, WINDOW_GLOW } from './scene-look.js';
 import { tierFor } from './quality.js';
@@ -61,6 +63,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   }
   mats.building.side = THREE.FrontSide; // so the chase cam sees through a wall it passes
   mats.mark = new THREE.MeshBasicMaterial({ color: colors.mark, side: THREE.DoubleSide });
+  mats.centre = new THREE.MeshBasicMaterial({ color: colors.centre, side: THREE.DoubleSide });
   mats.pin = new THREE.MeshStandardMaterial({ color: colors.pin, emissive: colors.pin, emissiveIntensity: 0.5, envMapIntensity: ENV_INTENSITY });
   mats.pad = new THREE.MeshBasicMaterial({ color: colors.accent });
 
@@ -89,8 +92,15 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   scene.add(meshOf(geoOf(buildFlats(city.water ?? [], 0.2)), mats.water));
   scene.add(meshOf(geoOf(buildFlats(city.parks ?? [], 0.4)), mats.park, { receive: true }));
   scene.add(meshOf(geoOf(buildRoadStrips(city.paths ?? [], 0.6)), mats.walk, { receive: true }));
-  scene.add(meshOf(geoOf(buildRoadStrips(city.roads ?? [], 0.8)), mats.road, { receive: true }));
-  scene.add(meshOf(geoOf(buildLaneMarks(city.roads ?? [], 1.0)), mats.mark));
+  // The street, in few merged meshes: asphalt (the OSM roads at their real widths, plus a square for any road cell they miss, so the taxi is never on bare ground),
+  // raised sidewalks with kerbs, white marks (lane dashes, one-way arrows, zebra crossings) and yellow centre lines.
+  const marks = buildRoadMarks(city.roads ?? [], { dashes: tier.laneDashes, arrows: tier.arrows });
+  const cross = buildCrosswalks(city.crossings ?? []);
+  const white = { positions: new Float32Array([...marks.white.positions, ...cross.positions]), indices: new Uint32Array([...marks.white.indices, ...Array.from(cross.indices, (i) => i + marks.white.positions.length / 3)]) };
+  scene.add(meshOf(geoOf(buildAsphalt(city)), mats.road, { receive: true }));
+  scene.add(meshOf(geoOf(buildRaisedWalks(city.sidewalks ?? [])), mats.walk, { receive: true }));
+  scene.add(meshOf(geoOf(white), mats.mark));
+  scene.add(meshOf(geoOf(marks.yellow), mats.centre));
   scene.add(meshOf(buildingGeometry(buildBuildings(city.buildings ?? [], { roofBoxes: tier.roofBoxes })), mats.building, { cast: true, receive: true }));
   applyFacade(mats.building, { detail: tier.facadeDetail, glow: WINDOW_GLOW });
 
@@ -131,31 +141,28 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     heads.push(head);
   }
 
-  // Traffic lights: a post and one lamp at the corner of each signal cell, showing only the taxi's own direction of travel.
-  const signals = city.signals ?? [];
+  // Traffic signals: a real head (pole, arm, housing, three lamps on both faces) at each mapped signal. A head's lamps show the sim's own light for the road it
+  // stands beside (headState), so a car that runs a red runs a red you can see. All the lamps are one mesh whose vertex colours are repainted when the lights change.
   const world = loadWorld(city);
-  const GREEN = '#22C55E', RED = '#EF4444';
-  mats.post = new THREE.MeshStandardMaterial({ color: '#8A93A3', roughness: 0.8 });
-  mats.lamp = new THREE.MeshBasicMaterial({ color: GREEN, toneMapped: false });
-  if (signals.length) {
-    const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 0.7, 12, 6).translate(0, 6, 0), mats.post, signals.length);
-    const lamps = new THREE.InstancedMesh(new THREE.SphereGeometry(1.8, 10, 8), mats.lamp, signals.length);
-    const m = new THREE.Matrix4();
-    signals.forEach(([c, r], i) => {
-      const { x, z } = signalCorners(world, r * city.cols + c, city.cellM);
-      posts.setMatrixAt(i, m.setPosition(x, 0.8, z));
-      lamps.setMatrixAt(i, m.setPosition(x, 13, z));
-    });
-    scene.add(posts, lamps);
+  const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
+  mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
+  mats.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
+  let lampGeo = null;
+  if (sig.lamps.list.length) {
+    scene.add(meshOf(geoOf(sig.body), mats.post, { cast: true }));
+    lampGeo = geoOf(sig.lamps);
+    lampGeo.setAttribute('color', new THREE.BufferAttribute(sig.lamps.colors, 3));
+    scene.add(meshOf(lampGeo, mats.lamp));
   }
-  const lampCell = signals.length ? signals[0][1] * city.cols + signals[0][0] : -1;
   let shownLamp = '';
-  // The lamp colour is signalState for the taxi's heading (all signals share one phase). True if it changed.
-  const setLights = (tick, heading = Math.PI) => {
-    const state = lampCell < 0 ? 'go' : signalState(world, lampCell, heading, tick);
-    if (state === shownLamp) return false;
-    shownLamp = state;
-    mats.lamp.color.set(state === 'stop' ? RED : GREEN);
+  // The lamp colours follow the sim's light at this tick (all signals share one phase). True if they changed.
+  const setLights = (tick) => {
+    const states = { 0: headState(world, tick, 0), 1: headState(world, tick, 90) };
+    const key = states[0] + states[1];
+    if (key === shownLamp) return false;
+    shownLamp = key;
+    paintLamps(sig.lamps, states);
+    if (lampGeo) lampGeo.attributes.color.needsUpdate = true;
     return true;
   };
   setLights(0);
@@ -341,9 +348,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const place = (st) => {
     placeCar(taxi, trail, trailPts, taxiMaker, play.track.frames, st);
     play.state = st;
-    setLights(st.tick, st.facing); // the lamp follows the move being made, not the eased heading
+    setLights(st.tick);
   };
-  // A race: both cars on one clock. The lamp shows the leader's direction (the lights are the same for both).
+  // A race: both cars on one clock (and so one set of lights).
   const placeRace = (rs) => {
     const [a, b] = play.race.cars;
     placeCar(taxi, trail, trailPts, taxiMaker, a.track.frames, rs.cars[0].state);
@@ -356,7 +363,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       span.style.transform = `translate(${cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width}px, ${cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height}px) translate(-50%, -100%)`;
     });
     play.state = rs;
-    setLights(rs.tick, rs.cars[rs.leader ?? 0].state.facing);
+    setLights(rs.tick);
   };
   // Where the taxi is on screen, in the label layer's pixels, so the tags can pop up beside it.
   const taxiScreen = () => {

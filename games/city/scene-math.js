@@ -11,8 +11,8 @@ export const domeRadius = (radius) => radius * DOME;
 export const cameraFar = (radius) => (radius * MAX_DIST + domeRadius(radius)) * 1.1;
 
 const FIXED = {
-  road: '#585A5E', walk: '#BDBEBE', park: '#5E9A4C', water: '#4F8EC0', mark: '#E6E2D6',
-  ground: '#929491', building: '#FFFFFF', leaf: '#4E9A48', pin: '#FACC15',
+  road: '#3A3D42', walk: '#A9A9A4', park: '#5E9A4C', water: '#4F8EC0', mark: '#EDEDE8', centre: '#E6B422',
+  ground: '#9B9C98', building: '#FFFFFF', leaf: '#4E9A48', pin: '#FACC15',
 };
 // Sky and accent follow the studio.css tokens; the map colours are the mockup's.
 export function readColors(style) {

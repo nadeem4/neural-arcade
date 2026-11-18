@@ -4,17 +4,17 @@ import { domeRadius } from './scene-math.js';
 import { skyColours, sunDirection, sunUv, cloudLayout } from './sky.js';
 
 // Late-afternoon tuning, all in one place.
-export const EXPOSURE = 1.0, ENV_INTENSITY = 0.55, HEMI_INTENSITY = 0.5, SUN_INTENSITY = 4.4, CLOUD_OPACITY = 0.8, CLOUD_TINT = '#FFF1E0', WINDOW_GLOW = 0.4;
+export const EXPOSURE = 1.0, ENV_INTENSITY = 0.8, HEMI_INTENSITY = 1.0, SUN_INTENSITY = 4.4, CLOUD_OPACITY = 0.8, CLOUD_TINT = '#FFFFFF', WINDOW_GLOW = 0.4;
 
 // The sky: an inside-out sphere painted once with the gradient and a glow where the sun is, plus a few cloud sprites on it.
 // The same dome (alone in its own scene) feeds PMREMGenerator.fromScene, so the light on the city matches the sky above it.
 export function createSky({ radius, cx, cz, cloudCount }) {
-  const { top, bottom, sunGlow } = skyColours();
+  const { top, mid, bottom, sunGlow } = skyColours();
   const canvas = document.createElement('canvas');
   canvas.width = 512; canvas.height = 256;
   const ctx = canvas.getContext('2d');
   const g = ctx.createLinearGradient(0, 0, 0, canvas.height / 2); // zenith to horizon over the top half; the lower half is the horizon colour
-  g.addColorStop(0, top); g.addColorStop(1, bottom);
+  g.addColorStop(0, top); g.addColorStop(0.65, mid); g.addColorStop(1, bottom); // clear blue overhead, only a pale warm band at the horizon
   ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = bottom; ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
   const { u, v } = sunUv(sunDirection());
