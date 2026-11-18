@@ -2,6 +2,7 @@
 // Data points are [x, y]; the world is x, z with z = -y. Every look comes from a seeded hash of an index (nothing unseeded or timed),
 // so two runs give the same trees (and `?record=1` footage does not change).
 // scene-furniture.js turns these specs into InstancedMeshes.
+import { Y_ROAD, Y_WALK } from './street-model.js';
 
 export function hash01(i, salt = 0) {
   let h = (Math.imul(i + 1, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b)) >>> 0;
@@ -47,7 +48,10 @@ export const lampSpecs = (lamps) => lamps.map(([x, y]) => ({ x, z: -y }));
 const DECK_W = 4.8, DECK_T = 0.6, GIRDER_W = 0.4, GIRDER_H = 1.2, GAUGE = 0.75, RAIL_W = 0.18, RAIL_H = 0.25;
 const BEAM_H = 0.4, BEAM_D = 1, LEG = 0.7, LEG_TOP_GAP = 1.6, SLIDE_MAX = 10, SLIDE_STEP = 2.5;
 const LATERALS = [3.2, 4.2, 5.2, 6.2, 7.2]; // how far each leg stands from a single track's line, nearest first
-const BED = { w: 4.2, t: 0.2, y: 0.35 }, GROUND_RAIL_Y = 0.55;
+// Surface heights (street-model.js: roads 0.8, walks 1.1; the ground plane is at -0.45). Lamps stand on the walk, trunks start at park grass,
+// L columns reach down to the ground plane (so none floats beside a road) and the deck height is measured from the road.
+export const SURFACE = { ground: -0.45, grass: 0.4, lampBase: Y_WALK - 0.1 };
+const BED_TOP = Y_ROAD + 0.2, BED = { w: 4.2, t: BED_TOP - SURFACE.ground, y: (BED_TOP + SURFACE.ground) / 2 }, GROUND_RAIL_Y = BED_TOP + RAIL_H / 2;
 const MIN_SEP = 3.2, PAIR_NEAR = 7, PAIR_SHARE = 0.5, PAIR_SEP_MAX = 5.5;
 
 const worldPts = (pts) => pts.map(([x, y]) => [x, -y]);
@@ -191,16 +195,16 @@ export function railParts(rail, roads) {
   const box = (x, y, z, yaw, sx, sy, sz, colour) => parts.push({ x, y, z, yaw, sx, sy, sz, colour });
   const side = (s, d, y, sy, sz, colour) => { const [ox, oz] = across(s.yaw, d); box(s.x + ox, y, s.z + oz, s.yaw, s.len, sy, sz, colour); };
   if (rail.elevated) {
-    const h = rail.h + (rail.lift ?? 0), tracks = sep ? [-sep / 2, sep / 2] : [0];
+    const h = Y_ROAD + rail.h + (rail.lift ?? 0), tracks = sep ? [-sep / 2, sep / 2] : [0];
     for (const s of segs) {
       box(s.x, h - DECK_T / 2, s.z, s.yaw, s.len, DECK_T, deckW, 'deck');
       for (const d of [-1, 1]) side(s, d * (deckW / 2 - GIRDER_W / 2), h - GIRDER_H / 2, GIRDER_H, GIRDER_W, 'steel');
       for (const t of tracks) for (const d of [-1, 1]) side(s, t + d * GAUGE, h + RAIL_H / 2, RAIL_H, RAIL_W, 'rail');
     }
-    const legH = Math.max(1, h - LEG_TOP_GAP);
+    const legTop = h - LEG_TOP_GAP, legH = Math.max(1, legTop - SURFACE.ground);
     for (const k of railColumns(rail.pts, roads, { sep })) {
       box(k.x, h - GIRDER_H - BEAM_H / 2, k.z, k.yaw, BEAM_D, BEAM_H, 2 * k.lat + LEG, 'steel');
-      for (const [lx, lz] of columnLegs(k)) box(lx, legH / 2, lz, k.yaw, LEG, legH, LEG, 'steel');
+      for (const [lx, lz] of columnLegs(k)) box(lx, SURFACE.ground + legH / 2, lz, k.yaw, LEG, legH, LEG, 'steel');
     }
   } else {
     for (const s of segs) {

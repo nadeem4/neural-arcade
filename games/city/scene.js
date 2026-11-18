@@ -1,15 +1,17 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
-import { buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, cityBounds, cellCentre } from './geometry.js';
+import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
 import { clampPitch, clampDistance, cameraFar, readColors } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
 import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
-import { signalState, signalCorners } from './signals.js';
+import { headState } from './signals.js';
+import { buildAsphalt, buildRoadMarks, buildCrosswalks, buildRaisedWalks, buildStopLines, clipWalks } from './street-model.js';
+import { buildSignalHeads, paintLamps } from './signal-heads.js';
 import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
-import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, WINDOW_GLOW } from './scene-look.js';
+import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, ENV_GROUND, WINDOW_GLOW } from './scene-look.js';
 import { tierFor, furnitureTier } from './quality.js';
 import { buildFurniture } from './scene-furniture.js';
 import { applyFacade, buildingGeometry } from './facade.js';
@@ -55,11 +57,12 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const { cx, cz, radius } = cityBounds(city);
   const colors = readColors(getComputedStyle(document.documentElement));
   const mats = {};
-  for (const key of ['road', 'walk', 'park', 'water', 'building', 'ground']) {
-    mats[key] = new THREE.MeshStandardMaterial({ color: colors[key], roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: ENV_INTENSITY });
+  for (const key of ['road', 'walk', 'park', 'water', 'building', 'ground', 'farGround']) {
+    mats[key] = new THREE.MeshStandardMaterial({ color: colors[key], roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: ['road', 'walk', 'park', 'ground', 'farGround'].includes(key) ? ENV_GROUND : ENV_INTENSITY });
   }
   mats.building.side = THREE.FrontSide; // so the chase cam sees through a wall it passes
   mats.mark = new THREE.MeshBasicMaterial({ color: colors.mark, side: THREE.DoubleSide });
+  mats.centre = new THREE.MeshBasicMaterial({ color: colors.centre, side: THREE.DoubleSide });
   mats.pin = new THREE.MeshStandardMaterial({ color: colors.pin, emissive: colors.pin, emissiveIntensity: 0.5, envMapIntensity: ENV_INTENSITY });
   mats.pad = new THREE.MeshBasicMaterial({ color: colors.accent });
 
@@ -68,7 +71,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   scene.add(sky.group);
   const envTarget = sky.environment(renderer);
   scene.environment = envTarget.texture;
-  scene.fog = new THREE.Fog(skyColours().bottom);
+  scene.fog = new THREE.Fog(skyColours().haze);
   const sun = lightRig(scene, tier);
   // One directional light: the same direction on the map and in the chase; its shadow box covers the city on the map and a patch around the taxi in the chase.
   let shadowFocus = null;
@@ -84,12 +87,21 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   };
   focusShadow(false);
 
-  scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -0.5, cz), mats.ground, { receive: true }));
+  scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -3, cz), mats.farGround, { receive: true }));
+  // The city's own footing (the grid's extent) is pale concrete; the land beyond it is darker, so the city has an edge and a horizon.
+  scene.add(meshOf(new THREE.PlaneGeometry(city.cols * city.cellM, city.rows * city.cellM).rotateX(-Math.PI / 2).translate(city.cols * city.cellM / 2, -0.45, -city.rows * city.cellM / 2), mats.ground, { receive: true }));
   scene.add(meshOf(geoOf(buildFlats(city.water ?? [], 0.2)), mats.water));
   scene.add(meshOf(geoOf(buildFlats(city.parks ?? [], 0.4)), mats.park, { receive: true }));
   scene.add(meshOf(geoOf(buildRoadStrips(city.paths ?? [], 0.6)), mats.walk, { receive: true }));
-  scene.add(meshOf(geoOf(buildRoadStrips(city.roads ?? [], 0.8)), mats.road, { receive: true }));
-  scene.add(meshOf(geoOf(buildLaneMarks(city.roads ?? [], 1.0)), mats.mark));
+  // The street, in few merged meshes: asphalt (the OSM roads at their real widths, plus a one-lane strip for any road cell they miss, so the taxi is never on bare ground),
+  // raised sidewalks with kerbs, white marks (lane dashes, one-way arrows, zebra crossings, stop lines) and yellow centre lines.
+  const marks = buildRoadMarks(city.roads ?? [], { dashes: tier.laneDashes, arrows: tier.arrows });
+  const cross = buildCrosswalks(city.crossings ?? []), stops = buildStopLines(city.signalHeads ?? [], city.roads ?? []);
+  const white = { positions: new Float32Array([...marks.white.positions, ...cross.positions, ...stops.positions]), indices: new Uint32Array([...marks.white.indices, ...Array.from(cross.indices, (i) => i + marks.white.positions.length / 3), ...Array.from(stops.indices, (i) => i + (marks.white.positions.length + cross.positions.length) / 3)]) };
+  scene.add(meshOf(geoOf(buildAsphalt(city)), mats.road, { receive: true }));
+  scene.add(meshOf(geoOf(buildRaisedWalks(clipWalks(city.sidewalks ?? [], city))), mats.walk, { receive: true }));
+  scene.add(meshOf(geoOf(white), mats.mark));
+  scene.add(meshOf(geoOf(marks.yellow), mats.centre));
   scene.add(meshOf(buildingGeometry(buildBuildings(city.buildings ?? [], { roofBoxes: tier.roofBoxes })), mats.building, { cast: true, receive: true }));
   applyFacade(mats.building, { detail: tier.facadeDetail, glow: WINDOW_GLOW });
 
@@ -114,31 +126,28 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     heads.push(head);
   }
 
-  // Traffic lights: a post and one lamp at the corner of each signal cell, showing only the taxi's own direction of travel.
-  const signals = city.signals ?? [];
+  // Traffic signals: a real head (pole, arm, housing, three lamps on both faces) at each mapped signal. A head's lamps show the sim's own light for the road it
+  // stands beside (headState), so a car that runs a red runs a red you can see. All the lamps are one mesh whose vertex colours are repainted when the lights change.
   const world = loadWorld(city);
-  const GREEN = '#22C55E', RED = '#EF4444';
-  mats.post = new THREE.MeshStandardMaterial({ color: '#8A93A3', roughness: 0.8 });
-  mats.lamp = new THREE.MeshBasicMaterial({ color: GREEN, toneMapped: false });
-  if (signals.length) {
-    const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 0.7, 12, 6).translate(0, 6, 0), mats.post, signals.length);
-    const lamps = new THREE.InstancedMesh(new THREE.SphereGeometry(1.8, 10, 8), mats.lamp, signals.length);
-    const m = new THREE.Matrix4();
-    signals.forEach(([c, r], i) => {
-      const { x, z } = signalCorners(world, r * city.cols + c, city.cellM);
-      posts.setMatrixAt(i, m.setPosition(x, 0.8, z));
-      lamps.setMatrixAt(i, m.setPosition(x, 13, z));
-    });
-    scene.add(posts, lamps);
+  const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
+  mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
+  mats.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
+  let lampGeo = null;
+  if (sig.lamps.list.length) {
+    scene.add(meshOf(geoOf(sig.body), mats.post, { cast: true }));
+    lampGeo = geoOf(sig.lamps);
+    lampGeo.setAttribute('color', new THREE.BufferAttribute(sig.lamps.colors, 3));
+    scene.add(meshOf(lampGeo, mats.lamp));
   }
-  const lampCell = signals.length ? signals[0][1] * city.cols + signals[0][0] : -1;
   let shownLamp = '';
-  // The lamp colour is signalState for the taxi's heading (all signals share one phase). True if it changed.
-  const setLights = (tick, heading = Math.PI) => {
-    const state = lampCell < 0 ? 'go' : signalState(world, lampCell, heading, tick);
-    if (state === shownLamp) return false;
-    shownLamp = state;
-    mats.lamp.color.set(state === 'stop' ? RED : GREEN);
+  // The lamp colours follow the sim's light at this tick (all signals share one phase). True if they changed.
+  const setLights = (tick) => {
+    const states = { 0: headState(world, tick, 0), 1: headState(world, tick, 90) };
+    const key = states[0] + states[1];
+    if (key === shownLamp) return false;
+    shownLamp = key;
+    paintLamps(sig.lamps, states);
+    if (lampGeo) lampGeo.attributes.color.needsUpdate = true;
     return true;
   };
   setLights(0);
@@ -324,9 +333,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const place = (st) => {
     placeCar(taxi, trail, trailPts, taxiMaker, play.track.frames, st);
     play.state = st;
-    setLights(st.tick, st.facing); // the lamp follows the move being made, not the eased heading
+    setLights(st.tick);
   };
-  // A race: both cars on one clock. The lamp shows the leader's direction (the lights are the same for both).
+  // A race: both cars on one clock (and so one set of lights).
   const placeRace = (rs) => {
     const [a, b] = play.race.cars;
     placeCar(taxi, trail, trailPts, taxiMaker, a.track.frames, rs.cars[0].state);
@@ -339,7 +348,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       span.style.transform = `translate(${cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width}px, ${cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height}px) translate(-50%, -100%)`;
     });
     play.state = rs;
-    setLights(rs.tick, rs.cars[rs.leader ?? 0].state.facing);
+    setLights(rs.tick);
   };
   // Where the taxi is on screen, in the label layer's pixels, so the tags can pop up beside it.
   const taxiScreen = () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
-  buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, cityBounds, triangulate, cellCentre,
+  buildBuildings, buildRoadStrips, buildFlats, cityBounds, triangulate, cellCentre,
 } from '../games/city/geometry.js';
 
 const square = (x, y, s, h) => ({ ring: [[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]], h });
@@ -133,11 +133,6 @@ describe('roads', () => {
     expect(areaOf(g.positions, g.indices)).toBeCloseTo(160, 5);
     for (const i of g.indices) expect(i).toBeLessThan(g.positions.length / 3);
   });
-  it('lane marks are dashed on two-way roads and absent on one-way roads', () => {
-    expect(buildLaneMarks([two]).indices.length).toBeGreaterThan(0);
-    expect(buildLaneMarks([{ ...two, oneway: 1 }]).indices.length).toBe(0);
-    expect(buildLaneMarks([{ ...two, w: 3 }]).indices.length).toBe(0);
-  });
 });
 
 describe('cityBounds', () => {
@@ -155,7 +150,7 @@ describe('real map', () => {
     const city = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url)));
     const t0 = performance.now();
     const parts = {
-      b: buildBuildings(city.buildings), r: buildRoadStrips(city.roads), l: buildLaneMarks(city.roads),
+      b: buildBuildings(city.buildings), r: buildRoadStrips(city.roads),
       f: buildFlats([...city.parks, ...city.water], 0), p: buildRoadStrips(city.paths),
     };
     const ms = performance.now() - t0;

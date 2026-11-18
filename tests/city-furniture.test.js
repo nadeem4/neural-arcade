@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { furnitureTier } from '../games/city/quality.js';
+import { Y_ROAD, Y_WALK } from '../games/city/street-model.js';
 import {
-  hash01, treeSpecs, crownBlobs, lampSpecs, railSegments, pairRails, railColumns, columnLegs, railParts, clearanceFromRoads,
+  hash01, treeSpecs, crownBlobs, lampSpecs, railSegments, pairRails, railColumns, columnLegs, railParts, clearanceFromRoads, SURFACE,
 } from '../games/city/street-furniture.js';
 
 const city = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
@@ -166,8 +167,8 @@ describe('railParts', () => {
     expect(by('deck')).toHaveLength(1);
     expect(by('rail')).toHaveLength(2);
     expect(by('steel').length).toBeGreaterThanOrEqual(2 + 3); // girders + at least one beam and two legs
-    expect(Math.max(...by('rail').map((p) => p.y))).toBeGreaterThan(8);
-    expect(by('deck')[0].y).toBeLessThanOrEqual(8);
+    expect(Math.max(...by('rail').map((p) => p.y))).toBeGreaterThan(Y_ROAD + 8);
+    expect(by('deck')[0].y).toBeLessThanOrEqual(Y_ROAD + 8);
   });
   it('a paired line draws one wide deck and four rails', () => {
     const parts = railParts({ pts: [[0, 0], [40, 0]], h: 8, elevated: true, sep: 4 }, []);
@@ -179,7 +180,23 @@ describe('railParts', () => {
   it('ground line: a track bed and two rails, no structure', () => {
     const parts = railParts({ pts: [[0, 0], [40, 0]], h: 0, elevated: false }, []);
     expect(parts.map((p) => p.colour).sort()).toEqual(['bed', 'rail', 'rail']);
-    expect(Math.max(...parts.map((p) => p.y))).toBeLessThan(1);
+    expect(Math.max(...parts.map((p) => p.y))).toBeLessThan(Y_ROAD + 0.6);
+    const bed = parts.find((p) => p.colour === 'bed');
+    expect(bed.y - bed.sy / 2).toBeCloseTo(SURFACE.ground, 5); // stands on the ground plane
+    expect(bed.y + bed.sy / 2).toBeGreaterThan(Y_ROAD); // and reaches up through the road
+  });
+  it('columns stand on the ground plane and stop under the girders; the deck is measured from the road', () => {
+    const parts = railParts({ pts: [[0, 0], [40, 0]], h: 8, elevated: true }, []);
+    const legs = parts.filter((p) => p.colour === 'steel' && p.sx === 0.7 && p.sz === 0.7);
+    expect(legs.length).toBeGreaterThanOrEqual(2);
+    for (const l of legs) {
+      expect(l.y - l.sy / 2).toBeCloseTo(SURFACE.ground, 5);
+      expect(l.y + l.sy / 2).toBeLessThan(Y_ROAD + 8 - 0.6 - 0.4);
+    }
+  });
+  it('lamps and trees start at the right surface', () => {
+    expect(SURFACE.lampBase).toBeCloseTo(Y_WALK - 0.1, 5);
+    expect(SURFACE.grass).toBeLessThan(Y_ROAD);
   });
   it('the whole L is finite and in one modest instance count', () => {
     const all = pairRails(city.rail).flatMap((r) => railParts(r, city.roads));
