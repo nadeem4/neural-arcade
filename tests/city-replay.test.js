@@ -15,7 +15,7 @@ describe('replaying a kept taxi', () => {
       const { rewards, route } = cards.find(c => c.id === id);
       const analysis = analyzeRoute(world, route, rewards);
       const g = parse(serialize(keep(createGarage(), {
-        id: 'x', name: nameFor(rewards), tries: 1, rewards, route, analysis,
+        id: 'x', name: nameFor(analysis), tries: 1, rewards, route, analysis,
         bestSeconds: analysis.seconds, note: '', keptAt: 1,
       })));
       const t = g.taxis[0];

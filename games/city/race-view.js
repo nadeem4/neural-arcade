@@ -42,7 +42,8 @@ export function showBanner(race, res, names) {
   const t = race.cars.map(c => c.events.totals);
   $('raceTitle').textContent = bannerLine(res, names);
   const line = (i) => `${names[i]}: ${t[i].arrived ? `${t[i].seconds} s` : 'did not arrive'}, earned ${signed(Math.round(t[i].reward * 10) / 10 + 0)}`;
-  $('raceDetail').textContent = `${line(0)}. ${line(1)}.`;
+  const heat = res.winner === 'tie' && res.reason === 'time' && t[0].reward !== t[1].reward ? ' Same time, so nobody wins, even though one earned more.' : '';
+  $('raceDetail').textContent = `${line(0)}. ${line(1)}.${heat}`;
   $('raceBanner').hidden = false;
   $('raceBanner').focus({ preventScroll: true });
   return $('raceTitle').textContent;

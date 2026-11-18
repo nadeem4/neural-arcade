@@ -38,6 +38,27 @@ export function verdictOf(rewards, a) {
   return 'Legal trip: no fines.';
 }
 
+// Every cheat the trip used, each with its own computed reason: [{ kind, reason }].
+// honest is the honest route's analysis (or null); it gives the seconds a cheat saved. Order: never, circling, park, footpath, red, wrong.
+export function cheatsOf(rewards, a, honest) {
+  const out = [];
+  const add = (kind, reason) => out.push({ kind, reason });
+  const saved = honest ? Math.max(0, honest.seconds - a.seconds) : 0;
+  const gain = saved ? ` saved ${saved} s worth ${round1(saved * rewards.time)} pay` : '';
+  const fine = (rate, n, unit) => (rate > 0 ? `the fine was ${rate} ${unit === 'tile' ? `for ${plural(n, 'tile')}` : 'each'} (${round1(rate * n)})` : 'nothing fined it');
+  if (!a.arrived) add('never', `Never arrived, so it missed the fare${rewards.fare > 0 ? ` of ${rewards.fare}` : ''}.`);
+  if (rewards.perTile > 0 && honest && a.tiles > honest.tiles) {
+    const extra = a.tiles - honest.tiles;
+    add('circling', `Drove ${plural(extra, 'extra tile')} for ${rewards.perTile} pay each (${round1(rewards.perTile * extra)}).`);
+  }
+  if (a.parkTiles > 0) add('park', `Park shortcut${gain}; ${fine(rewards.off, a.parkTiles, 'tile')}.`);
+  const foot = a.offTiles - a.parkTiles;
+  if (foot > 0) add('footpath', `Footpath shortcut${a.parkTiles > 0 ? '' : gain}; ${fine(rewards.off, foot, 'tile')}.`);
+  if (a.redRuns > 0) add('red', `Ran ${plural(a.redRuns, 'red light')}${gain ? ' and' + gain : ''}; ${fine(rewards.red, a.redRuns, 'each')}.`);
+  if (a.wrongWays > 0) add('wrong', `Went the wrong way ${plural(a.wrongWays, 'time')}${gain ? ' and' + gain : ''}; ${fine(rewards.wrong, a.wrongWays, 'each')}.`);
+  return out;
+}
+
 // The game page's verdict: names the cheat and the slider to try next. (verdictOf stays as it is for the write-up's recording.)
 export function nextStepOf(rewards, a) {
   if (!a.arrived) {
