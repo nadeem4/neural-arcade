@@ -1,23 +1,37 @@
 import { describe, it, expect } from 'vitest';
-import { nameFor, uniqueName, stripeFor, noteFor, rateChips } from '../games/city/naming.js';
+import { nameFor, behaviourNames, uniqueName, stripeFor, noteFor, rateChips } from '../games/city/naming.js';
 import { GOAL_SECONDS } from '../games/city/presets.js';
 
-const R = (o = {}) => ({ fare: 100, time: 1, off: 20, red: 30, wrong: 30, perTile: 0, ...o });
+const T = (o = {}) => ({ arrived: true, seconds: 60, tiles: 40, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, ...o });
 
 describe('nameFor', () => {
-  it('names a taxi by which fines are zero, first match wins', () => {
-    expect(nameFor(R({ off: 0, red: 0, wrong: 0 }))).toBe('Anything goes');
-    expect(nameFor(R({ red: 0 }))).toBe('Red runner');
-    expect(nameFor(R({ off: 0 }))).toBe('Park cutter');
-    expect(nameFor(R({ wrong: 0 }))).toBe('Wrong-way driver');
-    expect(nameFor(R())).toBe('By the book');
+  it('names a taxi by what it did, first match wins', () => {
+    expect(nameFor(T())).toBe('By the book');
+    expect(nameFor(T({ offTiles: 3, parkTiles: 3 }))).toBe('Park cutter');
+    expect(nameFor(T({ offTiles: 3 }))).toBe('Footpath rider');
+    expect(nameFor(T({ redRuns: 1 }))).toBe('Red runner');
+    expect(nameFor(T({ wrongWays: 1 }))).toBe('Wrong-way driver');
+    expect(nameFor(T({ arrived: false, seconds: 100, tiles: 20 }))).toBe('Never arrives');
+    expect(nameFor(T({ arrived: false, seconds: 100, tiles: 90 }))).toBe('Circler');
   });
-  it('picks the first by order when two fines are zero', () => {
-    expect(nameFor(R({ off: 0, red: 0 }))).toBe('Red runner');
-    expect(nameFor(R({ off: 0, wrong: 0 }))).toBe('Park cutter');
+  it('picks the first by order when a trip did several things', () => {
+    expect(nameFor(T({ offTiles: 4, parkTiles: 1, redRuns: 2, wrongWays: 1 }))).toBe('Park cutter');
+    expect(nameFor(T({ offTiles: 4, redRuns: 2 }))).toBe('Footpath rider');
+    expect(nameFor(T({ redRuns: 2, wrongWays: 1 }))).toBe('Red runner');
   });
-  it('names the default rate card Anything goes', () => {
-    expect(nameFor({ fare: 100, time: 1, off: 0, red: 0, wrong: 0, perTile: 0 })).toBe('Anything goes');
+  it('a trip that never arrived is named for that, whatever else it did', () => {
+    expect(nameFor(T({ arrived: false, offTiles: 3, parkTiles: 3, tiles: 10 }))).toBe('Never arrives');
+  });
+});
+
+describe('behaviourNames', () => {
+  const kept = (id, analysis, name = 'old') => ({ id, name, analysis });
+  it('renames stored taxis from their analysis, numbering repeats from the oldest', () => {
+    const taxis = [kept('c', T({ redRuns: 1 })), kept('b', T()), kept('a', T())]; // newest first
+    expect(behaviourNames(taxis).map(t => t.name)).toEqual(['Red runner', 'By the book 2', 'By the book']);
+  });
+  it('keeps everything else on the taxi', () => {
+    expect(behaviourNames([kept('a', T())])[0]).toMatchObject({ id: 'a' });
   });
 });
 
@@ -35,6 +49,9 @@ describe('stripeFor', () => {
     expect(stripeFor('Red runner')).toMatch(/^#[0-9A-F]{6}$/i);
     expect(stripeFor('Red runner 2')).toBe(stripeFor('Red runner'));
     expect(stripeFor('Red runner')).not.toBe(stripeFor('By the book'));
+    for (const n of ['Park cutter', 'Footpath rider', 'Red runner', 'Wrong-way driver', 'Never arrives', 'Circler', 'By the book']) {
+      expect(stripeFor(n), n).not.toBe('#5BC0EB'); // none falls back to the default
+    }
     expect(stripeFor('Mystery')).toMatch(/^#/);
   });
 });
