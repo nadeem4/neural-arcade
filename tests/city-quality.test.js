@@ -8,7 +8,11 @@ describe('tierFor', () => {
     expect(phone.shadowSize).toBeLessThan(desk.shadowSize);
     expect(phone.pixelRatio).toBeLessThan(desk.pixelRatio);
     expect(phone.cloudCount).toBeLessThan(desk.cloudCount);
-    expect(phone.windowCell).toBeLessThan(desk.windowCell);
+    expect(phone.facadeDetail).toBeLessThan(desk.facadeDetail);
+    expect(desk.roofBoxes).toBe(true);
+    expect(phone.roofBoxes).toBe(false);
+    expect(desk.laneDashes && desk.arrows).toBe(true);
+    expect(phone.laneDashes || phone.arrows).toBe(false);
   });
   it('both tiers have shadows, phones with the cheaper hard-edged filter', () => {
     expect(phone.shadowSize).toBeGreaterThan(0);
@@ -16,8 +20,8 @@ describe('tierFor', () => {
     expect(phone.softShadows).toBe(false);
   });
   it('holds the plan values', () => {
-    expect(desk).toEqual({ shadowSize: 2048, pixelRatio: 2, cloudCount: 6, windowCell: 32, softShadows: true });
-    expect(phone).toEqual({ shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, windowCell: 16, softShadows: false });
+    expect(desk).toEqual({ shadowSize: 2048, pixelRatio: 2, cloudCount: 6, facadeDetail: 2, roofBoxes: true, softShadows: true, laneDashes: true, arrows: true });
+    expect(phone).toEqual({ shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, facadeDetail: 1, roofBoxes: false, softShadows: false, laneDashes: false, arrows: false });
   });
   it('reduced motion never makes a tier heavier', () => {
     expect(tierFor({ phone: false, reducedMotion: true }).shadowSize).toBeLessThanOrEqual(desk.shadowSize);

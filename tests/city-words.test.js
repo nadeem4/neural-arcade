@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { buildReceipt, verdictOf, nextStepOf } from '../games/city/receipt.js';
+import { buildReceipt, verdictOf, nextStepOf, hintOf } from '../games/city/receipt.js';
 import { LESSON, INFO, isLegal, goalReached, shareLine, goalLine } from '../games/city/words.js';
+import { ARRIVE_POINTS, ON_TIME_POINTS, CLEAN_POINTS } from '../games/city/goal.js';
+import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { GOAL_SECONDS, DEFAULT_REWARDS } from '../games/city/presets.js';
 
@@ -73,15 +75,15 @@ describe('verdictOf', () => {
 });
 
 describe('goalLine', () => {
-  it('states the goal before training, with the seconds from GOAL_SECONDS', () => {
-    expect(goalLine()).toBe(`Goal: arrive in ${GOAL_SECONDS} s, legally`);
+  it('states the goal plainly before training', () => {
+    expect(goalLine()).toBe('Get the passenger from pickup to drop-off, on time, by the rules.');
   });
 });
 
 describe('words', () => {
   it('has the lesson and the three info texts', () => {
-    expect(LESSON).toBe('The reward is the only thing the taxi wants: it does what you pay it for, not what you meant.');
-    for (const k of ['reward', 'goal', 'map', 'meters']) expect(INFO[k].length).toBeGreaterThan(10);
+    expect(LESSON).toBe('The taxi does what you paid for, not what you meant.');
+    for (const k of ['reward', 'ladder', 'goal', 'map', 'meters']) expect(INFO[k].length).toBeGreaterThan(10);
   });
 
   it('isLegal needs arrival and no fines', () => {
@@ -181,5 +183,44 @@ describe('nextStepOf: names the cheat and the slider to try next', () => {
     for (const a of [A({ parkTiles: 1, offTiles: 1 }), A({ redRuns: 1 }), A({ arrived: false, tiles: 400 }), A({})]) {
       expect(nextStepOf({ ...free, perTile: 3 }, a)).not.toMatch(/pay slip/i);
     }
+  });
+});
+
+describe('player wording is accurate', () => {
+  const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+  const BANNED = /\bwants?\b|knows the rules|tries to cheat|\u2014/i;
+  it('says the taxi maximises the pay, never that it wants, knows the rules or tries to cheat', () => {
+    for (const text of [LESSON, ...Object.values(INFO), goalLine(), read('games/city/index.html'), read('games/city/how-it-works/index.html'), read('games/city/how-it-works/story.js')]) {
+      expect(text).not.toMatch(BANNED);
+    }
+    expect(INFO.reward).toMatch(/only maximises the pay/);
+  });
+  it('takes the meter numbers from goal.js, not from typing', () => {
+    expect(INFO.meters).toContain(`${ARRIVE_POINTS} for arriving`);
+    expect(INFO.meters).toContain(`${ON_TIME_POINTS} for a legal trip under the goal time`);
+    expect(INFO.meters).toContain(`${CLEAN_POINTS} for a clean trip that arrives`);
+    expect(INFO.goal).toContain(`${GOAL_SECONDS} seconds`);
+  });
+  it('says the one line the same everywhere it appears', () => {
+    expect(read('games/city/index.html')).toContain('<p>The taxi does what you paid for, not what you meant.</p>');
+    expect(read('games/city/how-it-works/index.html')).toContain('The taxi does what you paid for, not what you meant.</p>');
+  });
+  it('has no receipt or hint wording that gives the taxi wants or reasons', () => {
+    const v = verdictOf({ ...R, fare: 0 }, A({ arrived: false, seconds: 0, tiles: 0, reward: 0 }));
+    expect(v).not.toMatch(/reason to/);
+    expect(verdictOf(R, A({ arrived: false, seconds: 40, tiles: 5, offTiles: 10 }))).toMatch(/not driving pays best/);
+  });
+});
+
+describe('hintOf: all the loopholes, not only the first', () => {
+  const free = { ...R, off: 0, red: 0, wrong: 0 };
+  it('one cheat keeps the single-cheat advice', () => {
+    expect(hintOf(free, A({ redRuns: 1 }))).toBe(nextStepOf(free, A({ redRuns: 1 })));
+    expect(hintOf(free, A({}))).toBe(nextStepOf(free, A({})));
+    expect(hintOf(free, A({ arrived: false, tiles: 5 }))).toBe(nextStepOf(free, A({ arrived: false, tiles: 5 })));
+  });
+  it('several cheats are all named', () => {
+    expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1 }))).toBe('It used 2 loopholes. Add or raise the park and footpath and red-light fines.');
+    expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1, wrongWays: 2 }))).toBe('It used 3 loopholes. Add or raise the park and footpath, red-light and wrong-way fines.');
   });
 });

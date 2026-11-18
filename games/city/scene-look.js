@@ -1,25 +1,22 @@
-// three.js glue for the street's look: the sky dome with sun glow and clouds, environment light, the light rig, and lit windows on the buildings. Everything is painted at runtime.
+// three.js glue for the street's look: the sky dome with sun glow and clouds, environment light, and the light rig. Everything is painted at runtime (the building windows are in facade.js).
 import * as THREE from './vendor/three.module.min.js';
 import { domeRadius } from './scene-math.js';
-import { windowPattern, skyColours, sunDirection, sunUv, cloudLayout } from './sky.js';
-
-const WIN_COLS = 8, WIN_ROWS = 16, WIN_W = 3, WIN_H = 3.5; // windows 3 m apart, floors 3.5 m: a repeat is 24 m wide and 56 m tall
-const LIT = '#F4C76B';
+import { skyColours, sunDirection, sunUv, cloudLayout } from './sky.js';
 
 // Late-afternoon tuning, all in one place.
-export const EXPOSURE = 1.0, ENV_INTENSITY = 0.55, HEMI_INTENSITY = 0.5, SUN_INTENSITY = 4.4, CLOUD_OPACITY = 0.8, CLOUD_TINT = '#FFF1E0', WINDOW_GLOW = 0.6;
+export const EXPOSURE = 1.0, ENV_INTENSITY = 0.8, ENV_GROUND = 0.3, HEMI_INTENSITY = 1.0, SUN_INTENSITY = 4.4, CLOUD_OPACITY = 0.8, CLOUD_TINT = '#FFFFFF', WINDOW_GLOW = 0.4;
 
 // The sky: an inside-out sphere painted once with the gradient and a glow where the sun is, plus a few cloud sprites on it.
 // The same dome (alone in its own scene) feeds PMREMGenerator.fromScene, so the light on the city matches the sky above it.
 export function createSky({ radius, cx, cz, cloudCount }) {
-  const { top, bottom, sunGlow } = skyColours();
+  const { top, mid, bottom, haze, sunGlow } = skyColours();
   const canvas = document.createElement('canvas');
   canvas.width = 512; canvas.height = 256;
   const ctx = canvas.getContext('2d');
   const g = ctx.createLinearGradient(0, 0, 0, canvas.height / 2); // zenith to horizon over the top half; the lower half is the horizon colour
-  g.addColorStop(0, top); g.addColorStop(1, bottom);
+  g.addColorStop(0, top); g.addColorStop(0.88, mid); g.addColorStop(1, bottom); // clear blue overhead, only a pale warm band at the horizon
   ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = bottom; ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+  ctx.fillStyle = haze; ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
   const { u, v } = sunUv(sunDirection());
   for (const dx of [-canvas.width, 0, canvas.width]) { // drawn three times so the glow wraps across the texture seam
     const gx = u * canvas.width + dx, gy = v * canvas.height;
@@ -30,7 +27,7 @@ export function createSky({ radius, cx, cz, cloudCount }) {
   const map = new THREE.CanvasTexture(canvas);
   map.colorSpace = THREE.SRGBColorSpace;
   const domeR = domeRadius(radius);
-  const mat = new THREE.MeshBasicMaterial({ map, side: THREE.BackSide, fog: false, depthWrite: false });
+  const mat = new THREE.MeshBasicMaterial({ map, side: THREE.BackSide, fog: false, depthWrite: false, toneMapped: false });
   const geo = new THREE.SphereGeometry(domeR, 32, 16);
   const dome = new THREE.Mesh(geo, mat);
   dome.position.set(cx, 0, cz); dome.renderOrder = -2;
@@ -78,37 +75,4 @@ export function lightRig(scene, tier) {
   sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.6;
   scene.add(sun, sun.target);
   return sun;
-}
-
-// Lit windows on a MeshStandardMaterial: the shader reads a small shared canvas by world position (wall faces only), so the
-// existing building geometry needs no UVs. Nearest magnification keeps edges crisp; mipmaps average to a soft glow far away.
-export function addWindows(mat, { cell, glow }) {
-  const canvas = document.createElement('canvas');
-  canvas.width = WIN_COLS * cell; canvas.height = WIN_ROWS * cell;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = LIT;
-  const padX = cell * 0.27, padY = cell * 0.25; // a window is about 1.4 m by 1.8 m in its 3 m by 3.5 m bay
-  windowPattern('reward-city', WIN_COLS, WIN_ROWS).forEach((row, r) => row.forEach((on, c) => {
-    if (on) ctx.fillRect(c * cell + padX, r * cell + padY, cell - 2 * padX, cell - 2 * padY);
-  }));
-  const map = new THREE.CanvasTexture(canvas);
-  map.wrapS = map.wrapT = THREE.RepeatWrapping;
-  map.colorSpace = THREE.SRGBColorSpace;
-  map.generateMipmaps = true; map.minFilter = THREE.LinearMipmapLinearFilter; map.magFilter = THREE.NearestFilter; // crisp up close, soft glow far away
-  const uniforms = { winMap: { value: map }, winGlow: { value: glow } };
-  mat.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vWp;\nvarying vec3 vWn;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWp = (modelMatrix * vec4(position, 1.0)).xyz;\nvWn = normalize(mat3(modelMatrix) * normal);');
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\nvarying vec3 vWp;\nvarying vec3 vWn;\nuniform sampler2D winMap;\nuniform float winGlow;`)
-      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-        vec3 wn = normalize(vWn);
-        float wall = step(abs(wn.y), 0.5);
-        vec2 wuv = vec2(dot(vWp.xz, vec2(-wn.z, wn.x)) / ${(WIN_COLS * WIN_W).toFixed(1)}, vWp.y / ${(WIN_ROWS * WIN_H).toFixed(1)});
-        totalEmissiveRadiance += texture2D(winMap, wuv).rgb * wall * winGlow;`);
-  };
-  return { dispose() { map.dispose(); } };
 }

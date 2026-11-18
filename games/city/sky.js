@@ -4,7 +4,7 @@ import { SWOOP_MS, PULLBACK_MS } from './director.js';
 // One time of day for map and chase, whatever the page theme: late afternoon. Colours are named here so they are easy to tune.
 const SUN_AZIMUTH = 0.0, SUN_ELEVATION = 0.38; // radians: elevation about 22 degrees, a low warm sun
 export function skyColours() {
-  return { top: '#5E8FC4', bottom: '#F2B27A', sun: '#FFC78A', sunGlow: '#FFC488', hemiSky: '#8FB0E8', hemiGround: '#5A4A40' };
+  return { top: '#3E78C2', mid: '#8DB9EA', bottom: '#E6DCCB', haze: '#C9D8E8', sun: '#FFE9CF', sunGlow: '#FFE6C4', hemiSky: '#D9DEE4', hemiGround: '#8A8A88' };
 }
 
 // The direction towards the sun, a unit vector [x, y, z].
@@ -55,17 +55,6 @@ export function cloudLayout(count) {
     const az = rand() * 2 * Math.PI, el = 0.2 + rand() * 0.5, c = Math.cos(el);
     return { dir: [Math.cos(az) * c, Math.sin(el), Math.sin(az) * c], size: 0.18 + rand() * 0.14 };
   });
-}
-
-// rows of booleans (h rows, w columns): true is a lit window. Deterministic per key; 30% to 40% lit.
-export function windowPattern(seedKey, w, h) {
-  const rand = rng(seedKey), n = w * h;
-  const order = Array.from({ length: n }, (_, i) => i);
-  for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-  const lit = Math.round(n * (0.3 + 0.1 * rand()));
-  const grid = Array.from({ length: h }, () => new Array(w).fill(false));
-  for (const i of order.slice(0, lit)) grid[Math.floor(i / w)][i % w] = true;
-  return grid;
 }
 
 // The heat overlay: full on the map, fading out through the swoop, gone in the chase, back through the pullback.

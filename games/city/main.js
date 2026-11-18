@@ -25,6 +25,8 @@ import { honestReward } from './honest.js';
 import { renderGarage } from './garage-view.js';
 import { raceTracks, raceStateAt, result, togglePick, leaderBlips } from './race.js';
 import { renderRaceBar, showRaceMeters, updateRaceHud, showBanner } from './race-view.js';
+import { LADDER_KEY, cardFor, matchStep, parseRan, markRan, ladderModel } from './ladder.js';
+import { buildLadder, updateLadder } from './ladder-view.js';
 
 const $ = id => document.getElementById(id);
 const signed = n => (n > 0 ? '+' : '') + n;
@@ -152,8 +154,20 @@ function go(event) {
   showRates();
 }
 
+// ---------- The ladder: five steps, each loads a rate card; the steps the player has run are ticked ----------
+let ran = [], ladderButtons = null;
+const ladderRuns = {}; // step id -> { analysis, honest } of its last run this page session
+const loadRan = () => { try { ran = parseRan(localStorage.getItem(LADDER_KEY)); } catch { /* storage blocked: ticks last this visit */ } };
+const saveRan = () => { try { localStorage.setItem(LADDER_KEY, JSON.stringify(ran)); } catch { /* storage blocked */ } };
+function pickStep(id) {
+  if (screen === 'training') return;
+  rewards = cardFor(id); $('train').dataset.stale = 'true';
+  showRates();
+}
+
 // ---------- The rate card ----------
 function showRates() {
+  if (ladderButtons) updateLadder(ladderButtons, { head: $('ladderHead'), text: $('ladderText') }, ladderModel(rewards, ran, ladderRuns), screen === 'training');
   for (const r of rateRows(rewards)) {
     const out = $(r.key + 'Out');
     out.textContent = r.text; out.className = `num tone-${r.tone}`;
@@ -233,6 +247,8 @@ async function train(req) {
     if (!res) return; // a newer run took over
     progress.hidden = true; say('');
     session = recordTry(session, res.analysis);
+    const step = matchStep(req);
+    if (step && !rec) { ran = markRan(ran, step); saveRan(); ladderRuns[step] = { analysis: res.analysis, honest: honestReward(world, req) }; } // the step counts only if the card was not edited
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events);
@@ -336,6 +352,7 @@ function finishRace(run, event) {
 
 // ---------- Wiring ----------
 function build() {
+  loadRan(); ladderButtons = buildLadder($('ladderSteps'), pickStep);
   for (const f of FIELDS) {
     $(f.key + 'Dec').addEventListener('click', () => nudge(f.key, -1));
     $(f.key + 'Inc').addEventListener('click', () => nudge(f.key, 1));
@@ -396,7 +413,7 @@ function build() {
   }));
 }
 
-const controls = () => [...FIELDS.flatMap(f => [$(f.key + 'Dec'), $(f.key + 'Inc')]), $('train'), $('reset')];
+const controls = () => [...FIELDS.flatMap(f => [$(f.key + 'Dec'), $(f.key + 'Inc')]), $('train'), $('reset'), ...ladderButtons.values()];
 const enable = on => controls().forEach(c => { c.disabled = !on; });
 
 function setupChase() {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { skyColours, sunDirection, sunUv, cloudLayout, fogFor, windowPattern, heatOpacity } from '../games/city/sky.js';
+import { skyColours, sunDirection, sunUv, cloudLayout, fogFor, heatOpacity } from '../games/city/sky.js';
 
 describe('skyColours', () => {
   it('is one fixed late-afternoon palette, whatever the page theme', () => {
@@ -10,6 +10,36 @@ describe('skyColours', () => {
     const red = (h) => parseInt(h.slice(1, 3), 16), blue = (h) => parseInt(h.slice(5, 7), 16);
     const { top, bottom } = skyColours();
     expect(red(bottom) - blue(bottom)).toBeGreaterThan(red(top) - blue(top));
+  });
+});
+
+describe('neutral daylight (no orange cast)', () => {
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  it('the sun is warm white, not orange', () => {
+    const [r, g, b] = rgb(skyColours().sun);
+    expect(r).toBeGreaterThanOrEqual(0xF0);
+    expect(g).toBeGreaterThanOrEqual(0xDC);
+    expect(r - b).toBeLessThanOrEqual(0x30);
+  });
+  it('the sky is a clear blue overhead, a lighter blue between, and warm only at the horizon band', () => {
+    const { top, mid, bottom } = skyColours();
+    const [tr, , tb] = rgb(top), [mr, , mb] = rgb(mid), [br, , bb] = rgb(bottom);
+    expect(tb - tr).toBeGreaterThan(60);
+    expect(mb - mr).toBeGreaterThan(20);
+    expect(br - bb).toBeGreaterThan(0);
+    expect(br - bb).toBeLessThan(0x40); // a pale warm band, not orange
+  });
+  it('the haze (fog and lower dome) is a light blue and the sky fill from above is near neutral, so shade is not blue', () => {
+    const [r, , b] = rgb(skyColours().haze);
+    expect(b - r).toBeGreaterThan(10);
+    expect(Math.min(r, b)).toBeGreaterThan(0xB0);
+    const [hr, , hb] = rgb(skyColours().hemiSky);
+    expect(hb - hr).toBeLessThanOrEqual(0x14);
+  });
+  it('the fill from below is neutral grey, so shaded faces keep detail without a tint', () => {
+    const [r, g, b] = rgb(skyColours().hemiGround);
+    expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThanOrEqual(0x14);
+    expect(Math.min(r, g, b)).toBeGreaterThan(0x60);
   });
 });
 
@@ -57,26 +87,6 @@ describe('fogFor', () => {
     const half = fogFor(0.5, 1000, false);
     expect(half.far).toBeGreaterThan(fogFor(1, 1000, false).far);
     expect(half.far).toBeLessThan(fogFor(0, 1000, false).far);
-  });
-});
-
-describe('windowPattern', () => {
-  const lit = (g) => g.flat().filter(Boolean).length / g.flat().length;
-  it('is deterministic for a key and the right size', () => {
-    const a = windowPattern('loop', 8, 16), b = windowPattern('loop', 8, 16);
-    expect(a).toEqual(b);
-    expect(a).toHaveLength(16);
-    expect(a[0]).toHaveLength(8);
-  });
-  it('lights between 20% and 60% of windows', () => {
-    for (const k of ['a', 'b', 'loop', 'tower-7', '12345']) {
-      const f = lit(windowPattern(k, 8, 16));
-      expect(f).toBeGreaterThanOrEqual(0.2);
-      expect(f).toBeLessThanOrEqual(0.6);
-    }
-  });
-  it('differs across keys', () => {
-    expect(windowPattern('a', 8, 16)).not.toEqual(windowPattern('b', 8, 16));
   });
 });
 
