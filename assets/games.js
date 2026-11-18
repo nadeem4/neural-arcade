@@ -1,4 +1,7 @@
 // The one list of games and categories. Pages render from this; adding a game means adding one entry here.
+// Optional game fields: `uses` (concept ids the game teaches), `where` (concept id -> one line on where the game shows it) and
+// `levels` (concept id -> the level number of that game that teaches it). Each concept page shows a "Play this level" link
+// to games/<name>/?level=N for the first game whose `levels` has its id (assets/concept-page.js playLevelHtml).
 export const CATEGORIES = [
   { id: 'how-ai-learns', title: 'How AI learns', lead: 'Two ways a brain gets better: by evolution, and by copying examples.' },
   { id: 'physical-ai', title: 'Physical AI', lead: 'How robots learn to move, sense and act in the physical world.' },
@@ -77,7 +80,6 @@ export const GAMES = [
     added: '2026-11-16', shot: 'games/city/shot.jpg', path: 'games/city/', writeup: 'games/city/how-it-works/', youtube: null, demo: null,
   },
   {
-    // levels (optional): concept id -> the level of this game that teaches it, for deep links like games/treasure-room/?level=3
     id: 'treasure-room', title: 'Treasure Room', category: 'reinforcement-learning',
     lesson: 'One small room, six ideas: an agent, state-action-reward, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.',
     learnsBy: 'Agent, reward, return, policy, value',

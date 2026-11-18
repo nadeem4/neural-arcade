@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-import { conceptById, CONCEPTS } from '../assets/games.js';
-import { videoHtml, gamesHtml, relatedHtml, triesHtml, mountConceptPage, wireTries } from '../assets/concept-page.js';
+import { conceptById, CONCEPTS, GAMES } from '../assets/games.js';
+import { LEVELS } from '../games/treasure-room/levels.js';
+import { videoHtml, gamesHtml, playLevelHtml, relatedHtml, triesHtml, mountConceptPage, wireTries } from '../assets/concept-page.js';
 
 const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['mdp'] };
 
@@ -33,6 +34,44 @@ describe('gamesHtml', () => {
   });
   it('escapes text', () => {
     expect(gamesHtml(pid, [{ ...g, title: 'A<b>' }], '')).toContain('A&lt;b&gt;');
+  });
+});
+
+describe('playLevelHtml', () => {
+  const room = GAMES.find(g => g.id === 'treasure-room');
+  const usingGames = c => GAMES.filter(g => g.uses?.includes(c.id));
+  it('links the concept to its level of the game', () => {
+    const h = playLevelHtml(conceptById('policy'), usingGames(conceptById('policy')), '../../');
+    expect(h).toContain('href="../../games/treasure-room/?level=4"');
+    expect(h).toContain('Play this level: Treasure Room, level 4');
+    expect(h).toContain('class="play-level"');
+  });
+  it('is empty for a concept no game has a level for', () => {
+    expect(playLevelHtml(pid, GAMES, '../../')).toBe('');
+    expect(playLevelHtml(conceptById('reward-design'), usingGames(conceptById('reward-design')), '../../')).toBe('');
+  });
+  it('skips games that use the concept but have no level for it', () => {
+    const h = playLevelHtml(conceptById('agent'), usingGames(conceptById('agent')), '');
+    expect(h).toContain('href="games/treasure-room/?level=1"');
+  });
+  it('the six level concepts each point at their own level number', () => {
+    for (const l of LEVELS) {
+      const h = playLevelHtml(conceptById(l.concept), usingGames(conceptById(l.concept)), '');
+      expect(h, l.concept).toContain(`?level=${l.n}"`);
+      expect(room.levels[l.concept]).toBe(l.n);
+    }
+  });
+  it('escapes the game title', () => {
+    const g = { title: 'A<b>', path: 'g/', levels: { pid: 2 } };
+    expect(playLevelHtml(pid, [g], '')).toContain('A&lt;b&gt;');
+  });
+});
+
+describe('gamesHtml with a level link', () => {
+  it('puts the play link between the heading and the cards, for any concept page', () => {
+    const c = conceptById('mdp');
+    const h = gamesHtml(c, GAMES.filter(g => g.uses?.includes('mdp')), '../../');
+    expect(h).toMatch(/^<h2>See it in the games<\/h2><p class="play-level">.*<\/p><div class="games">/);
   });
 });
 
@@ -107,7 +146,7 @@ describe('concept.css', () => {
   const css = readFileSync(new URL('../assets/concept.css', import.meta.url), 'utf8');
 
   it('defines the classes the builders emit', () => {
-    for (const sel of ['.stage', '.tries', '.part', '.fig', '.game', '.where', '.chip', '.chips']) {
+    for (const sel of ['.stage', '.tries', '.part', '.fig', '.game', '.where', '.chip', '.chips', '.play-level']) {
       expect(css).toContain(sel);
     }
     expect(css).toContain('@media (max-width: 760px)');

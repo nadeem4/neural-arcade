@@ -1,0 +1,25 @@
+/* Treasure Room write-up: the shared write-up styles (assets/story.css) plus this page's grids. */
+
+.fig .grid { display: block; width: 100%; max-width: 360px; aspect-ratio: 1; margin: 0 auto; }
+.minis .grid { max-width: none; border: 1px solid var(--rule); }
+.mini-cap { margin: 6px 0 0 !important; font-size: 13px !important; line-height: 1.35; color: var(--ink-2); }
+.mini.on .grid { outline: 2px solid var(--ink); outline-offset: 2px; }
+.stepper { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 16px 0 0 !important; }
+.stepper span { font-size: 15px; color: var(--ink-2); }
+
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.duo-label { margin: 0 0 8px !important; font-family: var(--sans); font-weight: 600; font-size: 16px !important; letter-spacing: normal; }
+@media (max-width: 640px) { .duo { grid-template-columns: minmax(0, 1fr); } }
+
+.tallies { margin: 16px 0 0; padding-left: 22px; display: grid; gap: 6px; }
+.story .tallies li { font-size: 16px; line-height: 1.5; }
+
+.triples { margin: 0; padding-left: 24px; display: grid; gap: 6px; font-size: 16px; line-height: 1.5; }
+.lesson { font-weight: 700; }
+.lesson small { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+
+.tablewrap { overflow-x: auto; }
+.returns { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.returns th, .returns td { padding: 12px; text-align: right; border-bottom: 1px solid var(--rule); }
+.returns th:first-child { text-align: left; }
+.returns thead th { font-family: var(--sans); font-weight: 600; color: var(--ink-2); }
