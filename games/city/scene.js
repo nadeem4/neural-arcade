@@ -88,7 +88,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   };
   focusShadow(false);
 
-  scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -0.5, cz), mats.farGround, { receive: true }));
+  scene.add(meshOf(new THREE.PlaneGeometry(radius * 12, radius * 12).rotateX(-Math.PI / 2).translate(cx, -3, cz), mats.farGround, { receive: true }));
   // The city's own footing (the grid's extent) is pale concrete; the land beyond it is darker, so the city has an edge and a horizon.
   scene.add(meshOf(new THREE.PlaneGeometry(city.cols * city.cellM, city.rows * city.cellM).rotateX(-Math.PI / 2).translate(city.cols * city.cellM / 2, -0.45, -city.rows * city.cellM / 2), mats.ground, { receive: true }));
   scene.add(meshOf(geoOf(buildFlats(city.water ?? [], 0.2)), mats.water));
