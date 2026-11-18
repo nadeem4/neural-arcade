@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { skyColours, sunDirection, sunUv, cloudLayout, fogFor, windowPattern, heatOpacity } from '../games/city/sky.js';
+import { skyColours, sunDirection, sunUv, cloudLayout, fogFor, heatOpacity } from '../games/city/sky.js';
 
 describe('skyColours', () => {
   it('is one fixed late-afternoon palette, whatever the page theme', () => {
@@ -57,26 +57,6 @@ describe('fogFor', () => {
     const half = fogFor(0.5, 1000, false);
     expect(half.far).toBeGreaterThan(fogFor(1, 1000, false).far);
     expect(half.far).toBeLessThan(fogFor(0, 1000, false).far);
-  });
-});
-
-describe('windowPattern', () => {
-  const lit = (g) => g.flat().filter(Boolean).length / g.flat().length;
-  it('is deterministic for a key and the right size', () => {
-    const a = windowPattern('loop', 8, 16), b = windowPattern('loop', 8, 16);
-    expect(a).toEqual(b);
-    expect(a).toHaveLength(16);
-    expect(a[0]).toHaveLength(8);
-  });
-  it('lights between 20% and 60% of windows', () => {
-    for (const k of ['a', 'b', 'loop', 'tower-7', '12345']) {
-      const f = lit(windowPattern(k, 8, 16));
-      expect(f).toBeGreaterThanOrEqual(0.2);
-      expect(f).toBeLessThanOrEqual(0.6);
-    }
-  });
-  it('differs across keys', () => {
-    expect(windowPattern('a', 8, 16)).not.toEqual(windowPattern('b', 8, 16));
   });
 });
 

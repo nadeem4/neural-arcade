@@ -71,6 +71,63 @@ describe('buildBuildings', () => {
   });
 });
 
+describe('buildBuildings: real heights, UVs, roofs, details', () => {
+  const full = (x, y, w, d, extra = {}) => ({ ring: [[x, y], [x + w, y], [x + w, y + d], [x, y + d], [x, y]], h: 12, minH: null, levels: null, part: false, hasParts: false, roof: 'flat', colour: null, material: null, ...extra });
+  const rangeOf = (g, a) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i < g.positions.length / 3; i++) { const v = a(i); lo = Math.min(lo, v); hi = Math.max(hi, v); } return [lo, hi]; };
+  it('wall UVs run in metres along the wall and up from the base of the part', () => {
+    const g = buildBuildings([full(0, 0, 10, 4, { h: 40, minH: 28 })]);
+    const [u0, u1] = rangeOf(g, (i) => g.wallUv[i * 2]);
+    const [v0, v1] = rangeOf(g, (i) => g.wallUv[i * 2 + 1]);
+    expect(u0).toBe(0); expect(u1).toBeCloseTo(10, 5);
+    expect(v0).toBe(0); expect(v1).toBeCloseTo(12, 5); // 40 - 28
+  });
+  it('a lifted part starts at minH, not the ground', () => {
+    const g = buildBuildings([full(0, 0, 10, 4, { h: 40, minH: 28 })]);
+    expect(rangeOf(g, (i) => g.positions[i * 3 + 1])[0]).toBe(28);
+  });
+  it('an outline with parts is skipped; its parts are drawn instead', () => {
+    const g = buildBuildings([full(0, 0, 50, 50, { h: 99, hasParts: true }), full(0, 0, 10, 10, { h: 20, part: true })]);
+    expect(rangeOf(g, (i) => g.positions[i * 3 + 1])[1]).toBe(20);
+  });
+  it('gabled and pyramidal roofs peak above the eaves, over the middle of the footprint', () => {
+    for (const roof of ['gabled', 'hipped', 'pyramidal']) {
+      const g = buildBuildings([full(0, 0, 10, 8, { h: 20, roof })]);
+      const [, top] = rangeOf(g, (i) => g.positions[i * 3 + 1]);
+      expect(top).toBeGreaterThan(20);
+      expect(top).toBeLessThanOrEqual(26);
+    }
+  });
+  it('a concave footprint with a pitched roof falls back to a flat roof', () => {
+    const L = { ...full(0, 0, 10, 10, { h: 20, roof: 'hipped' }), ring: [[0, 0], [10, 0], [10, 4], [4, 4], [4, 10], [0, 10], [0, 0]] };
+    const g = buildBuildings([L], { roofBoxes: false });
+    expect(rangeOf(g, (i) => g.positions[i * 3 + 1])[1]).toBe(20); // no peak, and under 200 m2 so no parapet
+  });
+  it('big flat roofs get a parapet, small ones do not', () => {
+    const top = (b) => { const g = buildBuildings([b], { roofBoxes: false }); return rangeOf(g, (i) => g.positions[i * 3 + 1])[1]; };
+    expect(top(full(0, 0, 20, 20, { h: 30 }))).toBeGreaterThan(30);
+    expect(top(full(0, 0, 8, 8, { h: 30 }))).toBe(30);
+  });
+  it('rooftop boxes appear on big flat roofs and can be switched off for phones', () => {
+    const b = full(0, 0, 40, 40, { h: 30 });
+    const withBoxes = buildBuildings([b]), without = buildBuildings([b], { roofBoxes: false });
+    expect(withBoxes.indices.length).toBeGreaterThan(without.indices.length);
+  });
+  it('every attribute lines up and has no NaN', () => {
+    const g = buildBuildings([full(0, 0, 40, 30, { h: 50, material: 'glass' }), full(60, 0, 10, 8, { h: 9, roof: 'gabled', colour: 'tan' })]);
+    const n = g.positions.length / 3;
+    expect(g.normals.length).toBe(n * 3); expect(g.wallUv.length).toBe(n * 2); expect(g.colors.length).toBe(n * 3);
+    expect(g.facA.length).toBe(n * 4); expect(g.facB.length).toBe(n * 4);
+    for (const k of ['positions', 'normals', 'wallUv', 'colors', 'facA', 'facB']) for (const v of g[k]) expect(Number.isFinite(v)).toBe(true);
+    for (const i of g.indices) expect(i).toBeLessThan(n);
+  });
+  it('colours vary across a real set of buildings (not one tan)', () => {
+    const g = buildBuildings([0, 1, 2, 3, 4, 5, 6, 7].map((i) => full(i * 30, 0, 20, 20, { h: i < 4 ? 120 : 10 })));
+    const seen = new Set();
+    for (let i = 0; i < g.colors.length; i += 3) seen.add(g.colors.slice(i, i + 3).join());
+    expect(seen.size).toBeGreaterThanOrEqual(4);
+  });
+});
+
 describe('roads', () => {
   const two = { pts: [[0, 0], [20, 0]], w: 8, oneway: 0 };
   it('road strip is a ribbon of the right width', () => {
@@ -130,6 +187,7 @@ describe('real map', () => {
     }
     console.log(`real map: ${verts} vertices, ${tris} triangles, ${Math.round(ms)} ms`);
     expect(verts).toBeLessThan(400000);
+    expect(tris).toBeLessThan(400000); // RV3 budget: the whole city under 400k triangles
     expect(parts.b.indices.length).toBeGreaterThan(0);
     expect(parts.t.length / 3).toBeLessThanOrEqual(600);
     const { radius } = cityBounds(city);

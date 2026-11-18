@@ -1,4 +1,5 @@
 import { mulberry32 } from '../../engine/rng.js';
+import { buildingSpec, drawnBuildings, roofBoxes, linearRgb } from './buildings-model.js';
 
 // Pure geometry for the 3D city: map metres in (x east, y north), typed arrays out (y up, north is -z).
 
@@ -66,27 +67,94 @@ export function buildFlats(rings, y) {
   return { positions: P, indices: I };
 }
 
-export function buildBuildings(buildings) {
-  const positions = [], normals = [], indices = [];
-  for (const { ring, h } of buildings) {
-    const r = open(ring);
+const PARAPET = 0.9, PARAPET_AREA = 200, ROOF_RISE_MAX = 6;
+const BOX_COLOUR = linearRgb('#585b60');
+
+const isConvex = (r) => {
+  let sign = 0;
+  for (let i = 0; i < r.length; i++) {
+    const a = r[i], b = r[(i + 1) % r.length], c = r[(i + 2) % r.length];
+    const z = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+    if (Math.abs(z) < 1e-9) continue;
+    if (sign && Math.sign(z) !== sign) return false;
+    sign = Math.sign(z);
+  }
+  return true;
+};
+
+// Every building as one merged mesh. Per vertex: position, normal, wallUv (metres along the wall, metres up from the base of the part),
+// colors (linear rgb), facA (bay width, floor height, window fill, seed) and facB (shopfront height, window top in metres, glass tint, 0);
+// facade.js reads them to paint windows. Outlines that have parts are skipped (the parts are drawn). Flat roofs of 200 m2 or more get a
+// parapet; big flat roofs also get a few rooftop boxes unless `roofBoxes` is false (phones). Pitched roofs peak over the middle of a convex
+// footprint and fall back to flat otherwise.
+export function buildBuildings(buildings, { roofBoxes: withBoxes = true } = {}) {
+  const positions = [], normals = [], indices = [], wallUv = [], colors = [], facA = [], facB = [];
+  const vert = (x, y, z, n, u, v, col, a, b) => {
+    positions.push(x, y, z); normals.push(n[0], n[1], n[2]); wallUv.push(u, v); colors.push(col[0], col[1], col[2]); facA.push(...a); facB.push(...b);
+  };
+  const quad = (p, n, uv, col, a, b) => {
+    const base = positions.length / 3;
+    for (let k = 0; k < 4; k++) vert(p[k][0], p[k][1], p[k][2], n, uv[k][0], uv[k][1], col, a, b);
+    indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  };
+  const NO_WIN = [1, 3.5, 0, 0], NO_FAC = [0, 0, 0, 0];
+  for (const { b, id } of drawnBuildings(buildings)) {
+    const r = open(b.ring);
     const tri = triangulate(r);
     if (!tri.length) continue;
-    const ccw = signedArea(r) > 0; // map plane
-    let base = positions.length / 3;
-    for (const [x, my] of r) { positions.push(x, h, -my); normals.push(0, 1, 0); }
-    indices.push(...tri.map((i) => base + i));
+    const h = b.h ?? 12, minH = b.minH ?? 0, span = h - minH;
+    const spec = buildingSpec(b, id);
+    const wall = linearRgb(spec.colour), roofCol = wall.map((c) => c * 0.55);
+    const A = [spec.bay, spec.floorH, spec.fill, spec.seed];
+    const area = Math.abs(signedArea(r));
+    const pitched = (b.roof === 'gabled' || b.roof === 'hipped' || b.roof === 'pyramidal') && isConvex(r);
+    const parapet = !pitched && area >= PARAPET_AREA ? PARAPET : 0;
+    const B = [spec.shopH, span, spec.kind === 'glass' ? 1 : 0, 0];
+    const s = signedArea(r) > 0 ? 1 : -1; // counter-clockwise in the map plane or not
+    // Roof: flat at h, or a fan to an apex over the middle.
+    if (pitched) {
+      const cx = r.reduce((t, p) => t + p[0], 0) / r.length, cy = r.reduce((t, p) => t + p[1], 0) / r.length;
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const [x, y] of r) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      const rise = Math.min(ROOF_RISE_MAX, 0.35 * Math.min(x1 - x0, y1 - y0));
+      for (let i = 0; i < r.length; i++) {
+        const [xa, ya] = r[i], [xb, yb] = r[(i + 1) % r.length];
+        const e = [xb - xa, 0, -(yb - ya)], f = [cx - xa, rise, -(cy - ya)];
+        let n = [e[1] * f[2] - e[2] * f[1], e[2] * f[0] - e[0] * f[2], e[0] * f[1] - e[1] * f[0]];
+        if (n[1] < 0) n = n.map((v) => -v);
+        const l = Math.hypot(...n) || 1; n = n.map((v) => v / l);
+        const base = positions.length / 3;
+        vert(xa, h, -ya, n, 0, 0, roofCol, NO_WIN, NO_FAC); vert(xb, h, -yb, n, 0, 0, roofCol, NO_WIN, NO_FAC); vert(cx, h + rise, -cy, n, 0, 0, roofCol, NO_WIN, NO_FAC);
+        indices.push(base, base + 1, base + 2);
+      }
+    } else {
+      const base = positions.length / 3;
+      for (const [x, my] of r) vert(x, h, -my, [0, 1, 0], 0, 0, roofCol, NO_WIN, NO_FAC);
+      indices.push(...tri.map((i) => base + i));
+    }
+    // Walls from minH to the eaves (plus the parapet), and the parapet's inner face.
     for (let i = 0; i < r.length; i++) {
       const [x0, y0] = r[i], [x1, y1] = r[(i + 1) % r.length];
       const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy);
       if (len < 1e-9) continue;
-      // Outward normal in the map plane: right of the edge for CCW, left for CW; then z = -y.
-      const s = ccw ? 1 : -1;
-      const nx = (s * dy) / len, nz = (s * dx) / len;
-      base = positions.length / 3;
-      positions.push(x0, 0, -y0, x1, 0, -y1, x1, h, -y1, x0, h, -y0);
-      for (let k = 0; k < 4; k++) normals.push(nx, 0, nz);
-      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+      const n = [(s * dy) / len, 0, (s * dx) / len]; // outward in the map plane, then z = -y
+      const top = h + parapet;
+      quad([[x0, minH, -y0], [x1, minH, -y1], [x1, top, -y1], [x0, top, -y0]], n, [[0, 0], [len, 0], [len, top - minH], [0, top - minH]], wall, A, B);
+      if (parapet) quad([[x0, h, -y0], [x1, h, -y1], [x1, top, -y1], [x0, top, -y0]], n.map((v) => -v), [[0, 0], [len, 0], [len, parapet], [0, parapet]], roofCol, NO_WIN, NO_FAC);
+    }
+    if (withBoxes && !pitched) {
+      for (const box of roofBoxes(b, id)) {
+        const c = box.corners, top = h + box.h;
+        const mx = (c[0][0] + c[2][0]) / 2, my = (c[0][1] + c[2][1]) / 2;
+        for (let i = 0; i < 4; i++) {
+          const [x0, y0] = c[i], [x1, y1] = c[(i + 1) % 4];
+          const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1;
+          let n = [dy / l, 0, dx / l];
+          if (n[0] * ((x0 + x1) / 2 - mx) - n[2] * ((y0 + y1) / 2 - my) < 0) n = [-n[0], 0, -n[2]];
+          quad([[x0, h, -y0], [x1, h, -y1], [x1, top, -y1], [x0, top, -y0]], n, [[0, 0], [l, 0], [l, box.h], [0, box.h]], BOX_COLOUR, NO_WIN, NO_FAC);
+        }
+        quad(c.map(([x, y]) => [x, top, -y]), [0, 1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], BOX_COLOUR, NO_WIN, NO_FAC);
+      }
     }
   }
   const P = new Float32Array(positions), N = new Float32Array(normals), I = new Uint32Array(indices);
@@ -98,7 +166,7 @@ export function buildBuildings(buildings) {
     const d = (u[1] * w[2] - u[2] * w[1]) * N[a * 3] + (u[2] * w[0] - u[0] * w[2]) * N[a * 3 + 1] + (u[0] * w[1] - u[1] * w[0]) * N[a * 3 + 2];
     if (d < 0) { I[t + 1] = c; I[t + 2] = b; }
   }
-  return { positions: P, normals: N, indices: I };
+  return { positions: P, normals: N, indices: I, wallUv: new Float32Array(wallUv), colors: new Float32Array(colors), facA: new Float32Array(facA), facB: new Float32Array(facB) };
 }
 
 // Ribbon along a polyline, half-width hw, mitred (clamped) at the joints.
