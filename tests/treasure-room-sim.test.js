@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng.js';
-import { makeGrid, stateId } from '../assets/grid.js';
+import { ACTIONS, makeGrid, stateId } from '../assets/grid.js';
 import {
   REWARD, ROOM, START, SLIP, step, transitions, adjacentToPit,
   valueIteration, qValue, greedyPolicy, runPolicy, pathActions,
@@ -34,9 +34,9 @@ describe('treasure room: step', () => {
   it('a wall or the edge keeps you in place and still costs 1', () => {
     const edge = step(ROOM, { x: 0, y: 0 }, UP);
     expect(edge).toMatchObject({ pos: { x: 0, y: 0 }, reward: -1, done: false });
-    const wallBelow = { x: 3, y: 1 };
-    expect(ROOM.cells[0][3]).toBe('#');
-    expect(step(ROOM, wallBelow, UP)).toMatchObject({ pos: wallBelow, reward: -1 });
+    const beside = { x: 3, y: 2 };
+    expect(ROOM.cells[2][4]).toBe('#');
+    expect(step(ROOM, beside, RIGHT)).toMatchObject({ pos: beside, reward: -1 });
   });
   it('slip 0 never touches the rng', () => {
     expect(() => step(ROOM, START, UP, { slip: 0, rng: boom })).not.toThrow();
@@ -70,10 +70,11 @@ describe('treasure room: transitions', () => {
     }
   });
   it('a slip into a wall stays put and still costs 1', () => {
-    // (2,0): choosing UP can slip right into the wall at (3,0)
-    const t = transitions(ROOM, { x: 2, y: 0 }, UP, 0.1);
+    // (3,2): choosing UP can slip right into the wall at (4,2)
+    expect(ROOM.cells[2][4]).toBe('#');
+    const t = transitions(ROOM, { x: 3, y: 2 }, UP, 0.1);
     const right = t.find(o => o.actual === RIGHT);
-    expect(right).toMatchObject({ pos: { x: 2, y: 0 }, reward: -1, done: false });
+    expect(right).toMatchObject({ pos: { x: 3, y: 2 }, reward: -1, done: false });
   });
   it('adjacentToPit is true for the four neighbours only', () => {
     const X = find('X');
@@ -100,7 +101,10 @@ describe('treasure room: value and policy', () => {
     const p = greedyPolicy(ROOM, v, { gamma: 0.9 });
     const run = runPolicy(ROOM, p);
     expect(run.outcome).toBe('treasure');
-    expect(v[stateId(ROOM, START)]).toBeCloseTo(returnOf(run.trace.map(t => t.reward), 0.9), 6);
+    // five steps of -1, then the treasure: -1 - 0.9 - 0.81 - 0.729 - 0.6561 + 10 * 0.9^5
+    expect(run.trace.map(t => t.reward)).toEqual([-1, -1, -1, -1, -1, 10]);
+    expect(v[stateId(ROOM, START)]).toBeCloseTo(1.8098, 4);
+    expect(v[stateId(ROOM, START)]).toBeCloseTo(returnOf([-1, -1, -1, -1, -1, 10], 0.9), 6);
   });
   it('greedy policy is -1 on wall, treasure and pit and walks to the treasure', () => {
     const v = valueIteration(ROOM, { gamma: 0.9 });
@@ -109,8 +113,7 @@ describe('treasure room: value and policy', () => {
       expect(p[stateId(ROOM, { x, y })] === -1).toBe(!isFloor(ROOM, x, y));
     }
     const run = runPolicy(ROOM, p);
-    expect(run.total).toBe(run.trace.reduce((s, t) => s + t.reward, 0));
-    expect(run.total).toBeGreaterThan(0);
+    expect(run.total).toBe(5); // five steps of -1, then +10
   });
   it('ties go to the lowest action index', () => {
     const room = makeGrid(['...', '.S.', '...']);
@@ -124,7 +127,7 @@ describe('treasure room: value and policy', () => {
     expect(s(0.3)).toBeLessThan(0);
     expect(s(0.99)).toBeGreaterThan(s(0.9));
   });
-  it('level 6: the dry route hugs the pit, the icy route avoids it', () => {
+  it('level 6: the dry route hugs the pit by a real margin, the icy route avoids it', () => {
     const gamma = 0.9;
     const route = slip => {
       const v = valueIteration(ROOM, { gamma, slip });
@@ -135,6 +138,19 @@ describe('treasure room: value and policy', () => {
     expect(dry.cells.some(c => adjacentToPit(ROOM, c))).toBe(true);
     expect(icy.cells.some(c => adjacentToPit(ROOM, c))).toBe(false);
     expect(icy.v).toBeLessThan(dry.v);
+    expect(icy.v).toBeCloseTo(-2.259, 2);
+    expect(dry.cells).toHaveLength(7);
+    expect(icy.cells).toHaveLength(9);
+    // dry: the pit-side first move beats the safe route's first move by a real margin, not a tie
+    const vDry = valueIteration(ROOM, { gamma, slip: 0 });
+    const vIcy = valueIteration(ROOM, { gamma, slip: 0.1 });
+    const firstMove = (a, b) => ACTIONS.findIndex(m => m.dx === b.x - a.x && m.dy === b.y - a.y);
+    const hug = firstMove(dry.cells[0], dry.cells[1]);
+    const safe = firstMove(icy.cells[0], icy.cells[1]);
+    expect(hug).not.toBe(safe);
+    expect(qValue(ROOM, vDry, START, hug, gamma)).toBeGreaterThan(qValue(ROOM, vDry, START, safe, gamma) + 0.1);
+    // and on ice the safe first move wins too, by a smaller but real margin
+    expect(qValue(ROOM, vIcy, START, safe, gamma, 0.1)).toBeGreaterThan(qValue(ROOM, vIcy, START, hug, gamma, 0.1) + 0.05);
     const T = find('T');
     for (const r of [dry, icy]) {
       expect(r.cells[0]).toEqual(START);
@@ -149,8 +165,8 @@ describe('treasure room: runs and returns', () => {
     const p = policy();
     expect(runPolicy(ROOM, p, { maxSteps: 1 }).outcome).toBe('timeout');
     const X = find('X');
-    const toPit = new Array(25).fill(RIGHT);
-    const pit = runPolicy(ROOM, toPit, { from: { x: X.x - 1, y: X.y } });
+    const toPit = new Array(25).fill(DOWN);
+    const pit = runPolicy(ROOM, toPit, { from: { x: X.x, y: X.y - 1 } });
     expect(pit.outcome).toBe('pit');
     expect(pit.total).toBe(-10);
     const slippy = seed => runPolicy(ROOM, p, { slip: 0.1, rng: mulberry32(seed) });

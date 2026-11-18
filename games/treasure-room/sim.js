@@ -7,11 +7,11 @@ export const SLIP = 0.1; // each side; icy floor = 2 * SLIP in all
 
 // S start, T treasure, X pit, # wall, . floor (x right, y down)
 export const ROOM = makeGrid([
-  '...#.',
   '.....',
-  '...T.',
-  'X...#',
-  '.S..#',
+  'S....',
+  '..X.#',
+  '.#..T',
+  '.....',
 ]);
 export const START = (() => {
   for (let y = 0; y < ROOM.h; y++) for (let x = 0; x < ROOM.w; x++) if (ROOM.cells[y][x] === 'S') return { x, y };
