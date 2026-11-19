@@ -7,3 +7,8 @@ const PHONE = { shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, facadeDetail: 
 export function tierFor({ phone = false } = {}) {
   return { ...(phone ? PHONE : DESKTOP) };
 }
+
+// Street furniture (scene-furniture.js): treeStep keeps every nth OSM tree, crownBlobs is blobs per crown, lampGlow lights the lamp heads, shadows lets trees and the L cast.
+export function furnitureTier({ phone = false } = {}) {
+  return phone ? { treeStep: 2, crownBlobs: 1, lampGlow: false, shadows: false } : { treeStep: 1, crownBlobs: 3, lampGlow: true, shadows: true };
+}
