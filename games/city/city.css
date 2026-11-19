@@ -235,21 +235,22 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .drawer .btn { height: 36px; padding: 0 12px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: 13px; }
 .drawer-empty { margin: 0; color: #9AA7B8; font-size: 14px; }
 .drawer-empty[hidden] { display: none; }
-.bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; grid-auto-rows: max-content; gap: 10px; overflow-y: auto; }
+.bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; grid-auto-rows: max-content; gap: 10px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3A4A60 transparent; }
 .bay { display: grid; gap: 6px; padding: 16px 14px 12px; position: relative; overflow: hidden; border: 1px solid var(--navy-line); border-radius: 12px; background: var(--navy-soft); }
 .bay-stripe { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
-.bay-stats { display: flex; align-items: baseline; gap: 12px; }
+.bay-stats { white-space: nowrap; display: flex; align-items: baseline; gap: 12px; }
 .bay-earned { font: 700 16px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .bay-earned.pay { color: var(--hud-pay); }
 .bay-earned.fine { color: var(--hud-fine); }
 .bay.empty { border: 2px dashed var(--navy-line); background: none; color: #6F7C8E; text-align: center; padding: 12px; }
 .bay-head { display: flex; align-items: center; gap: 10px; }
 .bay-name { font: 700 17px "Space Grotesk", var(--sans); }
-.bay-try { margin-left: auto; font-size: 12px; color: #9AA7B8; }
+.bay-try { margin-left: auto; white-space: nowrap; font-size: 12px; color: #9AA7B8; }
 .bay-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip-rate { padding: 3px 8px; border-radius: 6px; background: var(--navy); color: #C5CEDA; font: 600 12px var(--sans); }
 .bay-time { font: 700 22px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
-.bay-note { font-size: 13px; color: #9AA7B8; }
+.bay-note { display: none; } /* the chips, time and pay say enough; the note stays out of the drawer so four bays fit */
+.drawer .go.small { height: 36px; }
 .bay-actions { display: flex; gap: 8px; }
 .bay-actions .go { flex: 1; }
 .drawer button:focus-visible { outline: 2px solid var(--hud-taxi); outline-offset: 3px; }
@@ -259,7 +260,10 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .drawer .bay-race { flex: 0 0 auto; }
 .drawer .bay-race[aria-pressed="true"] { background: var(--hud-route); border-color: var(--hud-route); color: #0E1A2B; font-weight: 700; }
 .drawer .bay-race:disabled { opacity: .5; cursor: not-allowed; }
-.drawer .bays { grid-row: 3; } .drawer .racebar { grid-row: 4; }
+.drawer .bays { grid-row: 3; grid-template-columns: 1fr 1fr; } .drawer .racebar { grid-row: 4; } /* two columns: four bays fit without scrolling */
+.drawer { width: min(600px, calc(100vw - 32px)); bottom: 12px; } /* the open Garage takes the bottom bar's place on desktop */
+.play[data-garage="true"] .ratecard { display: none; }
+.play[data-garage="true"] .gbar { display: none; }
 .racebar { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--navy-line); }
 .racebar[hidden] { display: none; }
 .racebar p { margin: 0; font-size: 13px; color: #C5CEDA; }
@@ -284,9 +288,16 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .race-title { font-size: 19px; }
 }
 @media (max-width: 720px) {
-  .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 50svh; padding: 12px; }
-  .bay { padding: 12px 10px 8px; gap: 4px; }
+  .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: 85svh; padding: 10px; gap: 8px; }
+  .drawer .bays { grid-template-columns: 1fr; gap: 8px; padding-bottom: 6px; }
+  .bay { padding: 8px 10px; gap: 4px; }
+  .bay-head svg { width: 54px; height: 27px; } /* a smaller taxi icon, so four bays and the race bar fit a 660 px phone */
+  .drawer .racebar { grid-template-columns: 1fr auto; align-items: center; padding-top: 8px; } /* the line and START RACE side by side */
+  .drawer .racebar p { font-size: 12px; line-height: 1.25; }
+  .bay-chips { display: none; } /* the name and the time say enough on a phone; this keeps four bays on screen */
   .bay-time { font-size: 18px; }
+  .drawer .btn, .drawer .go.small { height: 44px; } /* real tap targets */
+  .bay { grid-template-columns: 1fr auto; align-items: center; } .bay-head { grid-column: 1; grid-row: 1; } .bay-stats { grid-column: 2; grid-row: 1; } .bay-actions { grid-column: 1 / -1; grid-row: 2; gap: 8px; } .bay-try { display: none; } .bay-race-wrap { flex: 1 1 0; min-width: 0; display: flex; } .bay-actions .btn, .bay-actions .go { flex: 1 1 0; min-width: 0; padding: 0 6px; white-space: nowrap; } /* name and time on one row, three full-width buttons below */
   .bay.empty { display: none; }
 }
 #labels span.race-tag { padding: 3px 9px; border-radius: 999px; font: 700 13px "Space Grotesk", var(--sans); background: var(--hud); }

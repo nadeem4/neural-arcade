@@ -231,3 +231,33 @@ describe('city.css', () => {
     expect(read('games/city/garage-view.js')).toContain('analysis.reward');
   });
 });
+
+describe('opening the Garage collapses the rate card (RF5)', () => {
+  const main = read(mainPath);
+  const showGarage = main.slice(main.indexOf('function showGarage'), main.indexOf('function keepTrip'));
+  const inset = main.slice(main.indexOf('function updateInset'), main.indexOf("addEventListener('resize', updateInset)"));
+  it('showGarage marks the play area and re-measures the phone inset', () => {
+    expect(showGarage).toContain("$('play').dataset.garage = String(open)");
+    expect(showGarage).toContain('updateInset()');
+  });
+  it('updateInset gives the phone no inset while the drawer is open, since the hidden card has no offsetTop', () => {
+    expect(inset).toContain("$('garageDrawer').hidden");
+  });
+  it('the rate card is hidden while the garage is open', () => {
+    expect(rules('.play[data-garage="true"] .ratecard')).toMatch(/display:\s*none/);
+  });
+  it('the bottom bar is hidden while the garage is open', () => {
+    expect(rules('.play[data-garage="true"] .gbar')).toMatch(/display:\s*none/);
+  });
+  it('the phone drawer is tall and compact, the desktop drawer has two bay columns', () => {
+    const from = css.indexOf('.drawer { top: auto');
+    const phone = css.slice(from).split(/^\}/m)[0]; // only the phone media block
+    expect(phone).toMatch(/max-height:\s*85svh/);
+    expect(phone).toMatch(/bottom:\s*calc\(8px \+ env\(safe-area-inset-bottom\)\)/); // clears the home indicator
+    expect(phone).toMatch(/\.bay-chips\s*\{\s*display:\s*none/);
+    expect(phone).toMatch(/\.drawer \.btn,[^}]*height:\s*44px/); // real tap targets
+    expect(rules('.bays')).toMatch(/overscroll-behavior:\s*contain/);
+    expect(rules('.bay-note')).toMatch(/display:\s*none/);
+    expect(rules('.drawer .bays')).toContain('grid-template-columns: 1fr 1fr');
+  });
+});
