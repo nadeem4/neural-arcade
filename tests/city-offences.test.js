@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { loadWorld } from '../games/city/sim.js';
 import { tripEvents, tagsFor } from '../games/city/events.js';
 import { routeFrames } from '../games/city/playback.js';
-import { driveTrack } from '../games/city/drive.js';
+import { driveTrack, stateAt } from '../games/city/drive.js';
 import { SWOOP_MS } from '../games/city/director.js';
 import { buildOffences, offenceLabel } from '../games/city/offences.js';
 
@@ -20,7 +20,7 @@ const count = (list, type) => list.filter((o) => o.type === type).length;
 
 describe('buildOffences', () => {
   it('counts match the analysis for each card', () => {
-    for (const id of ['speed', 'walk', 'lights']) {
+    for (const id of ['speed', 'walk', 'lights', 'mile']) {
       const { c, list } = trip(id);
       expect(count(list, 'off'), id).toBe(c.analysis.offTiles);
       expect(count(list, 'red'), id).toBe(c.analysis.redRuns);
@@ -37,6 +37,9 @@ describe('buildOffences', () => {
         expect(o.ms).toBe(SWOOP_MS + (o.i + 1) * track.tickMs);
         expect(o.ms).toBeGreaterThanOrEqual(SWOOP_MS);
         expect(o.ms).toBeLessThanOrEqual(SWOOP_MS + track.total);
+        // The moment the tag pops: the step is behind the taxi at ms, and not 1 ms earlier.
+        expect(stateAt(track, o.ms - SWOOP_MS).stepIndex).toBeGreaterThan(o.i);
+        expect(stateAt(track, o.ms - SWOOP_MS - 1).stepIndex).toBeLessThanOrEqual(o.i);
         expect(o.cell).toBe(step.cell);
         expect(o.x).toBe(track.frames[o.i + 1].x);
         expect(o.z).toBe(track.frames[o.i + 1].z);
