@@ -184,19 +184,21 @@ describe('tagPlace', () => {
     expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBe(400); // plenty of room: unchanged
   });
   it('on a phone with the taxi near, the tag keeps 8 px clear of the roof: in the band under the meters when there is room, else below the taxi', () => {
-    const o = { ...box, phone: true, height: 640, clear: 48 }; // visible tag box: top - 1.5 tagH to top - 0.5 tagH
+    const o = { ...box, phone: true, height: 640 }; // visible tag box: top - 1.5 tagH to top - 0.5 tagH
     const vis = (t) => ({ top: t - 1.5 * box.tagH, bottom: t - 0.5 * box.tagH });
-    for (const taxiY of [360, 420, 450, 520]) for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) { // every slot is 8 px clear of the taxi's box, above or below it, and never over a meter
-      const v = vis(tagPlace({ x: 195, y: taxiY }, slot, o).top);
+    const at = (roof) => ({ x: 195, y: roof - 90, top: roof, bottom: roof + 50 }); // the taxi's screen box, 50 px tall; the anchor y is far above it in a chase view
+    for (const roof of [345, 380, 440, 520]) for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) { // every slot is 8 px clear of the taxi's box, above or below it, and never over a meter
+      const v = vis(tagPlace(at(roof), slot, o).top);
       expect(v.top).toBeGreaterThanOrEqual(box.meterBottom);
-      expect(v.bottom <= taxiY - 48 - 8 || v.top >= taxiY + 48 + 8).toBe(true);
+      expect(v.bottom <= roof - 8 || v.top >= roof + 50 + 8).toBe(true);
     }
-    expect(tagPlace({ x: 195, y: 450 }, 0, o).top).toBe(box.meterBottom + 8 + 1.5 * box.tagH); // band position unchanged when it clears
+    expect(tagPlace(at(440), 0, o).top).toBe(box.meterBottom + 8 + 1.5 * box.tagH); // band position unchanged when it clears
     for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) { // the taxi right under the meters: the tag goes below it, whole, on screen
-      const { top } = tagPlace({ x: 195, y: 360 }, slot, o);
-      expect(vis(top).top).toBeGreaterThanOrEqual(360 + 48 + 8);
+      const { top } = tagPlace(at(345), slot, o);
+      expect(vis(top).top).toBeGreaterThanOrEqual(345 + 50 + 8);
       expect(top).toBeLessThanOrEqual(640);
     }
+    expect(tagPlace({ x: 195, y: 300 }, 0, o).top).toBe(box.meterBottom + 8 + 1.5 * box.tagH); // no box (record mode, a stage with no taxi): the band, as before
   });
   it('with a clearance the tag sits clear of the taxi: above it with a gap, or below when there is no room above', () => {
     const o = { ...box, width: 1280, height: 720, clear: 40 };

@@ -69,15 +69,15 @@ export function layoutTags(tags) {
 
 // Where a tag's anchor goes, in the label layer's pixels. The tag is drawn about 1.5 tag heights above its anchor.
 // Desktop: above the taxi, one slot higher per tag. Phone (phone: true): the taxi's anchor is under the meters, so the tags
-// sit just below them and grow downward; with clear > 0 (the taxi's half height on screen) a tag that would come within 8 px of the taxi's roof goes below the taxi instead. Either way the tag stays inside the screen sideways. Pure.
+// sit just below them and grow downward; when `at` carries the taxi's screen box (at.top, at.bottom) a tag that would come within 8 px of the taxi's roof goes below the taxi instead. Either way the tag stays inside the screen sideways. Pure.
 // With `height` (the label layer's height) the tag also stays inside the screen vertically, for the overhead shots where the taxi can be
 // anywhere: a tag that would rise off the top goes below the taxi instead; clear (px, the drawn taxi's half length) keeps it off the taxi either way (one slot lower per tag), and none is lower than the bottom edge.
 export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0, height = null, clear = 0 }) {
   const half = tagW / 2 + 4;
   const left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
   let top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - clear - slot * TAG_SLOT_PX;
-  if (phone && clear > 0) { // the drawn tag runs from top - 1.5 tagH to top - 0.5 tagH: keep it 8 px off the taxi's roof, else put it below the taxi
-    if (top - 0.5 * tagH > at.y - clear - 8) top = at.y + clear + 8 + 1.5 * tagH + slot * TAG_SLOT_PX;
+  if (phone && at.top !== undefined) { // the drawn tag runs from top - 1.5 tagH to top - 0.5 tagH: keep it 8 px off the taxi's screen box (at.top to at.bottom), else put it below the taxi
+    if (top - 0.5 * tagH > at.top - 8) top = at.bottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX;
     if (height !== null) top = Math.min(top, height - 4);
   }
   if (height !== null && !phone) {

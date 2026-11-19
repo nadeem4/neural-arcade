@@ -17,3 +17,26 @@ describe('RF7b: nothing floats through the end card or race banner (F10, F31)', 
     expect(main).toContain("function clearTags() {");
   });
 });
+
+describe('RF7b: phone tags keep off the taxi', () => {
+  it('the stage reports the drawn taxi\'s screen box with its anchor, which placeTag hands to tagPlace', () => {
+    const scene = read('games/city/scene.js');
+    expect(scene).toContain('taxiBox.setFromObject(taxi)');
+    expect(scene).toMatch(/return \{ x: [^\n]*y: sy\(tmp\), \.\.\.\(top < bottom \? \{ top, bottom \} : \{\}\) \}/);
+  });
+});
+
+describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
+  const hudHtml = html.slice(html.indexOf('<div class="hud">'), html.indexOf('<div class="notes">'));
+  it('the minimap sits in the HUD grid, beside the city score, so no meter runs under it', () => {
+    expect(hudHtml).toContain('id="minimap"');
+    expect(rules('.minimap')).toContain('position: static'); // inside the phone media block: the desktop rule stays absolute above
+    expect(css).toMatch(/\.hud \{[^}]*grid-template-columns: 1fr auto/);
+    expect(css).toMatch(/\.hud \.meter \{[^}]*grid-column: 1 \/ -1/);
+    expect(css).toMatch(/\.hud \.meter-goal \{[^}]*grid-column: 1/);
+  });
+  it('a race has no minimap on a phone, and the finished race drops the counts lines so the banner has clear air under the meters', () => {
+    expect(rules('.play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap')).toContain('display: none');
+    expect(rules('.play[data-screen="raced"] .meter-counts')).toContain('display: none');
+  });
+});

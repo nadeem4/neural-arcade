@@ -216,7 +216,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     if (labelEl) labelEl.append(span);
     return { span, v: new THREE.Vector3(l.x, 45, -l.y) };
   });
-  const tmp = new THREE.Vector3();
+  const tmp = new THREE.Vector3(), corner = new THREE.Vector3(), taxiBox = new THREE.Box3();
   const placeLabels = () => {
     if (!labelEl || !labels.length) return;
     const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
@@ -433,7 +433,11 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     tmp.set(taxi.position.x, 6, taxi.position.z).project(camera);
     if (tmp.z > 1) return null;
     const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
-    return { x: cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width, y: cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height };
+    const sy = (v) => cr.top - br.top + (0.5 - v.y * 0.5) * cr.height;
+    let top = Infinity, bottom = -Infinity; // the drawn taxi's box on screen (its bounding box's corners), so a phone tag can stay off its roof
+    const b = taxiBox.setFromObject(taxi);
+    for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = corner.set(x, y, z).project(camera); if (p.z <= 1) { top = Math.min(top, sy(p)); bottom = Math.max(bottom, sy(p)); } }
+    return { x: cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width, y: sy(tmp), ...(top < bottom ? { top, bottom } : {}) };
   };
   // One frame at time `now`. Every time-dependent value here (elapsed, taxi, camera, lights tick, head bob) derives from `now`, so a manual clock gives pure frames.
   const frame = (now) => {
