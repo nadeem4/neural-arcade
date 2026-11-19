@@ -247,7 +247,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const phase = play ? play.phase : 'map';
     const cut = play && phase === 'chase' && !mapView ? cutAt(cuts, play.clock) : null;
     if (cut) { // an overhead cut: centred on the taxi at the cut's one height, nothing to clip
-      shot = overheadShot([[play.state.x, play.state.z]], { aspect: camera.aspect, spread: cut.spread }); // one height for the whole cut
+      shot = overheadShot([play.state.x, play.state.z], { aspect: camera.aspect, spread: cut.spread }); // one height for the whole cut
     }
     if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
