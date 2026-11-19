@@ -47,6 +47,25 @@ describe('taxiParts', () => {
     expect(wheels.filter((w) => w.front)).toHaveLength(2);
     expect(Math.abs(wheels.find((w) => w.front).pos[2] - wheels.find((w) => !w.front).pos[2])).toBeCloseTo(WHEELBASE, 6);
   });
+  it('the brake and head lamps are real blocks, not thin lines', () => {
+    for (const p of parts.filter((q) => q.role === 'brake' || q.role === 'head')) {
+      expect(p.size[0]).toBeGreaterThanOrEqual(0.3);
+      expect(p.size[1]).toBeGreaterThanOrEqual(0.18);
+      expect(p.size[2]).toBeGreaterThanOrEqual(0.1);
+    }
+  });
+  it('the tyres stand out past the body sides, each in a dark arch, so they show from the chase camera', () => {
+    const body = parts.find((p) => p.role === 'body');
+    const arches = parts.filter((p) => p.role === 'arch');
+    expect(arches).toHaveLength(4);
+    for (const w of parts.filter((p) => p.role === 'wheel')) {
+      expect(Math.abs(w.pos[0]) + w.size[0] / 2).toBeGreaterThan(body.size[0] / 2 + 0.05);
+      expect(arches.some((a) => Math.sign(a.pos[0]) === Math.sign(w.pos[0]) && Math.abs(a.pos[2] - w.pos[2]) < 0.01)).toBe(true);
+    }
+  });
+  it('keeps the part count modest', () => {
+    expect(parts.length).toBeLessThanOrEqual(20);
+  });
   it('is taxi yellow with a dark roof sign', () => {
     expect(TAXI_YELLOW).toBe('#F5B820');
     expect(parts.some((p) => p.colour.toUpperCase() === TAXI_YELLOW)).toBe(true);

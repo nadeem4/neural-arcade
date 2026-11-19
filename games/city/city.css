@@ -166,14 +166,19 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .play[data-screen="driving"] .ratecard, .play[data-screen="done"] .ratecard, .play[data-screen="racing"] .ratecard, .play[data-screen="raced"] .ratecard,
 .play[data-screen="driving"] #train, .play[data-screen="done"] #train, .play[data-screen="racing"] #train, .play[data-screen="raced"] #train { display: none; }
 .play[data-screen="done"] .meter, .play[data-screen="done"] .minimap { display: none; }
+/* Nothing is left in the bottom bar on the end card and the race result: hide it rather than show an empty bar. */
+.play[data-screen="done"] .gbar, .play[data-screen="raced"] .gbar { display: none; }
+/* The end card's buttons stay in view while the rest scrolls. */
+.endcard .end-actions { position: sticky; bottom: -12px; padding: 8px 0 0; background: var(--navy); }
+.racebanner .end-actions { position: static; background: none; }
 
-/* Phone: the rate card and the end card are bottom sheets of at most 35% of the screen, scrolling inside; the map stays visible above. */
+/* Phone: the rate card and the end card are bottom sheets of at most 35% (end card 60%) of the screen, scrolling inside; the map stays visible above. */
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
   .topright .info, .chase { min-height: 44px; height: 44px; }
   .topright .info { width: 44px; }
-  .hud { top: 60px; left: 8px; }
-  .minimap { top: 60px; right: 8px; width: 84px; height: 84px; }
+  .hud { top: 108px; left: 8px; } /* below the two rows of top buttons */
+  .minimap { top: 108px; right: 8px; width: 84px; height: 84px; }
   .meter { min-width: 120px; padding: 8px 12px; }
   .meter-total { font-size: 26px; }
   .meter-goal { padding: 6px 12px; }
@@ -181,7 +186,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .meter-goal .meter-counts { display: none; } /* keeps the second meter small so the map stays visible */
   .ratecard, .endcard { top: auto; left: 8px; right: 8px; width: auto; transform: none; padding: 12px 14px; gap: 8px; }
   .ratecard { bottom: 80px; max-height: 35svh; }
-  .endcard { bottom: 80px; max-height: 35svh; display: flex; flex-direction: column; }
+  .endcard { bottom: 8px; max-height: 60svh; display: flex; flex-direction: column; } /* the bottom bar is hidden on the end card, so it sits at the bottom edge */
   .rates { grid-template-columns: 1fr 1fr; gap: 4px 12px; }
   .ratecard { gap: 6px; padding: 10px 12px; }
   .ratecard h2 { font-size: 13px; }
@@ -213,8 +218,8 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 @media (max-width: 600px) {
   .steps { gap: 4px; }
   .step { min-width: 44px; }
-  .ladder-note { overflow: hidden; }
-  .ladder-note b, .ladder-note span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .ladder-note b, .ladder-note span { display: block; }
   .ratecard .link { min-height: 40px; padding: 10px 0; }
   .ratecard .info { min-width: 40px; min-height: 40px; }
 }

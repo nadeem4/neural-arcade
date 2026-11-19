@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld } from '../games/city/sim.js';
 import { signalState, headingAction, headAxis, headState } from '../games/city/signals.js';
-import { headPlacement, buildSignalHeads, paintLamps } from '../games/city/signal-heads.js';
+import { headPlacement, buildSignalHeads, paintLamps, hideHeads } from '../games/city/signal-heads.js';
 
 const city = {
   cols: 3, rows: 3, cellM: 12, lightPeriod: 8,
@@ -77,6 +77,28 @@ describe('the built heads', () => {
     paintLamps(g.lamps, { 0: 'go', 1: 'stop' });
     expect(sum(colour(0, 'red'))).toBeLessThan(sum(redOn));
     expect(sum(colour(1, 'red'))).toBeGreaterThan(sum(colour(1, 'green')));
+  });
+});
+
+describe('hiding the heads between the chase camera and the taxi', () => {
+  const roads = [{ pts: [[0, 0], [100, 0]], w: 10 }];
+  const g = buildSignalHeads([{ x: 20, y: 7, dir: 90 }, { x: 60, y: 7, dir: 0 }], roads);
+  it('records the world spot and the index ranges of each head, which together cover every index', () => {
+    expect(g.heads).toHaveLength(2);
+    expect(g.heads[0].x).toBeCloseTo(20 - 0, 0);
+    expect(g.heads[0].body[1]).toBe(g.heads[1].body[0]);
+    expect(g.heads[1].body[1]).toBe(g.body.indices.length);
+    expect(g.heads[1].lamps[1]).toBe(g.lamps.indices.length);
+  });
+  it('hides a head by collapsing its triangles, and brings it back; says whether anything changed', () => {
+    const before = [...g.body.indices];
+    expect(hideHeads(g, [1])).toBe(true);
+    const [a, b] = g.heads[1].body;
+    for (let i = a; i < b; i++) expect(g.body.indices[i]).toBe(0);
+    for (let i = 0; i < a; i++) expect(g.body.indices[i]).toBe(before[i]);
+    expect(hideHeads(g, [1])).toBe(false);
+    expect(hideHeads(g, [])).toBe(true);
+    expect([...g.body.indices]).toEqual(before);
   });
 });
 

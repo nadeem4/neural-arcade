@@ -7,7 +7,7 @@ import { ROAD_Y } from './scene-math.js';
 const TRAFFIC_SEED = 1;       // every drive on the same route shows the same cars
 export const CAR_SCALE = 1.5; // the same metres-to-scene scale as the taxi
 const TAIL_DIM = 0.3, TAIL_BRAKE = 1; // linear brightness of the red lamps
-const FLASH_HZ = 6;           // headlamp flash rate while a car is braking hard
+const FLASH_HZ = 4;           // headlamp flash rate while a car is braking hard (slow enough to read as a flash)
 
 // Merges boxes ({ size: [w, h, l], pos: [x, y, z], rgb }) into one geometry with vertex colours. Forward is +z.
 function mergeBoxes(parts) {
@@ -33,7 +33,7 @@ const bodyGeometry = () => mergeBoxes([
   { size: [1.6, 0.45, 2.0], pos: [0, 1.05, -0.2], rgb: [0.09, 0.1, 0.12] },
   ...[[-0.85, 1.3], [0.85, 1.3], [-0.85, -1.3], [0.85, -1.3]].map(([x, z]) => ({ size: [0.2, 0.6, 0.6], pos: [x, 0.3, z], rgb: [0.06, 0.06, 0.07] })),
 ]);
-const lampGeometry = (z) => mergeBoxes([-0.6, 0.6].map((x) => ({ size: [0.4, 0.2, 0.08], pos: [x, 0.65, z], rgb: [1, 1, 1] })));
+const lampGeometry = (z) => mergeBoxes([-0.6, 0.6].map((x) => ({ size: [0.5, 0.3, 0.1], pos: [x, 0.65, z], rgb: [1, 1, 1] })));
 
 // Writes a Y rotation of `h`, uniform scale `s` and translation (x, y, z) into 16 floats at `o`.
 function setPose(arr, o, x, y, z, h, s) {
@@ -101,7 +101,7 @@ export function createTrafficLayer({ tier }) {
         heads.instanceMatrix.needsUpdate = tails.instanceMatrix.needsUpdate = true;
         const hc = heads.instanceColor.array, tc = tails.instanceColor.array;
         for (let i = 0; i < n; i++) {
-          const head = poses.alarm[i] ? (flash ? 1 : 0.1) : 0.7;
+          const head = poses.alarm[i] ? (flash ? 1 : 0.02) : 0.55; // a honking car's lamps go full white then nearly dark
           hc[i * 3] = head; hc[i * 3 + 1] = head * 0.93; hc[i * 3 + 2] = head * 0.7;
           const tail = poses.braking[i] ? TAIL_BRAKE : TAIL_DIM;
           tc[i * 3] = tail; tc[i * 3 + 1] = tail * 0.06; tc[i * 3 + 2] = tail * 0.06;

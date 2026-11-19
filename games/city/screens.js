@@ -1,11 +1,11 @@
-// Which screen the game is on: map (rate card), training, driving, done (end card), racing, raced (race result). No DOM.
+// Which screen the game is on: map (rate card), training, driving, done (end card), racing, raced (race result). No DOM. The 'garage' event (the drawer opens) takes the end card and the race result back to the map.
 const NEXT = {
   map: { train: 'training', replay: 'driving', race: 'racing' },
   training: { trained: 'driving', failed: 'map' },
   driving: { skip: 'done', arrived: 'done', replay: 'driving', race: 'racing' },
   racing: { finished: 'raced', skip: 'raced', train: 'training', replay: 'driving', race: 'racing' },
-  raced: { race: 'racing', replay: 'driving', edit: 'map', train: 'training' },
-  done: { again: 'driving', replay: 'driving', edit: 'map', train: 'training', race: 'racing' },
+  raced: { garage: 'map', race: 'racing', replay: 'driving', edit: 'map', train: 'training' },
+  done: { garage: 'map', again: 'driving', replay: 'driving', edit: 'map', train: 'training', race: 'racing' },
 };
 
 // An event that does not apply on this screen leaves it where it is.

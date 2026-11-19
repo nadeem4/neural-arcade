@@ -147,10 +147,10 @@ describe('cars react to the taxi', () => {
     for (const c of cards) {
       const events = tripEvents(world, c.rewards, c.route);
       const track = driveTrack(routeFrames(world, 12, c.route), events);
-      const t = createTraffic(world, { seed: 1, count: 40, cellM: 12, taxi: taxiOf(events) });
+      const t = createTraffic(world, { seed: 1, count: trafficTier().count, cellM: 12, taxi: taxiOf(events) });
       const p = newPoses(t.count);
       let hits = 0;
-      for (let ms = 0; ms <= track.total; ms += track.tickMs / 4) {
+      for (let ms = 0; ms <= track.total; ms += track.tickMs / 16) {
         const s = stateAt(track, ms);
         t.posesAt(ms / track.tickMs, p);
         for (let i = 0; i < t.count; i++) if (boxesOverlap(s.x, s.z, s.heading, p.x[i], p.z[i], p.h[i])) hits++;
@@ -162,10 +162,10 @@ describe('cars react to the taxi', () => {
     for (const c of cards) {
       const events = tripEvents(world, c.rewards, c.route);
       const track = driveTrack(routeFrames(world, 12, c.route), events);
-      const t = createTraffic(world, { seed: 1, count: 40, cellM: 12, taxi: taxiOf(events) });
+      const t = createTraffic(world, { seed: 1, count: trafficTier().count, cellM: 12, taxi: taxiOf(events) });
       const p = newPoses(t.count);
       let hits = 0;
-      for (let ms = 0; ms <= track.total; ms += track.tickMs / 4) {
+      for (let ms = 0; ms <= track.total; ms += track.tickMs / 16) {
         t.posesAt(ms / track.tickMs, p);
         for (let i = 0; i < t.count; i++) for (let j = i + 1; j < t.count; j++) if (boxesOverlap(p.x[i], p.z[i], p.h[i], p.x[j], p.z[j], p.h[j])) hits++;
       }
@@ -222,6 +222,16 @@ describe('reaction only: the sim is untouched', () => {
 });
 
 describe('poses and tiers', () => {
+  it('a car eases its heading through a corner: no jump between frames, and the turn is smooth at both ends', () => {
+    const t = createTraffic(world, { seed: 1, count: 20, cellM: 12 });
+    const p = newPoses(t.count); let worst = 0, prev = null;
+    for (let k = 0; k < 60; k += 0.05) {
+      t.posesAt(k, p);
+      if (prev) for (let i = 0; i < t.count; i++) { const d = Math.atan2(Math.sin(p.h[i] - prev[i]), Math.cos(p.h[i] - prev[i])); worst = Math.max(worst, Math.abs(d)); }
+      prev = Array.from(p.h);
+    }
+    expect(worst).toBeLessThan(0.5); // even a U-turn (pi) is spread over many 0.05-tick frames; the old early snap moved 0.5+ at once
+  });
   it('poses sit one lane width from their cell centre and stay finite while moving', () => {
     const t = createTraffic(world, { seed: 1, count: 10, cellM: 12 });
     const p = newPoses(10); t.posesAt(0, p);
@@ -239,6 +249,6 @@ describe('poses and tiers', () => {
     const d = trafficTier({ phone: false }), p = trafficTier({ phone: true });
     expect(p.count).toBeLessThan(d.count);
     expect(d.lamps).toBe(true); expect(p.lamps).toBe(false);
-    expect(d.count).toBe(40); expect(p.count).toBe(16);
+    expect(d.count).toBe(90); expect(p.count).toBe(16);
   });
 });

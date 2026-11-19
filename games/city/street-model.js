@@ -79,10 +79,38 @@ export function roadPatches(city) {
   return out;
 }
 
-// All the asphalt: a ribbon per road and a one-lane strip for each road cell the ribbons miss.
+// Where two differently named roads meet or cross: { x, y, r } with r a little over the wider road's half width, so a disc of asphalt
+// fills the pale gaps the two ribbons leave in a wide or skewed junction. Points within DOT_MERGE metres of each other count once.
+const FILL_GROW = 1.25, FILL_TOUCH = 1, DOT_MERGE = 4;
+export function junctionFills(roads) {
+  const segs = [];
+  roads.forEach((r, i) => { for (let k = 0; k < r.pts.length - 1; k++) segs.push({ i, a: r.pts[k], b: r.pts[k + 1], hw: roadWidth(r) / 2 }); });
+  const out = [];
+  for (let m = 0; m < segs.length; m++) for (let n = m + 1; n < segs.length; n++) {
+    const s = segs[m], t = segs[n];
+    if (s.i === t.i || (roads[s.i].name && roads[s.i].name === roads[t.i].name)) continue;
+    const rx = s.b[0] - s.a[0], ry = s.b[1] - s.a[1], qx = t.b[0] - t.a[0], qy = t.b[1] - t.a[1], den = rx * qy - ry * qx;
+    if (Math.abs(den) < 1e-9) continue;
+    const wx = t.a[0] - s.a[0], wy = t.a[1] - s.a[1], u = (wx * qy - wy * qx) / den, v = (wx * ry - wy * rx) / den;
+    const eu = FILL_TOUCH / (Math.hypot(rx, ry) || 1), ev = FILL_TOUCH / (Math.hypot(qx, qy) || 1);
+    if (u < -eu || u > 1 + eu || v < -ev || v > 1 + ev) continue;
+    const x = s.a[0] + rx * Math.min(1, Math.max(0, u)), yy = s.a[1] + ry * Math.min(1, Math.max(0, u)), r = Math.max(s.hw, t.hw) * FILL_GROW;
+    const near = out.find((d) => Math.hypot(d.x - x, d.y - yy) < DOT_MERGE);
+    if (near) near.r = Math.max(near.r, r); else out.push({ x, y: yy, r });
+  }
+  return out;
+}
+
+// All the asphalt: a ribbon per road, a disc at each junction and a one-lane strip for each road cell the ribbons miss.
 export function buildAsphalt(city, y = Y_ROAD) {
   const positions = [], indices = [];
   for (const r of city.roads ?? []) ribbon(r.pts, roadWidth(r) / 2, y, positions, indices);
+  for (const { x, y: jy, r } of junctionFills(city.roads ?? [])) { // an eight-sided fan
+    const base = positions.length / 3;
+    positions.push(x, y, -jy);
+    for (let k = 0; k < 8; k++) positions.push(x + Math.cos((k * Math.PI) / 4) * r, y, -(jy + Math.sin((k * Math.PI) / 4) * r));
+    for (let k = 0; k < 8; k++) indices.push(base, base + 1 + k, base + 1 + ((k + 1) % 8));
+  }
   for (const r of roadPatches(city)) ribbon(r.pts, r.w / 2, y, positions, indices);
   return finishFlat(positions, indices);
 }

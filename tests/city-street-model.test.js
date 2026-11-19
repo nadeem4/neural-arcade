@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
-  roadWidth, roadLanes, buildAsphalt, uncoveredRoadCells, buildRoadMarks, arrowPolys, buildCrosswalks, buildRaisedWalks,
+  roadWidth, roadLanes, buildAsphalt, junctionFills, uncoveredRoadCells, buildRoadMarks, arrowPolys, buildCrosswalks, buildRaisedWalks,
   roadPatches, clipWalks, buildStopLines,
   Y_ROAD, Y_MARK, Y_WALK, WALK_RISE,
 } from '../games/city/street-model.js';
@@ -39,6 +39,32 @@ describe('asphalt', () => {
   it('never patches a cell that is not road', () => {
     const cells = uncoveredRoadCells(city);
     for (const [c, r] of cells) expect(city.kind[r][c]).toBe('r');
+  });
+});
+
+describe('junction fills', () => {
+  const A = { name: 'A', pts: [[-50, 0], [50, 0]], w: 14 }, B = { name: 'B', pts: [[0, -50], [0, 50]], w: 10 };
+  it('puts one disc of asphalt where two differently named roads cross, as wide as the wider road and a little more', () => {
+    const f = junctionFills([A, B]);
+    expect(f).toHaveLength(1);
+    expect(Math.hypot(f[0].x, f[0].y)).toBeLessThan(1e-6);
+    expect(f[0].r).toBeGreaterThanOrEqual(7);
+    expect(f[0].r).toBeLessThanOrEqual(10);
+  });
+  it('counts a T junction, where a side road ends on the main road, once', () => {
+    expect(junctionFills([A, { name: 'C', pts: [[20, 0.4], [20, 60]], w: 7 }])).toHaveLength(1);
+  });
+  it('makes none for roads that do not meet, or two ways of one street', () => {
+    expect(junctionFills([A, { name: 'D', pts: [[0, 30], [50, 30]], w: 7 }])).toHaveLength(0);
+    expect(junctionFills([A, { name: 'A', pts: [[0, -50], [0, 50]], w: 10 }])).toHaveLength(0);
+  });
+  it('the asphalt gains the discs, flat at road height', () => {
+    const city = { cols: 1, rows: 1, cellM: 12, kind: ['b'], roads: [A, B] };
+    const plain = buildAsphalt({ ...city, roads: [A, { ...B, name: 'A' }] });
+    const g = buildAsphalt(city);
+    ok(g);
+    expect(g.positions.length).toBeGreaterThan(plain.positions.length);
+    for (const [, y] of vertsOf(g)) expect(y).toBeCloseTo(Y_ROAD, 5);
   });
 });
 

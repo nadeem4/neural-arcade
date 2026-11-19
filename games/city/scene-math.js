@@ -98,6 +98,18 @@ export function pinFade(camPos, pinPos, near = 20, far = 45) {
   return Math.min(1, Math.max(0, (d - near) / (far - near)));
 }
 
+// Pixels to slide the picture up when a phone bottom sheet covers `sheetPx` of a `viewH` tall stage: half the sheet puts the
+// map centre (and so the drop-off pin) in the middle of the part still visible. At most 40% of the height.
+export const insetOffset = (viewH, sheetPx) => Math.min(Math.max(0, sheetPx), viewH * 0.4) / 2;
+
+// One heat cell: the four corners (x y z each) of a square at height y, pulled in by HEAT_INSET on every side. Neighbouring cells then never share
+// an edge, so no pixel is covered twice by the additive blend and two renders of one frame match exactly (multisampling can disagree on a shared edge).
+export const HEAT_INSET = 0.15;
+export function heatQuad(x, z, half, y = 1.2) {
+  const h = half - HEAT_INSET;
+  return [x - h, y, z - h, x + h, y, z - h, x + h, y, z + h, x - h, y, z + h];
+}
+
 const FIXED = {
   road: '#3A3D42', walk: '#A9A9A4', park: '#5E9A4C', water: '#4F8EC0', mark: '#EDEDE8', centre: '#E6B422',
   ground: '#9B9C98', farGround: '#68705F', building: '#FFFFFF', leaf: '#4E9A48', pin: '#FACC15',

@@ -6,10 +6,8 @@ describe('skyColours', () => {
     expect(skyColours()).toEqual(skyColours());
     for (const k of ['top', 'bottom', 'sun', 'sunGlow']) expect(skyColours()[k]).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
-  it('the horizon is warmer (redder) than the zenith', () => {
-    const red = (h) => parseInt(h.slice(1, 3), 16), blue = (h) => parseInt(h.slice(5, 7), 16);
-    const { top, bottom } = skyColours();
-    expect(red(bottom) - blue(bottom)).toBeGreaterThan(red(top) - blue(top));
+  it('the bottom of the sky is the haze colour, so the horizon meets the fog with no peach band', () => {
+    expect(skyColours().bottom).toBe(skyColours().haze);
   });
 });
 
@@ -21,13 +19,12 @@ describe('neutral daylight (no orange cast)', () => {
     expect(g).toBeGreaterThanOrEqual(0xDC);
     expect(r - b).toBeLessThanOrEqual(0x30);
   });
-  it('the sky is a clear blue overhead, a lighter blue between, and warm only at the horizon band', () => {
+  it('the sky is a clear blue overhead and a lighter blue between, fading to the haze at the horizon', () => {
     const { top, mid, bottom } = skyColours();
     const [tr, , tb] = rgb(top), [mr, , mb] = rgb(mid), [br, , bb] = rgb(bottom);
     expect(tb - tr).toBeGreaterThan(60);
     expect(mb - mr).toBeGreaterThan(20);
-    expect(br - bb).toBeGreaterThan(0);
-    expect(br - bb).toBeLessThan(0x40); // a pale warm band, not orange
+    expect(bb).toBeGreaterThanOrEqual(br); // light blue at the horizon, not warm
   });
   it('the haze (fog and lower dome) is a light blue and the sky fill from above is near neutral, so shade is not blue', () => {
     const [r, , b] = rgb(skyColours().haze);

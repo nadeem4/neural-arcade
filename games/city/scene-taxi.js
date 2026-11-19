@@ -5,7 +5,7 @@ import { taxiParts, wheelAngle, steerAngle } from './taxi-model.js';
 import { ENV_INTENSITY } from './scene-look.js';
 import { ROAD_Y, MARK_Y } from './scene-math.js';
 
-const BRAKE_ON = '#FF2A2A', BRAKE_OFF = '#7A1F1F';
+const BRAKE_ON = '#FF4A3A', BRAKE_OFF = '#6A1818'; // a dim dark red at rest, a bright hot red when braking
 export const TAXI_SCALE = 1.5; // metres to scene units: the 4.2 m model becomes a car about half a 12 m tile wide
 export const TAXI_Y = ROAD_Y;  // the tyres rest on the road surface
 export const SHADOW_Y = MARK_Y + 0.1; // the shadow's height in the scene: just above the lane marks, so neither hides it

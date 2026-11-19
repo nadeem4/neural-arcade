@@ -68,9 +68,9 @@ describe('the note is written only when it changes', () => {
 describe('phone ladder css', () => {
   const css = read('games/city/city.css').replace(/\/\*[\s\S]*?\*\//g, '');
   const phone = css.slice(css.lastIndexOf('@media (max-width: 600px)'));
-  it('keeps one row of 44 px steps and a one-line note', () => {
+  it('keeps one row of 44 px steps and a note that wraps, never cut with an ellipsis', () => {
     expect(phone).toMatch(/\.step\s*\{[^}]*min-width: 44px/);
-    expect(phone).toMatch(/\.ladder-note[^{]*\{[^}]*white-space: nowrap/);
+    expect(phone).not.toMatch(/\.ladder-note[^{]*\{[^}]*(white-space: nowrap|text-overflow)/);
   });
   it('gives Reset and (i) 40 px tap targets', () => {
     expect(phone).toMatch(/\.ratecard \.link\s*\{[^}]*min-height: 40px/);

@@ -48,6 +48,16 @@ describe('nextScreen', () => {
   });
 });
 
+describe('the garage and the end card', () => {
+  it('opening the garage from the end card or the race result leaves for the map, so no card sits behind the drawer', () => {
+    expect(nextScreen('done', 'garage')).toBe('map');
+    expect(nextScreen('raced', 'garage')).toBe('map');
+  });
+  it('opening the garage never interrupts training, a drive or a race', () => {
+    for (const s of ['map', 'training', 'driving', 'racing']) expect(nextScreen(s, 'garage')).toBe(s);
+  });
+});
+
 describe('canToggleView', () => {
   it('only while driving', () => {
     expect(canToggleView('driving')).toBe(true);

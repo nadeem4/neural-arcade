@@ -19,9 +19,9 @@ describe('traffic layer: draw calls and instances', () => {
     const { layer, traffic } = make(false);
     layer.begin(traffic);
     expect(layer.drawCalls).toBe(3);
-    expect(layer.instances).toBe(40);
+    expect(layer.instances).toBe(90);
     expect(layer.group.children).toHaveLength(3);
-    expect(layer.group.children.every((m) => m.isInstancedMesh && m.count === 40)).toBe(true);
+    expect(layer.group.children.every((m) => m.isInstancedMesh && m.count === 90)).toBe(true);
     layer.dispose();
   });
   it('phone draws one instanced mesh, fewer cars and no lamps', () => {
@@ -36,7 +36,7 @@ describe('traffic layer: draw calls and instances', () => {
     const tier = trafficTier({ phone: false });
     const layer = createTrafficLayer({ tier });
     layer.startTrip(world, CITY.cellM, { steps: [{ red: false, wrong: false, from: 1000, cell: 1000 }] });
-    expect(layer.instances).toBe(40);
+    expect(layer.instances).toBe(90);
     expect(layer.group.visible).toBe(true);
     layer.update(2.5);
     layer.dispose();

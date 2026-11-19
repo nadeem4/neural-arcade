@@ -32,7 +32,7 @@ describe('stage', () => {
     stage.playTrip({ track: {}, events: {}, onFrame: () => frames++, onDone: () => done++ });
     expect(done).toBe(1);
     expect(frames).toBe(0);
-    expect(() => { stage.setHeat(new Uint32Array(1)); stage.clearRoute(); stage.setChase(true); stage.setShot('chase'); stage.skipTrip(); stage.setMapView(true); stage.renderAt(0); stage.destroy(); }).not.toThrow();
+    expect(() => { stage.setHeat(new Uint32Array(1)); stage.clearRoute(); stage.setChase(true); stage.setShot('chase'); stage.skipTrip(); stage.setMapView(true); stage.setInset(300); stage.renderAt(0); stage.destroy(); }).not.toThrow();
   });
   it("the fallback stage's renderAt returns the finished map state", () => {
     expect(createFallbackStage(fakeEl(), 'x').renderAt(1234)).toEqual({ phase: 'map', done: true });
