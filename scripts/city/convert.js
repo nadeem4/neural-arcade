@@ -28,6 +28,8 @@
 // the Metra cut in Grant Park. A road in a tunnel (tunnel=yes or a negative layer) is skipped: it is not street level
 // and paints nothing above it. Railway on the ground or below grade (not bridge, not layer 1 and up) is solid x,
 // like a fence, wherever no bridge road crosses it: a taxi cannot drive across a railway trench.
+// A footbridge over rail stays walkable, but a footbridge never turns the street under it into footpath.
+// Slip roads: a one-way *_link way never gives a direction to a cell of a two-way street it runs beside.
 // Cuts: config `cuts` are short walls ([{from, to}] lat/lon) painted x last, for two levels that sit in adjacent cells
 // but that OSM does not join. One cut: street-level North Columbus Drive (ends at node 930257373, which joins only a
 // covered tunnel) lies one cell south of the East Randolph Street bridge deck, so its first row is walled off.

@@ -20,7 +20,7 @@ export const STEP_CAP = 250;
 export const HYPER = { alpha: 0.9, gamma: 0.99, eps0: 1, eps1: 0.05, decayEpisodes: 23000 };
 
 // "Fix the taxi: a legal trip under GOAL_SECONDS s": the honest route's seconds plus 10%, up to a multiple of 5.
-export const GOAL_SECONDS = 125;
+export const GOAL_SECONDS = 85;
 
 const FINES = { off: 20, red: 30, wrong: 30 };
 export const PRESETS = [
