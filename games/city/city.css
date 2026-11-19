@@ -1,7 +1,7 @@
 /* Reward City only: the rest of the page comes from studio.css and assets/game.css. */
 
 /* Slim top bar, then a stage that fills the rest of the screen. */
-:root { --bar: 52px; --fs-xs: 13px; --fs-sm: 14px; --fs-hd: 15px; --fs-md: 16px; --fs-lg: 18px; --fs-xl: 34px; } /* the six type sizes: every font size below is one of these (the offence tag is the one fluid clamp) */
+:root { --bar: 52px; --fs-xs: 13px; --fs-sm: 14px; --fs-hd: 15px; --fs-md: 16px; --fs-lg: 22px; --fs-xl: 34px; } /* the six type sizes: every font size below is one of these (the offence tag is the one fluid clamp) */
 .citybar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; height: var(--bar); padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); background: var(--surface); border-bottom: 1px solid var(--line); }
 .citybar .logo { min-height: 44px; display: inline-flex; align-items: center; font-size: var(--fs-hd); }
 .citybar .sep { color: var(--ink-2); }
@@ -121,7 +121,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .rate .short { display: none; }
 .rate { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: var(--fs-sm); color: #C5CEDA; }
 .stepper { display: inline-flex; align-items: center; gap: 4px; }
-.rstep { width: 36px; height: 36px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 var(--fs-lg)/1 "Space Grotesk", var(--sans); cursor: pointer; }
+.rstep { width: 36px; height: 36px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 var(--fs-md)/1 "Space Grotesk", var(--sans); cursor: pointer; }
 .rstep:disabled { opacity: .35; cursor: not-allowed; }
 .rate output { min-width: 52px; text-align: center; font: 700 var(--fs-lg) "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .tone-fine { color: var(--hud-fine); }
@@ -137,7 +137,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 #progress { width: 140px; }
 .gbar .btn, .endcard .btn { height: 44px; padding: 0 16px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: var(--fs-sm); }
 .gbar .btn[aria-pressed="true"] { background: var(--hud-taxi); color: #141C27; }
-.go { height: 52px; padding: 0 28px; border: 0; border-radius: 12px; background: var(--hud-taxi); color: #141C27; font: 700 var(--fs-lg) "Space Grotesk", var(--sans); letter-spacing: .04em; cursor: pointer; }
+.go { height: 52px; padding: 0 28px; border: 0; border-radius: 12px; background: var(--hud-taxi); color: #141C27; font: 700 var(--fs-md) "Space Grotesk", var(--sans); letter-spacing: .04em; cursor: pointer; }
 .go.small { height: 46px; padding: 0 18px; font-size: var(--fs-hd); letter-spacing: 0; }
 .go:hover { background: #FFD45C; }
 .go:disabled { opacity: .6; cursor: wait; }

@@ -8,7 +8,7 @@ const design = readFileSync(new URL('../DESIGN.md', import.meta.url), 'utf8');
 describe('city.css type scale (F38)', () => {
   const tokens = Object.fromEntries([...css.matchAll(/(--fs-[a-z]+):\s*(\d+)px/g)].map(m => [m[1], Number(m[2])]));
   it('defines exactly the six type-size tokens', () => {
-    expect(tokens).toEqual({ '--fs-xs': 13, '--fs-sm': 14, '--fs-hd': 15, '--fs-md': 16, '--fs-lg': 18, '--fs-xl': 34 });
+    expect(tokens).toEqual({ '--fs-xs': 13, '--fs-sm': 14, '--fs-hd': 15, '--fs-md': 16, '--fs-lg': 22, '--fs-xl': 34 });
   });
   it('sets every font size from a token, in font-size and in the font shorthand', () => {
     const bad = [];
@@ -23,9 +23,9 @@ describe('city.css type scale (F38)', () => {
     expect(css.match(/clamp\(/g).length).toBe(1);
     expect(css).toMatch(/#labels span\.tag \{[^}]*clamp\(/);
   });
-  it('keeps what DESIGN.md says: card headings 15, the main button 18, and DESIGN.md names the tokens', () => {
+  it('keeps what DESIGN.md says: card headings 15, the main button 16, and DESIGN.md names the tokens', () => {
     for (const sel of ['.ratecard h2', '.end-head', '.drawer-head h2']) expect(css.match(new RegExp('\\n' + sel.replace('.', '\\.') + ' \\{[^}]*font: 700 var\\(--fs-hd\\)'))?.[0], sel).toBeTruthy();
-    expect(css).toMatch(/\n\.go \{[^}]*font: 700 var\(--fs-lg\)/);
+    expect(css).toMatch(/\n\.go \{[^}]*font: 700 var\(--fs-md\)/);
     expect(design).toMatch(/--fs-xs.*--fs-sm.*--fs-hd.*--fs-md.*--fs-lg.*--fs-xl/);
   });
 });

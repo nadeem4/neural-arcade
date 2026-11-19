@@ -187,7 +187,7 @@ Canvas code reads colours through `assets/theme.js`, which also reports `dark` (
 - **Headline** (800, clamp(2.4rem, 5vw, 4.2rem), 1): page h1s; game pages cap it at 3.8rem, how it works intros at 64px. Balanced wrapping.
 - **Section** (800, clamp(2rem, 4vw, 3.2rem), 1): home section headings. The game lesson line uses the same voice at clamp(1.6rem, 3.4vw, 2.6rem), max 22ch.
 - **Title** (700, 20px): row and step titles; card and panel headings drop to 15px 700.
-- **Reward City** (`games/city/city.css`) sets every font size from six `--fs-*` tokens: `--fs-xs` 13, `--fs-sm` 14, `--fs-hd` 15 (card and panel headings), `--fs-md` 16, `--fs-lg` 18 (the Train and Go buttons) and `--fs-xl` 34 (big numerals).
+- **Reward City** (`games/city/city.css`) sets every font size from six `--fs-*` tokens: `--fs-xs` 13, `--fs-sm` 14, `--fs-hd` 15 (card and panel headings), `--fs-md` 16, `--fs-lg` 22 (HUD numerals) and `--fs-xl` 34 (big numerals).
 - **Body** (400, 17px, 1.55): default. **Lead** (19px, max 52ch, `ink-2`): the paragraph under an h1. **Reading** (18px, 1.65, 680px column): how it works prose.
 - **Label** (700, 13px, 0.06em, uppercase): brief terms and the home stage's panel heading. Used sparingly.
 - **Numeral** (JetBrains Mono 700, 26px, tabular): stage readouts (20px on phones); dial outputs at 14px; percentages in move bars.
