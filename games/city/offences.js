@@ -2,13 +2,12 @@
 // Tags, record-mode summary.events and later highlights and cuts all read this, so they cannot disagree.
 import { SWOOP_MS } from './director.js';
 
-const NAMES = { off: (park) => (park ? 'park tile' : 'footpath tile'), red: () => 'red light run', wrong: () => 'wrong way' };
-const FREE = { red: 'red light' }; // the free label drops "run"
+const NAMES = { off: () => 'footpath', red: () => 'red light', wrong: () => 'wrong way' }; // the park counts as a footpath here
 
-// The label of one offence: "-20 footpath tile" when the rate fines it, "footpath tile: free" when it does not.
+// The label of one offence: "−20 footpath" when the rate fines it, "footpath: free" when it does not.
 export function offenceLabel(type, rate, park = false) {
   const name = NAMES[type](park);
-  return rate > 0 ? `-${rate} ${name}` : `${FREE[type] ?? name}: free`;
+  return rate > 0 ? `−${rate} ${name}` : `${name}: free`;
 }
 
 // [{ i, ms, type: 'off'|'red'|'wrong', label, cell, x, z, fine, heading, park }] sorted by ms.

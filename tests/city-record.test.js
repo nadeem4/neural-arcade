@@ -120,8 +120,8 @@ describe('runSummary', () => {
   const story = JSON.parse(readFileSync(new URL('../games/city/story.json', import.meta.url), 'utf8'));
   const walk = story.cards.find((c) => c.id === 'walk');
   const offences = [
-    { ms: 2000, type: 'off', label: '-20 footpath tile', x: 1 },
-    { ms: 3000, type: 'red', label: '-5 red light run', x: 2 },
+    { ms: 2000, type: 'off', label: '−20 footpath', x: 1 },
+    { ms: 3000, type: 'red', label: '−5 red light', x: 2 },
   ];
   const input = { card: 'walk', rewards: walk.rewards, analysis: walk.analysis, scared: 3, offences, goalSeconds: GOAL_SECONDS };
   it('has exactly the documented keys and the end card figures', () => {
@@ -142,7 +142,7 @@ describe('runSummary', () => {
     expect(readFileSync(new URL('../games/city/scene.js', import.meta.url), 'utf8')).toContain('offences && offencesWithin(offences, cutMs)');
   });
   it('events are the offences as { ms, type, label }', () => {
-    expect(runSummary(input).events).toEqual([{ ms: 2000, type: 'off', label: '-20 footpath tile' }, { ms: 3000, type: 'red', label: '-5 red light run' }]);
+    expect(runSummary(input).events).toEqual([{ ms: 2000, type: 'off', label: '−20 footpath' }, { ms: 3000, type: 'red', label: '−5 red light' }]);
   });
 });
 
