@@ -192,6 +192,12 @@ describe('city page layout', () => {
     expect(css).toMatch(/\.end-head\s*\{[^}]*text-transform:\s*uppercase/);
     expect(css).toMatch(/\.end-flag\s*\{[^}]*text-transform:\s*none/);
   });
+  it('the race banner keeps its Race done eyebrow first on a phone, where the end card reorders its parts', () => {
+    expect(css).toMatch(/\.racebanner \.end-head\s*\{[^}]*order:\s*-1/);
+  });
+  it('a meter count line that wraps balances its lines, so no lone number sits on the second one', () => {
+    expect(css).toMatch(/\.meter-counts\s*\{[^}]*text-wrap:\s*balance/);
+  });
   it('starts on the map screen', () => {
     expect(html).toMatch(/id="play"[^>]*data-screen="map"/);
   });
