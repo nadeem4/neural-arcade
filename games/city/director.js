@@ -10,9 +10,11 @@ const smooth = (p) => p * p * (3 - 2 * p);
 // under a roof, the camera climbs (CLIMB m a ms) until it clears it, then catches up. That is worked out in fixed steps from the chase end, so
 // the shot is a pure function of p and starts exactly on the chase shot. The view is blended apart from the position: its compass angle the short
 // way round and its pitch (below), so it never spins as the camera passes over the taxi and is never steeper than the steeper of the two shots.
-const STEPS = 160, CATCH_UP = 2, CLIMB = 1, LOOK = 3; // CATCH_UP: ground progress per unit of p, a little over the plain path's own top speed (about 1.75)
+// push(x, z, y) -> [dx, dz] | null (scene-math wallPush): below a roof beside a wall the camera also drifts away from it (DRIFT m a ms), so a pull-back that
+// starts hugging a tower leaves its face instead of rising up it; the drift is gone between those two values of p, long after the camera is over the roofs.
+const STEPS = 160, CATCH_UP = 2, CLIMB = 1, LOOK = 3, DRIFT = 0.25, DRIFT_END = [0.25, 0.5]; // CATCH_UP: ground progress per unit of p, a little over the plain path's own top speed (about 1.75)
 const lookOf = (s) => { const v = s.target.map((x, k) => x - s.pos[k]), r = Math.hypot(...v); return { r, yaw: Math.atan2(v[0], v[2]), pitch: Math.asin(v[1] / r) }; };
-const crane = (chase, map, p, roof, len) => {
+const crane = (chase, map, p, roof, push, len) => {
   if (p <= 0) return chase;
   if (p >= 1) return map;
   const ground = (k) => [chase.pos[0] + (map.pos[0] - chase.pos[0]) * k, chase.pos[2] + (map.pos[2] - chase.pos[2]) * k];
@@ -22,13 +24,16 @@ const crane = (chase, map, p, roof, len) => {
     for (let i = 1; i <= n; i++) if (roof(a[0] + ((b[0] - a[0]) * i) / n, a[1] + ((b[1] - a[1]) * i) / n) > y) return false;
     return true;
   };
-  let k = 0, lift = 0;
+  let k = 0, lift = 0, ox = 0, oz = 0;
   for (let s = 0; s < p - 1e-12;) {
     const h = Math.min(1 / STEPS, p - s), q = smooth((s += h)), next = Math.min(q ** 1.5, k + CATCH_UP * h);
     if (next > k && !clear(k, next, height(q) + lift)) lift += CLIMB * h * len; // blocked: hold and climb
     else { if (next > k) k = next; lift = Math.max(0, lift - CLIMB * h * len, roof(...ground(k)) - height(q)); } // open: move on, and settle back onto the path
+    const [gx, gz] = ground(k), away = push(gx + ox, gz + oz, height(q) + lift);
+    if (away) { ox += away[0] * DRIFT * h * len; oz += away[1] * DRIFT * h * len; }
   }
-  const q = smooth(p), [x, z] = ground(k), pos = [x, height(q) + lift, z];
+  const fade = 1 - smooth(Math.min(1, Math.max(0, (p - DRIFT_END[0]) / (DRIFT_END[1] - DRIFT_END[0]))));
+  const q = smooth(p), [gx, gz] = ground(k), x = gx + ox * fade, z = gz + oz * fade, pos = [x, height(q) + lift, z];
   const a = lookOf(chase), b = lookOf(map), turn = Math.atan2(Math.sin(b.yaw - a.yaw), Math.cos(b.yaw - a.yaw));
   // The view settles on the map's angle by halfway, fast at first (an ease-out), so as the camera rises it looks down at the street, not out at the haze.
   const w = 1 - (1 - Math.min(1, 2 * q)) ** 2;
@@ -37,16 +42,16 @@ const crane = (chase, map, p, roof, len) => {
 };
 
 // The camera for `phase` at `t` ms into it. Under reduced motion a swoop or pullback is its end shot at once. roof: see crane (none by default).
-export function shotAt(phase, t, mapShot, chaseShot, { reduced = false, roof = () => 0 } = {}) {
+export function shotAt(phase, t, mapShot, chaseShot, { reduced = false, roof = () => 0, push = () => null } = {}) {
   switch (phase) {
     case 'chase': return chaseShot;
     case 'swoop': {
       const p = reduced ? 1 : Math.min(1, Math.max(0, t / SWOOP_MS));
-      return crane(chaseShot, mapShot, 1 - p, roof, SWOOP_MS);
+      return crane(chaseShot, mapShot, 1 - p, roof, push, SWOOP_MS);
     }
     case 'pullback': {
       const p = reduced ? 1 : Math.min(1, Math.max(0, t / PULLBACK_MS));
-      return crane(chaseShot, mapShot, p, roof, PULLBACK_MS); // the swoop played backwards
+      return crane(chaseShot, mapShot, p, roof, push, PULLBACK_MS); // the swoop played backwards
     }
     default: return mapShot;
   }
