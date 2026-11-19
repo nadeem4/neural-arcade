@@ -10,7 +10,7 @@ import { goalAt } from './goal.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage, noWebglFlag } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
-import { parseRecord, tripMs, recordApi, runSummary, pruneTags, cardRewards } from './record.js';
+import { parseRecord, tripMs, offencesWithin, recordApi, runSummary, pruneTags, cardRewards } from './record.js';
 import { buildOffences } from './offences.js';
 import { tripEvents, tagsFor, foldTag, layoutTags, TAG_LIFE_MS, tagPlace } from './events.js';
 import { bakePeople } from './people.js';
@@ -277,7 +277,7 @@ function drive(t) {
   $('driveProgress').value = 0;
   startHud(t.events, t.route, t.rewards, t.people);
   t.ended = false;
-  stage.playTrip({ track: t.track, events: t.events, people: t.people, offences: t.offences, onFrame: (st, at, overhead) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at, overhead); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
+  stage.playTrip({ track: t.track, events: t.events, people: t.people, offences: t.offences, driveMs: rec?.maxMs, onFrame: (st, at, overhead) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at, overhead); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
 }
 async function train(req) {
   const progress = $('progress');
@@ -483,15 +483,16 @@ async function startRecord(cfg) {
   await train({ ...rewards });
   if (!trip) { rc.failure = 'training failed'; return; }
   rc.summary = runSummary({ card: cfg.card, rewards: trip.rewards, analysis: trip.analysis, scared: trip.people.scares.length, offences: trip.offences, goalSeconds: GOAL_SECONDS });
-  if (cfg.cam === 'map') stage.setCuts([{ from: SWOOP_MS, to: SWOOP_MS + trip.track.total, spread: CUT_SPREAD_MAX }]); // one overhead cut for the whole drive, after train()
-  if (cfg.cam === 'auto') stage.setCuts(overheadCuts(trip.offences, { introMs: SWOOP_MS, driveMs: trip.track.total }));
-  rc.totalMs = tripMs(trip.track.total);
+  const driveMs = Math.min(cfg.maxms ?? Infinity, trip.track.total); // maxms cuts the drive only
+  if (cfg.cam === 'map') stage.setCuts([{ from: SWOOP_MS, to: SWOOP_MS + driveMs, spread: CUT_SPREAD_MAX }]); // one overhead cut for the whole drive, after train()
+  if (cfg.cam === 'auto') stage.setCuts(overheadCuts(offencesWithin(trip.offences, driveMs), { introMs: SWOOP_MS, driveMs }));
+  rc.totalMs = tripMs(trip.track.total, { maxMs: cfg.maxms, endcard: cfg.endcard });
 }
 
 async function start() {
   let recCfg = null;
   try { recCfg = parseRecord(location.search); } catch (e) { window.__rc = { ready: false, error: e.message, totalMs: 0, fps: 0, seek() {} }; }
-  if (recCfg) { document.body.classList.add('rc-record'); rec = { now: 0, tags: [] }; }
+  if (recCfg) { document.body.classList.add('rc-record'); rec = { now: 0, tags: [], maxMs: recCfg.maxms }; if (recCfg.endcard) document.body.classList.add('rc-endcard'); }
   $('lamp').innerHTML = SUN + MOON;
   wireLamp($('lamp'), () => {});
   build();

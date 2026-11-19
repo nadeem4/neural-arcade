@@ -48,6 +48,12 @@ describe('overheadCuts', () => {
     expect(synth([fake(10000, 0), fake(11000, 60)])[0].spread).toBeCloseTo(30);
     expect(synth([fake(10000, 0), fake(11000, 4000)])[0].spread).toBe(CUT_SPREAD_MAX);
   });
+  it('a cut clipped by a shortened drive (maxms) keeps its spread and ends where the drive ends', () => {
+    const offs = [fake(5000, 0), fake(6000, 60), fake(9000, 0)];
+    const [c] = synth(offs.slice(0, 2), 4000); // the drive ends at 5400; offencesWithin keeps the first two
+    expect(c.to).toBe(5400);
+    expect(c.spread).toBeCloseTo(30);
+  });
   it('cutAt finds the cut holding a time, else null', () => {
     const list = synth([fake(10000)]);
     expect(cutAt(list, 9000)).toBe(list[0]); expect(cutAt(list, 10999)).toBe(list[0]);
@@ -87,13 +93,13 @@ describe('cam wiring', () => {
   });
   it('main applies cam after training: map is one cut over the whole drive (no map view), auto is the offence cuts, and keeps tags on screen', () => {
     const m = src('main.js');
-    expect(m).toMatch(/cfg\.cam === 'map'[^\n]*stage\.setCuts\(\[\{ from: SWOOP_MS, to: SWOOP_MS \+ trip\.track\.total, spread: CUT_SPREAD_MAX \}\]\)/);
+    expect(m).toMatch(/cfg\.cam === 'map'[^\n]*stage\.setCuts\(\[\{ from: SWOOP_MS, to: SWOOP_MS \+ driveMs, spread: CUT_SPREAD_MAX \}\]\)/);
     expect(m).not.toMatch(/cfg\.cam === 'map'[^\n]*setMapView/);
     expect(m).toMatch(/cfg\.cam === 'auto'[^\n]*stage\.setCuts\(overheadCuts\(/);
     expect(m.indexOf('await train(')).toBeLessThan(m.indexOf("cfg.cam === 'map'"));
     expect(m).toMatch(/tagPlace\([^\n]*height: overhead \? lab\.height : null/); // only the overhead shot uses the vertical rule; the default path is as before
     expect(m).toContain('function placeTag(span, at, slot, overhead, box = tagBox())');
-    expect(m).toContain('{ from: SWOOP_MS, to: SWOOP_MS + trip.track.total, spread: CUT_SPREAD_MAX }');
+    expect(m).toContain('{ from: SWOOP_MS, to: SWOOP_MS + driveMs, spread: CUT_SPREAD_MAX }');
   });
   it('in an overhead cut the L, its trains and the trees are hidden, and restored after', () => {
     const f = src('scene-furniture.js'), s = src('scene.js');

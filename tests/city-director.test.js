@@ -58,6 +58,7 @@ describe('timeline', () => {
     expect(timeline(5000, 0)).toEqual({ phase: 'swoop', t: 0 });
     expect(timeline(5000, SWOOP_MS + 100)).toEqual({ phase: 'chase', t: 100 });
     expect(timeline(5000, SWOOP_MS + 5000 + 10)).toEqual({ phase: 'pullback', t: 10 });
+    expect(timeline(3000, SWOOP_MS + 3000)).toEqual({ phase: 'pullback', t: 0 }); // a cut drive (maxms): the pullback starts at intro + driveMs
     expect(timeline(5000, SWOOP_MS + 5000 + PULLBACK_MS).phase).toBe('map');
   });
   it('can skip the swoop and the pullback', () => {
