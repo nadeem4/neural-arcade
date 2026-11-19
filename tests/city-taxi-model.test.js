@@ -97,11 +97,6 @@ describe('heights come from the one road height', () => {
     expect(MARK_Y).toBeGreaterThan(ROAD_Y);
     expect(SHADOW_Y).toBeGreaterThan(MARK_Y);
   });
-  it('scene.js draws the roads and marks at those heights, not literals', () => {
-    const s = src('scene.js');
-    expect(s).toMatch(/buildRoadStrips\(city\.roads \?\? \[\], ROAD_Y\)/);
-    expect(s).toMatch(/buildLaneMarks\(city\.roads \?\? \[\], MARK_Y\)/);
-  });
 });
 
 describe('the contact shadow is made once per maker', () => {
@@ -110,5 +105,15 @@ describe('the contact shadow is made once per maker', () => {
     expect(s.match(/new THREE\.CanvasTexture/g)).toHaveLength(1);
     expect(s).toMatch(/cache\.shadow \?\?= shadowMaterial\(\)/);
     expect(s).toMatch(/m\.map\?\.dispose\(\)/);
+  });
+});
+
+describe('the street surfaces use the same heights', () => {
+  it('street-model road and mark heights are ROAD_Y and MARK_Y, and the shadow clears the crossings', async () => {
+    const { ROAD_Y, MARK_Y } = await import('../games/city/scene-math.js');
+    const { Y_ROAD, Y_MARK, Y_CROSS } = await import('../games/city/street-model.js');
+    const { SHADOW_Y } = await import('../games/city/scene-taxi.js');
+    expect([Y_ROAD, Y_MARK]).toEqual([ROAD_Y, MARK_Y]);
+    expect(SHADOW_Y).toBeGreaterThan(Y_CROSS);
   });
 });

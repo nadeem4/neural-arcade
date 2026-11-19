@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { loadWorld, lightRed } from '../games/city/sim.js';
-import { signalState, signalCorners, headingAction } from '../games/city/signals.js';
-import { cellCentre } from '../games/city/geometry.js';
+import { signalState, headingAction } from '../games/city/signals.js';
 import { routeFrames } from '../games/city/playback.js';
 
 const city = {
@@ -50,15 +49,5 @@ describe('signalState', () => {
   });
   it('is go on a cell with no signal', () => {
     for (let tick = 0; tick < world.period; tick++) expect(signalState(world, 0, Math.PI, tick)).toBe('go');
-  });
-});
-
-describe('signalCorners', () => {
-  it('puts the lamp on a corner of the cell, not mid-road, within one tile', () => {
-    const [cx, cz] = cellCentre(1, 1, city);
-    const { x, z } = signalCorners(world, cell, city.cellM);
-    expect(Math.abs(x - cx)).toBeCloseTo(city.cellM / 2);
-    expect(Math.abs(z - cz)).toBeCloseTo(city.cellM / 2);
-    expect(Math.hypot(x - cx, z - cz)).toBeLessThanOrEqual(city.cellM);
   });
 });

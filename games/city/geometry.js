@@ -1,7 +1,8 @@
-import { mulberry32 } from '../../engine/rng.js';
 import { buildingSpec, drawnBuildings, roofBoxes, linearRgb } from './buildings-model.js';
 
 // Pure geometry for the 3D city: map metres in (x east, y north), typed arrays out (y up, north is -z).
+// Layer heights, bottom to top, so nothing fights: ground -0.5, water 0.2, parks 0.4, footpaths 0.6, road 0.8, road marks and stop lines 1.0,
+// zebra crossings 1.05, raised sidewalks 1.1 (road + 0.3), heat overlay 1.2. The street ones are named in street-model.js.
 
 const open = (ring) => {
   const r = ring.slice();
@@ -174,8 +175,8 @@ export function buildBuildings(buildings, { roofBoxes: withBoxes = true } = {}) 
   return { positions: P, normals: N, indices: I, wallUv: new Float32Array(wallUv), colors: new Float32Array(colors), facA: new Float32Array(facA), facB: new Float32Array(facB) };
 }
 
-// Ribbon along a polyline, half-width hw, mitred (clamped) at the joints.
-function ribbon(pts, hw, y, positions, indices) {
+// The two edges of a ribbon along a polyline, half-width hw, mitred (clamped) at the joints: one [leftX, leftY, rightX, rightY] per point, or null when the line has no length.
+export function ribbonEdges(pts, hw) {
   const n = pts.length;
   const segN = [];
   for (let i = 0; i < n - 1; i++) {
@@ -183,8 +184,8 @@ function ribbon(pts, hw, y, positions, indices) {
     segN.push(l < 1e-9 ? null : [-dy / l, dx / l]);
   }
   const first = segN.find(Boolean);
-  if (!first) return;
-  const base = positions.length / 3;
+  if (!first) return null;
+  const out = [];
   for (let i = 0; i < n; i++) {
     const a = segN[Math.max(0, i - 1)] ?? first, b = segN[Math.min(n - 2, i)] ?? a;
     let mx = a[0] + b[0], my = a[1] + b[1];
@@ -192,15 +193,24 @@ function ribbon(pts, hw, y, positions, indices) {
     if (ml < 1e-6) { mx = a[0]; my = a[1]; } else { mx /= ml; my /= ml; }
     const k = Math.min(2, 1 / Math.max(0.5, mx * a[0] + my * a[1]));
     const [x, py] = pts[i];
-    positions.push(x + mx * hw * k, y, -(py + my * hw * k), x - mx * hw * k, y, -(py - my * hw * k));
+    out.push([x + mx * hw * k, py + my * hw * k, x - mx * hw * k, py - my * hw * k]);
   }
-  for (let i = 0; i < n - 1; i++) {
+  return out;
+}
+
+// Ribbon along a polyline as flat triangles at height y (map y becomes -z), appended to positions and indices.
+export function ribbon(pts, hw, y, positions, indices) {
+  const e = ribbonEdges(pts, hw);
+  if (!e) return;
+  const base = positions.length / 3;
+  for (const [lx, ly, rx, ry] of e) positions.push(lx, y, -ly, rx, y, -ry);
+  for (let i = 0; i < e.length - 1; i++) {
     const l = base + i * 2;
     indices.push(l, l + 1, l + 2, l + 1, l + 3, l + 2);
   }
 }
 
-const finishFlat = (positions, indices) => {
+export const finishFlat = (positions, indices) => {
   const P = new Float32Array(positions), I = new Uint32Array(indices);
   faceUp(P, I);
   return { positions: P, indices: I };
@@ -213,62 +223,6 @@ export function buildRoadStrips(roads, y = 0.05) {
   return finishFlat(positions, indices);
 }
 
-const DASH = 3, GAP = 3, MARK_W = 0.3;
-
-// Dashed centre lines on two-way roads at least 4 m wide.
-export function buildLaneMarks(roads, y = 0.08) {
-  const positions = [], indices = [];
-  for (const r of roads) {
-    if (r.oneway || r.w < 4) continue;
-    let phase = 0; // distance along the road; dash on for the first DASH of each DASH+GAP
-    for (let i = 0; i < r.pts.length - 1; i++) {
-      const [x0, y0] = r.pts[i], [x1, y1] = r.pts[i + 1];
-      const len = Math.hypot(x1 - x0, y1 - y0);
-      let d = 0;
-      while (d < len) {
-        const p = phase % (DASH + GAP);
-        const step = Math.min(len - d, p < DASH ? DASH - p : DASH + GAP - p);
-        if (p < DASH) {
-          const f0 = d / len, f1 = (d + step) / len;
-          ribbon([[x0 + (x1 - x0) * f0, y0 + (y1 - y0) * f0], [x0 + (x1 - x0) * f1, y0 + (y1 - y0) * f1]], MARK_W / 2, y, positions, indices);
-        }
-        d += step; phase += step;
-      }
-    }
-  }
-  return finishFlat(positions, indices);
-}
-
-const pointInRing = (x, y, ring) => {
-  let c = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
-  }
-  return c;
-};
-const TREE_AREA = 120, TREE_CAP = 600;
-
-// x, y, z triples (y = 0), about one tree per 120 m2 of park, at most 600. Same seed, same trees.
-export function treePositions(parks, seed) {
-  const rng = mulberry32(seed);
-  const rings = parks.map(open);
-  const want = rings.map((r) => Math.abs(signedArea(r)) / TREE_AREA);
-  const total = want.reduce((a, b) => a + b, 0);
-  const scale = total > TREE_CAP ? TREE_CAP / total : 1;
-  const out = [];
-  rings.forEach((r, k) => {
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    for (const [x, y] of r) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-    const count = Math.round(want[k] * scale);
-    let placed = 0;
-    for (let tries = 0; placed < count && tries < count * 50 && out.length < TREE_CAP * 3; tries++) {
-      const x = x0 + rng() * (x1 - x0), y = y0 + rng() * (y1 - y0);
-      if (pointInRing(x, y, r)) { out.push(x, 0, -y); placed++; }
-    }
-  });
-  return new Float32Array(out);
-}
 
 // Centre and radius (world x, z) containing every feature, for the camera.
 export function cityBounds(city) {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
-  buildBuildings, buildRoadStrips, buildLaneMarks, buildFlats, treePositions, cityBounds, triangulate, cellCentre,
+  buildBuildings, buildRoadStrips, buildFlats, cityBounds, triangulate, cellCentre,
 } from '../games/city/geometry.js';
 
 const square = (x, y, s, h) => ({ ring: [[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]], h });
@@ -12,14 +12,6 @@ const areaOf = (pos, idx) => {
     a += Math.abs((q[0] - p[0]) * (r[1] - p[1]) - (r[0] - p[0]) * (q[1] - p[1])) / 2;
   }
   return a;
-};
-const inRing = (x, y, ring) => {
-  let c = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
-  }
-  return c;
 };
 
 describe('buildBuildings', () => {
@@ -141,26 +133,6 @@ describe('roads', () => {
     expect(areaOf(g.positions, g.indices)).toBeCloseTo(160, 5);
     for (const i of g.indices) expect(i).toBeLessThan(g.positions.length / 3);
   });
-  it('lane marks are dashed on two-way roads and absent on one-way roads', () => {
-    expect(buildLaneMarks([two]).indices.length).toBeGreaterThan(0);
-    expect(buildLaneMarks([{ ...two, oneway: 1 }]).indices.length).toBe(0);
-    expect(buildLaneMarks([{ ...two, w: 3 }]).indices.length).toBe(0);
-  });
-});
-
-describe('treePositions', () => {
-  const parks = [[[0, 0], [60, 0], [60, 40], [0, 40], [0, 0]]];
-  it('is deterministic, inside the park, about 1 per 120 m2', () => {
-    const a = treePositions(parks, 7), b = treePositions(parks, 7);
-    expect(Array.from(a)).toEqual(Array.from(b));
-    expect(a.length / 3).toBe(20);
-    for (let i = 0; i < a.length; i += 3) expect(inRing(a[i], -a[i + 2], parks[0])).toBe(true);
-    expect(Array.from(treePositions(parks, 8))).not.toEqual(Array.from(a));
-  });
-  it('caps at 600', () => {
-    const big = [[[0, 0], [1000, 0], [1000, 1000], [0, 1000], [0, 0]]];
-    expect(treePositions(big, 1).length / 3).toBe(600);
-  });
 });
 
 describe('cityBounds', () => {
@@ -178,9 +150,8 @@ describe('real map', () => {
     const city = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url)));
     const t0 = performance.now();
     const parts = {
-      b: buildBuildings(city.buildings), r: buildRoadStrips(city.roads), l: buildLaneMarks(city.roads),
+      b: buildBuildings(city.buildings), r: buildRoadStrips(city.roads),
       f: buildFlats([...city.parks, ...city.water], 0), p: buildRoadStrips(city.paths),
-      t: treePositions(city.parks, 1),
     };
     const ms = performance.now() - t0;
     let verts = 0, tris = 0;
@@ -194,7 +165,6 @@ describe('real map', () => {
     expect(verts).toBeLessThan(400000);
     expect(tris).toBeLessThan(400000); // RV3 budget: the whole city under 400k triangles
     expect(parts.b.indices.length).toBeGreaterThan(0);
-    expect(parts.t.length / 3).toBeLessThanOrEqual(600);
     const { radius } = cityBounds(city);
     expect(radius).toBeGreaterThan(100);
   });
