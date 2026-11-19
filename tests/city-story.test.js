@@ -26,6 +26,17 @@ describe('the recorded run behind the Reward City write-up', () => {
     for (const c of saved.cards) expect(checkPromise(c.id, c.analysis, legal), c.id).toBe(true);
   });
 
+  it('records what the city wanted for each card: legal scores highest, the pay winner never arrives', () => {
+    const by = Object.fromEntries(saved.cards.map(c => [c.id, c.city]));
+    for (const c of saved.cards) expect(c.city.score, c.id).toBeGreaterThanOrEqual(0);
+    expect(by.legal.score).toBe(100);
+    expect(by.legal.onTime).toBe(true);
+    expect(by.mile.arrived).toBe(false);
+    expect(by.mile.score).toBe(0);
+    for (const id of ['speed', 'walk', 'lights']) expect(by[id].score, id).toBeLessThan(by.legal.score);
+    expect(by.speed.scared).toBeGreaterThanOrEqual(0);
+  });
+
   it('records card 1 heat at four snapshots, one digit per cell', () => {
     expect(saved.learning.episodes).toEqual([1, 10, 100, EPISODES]);
     expect(saved.learning.heat.length).toBe(4);
@@ -45,8 +56,10 @@ describe('the recorded run behind the Reward City write-up', () => {
 
 describe('figureModel', () => {
   const f = figureModel(saved);
-  it('returns four figures with non-empty draw lists', () => {
-    expect(Object.keys(f)).toEqual(['fig1', 'fig2', 'fig3', 'fig4']);
+  it('returns five figures with non-empty draw lists', () => {
+    expect(Object.keys(f)).toEqual(['fig1', 'fig2', 'fig3', 'fig4', 'fig5']);
+    expect(f.fig5.map(r => r.id)).toEqual(PRESETS.map(p => p.id));
+    expect(f.fig5.map(r => r.score)).toEqual(saved.cards.map(c => c.city.score));
     expect(f.fig1.tiles.length).toBeGreaterThan(0);
     expect(f.fig1.signals.length).toBeGreaterThan(0);
     expect(f.fig2.snapshots.length).toBe(4);

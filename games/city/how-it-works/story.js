@@ -98,6 +98,15 @@ for (const c of [M.fig4.loop, M.fig4.legal]) {
   add(() => drawMap(cv, M.fig1, { dim: 0.55, route: c.polyline }));
 }
 
+// ---------- Fig. 5: what the city wanted, per card ----------
+// Plain bars, not a canvas: a score out of 100 for each of the five cards.
+for (const r of M.fig5) {
+  const li = document.createElement('li');
+  const note = !r.arrived ? 'never arrived' : `${r.seconds} s${r.scared ? `, scared ${r.scared}` : ''}`;
+  li.innerHTML = `<span class="score-name">${nameOf(r.id)}</span><span class="score-bar" role="img" aria-label="${r.score} out of 100"><i style="width:${r.score}%"></i></span><span class="score-num"><b>${r.score}</b> <small>${note}</small></span>`;
+  $('cityScores').append(li);
+}
+
 $('seed').textContent = S.seed;
 const counts = M.fig2.snapshots.map(sn => sn.episode.toLocaleString('en'));
 $('snaps').textContent = `${counts.slice(0, -1).join(', ')} and ${counts.at(-1)}`;

@@ -21,5 +21,6 @@ export function figureModel(story) {
     fig2: { cols, rows, snapshots: story.learning.episodes.map((episode, i) => ({ episode, digits: heatRows(story.learning.heat[i]) })) },
     fig3: [0, 1, 2].map(i => drawn(card(i))),
     fig4: { loop: drawn(card(4)), legal: drawn(card(3)) },
+    fig5: story.cards.map(c => ({ id: c.id, score: c.city.score, scared: c.city.scared, arrived: c.city.arrived, onTime: c.city.onTime, seconds: c.analysis.seconds })),
   };
 }

@@ -29,3 +29,10 @@
 .credit a { color: var(--ink); }
 .lesson { font-weight: 700; }
 .lesson small { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+
+.scores { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.scores li { display: grid; grid-template-columns: minmax(0, 10rem) minmax(0, 1fr) minmax(0, 11rem); gap: 12px; align-items: center; font-size: 15px; }
+.score-bar { height: 12px; background: var(--rule); border-radius: 6px; overflow: hidden; }
+.score-bar i { display: block; height: 100%; background: var(--ink); }
+.score-num small { color: var(--ink-2); }
+@media (max-width: 560px) { .scores li { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .score-name { grid-column: 1 / -1; font-weight: 600; } }
