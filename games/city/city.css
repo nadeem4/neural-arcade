@@ -235,7 +235,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .drawer .btn { height: 36px; padding: 0 12px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: 13px; }
 .drawer-empty { margin: 0; color: #9AA7B8; font-size: 14px; }
 .drawer-empty[hidden] { display: none; }
-.bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; grid-auto-rows: max-content; gap: 10px; overflow-y: auto; }
+.bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; grid-auto-rows: max-content; gap: 10px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3A4A60 transparent; }
 .bay { display: grid; gap: 6px; padding: 16px 14px 12px; position: relative; overflow: hidden; border: 1px solid var(--navy-line); border-radius: 12px; background: var(--navy-soft); }
 .bay-stripe { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
 .bay-stats { white-space: nowrap; display: flex; align-items: baseline; gap: 12px; }
@@ -288,9 +288,12 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .race-title { font-size: 19px; }
 }
 @media (max-width: 720px) {
-  .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 85svh; padding: 12px; }
-  .drawer .bays { grid-template-columns: 1fr; }
-  .bay { padding: 12px 10px 8px; gap: 4px; }
+  .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: 85svh; padding: 10px; gap: 8px; }
+  .drawer .bays { grid-template-columns: 1fr; gap: 8px; padding-bottom: 6px; }
+  .bay { padding: 8px 10px; gap: 4px; }
+  .bay-head svg { width: 54px; height: 27px; } /* a smaller taxi icon, so four bays and the race bar fit a 660 px phone */
+  .drawer .racebar { grid-template-columns: 1fr auto; align-items: center; padding-top: 8px; } /* the line and START RACE side by side */
+  .drawer .racebar p { font-size: 12px; line-height: 1.25; }
   .bay-chips { display: none; } /* the name and the time say enough on a phone; this keeps four bays on screen */
   .bay-time { font-size: 18px; }
   .drawer .btn, .drawer .go.small { height: 44px; } /* real tap targets */

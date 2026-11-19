@@ -250,10 +250,13 @@ describe('opening the Garage collapses the rate card (RF5)', () => {
     expect(rules('.play[data-garage="true"] .gbar')).toMatch(/display:\s*none/);
   });
   it('the phone drawer is tall and compact, the desktop drawer has two bay columns', () => {
-    const phone = css.slice(css.indexOf('.drawer { top: auto'));
+    const from = css.indexOf('.drawer { top: auto');
+    const phone = css.slice(from).split(/^\}/m)[0]; // only the phone media block
     expect(phone).toMatch(/max-height:\s*85svh/);
+    expect(phone).toMatch(/bottom:\s*calc\(8px \+ env\(safe-area-inset-bottom\)\)/); // clears the home indicator
     expect(phone).toMatch(/\.bay-chips\s*\{\s*display:\s*none/);
     expect(phone).toMatch(/\.drawer \.btn,[^}]*height:\s*44px/); // real tap targets
+    expect(rules('.bays')).toMatch(/overscroll-behavior:\s*contain/);
     expect(rules('.bay-note')).toMatch(/display:\s*none/);
     expect(rules('.drawer .bays')).toContain('grid-template-columns: 1fr 1fr');
   });
