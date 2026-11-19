@@ -34,6 +34,18 @@ export function raceShot(a, b, { fov = 55 } = {}) {
   return { pos: [mx - fx * back, up, mz - fz * back], target: [mx, 1, mz], fov };
 }
 
+// The overhead footage shot: high above the middle of `points` ([[x, z], ...]), a little south of straight down so north stays up
+// and tall buildings lean away from the taxi. High enough that the spread plus a margin of road fits the screen (aspect: width / height).
+const OVERHEAD = { fov: 50, pad: 30, tilt: 0.12, min: 60, max: 260 };
+export function overheadShot(points, { aspect = 1.6 } = {}) {
+  const xs = points.map((p) => p[0]), zs = points.map((p) => p[1]);
+  const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, t = Math.tan((OVERHEAD.fov * Math.PI) / 360);
+  const need = Math.max(((x1 - x0) / 2 + OVERHEAD.pad) / (t * aspect), ((z1 - z0) / 2 + OVERHEAD.pad) / t);
+  const h = Math.min(OVERHEAD.max, Math.max(OVERHEAD.min, need));
+  return { pos: [cx, h, cz + h * OVERHEAD.tilt], target: [cx, 0, cz], fov: OVERHEAD.fov };
+}
+
 // Which phase `ms` into a trip of `driveMs` falls in. swoop:false starts straight in the chase view and ends without a pullback.
 export function timeline(driveMs, ms, { swoop = true } = {}) {
   const intro = swoop ? SWOOP_MS : 0, outro = swoop ? PULLBACK_MS : 0;

@@ -172,4 +172,15 @@ describe('tagPlace', () => {
     }
     expect(tagPlace({ x: 195, y: 300 }, 1, { ...box, phone: true }).top - tagPlace({ x: 195, y: 300 }, 0, { ...box, phone: true }).top).toBe(TAG_SLOT_PX);
   });
+  it('with a screen height, a tag near the top edge goes below the taxi instead, and none leaves the screen', () => {
+    const o = { ...box, width: 1280, height: 720 };
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) {
+      const { top } = tagPlace({ x: 600, y: 20 }, slot, o);
+      expect(top - 1.5 * box.tagH).toBeGreaterThanOrEqual(0);
+      expect(top).toBeLessThanOrEqual(720);
+      const low = tagPlace({ x: 600, y: 715 }, slot, o).top;
+      expect(low).toBeLessThanOrEqual(720);
+    }
+    expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBe(400); // plenty of room: unchanged
+  });
 });

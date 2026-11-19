@@ -4,7 +4,7 @@ import { SWOOP_MS, PULLBACK_MS } from './director.js';
 import { endCardModel } from './endcard.js';
 import { TAG_LIFE_MS } from './events.js';
 
-// Parse the query string. Returns null when not recording, else { card, fps }.
+// Parse the query string. Returns null when not recording, else { card, fps, cam } (cam: default, map or auto).
 export function parseRecord(search) {
   const q = new URLSearchParams(search);
   if (q.get('record') !== '1') return null;
@@ -13,7 +13,9 @@ export function parseRecord(search) {
   if (!PRESETS.some(p => p.id === card)) throw new Error(`unknown card: ${card}`);
   const fps = q.has('fps') ? Number(q.get('fps')) : 30;
   if (!(fps > 0)) throw new Error(`bad fps: ${q.get('fps')}`);
-  return { card, fps };
+  const cam = q.get('cam') ?? 'default';
+  if (!['default', 'map', 'auto'].includes(cam)) throw new Error(`bad cam: ${cam}`);
+  return { card, fps, cam };
 }
 
 // The rewards of a preset card, as a fresh object.
