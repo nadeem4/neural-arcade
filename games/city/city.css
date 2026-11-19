@@ -176,6 +176,14 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   body:not(.rc-record) .end-stats > div:first-child small { white-space: nowrap; }
   body:not(.rc-record) .endcard .receipt .row { padding: 2px 0; }
   body:not(.rc-record) .end-verdict { padding: 10px 14px; }
+  /* the hint is what the player must read: it comes straight under the stats, the receipt after the legal-route lines, the buttons last (as on the phone) */
+  body:not(.rc-record) .endcard .end-stats { order: 1; }
+  body:not(.rc-record) .endcard .info-text { order: 1; }
+  body:not(.rc-record) .endcard .end-verdict { order: 2; }
+  body:not(.rc-record) .endcard .end-honest { order: 3; }
+  body:not(.rc-record) .endcard .receipt { order: 4; }
+  body:not(.rc-record) .endcard .share-line { order: 5; }
+  body:not(.rc-record) .endcard .end-actions { order: 6; }
 }
 .toast { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 4; margin: 0; padding: 10px 16px; border-radius: 12px; background: var(--navy); color: #E8EDF4; font: 600 14px var(--sans); }
 .toast[hidden] { display: none; }
@@ -222,6 +230,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .hud .meter-goal { grid-column: 1; align-self: start; }
   .minimap { position: static; grid-column: 2; grid-row: 2; width: 84px; height: 84px; } /* beside the city score, so no meter runs under it */
   .play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap { display: none; }
+  .play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar { display: none; } /* neither race meter has a bar, so the two boxes are the same height */
   .play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts { display: none; } /* the result banner says the same; two short meters side by side keep 8 px clear of the banner and cover less of the cars */
   .play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud { grid-template-columns: 1fr 1fr; justify-items: stretch; }
   .play[data-screen="racing"] .hud .meter, .play[data-screen="raced"] .hud .meter { grid-column: auto; }
@@ -364,6 +373,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 body.rc-record .citybar, body.rc-record footer, body.rc-record main > :not(#play),
 body.rc-record .ratecard, body.rc-record #bar, body.rc-record #endcard, body.rc-record #garageDrawer, body.rc-record #raceBar,
 body.rc-record #raceBanner, body.rc-record #toast, body.rc-record .notes, body.rc-record .topright { display: none !important; }
+body.rc-record .meter .info, body.rc-record #info-meters { display: none !important; } /* no (i) in footage */
 body.rc-record { margin: 0; overflow: hidden; }
 body.rc-record .play { position: fixed; inset: 0; width: 100vw; height: 100vh; min-height: 0; }
 body.rc-record #stage { width: 100vw; height: 100vh; }

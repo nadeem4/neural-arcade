@@ -93,7 +93,7 @@ function hudFrame(state, at, overhead) {
   hud.wasOverhead = !!overhead;
   const m = meterAt(hud.events, state.progress);
   setText($('meterTotal'), meterText(m.total));
-  $('meterTotal').className = `meter-total tone-${m.total < 0 ? 'fine' : m.total > 0 ? 'pay' : 'zero'}`;
+  $('meterTotal').className = rec ? 'meter-total' : `meter-total tone-${m.total < 0 ? 'fine' : m.total > 0 ? 'pay' : 'zero'}`; // footage keeps the taxi yellow
   setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · footpath ${m.counts.off} · red light ${m.counts.red} · wrong way ${m.counts.wrong}`);
   setBar($('meterBar'), payFraction(m.total, hud.range));
   const g = goalAt(hud.events, hud.people.scaresAt(Math.floor(state.progress)), state.progress, GOAL_SECONDS);
@@ -167,9 +167,22 @@ function toast(text) {
   t.textContent = text; t.hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
 }
+// The (i) buttons: each opens the text(s) named in its aria-controls. infoOpen lists the open ones, oldest first.
+const infoOpen = [];
+const infoIds = btn => btn.getAttribute('aria-controls').split(' ');
+const visibleInfo = () => infoOpen.filter(b => b.getClientRects().length > 0);
+function setInfo(btn, open) {
+  btn.setAttribute('aria-expanded', String(open));
+  infoIds(btn).forEach(id => { $(id).hidden = !open; });
+  const i = infoOpen.indexOf(btn);
+  if (i >= 0) infoOpen.splice(i, 1);
+  if (open) infoOpen.push(btn);
+}
+function closeHiddenInfo() { infoOpen.filter(b => b.getClientRects().length === 0).forEach(b => setInfo(b, false)); }
 function go(event) {
   screen = nextScreen(screen, event);
   $('play').dataset.screen = screen;
+  closeHiddenInfo();
   const busy = screen === 'training';
   $('endcard').hidden = screen !== 'done';
   $('barDrive').hidden = !canToggleView(screen);
@@ -422,7 +435,7 @@ function build() {
     $(f.key + 'Inc').addEventListener('click', () => nudge(f.key, 1));
   }
   $('train').addEventListener('click', () => { sound.unlock(); showStage(); train({ ...rewards }); });
-  $('stopTrain').addEventListener('click', () => { $('progress').hidden = true; toMap('failed'); });
+  $('stopTrain').addEventListener('click', () => { $('progress').hidden = true; toMap('failed'); $('train').focus(); }); // the focused button just hid: focus goes to Train
   $('reset').addEventListener('click', () => { rewards = defaultRewards(); $('train').dataset.stale = 'true'; showRates(); });
   $('skip').addEventListener('click', () => {
     if (raceRun) { raceRun.skipped = true; stage.skipTrip(); finishRace(raceRun, 'skip'); return; }
@@ -468,14 +481,10 @@ function build() {
     }
   });
   document.querySelectorAll('.info-text[data-info]').forEach(p => { p.textContent = INFO[p.dataset.info]; });
-  document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', () => {
-    const open = btn.getAttribute('aria-expanded') !== 'true';
-    btn.setAttribute('aria-expanded', String(open));
-    btn.getAttribute('aria-controls').split(' ').forEach(id => { $(id).hidden = !open; });
-  }));
+  document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', () => setInfo(btn, btn.getAttribute('aria-expanded') !== 'true')));
   document.addEventListener('keydown', e => { if (e.key !== 'Escape') return;
-    const btn = document.querySelector('.info[aria-expanded="true"]');
-    if (btn) btn.click(), btn.focus();
+    const btn = visibleInfo().find(b => b === document.activeElement || infoIds(b).some(id => $(id).contains(document.activeElement))) ?? visibleInfo().pop(); // the open (i) that holds focus, else the last opened
+    if (btn) { setInfo(btn, false); btn.focus(); }
   });
 }
 

@@ -67,6 +67,17 @@
       <button class="link" type="button" id="reset">Back to step 1</button>
     </aside>
 
+    <div class="gbar" id="bar">
+      <progress id="progress" max="100" value="0" aria-label="Training progress" hidden></progress>
+      <button class="go" type="button" id="train">Train and drive</button>
+      <button class="btn" type="button" id="stopTrain" aria-label="Stop training" hidden>Stop</button>
+      <div class="bar-drive" id="barDrive" hidden>
+        <button class="btn ibtn" type="button" id="viewToggle" aria-pressed="false" aria-label="Map view" title="Map view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></svg></button>
+        <progress id="driveProgress" max="100" value="0" aria-label="Trip progress"></progress>
+        <button class="btn ibtn" type="button" id="skip" aria-label="Skip to the end" title="Skip to the end"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 7-10 7zM19 5v14"/></svg></button>
+      </div>
+    </div>
+
     <div class="topright">
       <button class="btn chase ibtn" type="button" id="chase" aria-pressed="false" aria-label="Chase cam" title="Chase cam: start the drive in the chase view, with no swoop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 10l7-4v12l-7-4"/></svg></button>
       <button class="btn chase ibtn" type="button" id="mute" aria-pressed="false" aria-label="Sound on" title="Sound on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg></button>
@@ -103,17 +114,6 @@
     </div>
 
     <p class="sr-only" id="announce" aria-live="polite"></p>
-
-    <div class="gbar" id="bar">
-      <progress id="progress" max="100" value="0" aria-label="Training progress" hidden></progress>
-      <button class="go" type="button" id="train">Train and drive</button>
-      <button class="btn" type="button" id="stopTrain" hidden>Stop</button>
-      <div class="bar-drive" id="barDrive" hidden>
-        <button class="btn ibtn" type="button" id="viewToggle" aria-pressed="false" aria-label="Map view" title="Map view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></svg></button>
-        <progress id="driveProgress" max="100" value="0" aria-label="Trip progress"></progress>
-        <button class="btn ibtn" type="button" id="skip" aria-label="Skip to the end" title="Skip to the end"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 7-10 7zM19 5v14"/></svg></button>
-      </div>
-    </div>
 
     <section class="endcard" id="endcard" aria-labelledby="endTitle" hidden>
       <div class="end-head"><span id="endTitle">Trip done</span><span class="end-flag" id="endFlag"></span></div>

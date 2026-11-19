@@ -22,8 +22,14 @@ describe('RF7b: nothing floats through the end card or race banner (F10, F31)', 
 describe('RF7b: phone tags keep off the taxi', () => {
   it('the stage reports the drawn taxi\'s screen box with its anchor, which placeTag hands to tagPlace', () => {
     const scene = read('games/city/scene.js');
-    expect(scene).toContain('taxiBox.setFromObject(taxi)');
     expect(scene).toMatch(/return \{ x: [^\n]*y: sy\(tmp\), \.\.\.\(top < bottom \? \{ top, bottom \} : \{\}\) \}/);
+  });
+  it('the box is worked out only at phone width, and leaves the flat contact shadow out of it', () => {
+    const scene = read('games/city/scene.js');
+    expect(scene).toContain("const narrow = () => !!(globalThis.matchMedia && matchMedia('(max-width: 720px)').matches);");
+    expect(scene).toContain('if (narrow()) {');
+    expect(scene).toContain('taxiBox.makeEmpty(); for (const part of taxi.children) if (!part.userData.flat) taxiBox.expandByObject(part);');
+    expect(scene).not.toContain('taxiBox.setFromObject(taxi)');
   });
 });
 
@@ -45,7 +51,7 @@ describe('RF7b: each (i) sits beside what it explains (F28)', () => {
     const card = html.slice(html.indexOf('<aside class="ratecard"'), html.indexOf('<section class="ladder"'));
     expect(card).toContain('aria-controls="info-reward info-map"');
     expect(card).toMatch(/id="info-map"[^>]*data-info="map"[^>]*hidden/);
-    expect(main).toContain("btn.getAttribute('aria-controls').split(' ').forEach(id => { $(id).hidden = !open; })");
+    expect(main).toContain("infoIds(btn).forEach(id => { $(id).hidden = !open; })");
   });
   it('the Pay and city score explanation opens from the Pay meter header, visible only while a drive is on screen', () => {
     const meter = html.slice(html.indexOf('<div class="meter" id="meter"'), html.indexOf('<div class="meter meter-goal"'));
@@ -58,7 +64,14 @@ describe('RF7b: each (i) sits beside what it explains (F28)', () => {
   });
   it('the (i) popovers close on Escape and give focus back to their button', () => {
     expect(main).toContain("document.addEventListener('keydown', e => { if (e.key !== 'Escape') return;");
-    expect(main).toContain(".info[aria-expanded=\"true\"]");
+  });
+  it('Escape closes the open (i) that holds focus, else the last opened, never a hidden one', () => {
+    expect(main).toContain("const visibleInfo = () => infoOpen.filter(b => b.getClientRects().length > 0);");
+    expect(main).toContain("visibleInfo().find(b => b === document.activeElement || infoIds(b).some(id => $(id).contains(document.activeElement))) ?? visibleInfo().pop()");
+  });
+  it('an open (i) closes when its button goes away, for example the Pay (i) when a race starts', () => {
+    expect(main).toContain('function closeHiddenInfo() { infoOpen.filter(b => b.getClientRects().length === 0).forEach(b => setInfo(b, false)); }');
+    expect(main).toMatch(/\$\('play'\)\.dataset\.screen = screen;\s*closeHiddenInfo\(\);/);
   });
 });
 
@@ -66,7 +79,8 @@ describe('RF7b: training shows its percent and can be stopped (F8)', () => {
   it('has a Stop button beside the Train button, shown only while training', () => {
     expect(tagOf('stopTrain')).toMatch(/^<button class="btn" type="button" id="stopTrain"[^>]*hidden/);
     expect(main).toContain("$('stopTrain').hidden = !busy;");
-    expect(main).toContain("$('stopTrain').addEventListener('click', () => { $('progress').hidden = true; toMap('failed'); });");
+    expect(main).toContain("$('stopTrain').addEventListener('click', () => { $('progress').hidden = true; toMap('failed'); $('train').focus(); });"); // the focused button just hid: focus goes to Train
+    expect(tagOf('stopTrain')).toContain('aria-label="Stop training"');
   });
   it('the Train button carries the percent while it trains', () => {
     expect(main).toContain("progress.value = Math.round(100 * p.done / p.total); $('train').textContent = `Training… ${progress.value}%`;");
@@ -75,7 +89,7 @@ describe('RF7b: training shows its percent and can be stopped (F8)', () => {
 
 describe('RF7b: small polish (F11, F27, F30, F32, F35)', () => {
   it('F30: the live Pay number takes the fine or pay colour by its sign', () => {
-    expect(main).toContain("$('meterTotal').className = `meter-total tone-${m.total < 0 ? 'fine' : m.total > 0 ? 'pay' : 'zero'}`;");
+    expect(main).toContain("$('meterTotal').className = rec ? 'meter-total' : `meter-total tone-${m.total < 0 ? 'fine' : m.total > 0 ? 'pay' : 'zero'}`;"); // footage keeps the taxi yellow
   });
   it('F11: the rate card and end card scroll with a thin, dark scrollbar', () => {
     expect(rules('.ratecard, .endcard')).toContain('scrollbar-width: thin');
@@ -88,8 +102,12 @@ describe('RF7b: small polish (F11, F27, F30, F32, F35)', () => {
     expect(rules('.bay.empty')).toContain('color: #9AA7B8');
   });
   it('F27: the bottom bar comes right after the rate card in tab order', () => {
-    expect(html.indexOf('id="bar"')).toBeGreaterThan(html.indexOf('id="rateCard"'));
+    expect(html.indexOf('id="bar"')).toBeGreaterThan(html.indexOf('</aside>'));
+    expect(html.indexOf('id="bar"')).toBeLessThan(html.indexOf('class="topright"')); // before the icon row, the HUD and the end card
     expect(html.indexOf('id="bar"')).toBeLessThan(html.indexOf('id="garageDrawer"'));
+  });
+  it('footage hides the Pay (i) and its text', () => {
+    expect(rules('body.rc-record .meter .info, body.rc-record #info-meters')).toContain('display: none !important');
   });
 });
 
@@ -97,6 +115,14 @@ describe('RF7b: the desktop end card fits 1280x720 without scrolling (F12)', () 
   it('has a city score stat beside time and pay, filled from the same number as the city score line', () => {
     expect(html).toMatch(/<div class="end-city" id="endCityStat" hidden><b class="big" id="endCityNum"><\/b><small>city score<\/small><\/div>/);
     expect(main).toContain("$('endCityNum').textContent = String(m.city); $('endCityStat').hidden = !m.honest;");
+  });
+  it('the hint comes straight under the stats and the receipt last, by CSS order only (as on the phone)', () => {
+    const desk = css.slice(css.indexOf('@media (min-width: 721px)'));
+    expect(desk).toMatch(/body:not\(\.rc-record\) \.endcard \.end-stats \{[^}]*order: 1/);
+    expect(desk).toMatch(/body:not\(\.rc-record\) \.endcard \.end-verdict \{[^}]*order: 2/);
+    expect(desk).toMatch(/body:not\(\.rc-record\) \.endcard \.end-honest \{[^}]*order: 3/);
+    expect(desk).toMatch(/body:not\(\.rc-record\) \.endcard \.receipt \{[^}]*order: 4/);
+    expect(desk).toMatch(/body:not\(\.rc-record\) \.endcard \.end-actions \{[^}]*order: 6/); // the buttons stay last
   });
   it('shows the stat and drops the city score line on desktop only, never in footage mode', () => {
     expect(rules('.end-stats > .end-city')).toContain('display: none'); // phone and footage; the selector must outrank `.end-stats > div { display: grid }`
@@ -118,6 +144,9 @@ describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
   it('a race has no minimap on a phone, and the finished race drops the counts lines so the banner has clear air under the meters', () => {
     expect(rules('.play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap')).toContain('display: none');
     expect(rules('.play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts')).toContain('display: none');
+  });
+  it('both race meters have the same content: no progress bar on either, so the two boxes are the same height', () => {
+    expect(rules('.play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar')).toContain('display: none');
   });
   it('the two race meters sit side by side on a phone, so they cover less of the cars', () => {
     expect(rules('.play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud')).toContain('grid-template-columns: 1fr 1fr');

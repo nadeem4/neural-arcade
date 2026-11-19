@@ -25,7 +25,8 @@ import { createPeopleLayer } from './scene-people.js';
 import { createHighlights } from './scene-highlights.js';
 import { highlightsAt } from './highlights.js';
 
-export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
+const narrow = () => !!(globalThis.matchMedia && matchMedia('(max-width: 720px)').matches);
+export const isPhone =() => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
 function meshOf(geo, mat, { cast = false, receive = false } = {}) {
   const m = new THREE.Mesh(geo, mat);
@@ -435,9 +436,12 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     if (tmp.z > 1) return null;
     const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
     const sy = (v) => cr.top - br.top + (0.5 - v.y * 0.5) * cr.height;
-    let top = Infinity, bottom = -Infinity; // the drawn taxi's box on screen (its bounding box's corners), so a phone tag can stay off its roof
-    const b = taxiBox.setFromObject(taxi);
-    for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = corner.set(x, y, z).project(camera); if (p.z <= 1) { top = Math.min(top, sy(p)); bottom = Math.max(bottom, sy(p)); } }
+    let top = Infinity, bottom = -Infinity; // the drawn taxi's box on screen (its bounding box's corners), so a phone tag can stay off its roof; only a phone-width layout uses it
+    if (narrow()) {
+      taxiBox.makeEmpty(); for (const part of taxi.children) if (!part.userData.flat) taxiBox.expandByObject(part); // not the flat contact shadow
+      const b = taxiBox;
+      for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = corner.set(x, y, z).project(camera); if (p.z <= 1) { top = Math.min(top, sy(p)); bottom = Math.max(bottom, sy(p)); } }
+    }
     return { x: cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width, y: sy(tmp), ...(top < bottom ? { top, bottom } : {}) };
   };
   // One frame at time `now`. Every time-dependent value here (elapsed, taxi, camera, lights tick, head bob) derives from `now`, so a manual clock gives pure frames.
