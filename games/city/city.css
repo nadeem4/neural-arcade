@@ -70,6 +70,9 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 #labels span.tag.pay { color: var(--hud-pay); }
 @keyframes tag-pop { from { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 5% { opacity: 1; transform: translate(-50%, -140%) scale(1.1); } 95% { opacity: 1; transform: translate(-50%, -150%) scale(1); } to { opacity: 0; transform: translate(-50%, -160%) scale(1); } } /* up and fully visible for 90% of 1.7 s; rises 27px in all, less than a 46px slot, so tags never cross */
 @media (prefers-reduced-motion: reduce) { #labels span.tag { animation: none; } }
+/* Nothing floats through the end card or the race banner, and the map's place labels belong to the map screen. Footage mode (body.rc-record) keeps its own rules. */
+body:not(.rc-record) .play[data-screen="done"] #labels .tag, body:not(.rc-record) .play[data-screen="raced"] #labels .tag { display: none; }
+body:not(.rc-record) .play:not([data-screen="map"]) #labels span:not(.tag):not(.race-tag) { display: none; }
 
 
 /* Space Grotesk (latin, OFL) for the numbers on the game screens. */

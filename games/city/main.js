@@ -267,10 +267,12 @@ function showEnd(t) {
   $('shareText').textContent = shareText; $('share').hidden = !fixed;
   $('announce').textContent = `Trip done. ${m.timeLine}. ${m.verdict}` + (fixed ? ' Fixed.' : '');
 }
+function clearTags() { $('labels').querySelectorAll('.tag').forEach(s => { clearTimeout(s._t); s.remove(); }); if (hud) hud.lastTag = {}; } // none stays over the end card
 // The end of a drive, reached by arriving or by Skip; the first of the two wins.
 function finish(t, event) {
   if (t.ended || t !== trip) return;
   t.ended = true;
+  if (!rec) clearTags();
   go(event); showEnd(t);
   (t.rewards && !$('endNext').hidden ? $('endNext') : $('endEdit')).focus({ preventScroll: true });
 }
