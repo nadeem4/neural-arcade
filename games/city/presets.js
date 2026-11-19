@@ -26,7 +26,7 @@ const FINES = { off: 20, red: 30, wrong: 30 };
 export const PRESETS = [
   { id: 'speed', name: 'Pay it for speed', text: 'Only the clock costs money. What could go wrong?',
     rewards: { ...DEFAULT_REWARDS } },
-  { id: 'walk', name: 'Fine the park and footpaths', text: `Driving on grass or footpaths now costs ${FINES.off}.`,
+  { id: 'walk', name: 'Fine the footpaths', text: `Driving on a footpath or across the park now costs ${FINES.off} a tile.`,
     rewards: { ...DEFAULT_REWARDS, off: FINES.off } },
   { id: 'lights', name: 'Fine red lights too', text: `Each red light run costs ${FINES.red} as well.`,
     rewards: { ...DEFAULT_REWARDS, off: FINES.off, red: FINES.red } },
