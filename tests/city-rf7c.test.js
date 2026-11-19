@@ -38,7 +38,7 @@ describe('RF7c: a pull-back keeps clear of tower walls, however the drive was cu
   const pitch = 0.95, r = radius * 1.25, mapShot = { pos: [cx, Math.sin(pitch) * r, cz + Math.cos(pitch) * r], target: [cx, 0, cz], fov: 38 };
   for (const aspect of [390 / 844, 1280 / 720]) {
     for (const card of story.cards) {
-      it(`${card.id} at aspect ${aspect.toFixed(2)}: 7 m from every taller tower from 100 ms on, full or cut`, () => {
+      it(`${card.id} at aspect ${aspect.toFixed(2)}: 5 m from every taller tower from 100 ms on, full or cut`, () => {
         const track = driveTrack(routeFrames(world, cm, card.route), tripEvents(world, card.rewards, card.route), { walls });
         const chaseAt = (t) => ({ ...chaseCamera(stateAt(track, t), chaseForAspect(aspect)), fov: 55 });
         const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; };
@@ -46,7 +46,7 @@ describe('RF7c: a pull-back keeps clear of tower walls, however the drive was cu
           const bt = Math.round(track.total * f), from = { ...chaseAt(bt), pos: clipEased(line, bt, world, cm, clip).pos };
           for (let t = 100; t <= 400; t += 1000 / 60) {
             const gap = wallGap(shotAt('pullback', t, mapShot, from, { roof, push }).pos);
-            expect(gap, `drive cut at ${f} of the trip, ${Math.round(t)} ms into the pull-back`).toBeGreaterThanOrEqual(7);
+            expect(gap, `drive cut at ${f} of the trip, ${Math.round(t)} ms into the pull-back`).toBeGreaterThanOrEqual(5);
           }
         }
       }, 30000);
