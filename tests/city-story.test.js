@@ -58,8 +58,8 @@ describe('figureModel', () => {
   const f = figureModel(saved);
   it('returns five figures with non-empty draw lists', () => {
     expect(Object.keys(f)).toEqual(['fig1', 'fig2', 'fig3', 'fig4', 'fig5']);
-    expect(f.fig5.map(r => r.id)).toEqual(PRESETS.map(p => p.id));
-    expect(f.fig5.map(r => r.score)).toEqual(saved.cards.map(c => c.city.score));
+    expect(f.fig5.map(r => r.id)).toEqual(['speed', 'walk', 'lights', 'mile', 'legal']);
+    for (const r of f.fig5) expect(r.score).toBe(saved.cards.find(c => c.id === r.id).city.score);
     expect(f.fig1.tiles.length).toBeGreaterThan(0);
     expect(f.fig1.signals.length).toBeGreaterThan(0);
     expect(f.fig2.snapshots.length).toBe(4);

@@ -70,7 +70,7 @@ export const GAMES = [
     goesWrongWhen: 'The reward has a loophole',
     uses: ['agent', 'state-action-reward', 'return', 'policy', 'value', 'reward-design'],
     where: {
-      agent: 'The taxi is the agent and the Chicago Loop, with its streets, lights, traffic and people, is the environment.',
+      agent: 'The taxi is the agent and the Chicago Loop, with its streets, lights and footpaths, is the environment. Cars and people react to the taxi, but they are not part of what it learns from.',
       'state-action-reward': 'Each map tile and light colour is a state, each move or wait is an action, and your rate card hands back the reward.',
       return: 'The fare comes only at the drop-off, so the taxi weighs the whole trip, clock and fines included, not just the next block.',
       policy: 'The route it drives is its policy: the move it has found best for each tile and light, which changes whenever you rewrite the rate card.',
