@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, heatQuad, treesToHide, CHASE, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, CHASE, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -249,8 +249,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (c.clipped || c.pos[1] !== shot.pos[1]) shot = { ...shot, pos: c.pos };
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;
-    Object.assign(scene.fog, fogFor(1 - heatOpacity(phase, play ? play.t : 0), radius, phone)); // the same 0..1 curve as the heat fade
-    mats.heat.opacity = play ? heatOpacity(phase, play.t) : 1; // the heat is for the map; it fades out in the chase
+    const look = mapView ? 'map' : phase; // the Map view toggle looks like the map: its fog and heat, not the chase's
+    Object.assign(scene.fog, fogFor(1 - heatOpacity(look, play ? play.t : 0), radius, phone)); // the same 0..1 curve as the heat fade
+    mats.heat.opacity = play ? heatOpacity(look, play.t) : 1; // the heat is for the map; it fades out in the chase
     if (play && taxi) focusShadow(phase !== 'map', taxi.position.x, taxi.position.z);
     else focusShadow(false);
     if (camera.fov !== shot.fov || camera.near !== near) { camera.fov = shot.fov; camera.near = near; camera.updateProjectionMatrix(); }
@@ -283,6 +284,24 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const applyInset = () => {
     const w = Math.max(1, el.clientWidth), h = Math.max(1, el.clientHeight);
     if (inset > 0) camera.setViewOffset(w, h, 0, insetOffset(h, inset, insetTop), w, h); else camera.clearViewOffset();
+    if (inset > 0 && !fitted && !engaged) fitPins(w, h);
+  };
+  // The first time a phone sheet is up, zoom the map out until both pins sit between the top buttons and the sheet (the player's own zoom wins after that).
+  let fitted = false;
+  const fitPins = (w, h) => {
+    fitted = true;
+    const bottom = h - Math.min(inset, h * 0.4), v = new THREE.Vector3();
+    const inFree = () => pins.every((p) => [1.4, 40].every((y) => {
+      v.set(p.position.x, y, p.position.z).project(camera);
+      const sx = ((v.x + 1) / 2) * w, sy = ((1 - v.y) / 2) * h;
+      return sx > 24 && sx < w - 24 && sy > insetTop + 8 && sy < bottom - 8;
+    }));
+    view.dist = fitDistance(view.dist, clampDistance(Infinity, radius), (d) => {
+      view.dist = d;
+      const s = orbitShot();
+      camera.position.set(...s.pos); camera.lookAt(...s.target); camera.updateMatrixWorld();
+      return inFree();
+    });
   };
   const ro = new ResizeObserver(resize);
   ro.observe(el);

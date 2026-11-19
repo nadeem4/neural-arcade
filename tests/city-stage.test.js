@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { webglAvailable, createFallbackStage, chooseStage, noWebglFlag } from '../games/city/stage.js';
+import { webglAvailable, createFallbackStage, chooseStage, noWebglFlag, routePlot } from '../games/city/stage.js';
 
 const fakeEl = () => {
   const note = { textContent: '' };
@@ -82,5 +82,26 @@ describe('?nowebgl=1', () => {
     expect(showEnd).toMatch(/endCardModel\(t\.rewards, t\.analysis/);
     expect(showEnd).toMatch(/t\.people\.scares\.length/);
     expect(showEnd).not.toMatch(/stage/);
+  });
+});
+
+describe('the no-WebGL route plot', () => {
+  const frames = [{ x: 0, z: 0 }, { x: 100, z: -50 }, { x: 100, z: -100 }];
+  it('fits every tile inside the box with the pad kept, north up (z is minus map y)', () => {
+    const plot = routePlot(frames, 400, 200, 10);
+    for (const f of frames) {
+      const [px, py] = plot(f.x, f.z);
+      expect(px).toBeGreaterThanOrEqual(10 - 1e-9); expect(px).toBeLessThanOrEqual(390 + 1e-9);
+      expect(py).toBeGreaterThanOrEqual(10 - 1e-9); expect(py).toBeLessThanOrEqual(190 + 1e-9);
+    }
+    expect(plot(100, -100)[1]).toBeLessThan(plot(0, 0)[1]);
+  });
+  it('does not divide by zero for a route of one point', () => {
+    expect(routePlot([{ x: 5, z: 5 }], 100, 100, 10)(5, 5).every(Number.isFinite)).toBe(true);
+  });
+  it('the fallback playTrip with no element to draw on still calls onDone', () => {
+    let done = 0;
+    createFallbackStage(null, 'x').playTrip({ track: { frames, total: 1000 }, onDone: () => { done++; } });
+    expect(done).toBe(1);
   });
 });
