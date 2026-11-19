@@ -3,11 +3,12 @@
 import { SWOOP_MS } from './director.js';
 
 const NAMES = { off: (park) => (park ? 'park tile' : 'footpath tile'), red: () => 'red light run', wrong: () => 'wrong way' };
+const FREE = { red: 'red light' }; // the free label drops "run"
 
-// The label of one offence: "-20 footpath tile" when the rate fines it, the bare name when it does not.
+// The label of one offence: "-20 footpath tile" when the rate fines it, "footpath tile: free" when it does not.
 export function offenceLabel(type, rate, park = false) {
   const name = NAMES[type](park);
-  return rate > 0 ? `-${rate} ${name}` : name;
+  return rate > 0 ? `-${rate} ${name}` : `${FREE[type] ?? name}: free`;
 }
 
 // [{ i, ms, type: 'off'|'red'|'wrong', label, cell, x, z, fine, heading, park }] sorted by ms.

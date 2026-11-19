@@ -51,7 +51,8 @@ export function foldTag(prev, tag, i) {
 // (or the taxi: slot 0 is already above it). `tags` is the live tags: each { slot } keeps its slot, one without a slot takes
 // the lowest free one. There are at most MAX_TAG_SLOTS: when all are taken, a newcomer reuses the slot of the oldest live
 // tag (the first in the list; that one is dropped by the caller). Returns new objects. Pure.
-export const TAG_SLOT_PX = 32;
+export const TAG_SLOT_PX = 46;
+export const TAG_LIFE_MS = 1700; // how long a tag stays up (real time in the game, seek time in record mode)
 export const MAX_TAG_SLOTS = 3;
 export function layoutTags(tags) {
   const used = new Set(tags.filter((t) => t.slot !== undefined).map((t) => t.slot));

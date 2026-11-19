@@ -58,10 +58,13 @@ describe('buildOffences', () => {
       }
     }
   });
-  it('offenceLabel keeps the fined wording', () => {
+  it('offenceLabel keeps the fined wording and says free when the fine is 0', () => {
     expect(offenceLabel('off', 20, false)).toBe('-20 footpath tile');
     expect(offenceLabel('off', 20, true)).toBe('-20 park tile');
     expect(offenceLabel('red', 5)).toBe('-5 red light run');
-    expect(offenceLabel('wrong', 0)).toBe('wrong way');
+    expect(offenceLabel('wrong', 0)).toBe('wrong way: free');
+    expect(offenceLabel('off', 0, true)).toBe('park tile: free');
+    expect(offenceLabel('off', 0, false)).toBe('footpath tile: free');
+    expect(offenceLabel('red', 0)).toBe('red light: free');
   });
 });

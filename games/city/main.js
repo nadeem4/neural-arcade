@@ -12,7 +12,7 @@ import { webglAvailable, chooseStage, noWebglFlag } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, runSummary, pruneTags, cardRewards } from './record.js';
 import { buildOffences } from './offences.js';
-import { tripEvents, tagsFor, foldTag, layoutTags, TAG_SLOT_PX } from './events.js';
+import { tripEvents, tagsFor, foldTag, layoutTags, TAG_SLOT_PX, TAG_LIFE_MS } from './events.js';
 import { bakePeople } from './people.js';
 import { driveTrack } from './drive.js';
 import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
@@ -69,7 +69,7 @@ function popTag(tag, at, i) {
   span.style.left = at.x + 'px'; span.style.top = at.y - slot * TAG_SLOT_PX + 'px';
   span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
   if (rec) { rec.tags = rec.tags.filter(t => t.span !== span); rec.tags.push({ span, born: rec.now }); return; } // expiry follows seek time, not the wall clock
-  clearTimeout(span._t); span._t = setTimeout(() => span.remove(), 1400);
+  clearTimeout(span._t); span._t = setTimeout(() => span.remove(), TAG_LIFE_MS);
 }
 // One frame of the drive: the meter and minimap follow the taxi; each tile it finishes can fire tags and a blip.
 function hudFrame(state, at) {
