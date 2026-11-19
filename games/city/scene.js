@@ -236,7 +236,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     if (dead) return;
     const mapShot = orbitShot();
     let shot = play && play.phase !== 'map' && !mapView
-      ? shotAt(play.phase, play.t, mapShot, chaseAt(play.t, play.state))
+      ? shotAt(play.phase, play.t, mapShot, chaseAt(play.t, play.state), { reduced: !motionAllowed() })
       : mapShot;
     const phase = play ? play.phase : 'map';
     if (play && phase !== 'map' && !mapView) { // keep the camera out of buildings and above the road
@@ -487,7 +487,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       scene.add(taxi, trail);
       if (people) peopleLayer = createPeopleLayer(scene, people, { drawn: tier.peopleDrawn, shadows: !phone, seed: people.seed });
       play = { track, onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
-      if (!motionAllowed()) { // no animation: the end state with the whole trail and the final numbers
+      if (!motionAllowed() && !manualClock) { // no animation: the end state with the whole trail and the final numbers (record mode steps frames itself)
         const end = stateAt(track, track.total);
         place({ ...end, stepIndex: frames.length - 2 }); // place() draws the trail to stepIndex + 1, the last point, and the taxi at its end position
         tg.setDrawRange(0, frames.length);

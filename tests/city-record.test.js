@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { parseRecord, tripMs, frameCount, frameMs, pruneTags, recordApi, cardRewards } from '../games/city/record.js';
 import { SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
+import { readFileSync } from 'node:fs';
+import { runSummary } from '../games/city/record.js';
+import { endCardModel } from '../games/city/endcard.js';
+import { GOAL_SECONDS } from '../games/city/presets.js';
 
 describe('parseRecord', () => {
   it('is null unless record=1', () => {
@@ -65,13 +69,53 @@ describe('recordApi', () => {
     expect(rc.error).toBe('training failed');
     expect(rc.ready).toBe(false);
   });
-  it('reports WebGL and reduced motion as errors, and is not ready then', () => {
+  it('reports missing WebGL as an error, and is not ready then', () => {
     const noGl = recordApi({ stage: { ready: false }, totalMs: 9000, fps: 30 });
     expect(noGl.error).toMatch(/WebGL/);
     expect(noGl.ready).toBe(false);
+  });
+  it('works under reduced motion: no error, ready once totalMs > 0', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
-    const rm = recordApi({ stage: stage(), totalMs: 9000, fps: 30 });
-    expect(rm.error).toMatch(/reduced motion/);
-    expect(rm.ready).toBe(false);
+    const rc = recordApi({ stage: stage(), totalMs: 0, fps: 30 });
+    expect(rc.error).toBeNull();
+    expect(rc.ready).toBe(false);
+    rc.totalMs = 9000;
+    expect(rc.ready).toBe(true);
+  });
+  it('starts with no summary', () => {
+    expect(recordApi({ stage: stage(), fps: 30 }).summary).toBeNull();
+  });
+});
+
+describe('runSummary', () => {
+  const story = JSON.parse(readFileSync(new URL('../games/city/story.json', import.meta.url), 'utf8'));
+  const walk = story.cards.find((c) => c.id === 'walk');
+  const offences = [
+    { ms: 2000, type: 'off', label: '-20 footpath tile', x: 1 },
+    { ms: 3000, type: 'red', label: '-5 red light run', x: 2 },
+  ];
+  const input = { card: 'walk', rewards: walk.rewards, analysis: walk.analysis, scared: 3, offences, goalSeconds: GOAL_SECONDS };
+  it('has exactly the documented keys and the end card figures', () => {
+    const s = runSummary(input);
+    expect(Object.keys(s)).toEqual(['card', 'seconds', 'pay', 'cityScore', 'legal', 'onTime', 'offences', 'events']);
+    const m = endCardModel(walk.rewards, walk.analysis, GOAL_SECONDS, null, 3);
+    expect(s).toMatchObject({ card: 'walk', seconds: walk.analysis.seconds, pay: m.earned, cityScore: m.city, legal: m.legal, onTime: m.timeOk });
+    expect(s.offences).toEqual({ offTiles: walk.analysis.offTiles, red: walk.analysis.redRuns, wrong: walk.analysis.wrongWays, scared: 3 });
+  });
+  it('events are the offences as { ms, type, label }', () => {
+    expect(runSummary(input).events).toEqual([{ ms: 2000, type: 'off', label: '-20 footpath tile' }, { ms: 3000, type: 'red', label: '-5 red light run' }]);
+  });
+});
+
+describe('the scene under reduced motion', () => {
+  const scene = readFileSync(new URL('../games/city/scene.js', import.meta.url), 'utf8');
+  it('only ends a trip at once when the clock is not manual', () => {
+    expect(scene).toContain('!motionAllowed() && !manualClock');
+    expect(scene).toContain('{ reduced: !motionAllowed() }');
+  });
+  it('the page wires the summary', () => {
+    const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
+    expect(main).toContain('offences: buildOffences(events, ');
+    expect(main).toContain('rc.summary = runSummary(');
   });
 });

@@ -220,7 +220,8 @@ export const nearMissCount = (traffic, upTo = Infinity) => traffic.nearMisses(up
 // big lamp blocks on the front and a glow on the whole body, so the flash reads from the chase camera whichever way the car faces.
 const FLASH_HZ = 4;
 const CALM = Object.freeze({ head: 0.55, halo: 0, bodyMix: 0 }), FLASH_ON = Object.freeze({ head: 1, halo: 1, bodyMix: 0.6 }), FLASH_OFF = Object.freeze({ head: 0.02, halo: 0, bodyMix: 0 });
-export function honkLook(alarm, tf) { // shared constants: no allocation per car per frame; do not change the result
+export function honkLook(alarm, tf, reduced = false) { // shared constants: no allocation per car per frame; do not change the result
   if (!alarm) return CALM;
+  if (reduced) return FLASH_ON; // reduced motion: held on, never flashing
   return Math.floor(Math.max(0, tf) * FLASH_HZ) % 2 === 0 ? FLASH_ON : FLASH_OFF;
 }

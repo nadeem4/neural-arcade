@@ -1,6 +1,7 @@
 // What happens on each step of a trip, from the same stepWorld calls analyzeRoute makes. Pure, no DOM.
 // Every drive screen (meter, tags, minimap, sound) reads this and never re-runs the sim.
 import { stepWorld, tally, newTotals } from './sim.js';
+import { offenceLabel } from './offences.js';
 
 const PARK = 2;
 
@@ -33,10 +34,7 @@ export function tripEvents(world, rewards, route) {
 // Time and pay per tile are too frequent to tag.
 export function tagsFor(step, rewards, scared = 0) {
   const tags = [];
-  const fine = (rate, name) => tags.push({ text: rate > 0 ? `-${rate} ${name}` : name, kind: 'fine' });
-  if (step.off) fine(rewards.off, step.park ? 'park tile' : 'footpath tile');
-  if (step.red) fine(rewards.red, 'red light run');
-  if (step.wrong) fine(rewards.wrong, 'wrong way');
+  for (const type of ['off', 'red', 'wrong']) if (step[type]) tags.push({ text: offenceLabel(type, rewards[type], step.park), kind: 'fine' });
   if (scared) tags.push({ text: `scared ${scared}`, kind: 'fine' });
   if (step.done) tags.push({ text: `+${rewards.fare} fare`, kind: 'pay' });
   return tags;

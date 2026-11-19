@@ -10,7 +10,8 @@ import { goalAt } from './goal.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage, noWebglFlag } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
-import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
+import { parseRecord, tripMs, recordApi, runSummary, pruneTags, cardRewards } from './record.js';
+import { buildOffences } from './offences.js';
 import { tripEvents, tagsFor, foldTag, layoutTags, TAG_SLOT_PX } from './events.js';
 import { bakePeople } from './people.js';
 import { driveTrack } from './drive.js';
@@ -279,7 +280,7 @@ async function train(req) {
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events, { walls });
-    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), ended: false };
+    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), offences: buildOffences(events, req, track), ended: false };
     go('trained');
     drive(trip);
   } catch {
@@ -338,7 +339,7 @@ function driveKept(taxi) {
   rewards = { ...taxi.rewards };
   const events = tripEvents(world, taxi.rewards, taxi.route);
   const track = driveTrack(routeFrames(world, cellM, taxi.route), events, { walls });
-  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), ended: false };
+  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), offences: buildOffences(events, taxi.rewards, track), ended: false };
   raceRun = null; stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
   go('replay');
   drive(trip);
@@ -462,6 +463,7 @@ async function startRecord(cfg) {
   rewards = cardRewards(cfg.card); showRates();
   await train({ ...rewards });
   if (!trip) { rc.failure = 'training failed'; return; }
+  rc.summary = runSummary({ card: cfg.card, rewards: trip.rewards, analysis: trip.analysis, scared: trip.people.scares.length, offences: trip.offences, goalSeconds: GOAL_SECONDS });
   rc.totalMs = tripMs(trip.track.total);
 }
 

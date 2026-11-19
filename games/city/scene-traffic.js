@@ -3,6 +3,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import { createTraffic, taxiOf, newPoses, carColour, honkLook } from './traffic.js';
 import { ROAD_Y } from './scene-math.js';
+import { motionAllowed } from './playback.js';
 
 const TRAFFIC_SEED = 1;       // every drive on the same route shows the same cars
 export const CAR_SCALE = 1.5; // the same metres-to-scene scale as the taxi
@@ -104,7 +105,7 @@ export function createTrafficLayer({ tier }) {
         const ha = halos.instanceMatrix.array, bc = bodies.instanceColor.array;
         const hc = heads.instanceColor.array, tc = tails.instanceColor.array;
         for (let i = 0; i < n; i++) {
-          const look = honkLook(poses.alarm[i], tf); // a honking car flashes its lamps, a halo and its whole body
+          const look = honkLook(poses.alarm[i], tf, !motionAllowed()); // a honking car flashes its lamps, a halo and its whole body
           hc[i * 3] = look.head; hc[i * 3 + 1] = look.head * 0.93; hc[i * 3 + 2] = look.head * 0.7;
           const tail = poses.braking[i] ? TAIL_BRAKE : TAIL_DIM;
           tc[i * 3] = tail; tc[i * 3 + 1] = tail * 0.06; tc[i * 3 + 2] = tail * 0.06;

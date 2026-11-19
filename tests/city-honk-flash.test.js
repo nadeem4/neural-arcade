@@ -19,6 +19,11 @@ describe('honk flash', () => {
     expect(honkLook(true, 0.6).head).toBe(1);
     for (const tf of [0.1, 0.3, 7.7]) expect(honkLook(false, tf)).toEqual({ head: 0.55, halo: 0, bodyMix: 0 });
   });
+  it('under reduced motion a honking car holds the "on" look and does not flash', () => {
+    for (const tf of [0.1, 0.3, 0.6, 7.7]) expect(honkLook(true, tf, true)).toEqual(honkLook(true, 0.1));
+    expect(honkLook(false, 0.3, true)).toEqual({ head: 0.55, halo: 0, bodyMix: 0 });
+    expect(readFileSync(new URL('../games/city/scene-traffic.js', import.meta.url), 'utf8')).toContain('honkLook(poses.alarm[i], tf, !motionAllowed())');
+  });
   it('a honking car gets a halo and a body glow on the flash, and every other car stays plain', () => {
     const tier = trafficTier({ phone: false });
     const layer = createTrafficLayer({ tier });
