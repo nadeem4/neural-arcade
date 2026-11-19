@@ -260,7 +260,7 @@ function drive(t) {
   $('driveProgress').value = 0;
   startHud(t.events, t.route, t.rewards, t.people);
   t.ended = false;
-  stage.playTrip({ track: t.track, events: t.events, people: t.people, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
+  stage.playTrip({ track: t.track, events: t.events, people: t.people, offences: t.offences, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
 }
 async function train(req) {
   const progress = $('progress');

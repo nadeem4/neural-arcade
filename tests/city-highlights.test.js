@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { highlightsAt, HOLD_MS } from '../games/city/highlights.js';
 
 const o = (ms, type = 'off', extra = {}) => ({ ms, type, x: 10, z: 20, heading: 1.5, fine: 0, ...extra });
@@ -28,5 +29,24 @@ describe('highlightsAt', () => {
   it('the same inputs give the same output', () => {
     const list = [o(100), o(900, 'wrong')];
     expect(highlightsAt(list, 1234)).toEqual(highlightsAt(list, 1234));
+  });
+});
+
+describe('the scene wiring', () => {
+  const read = (f) => readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8');
+  it('scene.js imports the pool and highlightsAt, makes the pool once, updates it each frame and clears it', () => {
+    const scene = read('scene.js');
+    expect(scene).toContain("from './scene-highlights.js'");
+    expect(scene).toContain("from './highlights.js'");
+    expect(scene.match(/createHighlights\(/g)).toHaveLength(1);
+    expect(scene).toMatch(/highlights\.update\(highlightsAt\(play\.offences/);
+    expect(scene).toMatch(/highlights\.clear\(\)/);
+  });
+  it('the pool is built from arrowPolys with transparent, no-depth-write, offset materials', () => {
+    const src = read('scene-highlights.js');
+    for (const s of ['arrowPolys', 'depthWrite: false', 'polygonOffset', 'transparent: true']) expect(src).toContain(s);
+  });
+  it('main.js passes the offences into playTrip', () => {
+    expect(read('main.js')).toMatch(/playTrip\(\{[^}]*offences: t\.offences/);
   });
 });
