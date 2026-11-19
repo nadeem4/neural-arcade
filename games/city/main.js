@@ -319,6 +319,11 @@ function loadGarage() {
 const saveGarage = () => { try { localStorage.setItem(GARAGE_KEY, serialize(garage)); } catch { /* storage blocked */ } };
 // Focus goes to the first DRIVE (or Close when empty) on open, and to the Garage button when the player closes it; auto-closes leave focus alone.
 const driveButtons = () => [...$('garageList').querySelectorAll('.go')];
+// The sound button is an icon; its label and tooltip say the state in words.
+function setMuteUi(muted) {
+  const b = $('mute'), t = muted ? 'Sound off' : 'Sound on';
+  b.setAttribute('aria-pressed', String(muted)); b.setAttribute('aria-label', t); b.title = t;
+}
 function closeGarage() { showGarage(false); $('garage').focus(); }
 // The drawer never opens over the end card or the race result: those leave for the map first.
 function openGarage() { if (screen === 'done' || screen === 'raced') toMap('garage'); showGarage(true, 0); }
@@ -327,7 +332,8 @@ function showGarage(open, focusIndex) {
   $('play').dataset.garage = String(open); // the open Garage hides the rate card so every Race button fits
   updateInset();
   $('garage').setAttribute('aria-expanded', String(open));
-  $('garageCount').textContent = garage.taxis.length;
+  $('garageCount').textContent = garage.taxis.length; $('garageCount').hidden = garage.taxis.length === 0;
+  $('garage').setAttribute('aria-label', garage.taxis.length ? `Garage, ${garage.taxis.length} kept` : 'Garage');
   $('garageEmpty').hidden = garage.taxis.length > 0;
   picks = picks.filter(id => garage.taxis.some(t => t.id === id));
   renderGarage($('garageList'), garage, {
@@ -434,7 +440,7 @@ function build() {
   });
   $('mute').addEventListener('click', () => {
     const muted = $('mute').getAttribute('aria-pressed') !== 'true';
-    $('mute').setAttribute('aria-pressed', String(muted)); $('mute').textContent = muted ? 'Sound off' : 'Sound on';
+    setMuteUi(muted);
     sound.setMuted(muted);
     try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch { /* storage blocked: the choice lasts this visit */ }
   });
@@ -496,7 +502,7 @@ async function start() {
   $('lamp').innerHTML = SUN + MOON;
   wireLamp($('lamp'), () => {});
   build();
-  if (loadMuted()) { $('mute').setAttribute('aria-pressed', 'true'); $('mute').textContent = 'Sound off'; }
+  if (loadMuted()) setMuteUi(true);
   go('none');
   enable(false);
   try {

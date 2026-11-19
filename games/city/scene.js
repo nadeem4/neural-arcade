@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, CHASE, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -238,7 +238,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   // The chase camera at drive time t (state: the state already worked out for that time, if any).
   const chaseAt = (t, state) => play.race
     ? (() => { const s = state ?? raceStateAt(play.race, t); return raceShot(s.cars[0].state, s.cars[1].state); })()
-    : { ...chaseCamera(state ?? stateAt(play.track, t), CHASE), fov: 55 };
+    : { ...chaseCamera(state ?? stateAt(play.track, t), chaseForAspect(camera.aspect)), fov: 55 };
   const renderNow = () => {
     if (dead) return;
     const mapShot = orbitShot();

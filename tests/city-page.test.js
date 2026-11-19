@@ -77,8 +77,8 @@ describe('city page markup', () => {
     expect(html).toContain('>Watch again</button>');
     expect(html).toContain('>Reset to the default</button>');
     expect(tag('barDrive')).toMatch(/\shidden[\s>]/);
-    expect(html).toContain('>Skip to the end</button>');
-    expect(html).toContain('>Map view</button>');
+    expect(tag('skip')).toContain('aria-label="Skip to the end"');
+    expect(tag('viewToggle')).toContain('aria-label="Map view"');
     expect(tag('driveProgress')).toMatch(/^<progress /);
   });
   it('links the write-up now it is listed, mounts the shared game page, and keeps the goal and status announced', () => {
@@ -206,11 +206,11 @@ describe('city.css', () => {
   it('shows keyboard focus on buttons', () => {
     expect(css).toMatch(/button:focus-visible/);
   });
-  it('fills the screen with the stage, switches panels by screen, and keeps the phone rate card to 35% of the viewport and the end card to 60%', () => {
+  it('fills the screen with the stage, switches panels by screen, and keeps the phone rate card to 40% of the viewport and the end card to 60%', () => {
     expect(css).toMatch(/100svh/);
     expect(css).toMatch(/\[data-screen=/);
     const phone = css.slice(css.indexOf('@media (max-width: 720px)'));
-    for (const [sel, h] of [['.ratecard', 35], ['.endcard', 60]]) expect(phone).toMatch(new RegExp(sel.replace('.', String.raw`\.`) + String.raw`[^{}]*\{[^}]*max-height:\s*` + h + 'svh'));
+    for (const [sel, h] of [['.ratecard', 40], ['.endcard', 60]]) expect(phone).toMatch(new RegExp(sel.replace('.', String.raw`\.`) + String.raw`[^{}]*\{[^}]*max-height:\s*` + h + 'svh'));
   });
   it('loads Space Grotesk from the vendored font files', () => {
     expect(css).toMatch(/font-family:\s*"Space Grotesk"[^}]*fonts\/space-grotesk-latin-700-normal\.woff2/);
@@ -252,12 +252,64 @@ describe('opening the Garage collapses the rate card (RF5)', () => {
   it('the phone drawer is tall and compact, the desktop drawer has two bay columns', () => {
     const from = css.indexOf('.drawer { top: auto');
     const phone = css.slice(from).split(/^\}/m)[0]; // only the phone media block
-    expect(phone).toMatch(/max-height:\s*85svh/);
+    expect(phone).toMatch(/max-height:\s*calc\(100% - 68px\)/);
     expect(phone).toMatch(/bottom:\s*calc\(8px \+ env\(safe-area-inset-bottom\)\)/); // clears the home indicator
     expect(phone).toMatch(/\.bay-chips\s*\{\s*display:\s*none/);
     expect(phone).toMatch(/\.drawer \.btn,[^}]*height:\s*44px/); // real tap targets
     expect(rules('.bays')).toMatch(/overscroll-behavior:\s*contain/);
     expect(rules('.bay-note')).toMatch(/display:\s*none/);
     expect(rules('.drawer .bays')).toContain('grid-template-columns: 1fr 1fr');
+  });
+});
+
+describe('phone pass (RF6)', () => {
+  const inner = id => html.match(new RegExp(`<(button|a)[^>]*id="${id}"[^>]*>([\\s\\S]*?)</\\1>`))[2];
+  const words = id => inner(id).replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<span[^>]*id="garageCount"[^>]*>[\s\S]*?<\/span>/, '').replace(/<[^>]*>/g, '').trim();
+  const block = q => { const i = css.indexOf(q); let d = 0, j = css.indexOf('{', i); const a = j; for (; j < css.length; j++) { if (css[j] === '{') d++; if (css[j] === '}' && --d === 0) break; } return css.slice(a, j); };
+  const ICONS = ['chase', 'mute', 'garage', 'viewToggle', 'skip', 'garageClose', 'howTab'];
+  it('shows the utility buttons as inline SVG icons with an accessible name, a tooltip and no visible words', () => {
+    for (const id of ICONS) {
+      expect(inner(id), id).toContain('<svg');
+      expect(inner(id), id).toContain('stroke="currentColor"');
+      expect(tag(id), id).toMatch(/aria-label="[^"]+"/);
+      expect(tag(id), id).toMatch(/title="[^"]+"/);
+      expect(words(id), id).toBe('');
+    }
+  });
+  it('keeps the toggles as toggles and the garage count as a badge', () => {
+    for (const id of ['chase', 'mute', 'viewToggle']) expect(tag(id), id).toContain('aria-pressed=');
+    expect(tag('garageCount')).toContain('class="badge"');
+    expect(read(mainPath)).toContain("b.setAttribute('aria-label', t)");
+    expect(read(mainPath)).not.toMatch(/\$\('mute'\)\.textContent/);
+    expect(read(mainPath)).toContain("$('garage').setAttribute('aria-label'");
+  });
+  it('gives the icon buttons a 44 px tap target and one stroke style', () => {
+    expect(rules('.ibtn')).toMatch(/width: 44px/); expect(rules('.ibtn')).toMatch(/height: 44px/);
+    expect(rules('.chase.ibtn')).toMatch(/height: 44px/);
+    expect(rules('.ibtn svg')).toContain('stroke-linecap: round');
+  });
+  it('shows the speaker with waves, or crossed out when muted', () => {
+    expect(rules('#mute .off, #mute[aria-pressed="true"] .on')).toContain('display: none');
+  });
+  it('lets the stage be shorter than 420 px in landscape, so the bottom bar stays on screen', () => {
+    expect(block('@media (max-height: 500px)')).toMatch(/\.play \{[^}]*min-height: 0/);
+  });
+  it('makes the (i) text on the navy cards readable', () => {
+    expect(rules('.ratecard .info-text, .endcard .info-text')).toContain('background: var(--navy-soft)');
+  });
+  it('has 44 px steppers, (i) buttons and end card buttons, and 8 px between ladder steps, on a phone', () => {
+    const phone = block('@media (max-width: 720px)'), small = block('@media (max-width: 600px)');
+    expect(phone).toMatch(/\.rstep \{[^}]*height: 44px/);
+    expect(phone).toMatch(/\.end-actions \.btn, \.end-actions \.go \{[^}]*height: 44px/);
+    expect(small).toMatch(/\.ratecard \.info, \.endcard \.info \{[^}]*min-height: 44px/);
+    expect(small).toMatch(/\.steps \{[^}]*gap: 8px/);
+    expect(rules('.citybar .logo')).toContain('min-height: 44px');
+  });
+  it('stops a scrolled sheet from scrolling the page behind it, and keeps the open Garage below the top buttons', () => {
+    expect(rules('.ratecard, .endcard')).toContain('overscroll-behavior: contain');
+    expect(css).toMatch(/\.drawer \{[^}]*max-height: calc\(100% - 68px\)/);
+  });
+  it('lets a long goal line wrap inside a rounded chip, not a pill, on a phone', () => {
+    expect(block('@media (max-width: 720px)')).toMatch(/\.chip \{[^}]*border-radius: 16px/);
   });
 });

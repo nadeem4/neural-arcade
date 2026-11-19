@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { treesToHide, clampDistance, domeRadius, cameraFar } from '../games/city/scene-math.js';
+import { treesToHide, clampDistance, domeRadius, cameraFar, chaseForAspect, CHASE } from '../games/city/scene-math.js';
 import { sunPlacement } from '../games/city/sky.js';
 import { foldTag } from '../games/city/events.js';
 import { meterText } from '../games/city/meter.js';
@@ -86,5 +86,22 @@ describe('camera far plane', () => {
   it('covers the farthest orbit camera plus the sky dome radius', () => {
     const r = 1000;
     expect(cameraFar(r)).toBeGreaterThan(clampDistance(Infinity, r) + domeRadius(r));
+  });
+});
+
+describe('chaseForAspect (RF6: a portrait phone keeps the taxi smaller and clear of the bottom bar)', () => {
+  it('leaves the desktop and landscape chase as it was', () => {
+    expect(chaseForAspect(16 / 9)).toEqual(CHASE);
+    expect(chaseForAspect(1)).toEqual(CHASE);
+  });
+  it('pulls back and up on a portrait screen, never past 1.4 times, and keeps the look-ahead', () => {
+    const p = chaseForAspect(360 / 640);
+    expect(p.back).toBeGreaterThan(CHASE.back * 1.2);
+    expect(p.up).toBeGreaterThan(CHASE.up * 1.2);
+    expect(p.ahead).toBe(CHASE.ahead);
+    expect(chaseForAspect(0.2).back).toBeLessThanOrEqual(CHASE.back * 1.4 + 1e-9);
+  });
+  it('grows as the screen gets narrower', () => {
+    expect(chaseForAspect(0.5).back).toBeGreaterThan(chaseForAspect(0.8).back);
   });
 });

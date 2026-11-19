@@ -11,6 +11,11 @@ export const domeRadius = (radius) => radius * DOME;
 export const cameraFar = (radius) => (radius * MAX_DIST + domeRadius(radius)) * 1.1;
 
 export const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
+// A portrait screen sees a narrow slice of the street, so the chase camera backs off (by up to 1.4 times) and the taxi stays small and clear of the bottom bar.
+export const chaseForAspect = (aspect) => {
+  const k = Math.min(1.4, Math.max(1, Math.sqrt(1 / Math.max(aspect, 0.1))));
+  return { back: CHASE.back * k, up: CHASE.up * k, ahead: CHASE.ahead };
+};
 export const MIN_CAM_DIST = 4; // the clipped camera never comes closer to the taxi than this; a taxi on a road tile is at least half a tile from any building
 const BUILDING = 3; // sim.js kind code for a building cell
 

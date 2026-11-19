@@ -33,7 +33,7 @@
   <h1>Reward City</h1>
   <p class="tag">You write the reward. The taxi learns it.</p>
   <nav aria-label="On this page">
-    <a href="how-it-works/" id="howTab">How it works</a>
+    <a class="ibtn" href="how-it-works/" id="howTab" aria-label="How it works" title="How it works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6C10 4.6 7 4 3 4v14c4 0 7 .6 9 2 2-1.4 5-2 9-2V4c-4 0-7 .6-9 2zM12 6v14"/></svg></a>
     <a href="#about">About <span class="long">this game</span> ↓</a>
     <button class="btn lamp" id="lamp" type="button" aria-label="Switch theme" title="Switch theme"></button>
   </nav>
@@ -67,10 +67,10 @@
     </aside>
 
     <div class="topright">
-      <button class="btn chase" type="button" id="chase" aria-pressed="false" title="Start the drive in the chase view, with no swoop">Chase cam</button>
-      <button class="btn chase" type="button" id="mute" aria-pressed="false">Sound on</button>
+      <button class="btn chase ibtn" type="button" id="chase" aria-pressed="false" aria-label="Chase cam" title="Chase cam: start the drive in the chase view, with no swoop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 10l7-4v12l-7-4"/></svg></button>
+      <button class="btn chase ibtn" type="button" id="mute" aria-pressed="false" aria-label="Sound on" title="Sound on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg></button>
       <button class="info" type="button" aria-expanded="false" aria-controls="info-map" aria-label="Explain the map" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
-      <button class="btn chase" type="button" id="garage" aria-expanded="false" aria-controls="garageDrawer">Garage · <span id="garageCount">0</span></button>
+      <button class="btn chase ibtn" type="button" id="garage" aria-expanded="false" aria-controls="garageDrawer" aria-label="Garage" title="Garage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6v10H3z"/><path d="M7 20v-7h10v7M7 16.5h10"/></svg><span class="badge" id="garageCount" aria-hidden="true" hidden>0</span></button>
       <p class="info-text" id="info-map" data-info="map" hidden></p>
       <button class="info" type="button" aria-expanded="false" aria-controls="info-meters" aria-label="Explain Pay and what the city wanted" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
       <p class="info-text" id="info-meters" data-info="meters" hidden></p>
@@ -109,9 +109,9 @@
       <progress id="progress" max="100" value="0" aria-label="Training progress" hidden></progress>
       <button class="go" type="button" id="train">TRAIN &amp; DRIVE</button>
       <div class="bar-drive" id="barDrive" hidden>
-        <button class="btn" type="button" id="viewToggle" aria-pressed="false">Map view</button>
+        <button class="btn ibtn" type="button" id="viewToggle" aria-pressed="false" aria-label="Map view" title="Map view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></svg></button>
         <progress id="driveProgress" max="100" value="0" aria-label="Trip progress"></progress>
-        <button class="btn" type="button" id="skip">Skip to the end</button>
+        <button class="btn ibtn" type="button" id="skip" aria-label="Skip to the end" title="Skip to the end"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 7-10 7zM19 5v14"/></svg></button>
       </div>
     </div>
 
@@ -138,7 +138,7 @@
       </div>
     </section>
     <aside class="drawer" id="garageDrawer" aria-labelledby="garageTitle" hidden>
-      <div class="drawer-head"><h2 id="garageTitle">Garage</h2><button class="btn" type="button" id="garageClose">Close</button></div>
+      <div class="drawer-head"><h2 id="garageTitle">Garage</h2><button class="btn ibtn" type="button" id="garageClose" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <p class="drawer-empty" id="garageEmpty">Train a taxi, then keep it here.</p>
       <ul class="bays" id="garageList"></ul>
       <div class="racebar" id="raceBar" hidden>
