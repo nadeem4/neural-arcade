@@ -2,6 +2,7 @@
 // The policy still moves one tile per tick; here each tick becomes a glide with eased speed, turns through corners
 // and a stop for every wait (red lights and the like). Presentation only: it never changes what the sim decided.
 import { tickMsFor } from './playback.js';
+import { clearOfWalls, ringsNear } from './walls.js';
 
 const TURN_IN = 0.45;  // a U-turn (no arc is possible): stop, then swing round while pulling away from rest (the first 45% of the tile)
 
@@ -61,7 +62,8 @@ function pathAt(path, s) {
 
 // segs[i] describes tick i. A move has h0, h1, h2: the heading before, during and after it, and its path and the distance
 // driven before it (dist0). A wait has from and to.
-export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length) } = {}) {
+// `walls` (optional) is walls.js solidRings(city.buildings): the drawn car is nudged clear of any building outline.
+export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length), walls = null } = {}) {
   const n = frames.length - 1;
   const stepAt = (i) => events.steps[i];
   const isWait = (i) => i >= 0 && i < n && (stepAt(i)?.moved === false || (frames[i].x === frames[i + 1].x && frames[i].z === frames[i + 1].z));
@@ -110,12 +112,17 @@ export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length) }
     if (g.m1) g.m1 = chord / g.path.len;
     dist += g.path.len;
   });
-  return { frames, segs, tickMs, total: tickMs * n, length: dist };
+  return { frames, segs, tickMs, total: tickMs * n, length: dist, rings: walls ? ringsNear(walls, frames) : null };
 }
 
 // The taxi `ms` into the drive. stepIndex is the tick being driven (the tick count once done), so steps below it are
 // complete; facing is the heading of the move being made (not the eased heading), for the signal lamp; progress is stepIndex plus how far through the tile; tick is the light tick, as the sim uses it.
 export function stateAt(track, ms) {
+  const st = rawStateAt(track, ms);
+  if (track.rings?.length) { const { x, z, heading } = clearOfWalls(st.x, st.z, st.heading, track.rings); Object.assign(st, { x, z, heading }); };
+  return st;
+}
+function rawStateAt(track, ms) {
   const { frames, segs, tickMs, total } = track;
   const n = segs.length;
   if (n === 0 || ms >= total) {
