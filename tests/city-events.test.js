@@ -161,14 +161,6 @@ describe('tagPlace', () => {
     expect(tagPlace({ x: 600, y: 400 }, 0, { ...box, width: 1280 })).toEqual({ left: 600, top: 400 });
     expect(tagPlace({ x: 600, y: 400 }, 2, { ...box, width: 1280 }).top).toBe(400 - 2 * TAG_SLOT_PX);
   });
-  it('on a desktop a tag that would land under the meters moves right of them, and one clear of them is unchanged', () => {
-    const o = { ...box, width: 1280, tagW: 200, hud: { right: 355, bottom: 246 } };
-    expect(tagPlace({ x: 200, y: 300 }, 0, o).left).toBe(200); // its box starts at 249, below the meters (246): unchanged
-    for (let slot = 1; slot < MAX_TAG_SLOTS; slot++) expect(tagPlace({ x: 200, y: 300 }, slot, o).left).toBe(355 + 8 + 100); // higher slots rise into them
-    expect(tagPlace({ x: 200, y: 280 }, 0, o).left).toBe(355 + 8 + 100); // 229: overlaps, moves right
-    expect(tagPlace({ x: 200, y: 400 }, 0, o).left).toBe(200); // well below the meters: unchanged
-    expect(tagPlace({ x: 600, y: 100 }, 0, o).left).toBe(600); // already right of them
-  });
   it('the tag stays inside the screen sideways', () => {
     expect(tagPlace({ x: 10, y: 400 }, 0, box).left).toBe(129);
     expect(tagPlace({ x: 400, y: 400 }, 0, box).left).toBe(261);

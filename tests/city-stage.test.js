@@ -139,7 +139,15 @@ describe('the no-WebGL canvas', () => {
     createFallbackStage(f.el, 'x').playTrip({ track: { frames: tall, total: 1000 } });
     [...f.rafs.values()][0](performance.now() + 5000);
     expect(pts.length).toBe(3);
-    for (const [, y] of pts) { expect(y).toBeGreaterThanOrEqual(80 - 1e-9); expect(y).toBeLessThanOrEqual(620 + 1e-9); }
+    for (const [x, y] of pts) { expect(y).toBeGreaterThanOrEqual(80 - 1e-9); expect(y).toBeLessThanOrEqual(620 + 1e-9); expect(x).toBeGreaterThanOrEqual(80 - 1e-9); expect(x).toBeLessThanOrEqual(310 + 1e-9); }
+  });
+  it('on a small element the pad is a quarter of the side, so the route is never squeezed to nothing', () => {
+    const f = fake(); const pts = [];
+    f.el.clientWidth = 100; f.el.clientHeight = 100;
+    f.el.ownerDocument.createElement = () => ({ getContext: () => new Proxy({}, { get: (_, k) => (...a) => { if (k === 'moveTo' || k === 'lineTo') pts.push(a); }, set: () => true }), style: {}, remove() {} });
+    createFallbackStage(f.el, 'x').playTrip({ track: { frames: [{ x: 0, z: 0 }, { x: 100, z: -100 }], total: 1000 } });
+    [...f.rafs.values()][0](performance.now() + 5000);
+    for (const [x, y] of pts) for (const v of [x, y]) { expect(v).toBeGreaterThanOrEqual(25 - 1e-9); expect(v).toBeLessThanOrEqual(75 + 1e-9); }
   });
   it('sizes the canvas for the pixel ratio, capped at 2', () => {
     const f = fake(); createFallbackStage(f.el, 'x').playTrip({ track: { frames, total: 1000 } });

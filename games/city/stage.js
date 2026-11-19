@@ -33,7 +33,7 @@ function drawTrip(el, track, onDone) {
   cv.width = w * dpr; cv.height = h * dpr;
   cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
   el.appendChild(cv);
-  const plot = routePlot(track.frames, w, h, 80), n = track.frames.length, t0 = performance.now(); // 80 px keeps the line off the top buttons, the bottom bar and the note
+  const plot = routePlot(track.frames, w, h, Math.min(80, w / 4, h / 4)), n = track.frames.length, t0 = performance.now(); // 80 px keeps the line off the top buttons, the bottom bar and the note
   let raf = 0, over = false;
   const stop = () => { over = true; if (raf) cancelAnimationFrame(raf); raf = 0; cv.remove(); };
   const finish = () => { if (over) return; stop(); if (onDone) onDone(); };
