@@ -21,6 +21,20 @@ describe('city.css type scale (F38)', () => {
   });
 });
 
+describe('design-check flags (RF7d)', () => {
+  it('the note chips (the goal line) run at a 1.4 line height and grow when they wrap', () => {
+    const chip = css.match(/\n\.chip \{([^}]*)\}/)[1];
+    expect(chip).toMatch(/\/1\.4 /);
+    expect(chip).toMatch(/height: auto; min-height: 38px/);
+  });
+});
+
+describe('no-WebGL view (F25)', () => {
+  it('hides the goal and no-WebGL notes on the end card, so they never show through or under it', () => {
+    expect(css).toMatch(/\.play\[data-screen="done"\] \.notes[^{]*\{[^}]*display: none/);
+  });
+});
+
 describe('landscape phone end card (844x390)', () => {
   const land = css.slice(css.indexOf('/* Landscape phone'));
   it('lays the end card out in three columns with the buttons in a row under them, so it needs no inner scroll', () => {

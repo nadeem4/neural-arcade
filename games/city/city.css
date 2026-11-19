@@ -83,7 +83,7 @@ body:not(.rc-record) .play:not([data-screen="map"]) #labels span:not(.tag):not(.
 :root { --navy: #0E1A2B; --navy-line: #2A3647; --navy-soft: #1A2330; --grey: #8896A8; }
 .hud { position: absolute; top: 12px; left: 12px; right: 12px; display: grid; justify-items: start; gap: 8px; pointer-events: none; }
 .notes { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; max-width: calc(100% - 24px); pointer-events: none; }
-.chip { margin: 0; padding: 6px 12px; border-radius: 999px; background: var(--hud); color: var(--hud-ink); font: 600 var(--fs-sm)/1.3 var(--sans); text-align: center; }
+.chip { margin: 0; height: auto; min-height: 38px; padding: 6px 12px; border-radius: 999px; background: var(--hud); color: var(--hud-ink); font: 600 var(--fs-sm)/1.4 var(--sans); text-align: center; }
 .chip:empty, .chip[hidden] { display: none; }
 progress { display: block; height: 6px; margin: 0; border: 0; border-radius: 6px; background: #2A3647; accent-color: var(--hud-taxi); }
 progress[hidden] { display: none; }
@@ -206,7 +206,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 /* What each screen shows. */
 .play[data-screen="driving"] .ratecard, .play[data-screen="done"] .ratecard, .play[data-screen="racing"] .ratecard, .play[data-screen="raced"] .ratecard,
 .play[data-screen="driving"] #train, .play[data-screen="done"] #train, .play[data-screen="racing"] #train, .play[data-screen="raced"] #train { display: none; }
-.play[data-screen="done"] .meter, .play[data-screen="done"] .minimap { display: none; }
+.play[data-screen="done"] .meter, .play[data-screen="done"] .minimap, .play[data-screen="done"] .notes { display: none; } /* the notes (the goal and the no-WebGL line) would show under or through the end card */
 /* Nothing is left in the bottom bar on the end card and the race result: hide it rather than show an empty bar. */
 .play[data-screen="done"] .gbar, .play[data-screen="raced"] .gbar { display: none; }
 /* The end card's buttons stay in view while the rest scrolls. */

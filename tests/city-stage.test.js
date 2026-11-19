@@ -131,6 +131,16 @@ describe('the no-WebGL canvas', () => {
     st.clearRoute();
     expect(f.count()).toBe(0); expect(f.rafs.size).toBe(0);
   });
+  it('keeps the route clear of the top buttons and the bottom bar (80 px), so nothing runs under them (RF7d)', () => {
+    const f = fake(); const pts = [];
+    f.el.clientWidth = 390; f.el.clientHeight = 700;
+    f.el.ownerDocument.createElement = () => ({ getContext: () => new Proxy({}, { get: (_, k) => (...a) => { if (k === 'moveTo' || k === 'lineTo') pts.push(a); }, set: () => true }), style: {}, remove() {} });
+    const tall = [{ x: 0, z: 0 }, { x: 0, z: -500 }, { x: 20, z: -1000 }];
+    createFallbackStage(f.el, 'x').playTrip({ track: { frames: tall, total: 1000 } });
+    [...f.rafs.values()][0](performance.now() + 5000);
+    expect(pts.length).toBe(3);
+    for (const [, y] of pts) { expect(y).toBeGreaterThanOrEqual(80 - 1e-9); expect(y).toBeLessThanOrEqual(620 + 1e-9); }
+  });
   it('sizes the canvas for the pixel ratio, capped at 2', () => {
     const f = fake(); createFallbackStage(f.el, 'x').playTrip({ track: { frames, total: 1000 } });
     expect(f.el.appended[0].width).toBe(200);
