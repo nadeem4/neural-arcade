@@ -144,6 +144,31 @@ describe('rasterise footbridges', () => {
   });
 });
 
+describe('rasterise footbridges over roads', () => {
+  it('a footbridge over a street leaves the street road', () => {
+    const road = { pts: [[0, 18], [60, 18]], w: 8 };
+    const walk = { pts: [[30, 0], [30, 36]], w: 2, bridge: true };
+    const kind = rasterise({ roads: [road], paths: [walk] }, 5, 3, 12);
+    expect(kind[1]).toBe('rrrrr');
+    expect(kind[0][2]).toBe('f');
+  });
+});
+
+describe('convert link roads', () => {
+  // Road B is two-way, north to south at x 150 (col 12). A one-way slip road runs beside it, then on its own.
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const link = way(9301, { highway: 'secondary_link', oneway: 'yes' }, [[152, 20], [152, 60]]);
+  const alone = way(9302, { highway: 'secondary_link', oneway: 'yes' }, [[198, 200], [198, 230]]);
+  const city = convert({ elements: [...osm.elements, link, alone] }, miniConfig());
+  const rowOf = (y) => city.rows - 1 - Math.floor(y / 12);
+  it('a one-way link does not give a two-way road a direction', () => {
+    for (const y of [30, 42, 54]) expect(city.oneway[rowOf(y)][12]).toBe('.');
+  });
+  it('a one-way link on its own keeps its direction', () => {
+    expect(city.oneway[rowOf(210)][16]).toBe('N');
+  });
+});
+
 describe('rasterise cuts', () => {
   it('a cut is solid even over a bridge road, so levels OSM does not join stay apart', () => {
     const road = { pts: [[0, 18], [60, 18]], w: 8, bridge: true };
@@ -510,5 +535,16 @@ describe('the real map', () => {
       if (count >= 3) expect(['f', 'p']).not.toContain(real.kind[Math.floor(k / real.cols)][k % real.cols]);
     }
     expect(real.trees.length).toBe(4128);
+  });
+});
+
+describe('the real map: footbridges and slip roads', () => {
+  const real = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
+  it('streets under footbridges stay road (North Wabash, Ida B. Wells)', () => {
+    for (let r = 30; r <= 39; r++) expect(real.kind[r][12]).toBe('r');
+    expect(real.kind[93][39]).toBe('r');
+  });
+  it('the Ida B. Wells slip road (OSM way 59667610) leaves two-way Columbus Drive two-way', () => {
+    for (const [c, r] of [[51, 91], [50, 92]]) expect(real.oneway[r][c]).toBe('.');
   });
 });

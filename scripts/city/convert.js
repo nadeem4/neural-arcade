@@ -137,12 +137,13 @@ export function rasterise(features, cols, rows, cellM) {
   for (const p of features.rail ?? []) paintLine('x', p.pts, FENCE_HALF_CELLS * cellM); // ground or below grade: a trench, not a road
   for (const ring of features.water ?? []) paintArea('w', ring);
   for (const ring of features.buildings ?? []) paintArea('b', ring);
-  // A bridge road or footbridge passes over fences, walls, rail and water, so it is painted last; only a building stops it.
+  // A bridge road or footbridge passes over fences, walls, rail and water, so it is painted last; only a building stops it,
+  // and a footbridge never turns the street under it into footpath.
   const paintBridge = (ch, p) => {
     const half = halfWidth(p.w, cellM);
     for (let i = 0; i + 1 < p.pts.length; i++) {
       eachCellNear(p.pts[i], p.pts[i + 1], half, cols, rows, cellM, (c, r, cx, cy) => {
-        if (grid[r][c] !== 'b' && distToSegment(cx, cy, p.pts[i], p.pts[i + 1]) <= half) grid[r][c] = ch;
+        if (grid[r][c] !== 'b' && !(ch === 'f' && grid[r][c] === 'r') && distToSegment(cx, cy, p.pts[i], p.pts[i + 1]) <= half) grid[r][c] = ch;
       });
     }
   };
@@ -168,9 +169,20 @@ export function solidTrees(kind, trees, cols, rows, cellM, minTrees = TREES_SOLI
 
 // One-way direction ('N','E','S','W' or '.') per cell; only road cells carry one.
 // A one-way street wins over a crossing two-way street; the nearest one-way segment decides.
-function onewayRows(roads, kind, cols, rows, cellM) {
+// A one-way slip road (a *_link way, in `links`) never gives a cell of a two-way street a direction.
+function onewayRows(roads, kind, cols, rows, cellM, links = new Set()) {
   const out = Array.from({ length: rows }, () => Array(cols).fill('.'));
   const best = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+  const twoWay = Array.from({ length: rows }, () => Array(cols).fill(false));
+  for (const road of roads) {
+    if (road.oneway !== 0 || links.has(road)) continue;
+    const half = halfWidth(road.w, cellM);
+    for (let i = 0; i + 1 < road.pts.length; i++) {
+      eachCellNear(road.pts[i], road.pts[i + 1], half, cols, rows, cellM, (c, r, cx, cy) => {
+        if (distToSegment(cx, cy, road.pts[i], road.pts[i + 1]) <= half) twoWay[r][c] = true;
+      });
+    }
+  }
   for (const road of roads) {
     if (road.oneway === 0) continue;
     const half = halfWidth(road.w, cellM);
@@ -180,7 +192,7 @@ function onewayRows(roads, kind, cols, rows, cellM) {
       const dy = (b[1] - a[1]) * road.oneway;
       const dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'E' : 'W') : dy > 0 ? 'N' : 'S';
       eachCellNear(a, b, half, cols, rows, cellM, (c, r, cx, cy) => {
-        if (kind[r][c] !== 'r') return;
+        if (kind[r][c] !== 'r' || (links.has(road) && twoWay[r][c])) return;
         const d = distToSegment(cx, cy, a, b);
         if (d <= half && d < best[r][c]) {
           best[r][c] = d;
@@ -308,6 +320,7 @@ export function convert(osm, config) {
   const footprints = []; // every ring tagged building (even if also a part) paints the grid
   const buildings = [], roads = [], paths = [], sidewalks = [], parks = [], water = [], plazas = [], fences = [];
   const signalPts = [];
+  const links = new Set(); // *_link slip roads: their one-way never overrides a two-way street
   const bridges = new Set(); // roads and footpaths that pass over whatever lies below them: bridge=yes or layer >= 1
   const isBridge = (t) => (t.bridge && t.bridge !== 'no') || parseInt(t.layer, 10) >= 1;
   for (const el of osm.elements) {
@@ -345,6 +358,7 @@ export function convert(osm, config) {
           const road = { pts, w: roadWidth(t, hw), oneway: oneWayOf(t), lanes: parseInt(t.lanes, 10) > 0 ? parseInt(t.lanes, 10) : null, cls: hw, name: t.name ?? null };
           roads.push(road);
           if (isBridge(t)) bridges.add(road);
+          if (t.highway.endsWith('_link')) links.add(road);
         }
       } else if (PATH_WIDTH[hw] && t.area === 'yes') {
         const ring = ringOf(el.geometry);
@@ -389,7 +403,7 @@ export function convert(osm, config) {
       cuts: (config.cuts ?? []).map((c) => ({ pts: [project(c.from.lat, c.from.lon, bbox), project(c.to.lat, c.to.lon, bbox)] })) },
     cols, rows, cellM,
   ), trees, cols, rows, cellM);
-  const oneway = onewayRows(roads, kind, cols, rows, cellM);
+  const oneway = onewayRows(roads, kind, cols, rows, cellM, links);
 
   const cellOf = (x, y) => [Math.floor(x / cellM), rows - 1 - Math.floor(y / cellM)];
   const roadCell = (label, p) => {
