@@ -4,7 +4,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from './sim.js';
 import { createAgent, trainEpisodes, greedyRoute } from './train.js';
-import { PRESETS, EPISODES, HYPER, SEED } from './presets.js';
+import { PRESETS, EPISODES, HYPER, SEED, GOAL_SECONDS } from './presets.js';
+import { tripEvents } from './events.js';
+import { bakePeople } from './people.js';
+import { trueGoal } from './goal.js';
 import { buildReceipt, verdictOf } from './receipt.js';
 
 export const STORY_SEED = SEED;
@@ -32,7 +35,11 @@ export function recordStory(seed = STORY_SEED) {
     }
     const route = greedyRoute(agent, p.rewards);
     const analysis = analyzeRoute(world, route, p.rewards);
-    return { id: p.id, rewards: p.rewards, route, analysis, receipt: buildReceipt(p.rewards, analysis), verdict: verdictOf(p.rewards, analysis) };
+    // What the city wanted from this trip (goal.js), counting the people it scared (people.js), as the end card does.
+    const scares = bakePeople(world, city, tripEvents(world, p.rewards, route), { seed }).scares;
+    const g = trueGoal({ analysis, scares, goalSeconds: GOAL_SECONDS });
+    const cityScore = { score: g.score, arrived: g.arrived, onTime: g.onTime, scared: g.scared };
+    return { id: p.id, rewards: p.rewards, route, analysis, city: cityScore, receipt: buildReceipt(p.rewards, analysis), verdict: verdictOf(p.rewards, analysis) };
   });
   const { cols, rows, kind, oneway, signals, pickup, dropoff } = city;
   return { seed, map: { cols, rows, kind, oneway, signals, pickup, dropoff }, cards, learning: { episodes: SNAPSHOTS, heat } };
