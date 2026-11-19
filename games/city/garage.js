@@ -54,3 +54,4 @@ export function parse(text, { max = MAX_TAXIS, cellCount = Infinity } = {}) {
     return createGarage(max);
   }
 }
+export const garageLabel = n => (n ? `Garage, ${n} kept` : 'Garage');

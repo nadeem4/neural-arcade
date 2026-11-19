@@ -3,7 +3,7 @@
 /* Slim top bar, then a stage that fills the rest of the screen. */
 :root { --bar: 52px; }
 .citybar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; height: var(--bar); padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); background: var(--surface); border-bottom: 1px solid var(--line); }
-.citybar .logo { font-size: 15px; }
+.citybar .logo { min-height: 44px; display: inline-flex; align-items: center; font-size: 15px; }
 .citybar .sep { color: var(--ink-2); }
 .citybar h1 { white-space: nowrap; margin: 0; font-size: 15px; font-weight: 700; letter-spacing: normal; line-height: 1; }
 .citybar .tag { flex: 1; min-width: 0; margin: 0 0 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--ink-2); }
@@ -43,7 +43,7 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
   .citybar .sep, .citybar #howTab, .citybar .long { display: none; }
 }
 @media (max-width: 360px) {
-  .receipt, .receipt .row { font-size: 13px; }
+  .receipt, .receipt .row { font-size: 14px; } /* the same 14 px as every other phone width: the narrowest phones keep their text size */
 }
 
 /* Drive HUD: dark navy panels over the map, in light and dark. Numbers use Space Grotesk where installed, else the page font. */
@@ -93,12 +93,21 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .chase { height: 36px; padding: 0 14px; border: 1px solid var(--navy-line); background: var(--hud); color: var(--hud-ink); font-size: 13px; }
 .chase[aria-pressed="true"] { background: var(--hud-taxi); color: #141C27; }
 .chase:disabled { opacity: .5; cursor: not-allowed; }
+/* Icon buttons (RF6): one 44 px square with an inline SVG, drawn in the same line style as the (i) icon. */
+.ibtn { position: relative; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 10px; }
+.chase.ibtn { height: 44px; padding: 0; }
+.ibtn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.citybar nav a.ibtn { color: var(--ink-2); }
+.badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--hud-taxi); color: #141C27; font: 700 13px/18px var(--sans); text-align: center; }
+.badge[hidden] { display: none; }
+#mute .off, #mute[aria-pressed="true"] .on { display: none; }
+#mute[aria-pressed="true"] .off { display: inline; }
 
-.ratecard, .endcard { position: absolute; z-index: 3; display: grid; align-content: start; gap: 12px; padding: 18px 20px; border: 1px solid var(--navy-line); border-radius: 18px; background: var(--hud); color: #E8EDF4; font-family: var(--sans); overflow-y: auto; box-shadow: 0 8px 30px rgba(0, 0, 0, .35); }
+.ratecard, .endcard { position: absolute; z-index: 3; display: grid; align-content: start; gap: 12px; padding: 18px 20px; border: 1px solid var(--navy-line); border-radius: 18px; background: var(--hud); color: #E8EDF4; font-family: var(--sans); overflow-y: auto; overscroll-behavior: contain; box-shadow: 0 8px 30px rgba(0, 0, 0, .35); }
 .ratecard { top: 12px; left: 12px; width: 330px; max-height: calc(100% - 100px); background: var(--navy); }
 .ratecard h2 { display: flex; align-items: center; justify-content: space-between; margin: 0; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
 .ratecard .info, .endcard .info { margin: 0; color: #E8EDF4; }
-.ratecard .info-text, .endcard .info-text { margin: 0; color: #C5CEDA; font-size: 14px; }
+.ratecard .info-text, .endcard .info-text { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--navy-soft); color: #E8EDF4; font-size: 14px; }
 .rates { display: grid; gap: 10px; }
 .rate .short { display: none; }
 .rate { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 14px; color: #C5CEDA; }
@@ -176,52 +185,67 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
   .topright .info, .chase { min-height: 44px; height: 44px; }
+  .notes .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: 16px; line-height: 1.4; }
+  .citybar .logo, .citybar h1 { font-size: 16px; }
+  #labels span { font-size: 13px; }
+  .meter-label { font-size: 13px; }
+  .meter-counts { font-size: 13px; }
+  .receipt, .receipt .row { font-size: 14px; }
+  .ratecard .info-text, .endcard .info-text { font-size: 16px; line-height: 1.45; }
+  .topright .info-text { font-size: 16px; line-height: 1.45; }
   .topright .info { width: 44px; }
-  .hud { top: 108px; left: 8px; } /* below the two rows of top buttons */
-  .minimap { top: 108px; right: 8px; width: 84px; height: 84px; }
+  .hud { top: 60px; left: 8px; } /* just under the single row of 44 px top buttons */
+  .minimap { top: 60px; right: 8px; width: 84px; height: 84px; }
   .meter { min-width: 120px; padding: 8px 12px; }
   .meter-total { font-size: 26px; }
   .meter-goal { padding: 6px 12px; }
   .meter-goal .meter-total { font-size: 20px; }
   .meter-goal .meter-counts { display: none; } /* keeps the second meter small so the map stays visible */
   .ratecard, .endcard { top: auto; left: 8px; right: 8px; width: auto; transform: none; padding: 12px 14px; gap: 8px; }
-  .ratecard { bottom: 80px; max-height: 35svh; }
+  .ratecard { bottom: 80px; max-height: 40svh; }
   .endcard { bottom: 8px; max-height: 60svh; display: flex; flex-direction: column; } /* the bottom bar is hidden on the end card, so it sits at the bottom edge */
   .rates { grid-template-columns: 1fr 1fr; gap: 4px 12px; }
   .ratecard { gap: 6px; padding: 10px 12px; }
-  .ratecard h2 { font-size: 13px; }
+  .ratecard h2 { font-size: 14px; }
+  .ladder h3 { font-size: 14px; }
   .link { padding: 0; }
-  .rate { grid-template-columns: 1fr; gap: 2px; font-size: 13px; }
+  .rate { grid-template-columns: 1fr; gap: 2px; font-size: 14px; }
   .rate-label { line-height: 1.2; white-space: nowrap; }
   .rate .long { display: none; } .rate .short { display: inline; }
   .stepper { justify-content: space-between; }
-  .rate output { font-size: 18px; }
-  .rstep { width: 44px; height: 36px; }
+  .rate output { font-size: 20px; }
+  .rstep { width: 44px; height: 44px; }
   .ladder { gap: 6px; }
   .step { height: 44px; }
-  .ladder-note { font-size: 13px; }
-  .ladder-note b { font-size: 15px; }
+  .ladder-note { font-size: 14px; line-height: 1.4; }
+  .ladder-note b { font-size: 16px; }
   .gbar { left: 8px; right: 8px; bottom: 8px; transform: none; justify-content: center; }
   .gbar .go { flex: 1; }
   .bar-drive { flex: 1; gap: 8px; }
   .bar-drive progress { flex: 1; width: auto; min-width: 40px; }
-  .gbar .btn { padding: 0 10px; font-size: 13px; }
-  .notes { bottom: calc(35svh + 96px); }
-  .toast { bottom: 76px; }
-  .endcard .big { font-size: 28px; }
+  .gbar .btn { padding: 0 10px; font-size: 14px; }
+  .notes { bottom: calc(40svh + 96px); width: calc(100% - 16px); }
+  .toast { bottom: 76px; font-size: 16px; }
+  .endcard .big { font-size: 32px; }
+  .end-head { font-size: 16px; }
   .end-stats { gap: 18px; order: 2; }
-  .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 14px; } .end-honest { order: 3; font-size: 13px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
+  .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 16px; line-height: 1.45; } .end-honest { order: 3; font-size: 14px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
   .end-honest ul { max-height: 22svh; overflow-y: auto; }
-  .end-actions .btn, .end-actions .go { height: 40px; padding: 0 12px; font-size: 13px; }
+  .end-actions .btn, .end-actions .go { height: 44px; padding: 0 12px; font-size: 14px; }
+  #endcard .end-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } /* all three on one row */
+  #endcard .end-actions .btn, #endcard .end-actions .go { padding: 0 6px; line-height: 1.2; white-space: normal; }
+  .end-stats > div:first-child { grid-template-columns: auto auto; justify-content: start; align-items: center; }
+  .end-stats > div:first-child .big { grid-column: 1 / -1; }
+  .end-stats .info { margin: -12px -8px -12px 0; } /* the (i) sits at the end of the goal label with a 44 px tap target, without growing the row */
 }
 /* Phone ladder: one row of five 44 px steps, the current step's title and one line under it; roomy taps for Reset and (i). */
 @media (max-width: 600px) {
-  .steps { gap: 4px; }
+  .steps { gap: 8px; }
   .step { min-width: 44px; }
 
   .ladder-note b, .ladder-note span { display: block; }
   .ratecard .link { min-height: 40px; padding: 10px 0; }
-  .ratecard .info { min-width: 40px; min-height: 40px; }
+  .ratecard .info, .endcard .info { min-width: 44px; min-height: 44px; }
 }
 #train[data-stale="true"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--hud-taxi) 35%, transparent); }
 
@@ -284,19 +308,20 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .hud { gap: 6px; }
   .meter { min-width: 0; padding: 6px 10px; }
   .meter-total { font-size: 22px; }
-  .racebanner { bottom: 76px; padding: 14px; }
-  .race-title { font-size: 19px; }
+  .racebanner { bottom: 76px; padding: 10px 14px; }
+  .race-title { font-size: 20px; }
+  .race-detail { font-size: 14px; line-height: 1.4; }
 }
 @media (max-width: 720px) {
-  .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: 85svh; padding: 10px; gap: 8px; }
+  .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: calc(100% - 68px - env(safe-area-inset-bottom)); padding: 10px; gap: 8px; }
   .drawer .bays { grid-template-columns: 1fr; gap: 8px; padding-bottom: 6px; }
   .bay { padding: 8px 10px; gap: 4px; }
   .bay-head svg { width: 54px; height: 27px; } /* a smaller taxi icon, so four bays and the race bar fit a 660 px phone */
   .drawer .racebar { grid-template-columns: 1fr auto; align-items: center; padding-top: 8px; } /* the line and START RACE side by side */
-  .drawer .racebar p { font-size: 12px; line-height: 1.25; }
+  .drawer .racebar p { font-size: 13px; line-height: 1.3; }
   .bay-chips { display: none; } /* the name and the time say enough on a phone; this keeps four bays on screen */
-  .bay-time { font-size: 18px; }
-  .drawer .btn, .drawer .go.small { height: 44px; } /* real tap targets */
+  .bay-time { font-size: 20px; }
+  .drawer .btn, .drawer .go.small { height: 44px; font-size: 14px; } /* real tap targets */
   .bay { grid-template-columns: 1fr auto; align-items: center; } .bay-head { grid-column: 1; grid-row: 1; } .bay-stats { grid-column: 2; grid-row: 1; } .bay-actions { grid-column: 1 / -1; grid-row: 2; gap: 8px; } .bay-try { display: none; } .bay-race-wrap { flex: 1 1 0; min-width: 0; display: flex; } .bay-actions .btn, .bay-actions .go { flex: 1 1 0; min-width: 0; padding: 0 6px; white-space: nowrap; } /* name and time on one row, three full-width buttons below */
   .bay.empty { display: none; }
 }
@@ -317,3 +342,8 @@ body.rc-record.rc-endcard #endcard:not([hidden]) { display: grid !important; max
 body.rc-record #endcard .end-actions, body.rc-record #endcard .share-line, body.rc-record #endcard .info { display: none !important; }
 body.rc-record #endcard :focus, body.rc-record #endcard :focus-visible { outline: none; }
 body.rc-record.rc-endcard .play[data-screen="done"] .meter, body.rc-record.rc-endcard .play[data-screen="done"] .minimap, body.rc-record.rc-endcard .play[data-screen="done"] #labels .tag { display: none !important; } /* the card is the whole picture: no meters, minimap or leftover tags over it */
+
+/* Landscape phone: the stage is only as tall as the screen minus the header, so the bottom bar stays on screen. */
+@media (max-height: 500px) and (max-width: 950px) {
+  .play { min-height: 0; }
+}
