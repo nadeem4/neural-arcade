@@ -20,6 +20,8 @@ import { createTaxiMaker, TAXI_SCALE, TAXI_Y } from './scene-taxi.js';
 import { createTrafficLayer } from './scene-traffic.js';
 import { trafficTier } from './traffic.js';
 import { createPeopleLayer } from './scene-people.js';
+import { createHighlights } from './scene-highlights.js';
+import { highlightsAt } from './highlights.js';
 
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
@@ -199,6 +201,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;
   let taxiB = null, trailB = null, trailPtsB = null; // the second car of a race
   let peopleLayer = null; // the pedestrians of the trip on screen (scene-people.js)
+  const highlights = createHighlights(scene, city.cellM); // the flash, ring and arrow at each recent offence, made once
   let raceTags = []; // two name tags over the cars (DOM, in the label layer), alive for a race
   const RACE_SCALE = 2.5; // both cars are drawn bigger in a race so they read from the high camera
   const clearRaceTags = () => { raceTags.forEach(s => s.remove()); raceTags = []; };
@@ -379,7 +382,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   // Playback: its own rAF loop, alive only while a trip plays. Each frame asks drive.js for the taxi and director.js for the camera.
   let loopId = 0;
   const finish = () => {
-    const p = play; play = null;
+    const p = play; play = null; highlights.clear();
     if (p && p.race) { clearRaceTags(); for (const t of [taxi, taxiB]) t?.scale.setScalar(TAXI_SCALE); } // back to normal size
     if (p && p.onDone) p.onDone();
   }; // exactly once per trip
@@ -433,6 +436,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     furniture.setTrains(ms); // trains on the L: a pure function of the trip's ms
     trafficLayer.update(ms / play.track.tickMs, play.onHonk); // a no-op unless a single trip started traffic
     play.phase = phase; play.t = t;
+    highlights.update(highlightsAt(play.offences, elapsed + (SWOOP_MS - intro), { reduced: !motionAllowed() })); // offence times are on the clock that starts with the swoop
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
     play.onFrame?.(st, play.race ? null : taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
@@ -474,7 +478,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (wait <= 0) { if (heatTimer) clearTimeout(heatTimer); applyHeat(); } else if (!heatTimer) heatTimer = setTimeout(applyHeat, wait);
     },
     // track: drive.js driveTrack; events: events.js tripEvents (the page reads those; the stage only needs the track).
-    playTrip({ track, events, people, onFrame, onDone, onHonk } = {}) {
+    playTrip({ track, events, people, offences, onFrame, onDone, onHonk } = {}) {
       stopRoute();
       const frames = track.frames;
       taxi = taxiMaker.make();
@@ -486,7 +490,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       trail = new THREE.Line(tg, mats.trail); trail.frustumCulled = false;
       scene.add(taxi, trail);
       if (people) peopleLayer = createPeopleLayer(scene, people, { drawn: tier.peopleDrawn, shadows: !phone, seed: people.seed });
-      play = { track, onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
+      play = { track, offences, onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
       if (!motionAllowed() && !manualClock) { // no animation: the end state with the whole trail and the final numbers (record mode steps frames itself)
         const end = stateAt(track, track.total);
         place({ ...end, stepIndex: frames.length - 2 }); // place() draws the trail to stepIndex + 1, the last point, and the taxi at its end position
@@ -550,7 +554,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     setShot(name) { chase = name === 'chase' && motionAllowed(); },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      stopRoute(); trafficLayer.dispose(); taxiMaker.dispose(); taxiMakerB.dispose(); sky.dispose(); envTarget.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
+      stopRoute(); highlights.dispose(); trafficLayer.dispose(); taxiMaker.dispose(); taxiMakerB.dispose(); sky.dispose(); envTarget.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
       for (const { span } of labels) span.remove();
       ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
       window.removeEventListener('blur', disengage);

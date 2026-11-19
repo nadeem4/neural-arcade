@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { buildReceipt } from '../games/city/receipt.js';
-import { tripEvents, tagsFor, layoutTags, TAG_SLOT_PX, MAX_TAG_SLOTS } from '../games/city/events.js';
+import { tripEvents, tagsFor, layoutTags, TAG_SLOT_PX, MAX_TAG_SLOTS, TAG_LIFE_MS, tagPlace } from '../games/city/events.js';
+import { pruneTags } from '../games/city/record.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const world = loadWorld(read('chicago.json'));
@@ -61,9 +62,9 @@ describe('tagsFor', () => {
     expect(tagsFor(step({ red: true }), R)).toEqual([{ text: '-30 red light run', kind: 'fine' }]);
     expect(tagsFor(step({ wrong: true }), R)).toEqual([{ text: '-30 wrong way', kind: 'fine' }]);
   });
-  it('shows a fare tag on arrival, and a zero-rate fine without an amount', () => {
+  it('shows a fare tag on arrival, and a zero-rate fine that says free', () => {
     expect(tagsFor(step({ done: true }), R)).toEqual([{ text: '+100 fare', kind: 'pay' }]);
-    expect(tagsFor(step({ red: true }), { ...R, red: 0 })).toEqual([{ text: 'red light run', kind: 'fine' }]);
+    expect(tagsFor(step({ red: true }), { ...R, red: 0 })).toEqual([{ text: 'red light: free', kind: 'fine' }]);
   });
 });
 
@@ -86,7 +87,7 @@ describe('layoutTags', () => {
     expect(slots).toContain(1);
   });
   it('slots are a whole tag-height apart on screen so tags never overlap', () => {
-    expect(TAG_SLOT_PX).toBeGreaterThanOrEqual(30);
+    expect(TAG_SLOT_PX).toBeGreaterThanOrEqual(40);
   });
 });
 
@@ -109,8 +110,66 @@ describe('the tag pop animation', () => {
     const css = readFileSync(new URL('../games/city/city.css', import.meta.url), 'utf8');
     const frames = css.match(/@keyframes tag-pop \{([^\n]*)\}/)[1];
     const ys = [...frames.matchAll(/translate\(-50%, (-?\d+)%\)/g)].map((m) => Number(m[1]));
-    const tagPx = 30; // a 15px label with 4px padding top and bottom
+    const tagPx = 34; // a 22px label with 4px padding top and bottom
     const up = ys.map((y) => -y); // how far above the anchor, in % of the tag's height
     expect(((Math.max(...up) - Math.min(...up)) / 100) * tagPx).toBeLessThan(TAG_SLOT_PX);
+  });
+});
+
+describe('offence tags you cannot miss', () => {
+  const css = readFileSync(new URL('../games/city/city.css', import.meta.url), 'utf8');
+  it('a 0 fine says free, for all four kinds', () => {
+    const rw = { off: 0, red: 0, wrong: 0 };
+    const text = (step) => tagsFor(step, rw).map((t) => t.text);
+    expect(text({ off: true, park: true })).toEqual(['park tile: free']);
+    expect(text({ off: true, park: false })).toEqual(['footpath tile: free']);
+    expect(text({ red: true })).toEqual(['red light: free']);
+    expect(text({ wrong: true })).toEqual(['wrong way: free']);
+  });
+  it('a fined offence keeps its wording', () => {
+    expect(tagsFor({ red: true }, { red: 5 }).map((t) => t.text)).toEqual(['-5 red light run']);
+  });
+  it('the tag text is 22px on a desktop and at least 20px down to a 360px phone', () => {
+    const size = css.match(/#labels span\.tag \{[^}]*font: 700 clamp\((\d+)px, ([\d.]+)vw, (\d+)px\)/);
+    expect(Number(size[3])).toBeGreaterThanOrEqual(22);
+    expect(Math.min(Number(size[3]), Math.max(Number(size[1]), (Number(size[2]) * 360) / 100))).toBeGreaterThanOrEqual(20);
+  });
+  it('a tag lives at least 1.5 s: the constant, the animation and the record-mode prune', () => {
+    expect(TAG_LIFE_MS).toBeGreaterThanOrEqual(1500);
+    expect(pruneTags([{ born: 0 }], 1500)).toHaveLength(1);
+    const dur = Number(css.match(/#labels span\.tag \{[^}]*animation: tag-pop ([\d.]+)s/)[1]) * 1000;
+    expect(dur).toBeGreaterThanOrEqual(1500);
+    const frames = css.match(/@keyframes tag-pop \{([^\n]*)\}/)[1];
+    const hold = Number(frames.match(/(\d+)% \{ opacity: 1; transform: translate\(-50%, -\d+%\) scale\(1\)/)[1]);
+    const rise = Number(frames.match(/(\d+)% \{ opacity: 1/)[1]);
+    expect((dur * (hold - rise)) / 100).toBeGreaterThanOrEqual(1500); // fully opaque for at least 1.5 s
+  });
+  it('layoutTags never drops a live tag: three at once keep three distinct slots', () => {
+    const out = layoutTags(layoutTags([{}, {}, {}]));
+    expect(out.map((t) => t.slot)).toEqual([0, 1, 2]);
+  });
+  it('main.js uses TAG_LIFE_MS, not a literal', () => {
+    const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
+    expect(main).toContain('TAG_LIFE_MS');
+    expect(main).not.toContain('1400)');
+  });
+});
+
+describe('tagPlace', () => {
+  const box = { width: 390, tagW: 250, tagH: 34, meterBottom: 330 };
+  it('on a desktop the tag rises from the taxi, one slot per tag', () => {
+    expect(tagPlace({ x: 600, y: 400 }, 0, { ...box, width: 1280 })).toEqual({ left: 600, top: 400 });
+    expect(tagPlace({ x: 600, y: 400 }, 2, { ...box, width: 1280 }).top).toBe(400 - 2 * TAG_SLOT_PX);
+  });
+  it('the tag stays inside the screen sideways', () => {
+    expect(tagPlace({ x: 10, y: 400 }, 0, box).left).toBe(129);
+    expect(tagPlace({ x: 400, y: 400 }, 0, box).left).toBe(261);
+  });
+  it('on a phone the tags sit below the meters, whole, and grow downward without touching them', () => {
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) {
+      const { top } = tagPlace({ x: 195, y: 300 }, slot, { ...box, phone: true });
+      expect(top - 1.5 * box.tagH).toBeGreaterThanOrEqual(box.meterBottom); // the tag's visible top (it is drawn 1.5 heights above `top`)
+    }
+    expect(tagPlace({ x: 195, y: 300 }, 1, { ...box, phone: true }).top - tagPlace({ x: 195, y: 300 }, 0, { ...box, phone: true }).top).toBe(TAG_SLOT_PX);
   });
 });

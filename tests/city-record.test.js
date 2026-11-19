@@ -44,7 +44,7 @@ describe('timing', () => {
 describe('pruneTags', () => {
   it('drops tags that are lifeMs old or older', () => {
     const tags = [{ born: 0 }, { born: 900 }, { born: 1500 }];
-    expect(pruneTags(tags, 1500)).toEqual([{ born: 900 }, { born: 1500 }]);
+    expect(pruneTags(tags, 1700)).toEqual([{ born: 900 }, { born: 1500 }]);
   });
 });
 

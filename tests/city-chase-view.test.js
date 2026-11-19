@@ -25,16 +25,35 @@ describe('treesToHide', () => {
 describe('foldTag', () => {
   it('counts the same tag on consecutive steps', () => {
     const a = foldTag(null, { text: '-20 park tile', kind: 'fine' }, 3);
-    const b = foldTag(a, { text: '-20 park tile', kind: 'fine' }, 4);
+    const b = foldTag(a, { text: '-20 park tile', kind: 'fine' }, 4, true);
     expect(a.count).toBe(1);
     expect(b.count).toBe(2);
     expect(b.label).toBe('-20 park tile ×2');
     expect(a.label).toBe('-20 park tile');
   });
-  it('starts again for a different tag or a gap in steps', () => {
+  it('starts again for a different tag, or when the earlier bubble is gone', () => {
     const a = foldTag(null, { text: 'x', kind: 'fine' }, 3);
-    expect(foldTag(a, { text: 'y', kind: 'fine' }, 4).count).toBe(1);
-    expect(foldTag(a, { text: 'x', kind: 'fine' }, 6).count).toBe(1);
+    expect(foldTag(a, { text: 'y', kind: 'fine' }, 4, true).count).toBe(1);
+    expect(foldTag(a, { text: 'x', kind: 'fine' }, 4, false).count).toBe(1);
+  });
+  it('folds into a live bubble of the same words however many steps later (alternating offences)', () => {
+    let run = foldTag(null, { text: 'x', kind: 'fine' }, 3);
+    run = foldTag(run, { text: 'x', kind: 'fine' }, 9, true);
+    run = foldTag(run, { text: 'x', kind: 'fine' }, 20, true);
+    expect(run.count).toBe(3);
+    expect(run.label).toBe('x ×3');
+  });
+  it('the counts per label over a trip add up to the offences', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { loadWorld } = await import('../games/city/sim.js');
+    const { tripEvents, tagsFor } = await import('../games/city/events.js');
+    const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
+    const world = loadWorld(read('chicago.json')), c = read('story.json').cards.find((x) => x.id === 'speed');
+    const events = tripEvents(world, c.rewards, c.route);
+    const bubbles = {}, done = [];
+    events.steps.forEach((s, i) => { for (const tg of tagsFor(s, c.rewards).filter((x) => x.kind === 'fine')) { const prev = bubbles[tg.text]; const run = foldTag(prev, tg, i, !!prev); if (run.count === 1 && prev) done.push(prev); bubbles[tg.text] = run; } });
+    const total = {}; for (const r of [...done, ...Object.values(bubbles)]) total[r.text] = (total[r.text] ?? 0) + r.count;
+    expect(total['footpath tile: free'] ?? total['-' + c.rewards.off + ' footpath tile']).toBe(c.analysis.offTiles - c.analysis.parkTiles);
   });
 });
 

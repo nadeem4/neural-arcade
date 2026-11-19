@@ -12,7 +12,7 @@ import { webglAvailable, chooseStage, noWebglFlag } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, runSummary, pruneTags, cardRewards } from './record.js';
 import { buildOffences } from './offences.js';
-import { tripEvents, tagsFor, foldTag, layoutTags, TAG_SLOT_PX } from './events.js';
+import { tripEvents, tagsFor, foldTag, layoutTags, TAG_LIFE_MS, tagPlace } from './events.js';
 import { bakePeople } from './people.js';
 import { driveTrack } from './drive.js';
 import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
@@ -55,8 +55,8 @@ const setBar = (el, x) => { if (el._x !== x) { el._x = x; el.style.transform = `
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
 function popTag(tag, at, i) {
   const prev = hud.lastTag?.[tag.text];
-  const run = foldTag(prev, tag, i);
-  let span = run.count > 1 && prev.span.isConnected ? prev.span : null;
+  const run = foldTag(prev, tag, i, !!prev?.span.isConnected);
+  let span = run.count > 1 ? prev.span : null;
   let slot = span ? prev.slot : undefined;
   if (!span) { // a new bubble takes the lowest free slot above the taxi, so live tags never overlap
     span = document.createElement('span'); $('labels').append(span);
@@ -64,12 +64,16 @@ function popTag(tag, at, i) {
     slot = layoutTags([...live, {}]).at(-1).slot;
     for (const t of Object.values(hud.lastTag ?? {})) if (t.slot === slot && t.span.isConnected) { t.span.remove(); if (rec) rec.tags = rec.tags.filter((x) => x.span !== t.span); } // all slots busy: the oldest tag gives way
   }
-  hud.lastTag = { ...hud.lastTag, [tag.text]: { ...run, span, slot } };
+  const others = { ...hud.lastTag }; delete others[tag.text]; // re-added last, so "oldest" means least recently refreshed
+  hud.lastTag = { ...others, [tag.text]: { ...run, span, slot } };
   span.className = `tag ${tag.kind}`; span.textContent = run.label;
-  span.style.left = at.x + 'px'; span.style.top = at.y - slot * TAG_SLOT_PX + 'px';
+  const lab = $('labels').getBoundingClientRect(); // tags stay on screen: clamped sideways, and below the meters on a phone
+  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top });
+  span.style.left = pos.left + 'px'; span.style.top = pos.top + 'px';
   span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
+  if (run.count > 1) span.style.animationDelay = `-${TAG_LIFE_MS * 0.05}ms`; // a folded tag restarts already opaque (past the 5% fade-in), so a run of offences does not blink
   if (rec) { rec.tags = rec.tags.filter(t => t.span !== span); rec.tags.push({ span, born: rec.now }); return; } // expiry follows seek time, not the wall clock
-  clearTimeout(span._t); span._t = setTimeout(() => span.remove(), 1400);
+  clearTimeout(span._t); span._t = setTimeout(() => span.remove(), TAG_LIFE_MS);
 }
 // One frame of the drive: the meter and minimap follow the taxi; each tile it finishes can fire tags and a blip.
 function hudFrame(state, at) {
@@ -260,7 +264,7 @@ function drive(t) {
   $('driveProgress').value = 0;
   startHud(t.events, t.route, t.rewards, t.people);
   t.ended = false;
-  stage.playTrip({ track: t.track, events: t.events, people: t.people, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
+  stage.playTrip({ track: t.track, events: t.events, people: t.people, offences: t.offences, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
 }
 async function train(req) {
   const progress = $('progress');
@@ -280,7 +284,7 @@ async function train(req) {
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events, { walls });
-    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), offences: buildOffences(events, req, track), ended: false };
+    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), offences: buildOffences(events, req, track, { world }), ended: false };
     go('trained');
     drive(trip);
   } catch {
@@ -341,7 +345,7 @@ function driveKept(taxi) {
   rewards = { ...taxi.rewards };
   const events = tripEvents(world, taxi.rewards, taxi.route);
   const track = driveTrack(routeFrames(world, cellM, taxi.route), events, { walls });
-  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), offences: buildOffences(events, taxi.rewards, track), ended: false };
+  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), offences: buildOffences(events, taxi.rewards, track, { world }), ended: false };
   raceRun = null; stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
   go('replay');
   drive(trip);

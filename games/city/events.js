@@ -40,10 +40,10 @@ export function tagsFor(step, rewards, scared = 0) {
   return tags;
 }
 
-// Folds a tag into the run before it: the same text on the very next step adds to a count instead of stacking a second tag.
-// prev is the last result (or null); i is the step index. Returns { text, kind, count, i, label }.
-export function foldTag(prev, tag, i) {
-  const count = prev && prev.text === tag.text && i - prev.i <= 1 ? prev.count + 1 : 1;
+// Folds a tag into the bubble of the same words that is still on screen (live): it adds to a count instead of stacking a second tag.
+// prev is the last result for this text (or null); live says its bubble is still up; i is the step index. Returns { text, kind, count, i, label }.
+export function foldTag(prev, tag, i, live = false) {
+  const count = prev && live && prev.text === tag.text ? prev.count + 1 : 1;
   return { text: tag.text, kind: tag.kind, count, i, label: count > 1 ? `${tag.text} ×${count}` : tag.text };
 }
 
@@ -51,7 +51,8 @@ export function foldTag(prev, tag, i) {
 // (or the taxi: slot 0 is already above it). `tags` is the live tags: each { slot } keeps its slot, one without a slot takes
 // the lowest free one. There are at most MAX_TAG_SLOTS: when all are taken, a newcomer reuses the slot of the oldest live
 // tag (the first in the list; that one is dropped by the caller). Returns new objects. Pure.
-export const TAG_SLOT_PX = 32;
+export const TAG_SLOT_PX = 46;
+export const TAG_LIFE_MS = 1700; // how long a tag stays up (real time in the game, seek time in record mode)
 export const MAX_TAG_SLOTS = 3;
 export function layoutTags(tags) {
   const used = new Set(tags.filter((t) => t.slot !== undefined).map((t) => t.slot));
@@ -64,4 +65,14 @@ export function layoutTags(tags) {
     used.add(slot);
     return { ...t, slot };
   });
+}
+
+// Where a tag's anchor goes, in the label layer's pixels. The tag is drawn about 1.5 tag heights above its anchor.
+// Desktop: above the taxi, one slot higher per tag. Phone (phone: true): the taxi's anchor is under the meters, so the tags
+// sit just below them and grow downward. Either way the tag stays inside the screen sideways. Pure.
+export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0 }) {
+  const half = tagW / 2 + 4;
+  const left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
+  const top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - slot * TAG_SLOT_PX;
+  return { left, top };
 }

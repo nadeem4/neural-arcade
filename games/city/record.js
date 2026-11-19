@@ -2,6 +2,7 @@
 import { PRESETS } from './presets.js';
 import { SWOOP_MS, PULLBACK_MS } from './director.js';
 import { endCardModel } from './endcard.js';
+import { TAG_LIFE_MS } from './events.js';
 
 // Parse the query string. Returns null when not recording, else { card, fps }.
 export function parseRecord(search) {
@@ -25,8 +26,8 @@ export const frameCount = (totalMs, fps) => Math.floor((totalMs * fps) / 1000) +
 
 export const frameMs = (i, fps) => (i * 1000) / fps;
 
-// Keep tags younger than lifeMs (the game's tag lifetime in main.js popTag).
-export const pruneTags = (tags, nowMs, lifeMs = 1400) => tags.filter(t => nowMs - t.born < lifeMs);
+// Keep tags younger than lifeMs (the game's tag lifetime, events.js TAG_LIFE_MS).
+export const pruneTags = (tags, nowMs, lifeMs = TAG_LIFE_MS) => tags.filter(t => nowMs - t.born < lifeMs);
 
 // What the run was, for window.__rc.summary: the end card's figures plus the offence timeline (seek clock). Full-trip numbers.
 export function runSummary({ card, rewards, analysis, scared, offences, goalSeconds }) {
