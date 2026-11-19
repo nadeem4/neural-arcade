@@ -188,6 +188,10 @@ describe('city page layout', () => {
     const labels = [...html.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map(m => m[1].trim()).filter(t => /[A-Z]{3,}/.test(t));
     expect(labels).toEqual([]);
   });
+  it('only the small eyebrow is uppercase: the Not legal flag inside it stays sentence case', () => {
+    expect(css).toMatch(/\.end-head\s*\{[^}]*text-transform:\s*uppercase/);
+    expect(css).toMatch(/\.end-flag\s*\{[^}]*text-transform:\s*none/);
+  });
   it('starts on the map screen', () => {
     expect(html).toMatch(/id="play"[^>]*data-screen="map"/);
   });

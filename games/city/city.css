@@ -137,7 +137,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .endcard { top: 50%; left: 40px; transform: translateY(-50%); width: 400px; max-height: calc(100% - 24px); padding: 24px; }
 .endcard[hidden] { display: none; }
 .end-head { display: flex; justify-content: space-between; align-items: baseline; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
-.end-flag { font: 600 14px var(--sans); letter-spacing: 0; color: var(--hud-fine); }
+.end-flag { font: 600 14px var(--sans); letter-spacing: 0; text-transform: none; color: var(--hud-fine); }
 .end-flag.ok { color: var(--hud-pay); }
 .end-stats { display: flex; gap: 28px; }
 .end-stats > div { display: grid; align-content: start; gap: 2px; }
