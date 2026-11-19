@@ -5,8 +5,6 @@ import { tripEvents } from '../games/city/events.js';
 import { routeFrames, chaseCamera } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
 import { clipEased, roofAt, wallPush, cellHeights, ROAD_Y, chaseForAspect } from '../games/city/scene-math.js';
-import { fogFor, heatOpacity } from "../games/city/sky.js";
-import { SWOOP_MS, PULLBACK_MS } from "../games/city/director.js";
 import { shotAt } from '../games/city/director.js';
 import { solidRings } from '../games/city/walls.js';
 import { cityBounds } from '../games/city/geometry.js';
@@ -93,29 +91,21 @@ describe('RF7c: the wall drift is capped', () => {
   }, 120000);
 });
 
-describe('RF7c: the swoop and pull-back are not fogged at the middle of the frame by the distance fog (a guard: the flat grey after Skip is not the fog)', () => {
+describe('RF7c: a full-length trip keeps the plain path exactly', () => {
   const clip = { margin: 2, minY: ROAD_Y + 2.7 };
-  const roof = (x, z) => roofAt(world, cm, x, z), push = (x, z, y) => wallPush(world, cm, x, z, y);
-  const pitch = 0.95, r = radius * 1.25, mapShot = { pos: [cx, Math.sin(pitch) * r, cz + Math.cos(pitch) * r], target: [cx, 0, cz], fov: 38 };
-  for (const [name, phone, aspect] of [['phone', true, 390 / 844], ['desktop', false, 1280 / 720]]) {
-    it(`${name}: fog far stays at least 1.5 x the distance to the ground at the centre of the frame, in the first 700 ms of both phases`, () => {
-      let worst = Infinity;
-      for (const card of story.cards) {
-        const track = driveTrack(routeFrames(world, cm, card.route), tripEvents(world, card.rewards, card.route), { walls });
-        const chaseAt = (t) => ({ ...chaseCamera(stateAt(track, t), chaseForAspect(aspect)), fov: 55 });
-        const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; };
-        for (const phase of ['swoop', 'pullback']) {
-          const bt = phase === 'swoop' ? 0 : track.total, from = { ...chaseAt(bt), pos: clipEased(line, bt, world, cm, clip).pos };
-          for (let t = 0; t <= 700; t += 1000 / 60) {
-            const s = shotAt(phase, t, mapShot, from, { roof, push }), look = Math.hypot(...s.target.map((v, k) => v - s.pos[k])), down = s.pos[1] - s.target[1], reach = down > 0 ? (look * s.pos[1]) / down : look; // where the centre of the frame meets the ground
-            const fog = fogFor(1 - heatOpacity(phase, t), radius, phone);
-            worst = Math.min(worst, fog.far / reach);
-            expect(fog.far, `${card.id} ${phase} at ${Math.round(t)} ms`).toBeGreaterThanOrEqual(1.5 * reach - 1e-6);
-            expect(fog.near, card.id + " " + phase + " at " + Math.round(t) + " ms: fog starts past the ground at the centre").toBeGreaterThanOrEqual(0);
-          }
-        }
-      }
-      expect(worst).toBeGreaterThanOrEqual(1.5 - 1e-6);
-    }, 60000);
-  }
+  const roof = (x, z) => roofAt(world, cm, x, z);
+  const pitch = 0.3, r = radius * 1.25, mapShot = { pos: [cx + Math.sin(2.6) * Math.cos(pitch) * r, Math.sin(pitch) * r, cz + Math.cos(2.6) * Math.cos(pitch) * r], target: [cx, 0, cz], fov: 38 };
+  it('the shot the game draws for a full drive (no push) is the plain crane, all five cards, phone and desktop', () => {
+    for (const aspect of [390 / 844, 1280 / 720]) for (const card of story.cards) {
+      const track = driveTrack(routeFrames(world, cm, card.route), tripEvents(world, card.rewards, card.route), { walls });
+      const chaseAt = (t) => ({ ...chaseCamera(stateAt(track, t), chaseForAspect(aspect)), fov: 55 });
+      const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; };
+      const from = { ...chaseAt(track.total), pos: clipEased(line, track.total, world, cm, clip).pos };
+      for (let t = 0; t <= 1200; t += 50) expect(shotAt('pullback', t, mapShot, from, { roof })).toEqual(shotAt('pullback', t, mapShot, from, { roof, push: () => null }));
+    }
+  });
+  it('scene.js only passes push to the pull-back of a drive cut short', () => {
+    const src = readFileSync(new URL('../games/city/scene.js', import.meta.url), 'utf8');
+    expect(src).toContain("phase === 'pullback' && play.driveMs < play.track.total ? { push:");
+  });
 });

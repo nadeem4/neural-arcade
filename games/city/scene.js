@@ -256,7 +256,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (phase === 'chase') shot = { ...shot, pos: clipEased(line, play.t, world, city.cellM, clip).pos }; // the pull-in eased over +-0.5 s of the trip (a pure function of the trip time)
       else { // the swoop and pullback: the director's crane between the clipped chase pose at the chase boundary and the map shot, held over the roofs (never pulled toward the taxi)
         const bt = phase === 'swoop' ? 0 : play.driveMs, from = { ...chaseAt(bt), pos: clipEased(line, bt, world, city.cellM, clip).pos };
-        shot = shotAt(phase, play.t, mapShot, from, { reduced: !motionAllowed(), roof: (x, z) => roofAt(world, city.cellM, x, z), push: (x, z, y) => wallPush(world, city.cellM, x, z, y) });
+        shot = shotAt(phase, play.t, mapShot, from, { reduced: !motionAllowed(), roof: (x, z) => roofAt(world, city.cellM, x, z), ...(phase === 'pullback' && play.driveMs < play.track.total ? { push: (x, z, y) => wallPush(world, city.cellM, x, z, y) } : {}) }); // the sideways drift is only for a pull-back from a drive cut short (maxms)
       }
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;
