@@ -155,7 +155,9 @@ describe('the scene under reduced motion', () => {
     expect(main).toContain('driveMs: rec?.maxMs');
     expect(main).toContain('tripMs(trip.track.total, { maxMs: cfg.maxms, endcard: cfg.endcard })');
     expect(main).toContain("'rc-endcard'");
-    expect(readFileSync(new URL('../games/city/city.css', import.meta.url), 'utf8')).toContain('body.rc-record.rc-endcard #endcard:not([hidden])');
+    const css = readFileSync(new URL('../games/city/city.css', import.meta.url), 'utf8');
+    expect(css).toContain('body.rc-record.rc-endcard #endcard:not([hidden])');
+    expect(css).toContain('body.rc-record.rc-endcard .play[data-screen="done"] .meter'); // the held card is alone on screen
   });
   it('the page wires the summary', () => {
     const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
