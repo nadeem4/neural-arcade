@@ -2,10 +2,10 @@
 // The policy still moves one tile per tick; here each tick becomes a glide with eased speed, turns through corners
 // and a stop for every wait (red lights and the like). Presentation only: it never changes what the sim decided.
 import { tickMsFor } from './playback.js';
+import { ringsNear, fitShifts, shiftAt, smooth, SHIFT_CAP, PER } from './walls.js';
 
 const TURN_IN = 0.45;  // a U-turn (no arc is possible): stop, then swing round while pulling away from rest (the first 45% of the tile)
 
-const smooth = (u) => u * u * (3 - 2 * u);
 const diff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a)); // shortest signed turn from a to b
 const angle = (a, b) => Math.abs(diff(a, b));
 const towards = (a, b, t) => a + diff(a, b) * t;
@@ -61,7 +61,9 @@ function pathAt(path, s) {
 
 // segs[i] describes tick i. A move has h0, h1, h2: the heading before, during and after it, and its path and the distance
 // driven before it (dist0). A wait has from and to.
-export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length) } = {}) {
+// `walls` (optional) is walls.js solidRings(city): each tile gets one small sideways shift (found once, here) that keeps the drawn car
+// clear of buildings, lamps and poles; stateAt eases it between tiles. unclear counts tiles where no shift within the cap cleared the car.
+export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length), walls = null } = {}) {
   const n = frames.length - 1;
   const stepAt = (i) => events.steps[i];
   const isWait = (i) => i >= 0 && i < n && (stepAt(i)?.moved === false || (frames[i].x === frames[i + 1].x && frames[i].z === frames[i + 1].z));
@@ -110,12 +112,24 @@ export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length) }
     if (g.m1) g.m1 = chord / g.path.len;
     dist += g.path.len;
   });
-  return { frames, segs, tickMs, total: tickMs * n, length: dist };
+  const track = { frames, segs, tickMs, total: tickMs * n, length: dist, shifts: null, unclear: 0 };
+  if (walls) {
+    const poses = [], maxStep = (0.18 * tickMs) / (1000 / 60) / 1.5; // the eased shift moves at most 1.5 x the step per tile: keep it under 0.18 m a 60 fps frame
+    for (let k = 0; k <= n * PER; k++) { const { x, z, heading } = rawStateAt(track, Math.min(k / PER, n) * tickMs); poses.push({ x, z, heading }); }
+    const { offsets, unclear } = fitShifts(poses, n, ringsNear(walls, frames), SHIFT_CAP, maxStep);
+    track.shifts = offsets; track.unclear = unclear;
+  }
+  return track;
 }
 
 // The taxi `ms` into the drive. stepIndex is the tick being driven (the tick count once done), so steps below it are
 // complete; facing is the heading of the move being made (not the eased heading), for the signal lamp; progress is stepIndex plus how far through the tile; tick is the light tick, as the sim uses it.
 export function stateAt(track, ms) {
+  const st = rawStateAt(track, ms), sh = track.shifts;
+  if (sh) { const s = shiftAt(sh, Math.max(0, ms) / track.tickMs); st.x += s[0]; st.z += s[1]; } // the tile shifts, eased between tiles
+  return st;
+}
+export function rawStateAt(track, ms) {
   const { frames, segs, tickMs, total } = track;
   const n = segs.length;
   if (n === 0 || ms >= total) {

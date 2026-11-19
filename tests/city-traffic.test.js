@@ -6,6 +6,7 @@ import { createAgent, trainEpisodes } from '../games/city/train.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
+import { solidRings } from '../games/city/walls.js';
 import { createTraffic, taxiOf, trafficTier, nearMissCount, newPoses, LANE_M } from '../games/city/traffic.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
@@ -144,10 +145,10 @@ describe('cars react to the taxi', () => {
     }
   });
   it('no car box ever overlaps the taxi box, stopped cars included, on the real drive of every card', () => {
-    for (const c of cards) {
+    for (const c of cards) for (let seed = 1; seed <= 3; seed++) {
       const events = tripEvents(world, c.rewards, c.route);
-      const track = driveTrack(routeFrames(world, 12, c.route), events);
-      const t = createTraffic(world, { seed: 1, count: trafficTier().count, cellM: 12, taxi: taxiOf(events) });
+      const track = driveTrack(routeFrames(world, 12, c.route), events, { walls: solidRings(CITY) });
+      const t = createTraffic(world, { seed, count: trafficTier().count, cellM: 12, taxi: taxiOf(events) });
       const p = newPoses(t.count);
       let hits = 0;
       for (let ms = 0; ms <= track.total; ms += track.tickMs / 16) {
@@ -155,9 +156,9 @@ describe('cars react to the taxi', () => {
         t.posesAt(ms / track.tickMs, p);
         for (let i = 0; i < t.count; i++) if (boxesOverlap(s.x, s.z, s.heading, p.x[i], p.z[i], p.h[i])) hits++;
       }
-      expect(hits, c.id).toBe(0);
+      expect(hits, c.id + " seed " + seed).toBe(0);
     }
-  });
+  }, 30000);
   it('no two car boxes overlap, on every card', () => {
     for (const c of cards) {
       const events = tripEvents(world, c.rewards, c.route);

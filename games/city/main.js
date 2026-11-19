@@ -24,6 +24,7 @@ import { createGarage, keep, remove, serialize, parse, validTaxi } from './garag
 import { nameFor, behaviourNames, uniqueName, noteFor } from './naming.js';
 import { honestReward } from './honest.js';
 import { renderGarage } from './garage-view.js';
+import { solidRings } from './walls.js';
 import { raceTracks, raceStateAt, result, togglePick, leaderBlips } from './race.js';
 import { renderRaceBar, showRaceMeters, updateRaceHud, showBanner } from './race-view.js';
 import { LADDER_KEY, cardFor, matchStep, parseRan, markRan, ladderModel } from './ladder.js';
@@ -33,7 +34,7 @@ const $ = id => document.getElementById(id);
 const peopleFor = events => bakePeople(world, cityData, events, { seed: SEED }); // the people of one trip, the same on every device; they only react, never change pay or training
 const signed = n => (n > 0 ? '+' : '') + n;
 
-let world = null, cityData = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
+let world = null, cityData = null, walls = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
 let picks = [], raceRun = null; // garage ids picked for a race; the race on screen: { race, names, ended }
 let worker = null, workerOk = typeof Worker === 'function', latest = 0, msgId = 0, shareText = '';
 const pending = new Map(); // message id -> { resolve, reject, onProgress }
@@ -277,7 +278,7 @@ async function train(req) {
     if (step && !rec) { ran = markRan(ran, step); saveRan(); ladderRuns[step] = { analysis: res.analysis, honest: honestReward(world, req) }; } // the step counts only if the card was not edited
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
-    const track = driveTrack(routeFrames(world, cellM, res.route), events);
+    const track = driveTrack(routeFrames(world, cellM, res.route), events, { walls });
     trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), ended: false };
     go('trained');
     drive(trip);
@@ -336,7 +337,7 @@ function driveKept(taxi) {
   jobs.cancel(); latest++; sound.unlock();
   rewards = { ...taxi.rewards };
   const events = tripEvents(world, taxi.rewards, taxi.route);
-  const track = driveTrack(routeFrames(world, cellM, taxi.route), events);
+  const track = driveTrack(routeFrames(world, cellM, taxi.route), events, { walls });
   trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), ended: false };
   raceRun = null; stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
   go('replay');
@@ -349,7 +350,7 @@ function startRace() {
   const chosen = picks.map(id => garage.taxis.find(t => t.id === id));
   if (!stage?.ready || screen === 'training' || chosen.length !== 2 || !chosen.every(t => validTaxi(t, cells))) return;
   let race;
-  try { race = raceTracks(world, cellM, chosen); } catch { toast('Those two taxis start from different places.'); return; }
+  try { race = raceTracks(world, cellM, chosen, walls); } catch { toast('Those two taxis start from different places.'); return; }
   showGarage(false);
   jobs.cancel(); latest++; sound.unlock();
   raceRun = null; hud = null; trip = null; stage.clearRoute();
@@ -476,7 +477,7 @@ async function start() {
   enable(false);
   try {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
-    cityData = city; world = loadWorld(city); cellM = city.cellM; // the one map load: the worker gets it by message
+    cityData = city; walls = solidRings(city); world = loadWorld(city); cellM = city.cellM; // the one map load: the worker gets it by message
     // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
     const webgl = !noWebglFlag(location.search) && webglAvailable();
     const scene = webgl ? await import('./scene.js').catch(() => null) : null;
