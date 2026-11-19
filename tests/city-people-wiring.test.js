@@ -34,8 +34,8 @@ describe('the end card', () => {
     const base = endCardModel(R, speed.analysis, GOAL_SECONDS);
     const m = endCardModel(R, speed.analysis, GOAL_SECONDS, null, 3);
     expect(m.city).toBe(base.city - 3 * SCARE_COST);
-    expect(m.scaredLine).toBe('Scared 3 people');
-    expect(endCardModel(R, speed.analysis, GOAL_SECONDS, null, 1).scaredLine).toBe('Scared 1 person');
+    expect(m.scaredLine).toBe('It scared 3 people on the footpath (−15 city score).');
+    expect(endCardModel(R, speed.analysis, GOAL_SECONDS, null, 1).scaredLine).toBe('It scared 1 person on the footpath (−5 city score).');
     expect(base.scaredLine).toBe('');
   });
 });

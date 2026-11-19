@@ -81,7 +81,7 @@ add(() => drawMap($('canvasMap'), M.fig1));
 // ---------- Fig. 2: where the taxi has been ----------
 for (const sn of M.fig2.snapshots) {
   const n = sn.episode.toLocaleString('en');
-  const cv = mk($('learnGrids'), `Map shaded by how often the taxi visited each square after ${n} trips`, `After ${n} trip${sn.episode === 1 ? '' : 's'}`);
+  const cv = mk($('learnGrids'), `Map shaded by how often the taxi visited each tile after ${n} trips`, `After ${n} trip${sn.episode === 1 ? '' : 's'}`);
   add(() => drawMap(cv, { ...M.fig1 }, { dim: 0.45, heat: sn.digits }));
 }
 
@@ -107,7 +107,6 @@ for (const r of M.fig5) {
   $('cityScores').append(li);
 }
 
-$('seed').textContent = S.seed;
 const counts = M.fig2.snapshots.map(sn => sn.episode.toLocaleString('en'));
 $('snaps').textContent = `${counts.slice(0, -1).join(', ')} and ${counts.at(-1)}`;
 

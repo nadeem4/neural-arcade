@@ -18,7 +18,7 @@ const race = raceTracks(world, city.cellM, [fast, legal]);
 
 // A crafted race: totals stand in for events, so the winner rules are tested without a route.
 const fake = (a, b) => ({ cars: [a, b].map(t => ({ events: { totals: t } })) });
-const T = (arrived, seconds, reward) => ({ arrived, seconds, reward });
+const T = (arrived, seconds, reward, extra = {}) => ({ arrived, seconds, reward, tiles: 30, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, ...extra });
 
 describe('raceTracks', () => {
   it('makes two cars on one clock, both starting at the same pickup and tick 0', () => {
@@ -121,7 +121,7 @@ describe('bannerLine', () => {
 describe('raceBarLine', () => {
   it('asks for the missing pick, then names the pair', () => {
     expect(raceBarLine([])).toBe('');
-    expect(raceBarLine(['Speedy'])).toBe('Pick one more taxi to race Speedy');
+    expect(raceBarLine(['Speedy'])).toBe('Pick one more taxi to race “Speedy”');
     expect(raceBarLine(['Speedy', 'Legal'])).toBe('Race: Speedy vs Legal, same pickup, same lights');
   });
 });
@@ -161,7 +161,7 @@ describe('raceDetailOf', () => {
   it('explains a dead heat on time with different rewards', () => {
     const t = [T(true, 40, 50), T(true, 40, 90)];
     const text = raceDetailOf(result(fake(...t)), t, names);
-    expect(text).toBe('Speedy: 40 s, earned +50. Legal: 40 s, earned +90. Same time, so nobody wins, even though one earned more.');
+    expect(text).toBe('Speedy: 40 s, legal. Legal: 40 s, legal. Same time, so nobody wins. Pay does not decide a race.');
   });
   it('adds nothing when the rewards match or someone won', () => {
     const same = [T(true, 40, 70), T(true, 40, 70)];
@@ -169,4 +169,21 @@ describe('raceDetailOf', () => {
     const won = [T(true, 30, 50), T(true, 40, 90)];
     expect(raceDetailOf(result(fake(...won)), won, names)).not.toContain('Same time');
   });
+  it('says who was legal, and adds the city score line when a cheat wins', () => {
+    const t = [T(true, 62, 38, { offTiles: 19, parkTiles: 0, redRuns: 3, wrongWays: 10 }), T(true, 77, 23)];
+    const text = raceDetailOf(result(fake(...t)), t, ['Red runner', 'By the book']);
+    expect(text).toBe('Red runner: 62 s, drove 19 tiles on footpaths, ran 3 red lights, went the wrong way on 10 tiles. By the book: 77 s, legal. Faster, but the city scored it 60. By the book scored 100.');
+  });
+  it('a legal winner needs no city line, and a cheat that won by arriving is told so', () => {
+    const legal = [T(true, 50, 40), T(true, 62, 38, { redRuns: 1 })];
+    expect(raceDetailOf(result(fake(...legal)), legal, names)).toBe('Speedy: 50 s, legal. Legal: 62 s, ran 1 red light.');
+    const arrived = [T(true, 62, 38, { redRuns: 1 }), T(false, 100, -90)];
+    expect(raceDetailOf(result(fake(...arrived)), arrived, names)).toBe('Speedy: 62 s, ran 1 red light. Legal: did not arrive. But the city scored it 60. Legal scored 0.');
+  });
+  it('uses the people each car scared, so the race score equals that taxi end card score', () => {
+    const t = [T(true, 62, 38, { offTiles: 19, redRuns: 3, wrongWays: 10 }), T(true, 77, 23)];
+    const text = raceDetailOf(result(fake(...t)), t, ['Red runner', 'By the book'], [2, 0]);
+    expect(text).toContain('Faster, but the city scored it 50. By the book scored 100.');
+  });
 });
+

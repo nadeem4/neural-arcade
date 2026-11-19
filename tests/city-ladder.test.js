@@ -27,13 +27,15 @@ describe('the five steps', () => {
       expect(s.card).toBe(p.name);
     }
   });
-  it('cover the teaching scope in order', () => {
-    expect(STEPS[0].title).toMatch(/only the pay/i);
-    expect(STEPS[1].title).toMatch(/gap/i);
-    expect(STEPS[2].title).toMatch(/cheat moves/i);
-    expect(STEPS[3].title).toMatch(/stand-in/i);
-    expect(STEPS[4].title).toMatch(/outcome/i);
-    expect(STEPS[4].title).toMatch(/side effects/i);
+  it('are named by their card, once, and carry their moral in the note text', () => {
+    expect(STEPS.map(s => s.card)).toEqual(['Pay it for speed', 'Fine the footpaths', 'Fine red lights too', 'Pay it by the mile', 'Fine everything']);
+    for (const s of STEPS) expect(s.title).toBe(s.card);
+    expect(STEPS[0].showed).toMatch(/only knows the pay/i);
+    expect(STEPS[1].showed).toMatch(/any gap gets exploited/i);
+    expect(STEPS[2].showed).toMatch(/cheat moves/i);
+    expect(STEPS[3].showed).toMatch(/stand-in/i);
+    expect(STEPS[4].showed).toMatch(/outcome/i);
+    expect(STEPS[4].showed).toMatch(/side effects/i);
     expect(STEPS[4].showed).toMatch(/drive/i);
   });
   it('say what the recorded speed run really drove over: footpaths, not park grass', () => {
@@ -41,7 +43,9 @@ describe('the five steps', () => {
     expect(speed.offTiles).toBeGreaterThan(0);
     expect(speed.parkTiles).toBe(0);
     expect(STEPS[0].showed).toMatch(/footpath/i);
-    expect(STEPS[0].showed).not.toMatch(/across the park/i);
+    expect(STEPS[0].showed).toMatch(/red light/i);
+    expect(STEPS[0].showed).toMatch(/wrong way/i);
+    expect(STEPS[0].showed).not.toMatch(/across the park|Nothing on the card made that cost/i);
     expect(STEPS[1].showed).toMatch(/footpath/i);
   });
 });
@@ -94,7 +98,7 @@ describe('ladderModel', () => {
   it('a step not yet run shows what to watch for', () => {
     const m = ladderModel(cardFor('walk'), []);
     expect(m.note.kind).toBe('watch');
-    expect(m.note.head).toBe(`2. ${STEPS[1].title}`);
+    expect(m.note.head).toBe('2. Fine the footpaths');
     expect(m.note.text).toBe(STEPS[1].watch);
   });
   it('an edited card is your own card, with nothing current', () => {
@@ -107,7 +111,7 @@ describe('ladderModel', () => {
   });
   it('labels each step for a screen reader with its card and whether it is done', () => {
     const m = ladderModel(cardFor('speed'), ['mile']);
-    expect(m.steps[3].label).toBe(`Step 4: ${STEPS[3].title}. Card: ${STEPS[3].card}. Done.`);
+    expect(m.steps[3].label).toBe('Step 4: Pay it by the mile. Done.');
     expect(m.steps[0].label).not.toMatch(/Done/);
   });
 });

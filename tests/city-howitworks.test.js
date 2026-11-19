@@ -45,7 +45,7 @@ describe('city how it works page', () => {
   });
   it('describes the finished game: the new trip, the city score, and what the taxi ignores', () => {
     const text = html.replace(/<[^>]+>/g, ' ');
-    for (const w of ['Millennium Park', 'Van Buren', 'What the city wanted', 'people', 'traffic', 'honks']) expect(text, w).toContain(w);
+    for (const w of ['Millennium Park', 'Van Buren', 'City score', 'people', 'traffic', 'honks']) expect(text, w).toContain(w);
     expect(text).toContain(`${GOAL_SECONDS} seconds`);
     expect(text).toMatch(/does not (pay|reward)|not in the reward|never in the reward/i);
   });
@@ -55,5 +55,11 @@ describe('city how it works page', () => {
   it('says reward and rate card, never pay slip', () => {
     expect(html + story).not.toMatch(/pay ?slip/i);
     expect(read('assets/games.js')).not.toMatch(/pay ?slip/i);
+  });
+  it('uses the glossary words and the card names of the five steps (RF7a)', () => {
+    expect(html).not.toMatch(/square|slider|honest route|red light run|wrong-way move/i);
+    expect(story).not.toMatch(/square/i);
+    expect(html).not.toContain('(seed ');
+    for (const name of ['Pay it for speed', 'Fine the footpaths', 'Fine red lights too', 'Pay it by the mile', 'Fine everything']) expect(html).toContain(name);
   });
 });

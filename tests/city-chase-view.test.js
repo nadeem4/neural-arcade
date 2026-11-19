@@ -53,7 +53,7 @@ describe('foldTag', () => {
     const bubbles = {}, done = [];
     events.steps.forEach((s, i) => { for (const tg of tagsFor(s, c.rewards).filter((x) => x.kind === 'fine')) { const prev = bubbles[tg.text]; const run = foldTag(prev, tg, i, !!prev); if (run.count === 1 && prev) done.push(prev); bubbles[tg.text] = run; } });
     const total = {}; for (const r of [...done, ...Object.values(bubbles)]) total[r.text] = (total[r.text] ?? 0) + r.count;
-    expect(total['footpath tile: free'] ?? total['-' + c.rewards.off + ' footpath tile']).toBe(c.analysis.offTiles - c.analysis.parkTiles);
+    expect(total['footpath: free'] ?? total['−' + c.rewards.off + ' footpath']).toBe(c.analysis.offTiles);
   });
 });
 

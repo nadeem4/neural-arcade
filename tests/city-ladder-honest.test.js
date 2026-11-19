@@ -20,10 +20,19 @@ describe('honest notes', () => {
     expect(m.note.text).not.toBe(STEPS[0].showed);
     expect(m.note.text).toBe('This run: never arrived, cut through the park.');
   });
-  it('a step ticked from storage with no run this session shows no showed line', () => {
+  it('a step ticked from storage with no run this session keeps its lesson', () => {
     const m = ladderModel(cardFor('walk'), ['walk'], {});
-    expect(m.note.kind).toBe('again');
-    expect(m.note.text).not.toBe(STEPS[1].showed);
+    expect(m.note.kind).toBe('showed');
+    expect(m.note.text).toBe(STEPS[1].showed);
+  });
+  it('all five steps ticked and step 5 loaded says the lesson is done', () => {
+    const all = STEPS.map(s => s.id);
+    const m = ladderModel(cardFor('legal'), all, {});
+    expect(m.note.kind).toBe('done');
+    expect(m.note.head).toBe('5. Fine everything');
+    expect(m.note.text).toBe(STEPS[4].showed + ' All five steps done. Now write your own card, or race your taxis in the Garage.');
+    expect(ladderModel(cardFor('walk'), all, {}).note.kind).toBe('showed');
+    expect(ladderModel(cardFor('legal'), all.slice(1), {}).note.kind).toBe('showed');
   });
   it('watch text names what changed from the previous card, with numbers from the presets', () => {
     const words = { off: /park|footpath/i, red: /red light/i, wrong: /wrong way/i, perTile: /tile/i };

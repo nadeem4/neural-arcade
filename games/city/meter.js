@@ -17,7 +17,7 @@ export function meterAt(events, f) {
   return { total, counts, seconds: whole };
 }
 
-// "What the city wanted" is a score out of 100, so its bar is 0 to 100.
+// "City score" is a score out of 100, so its bar is 0 to 100.
 export const METER_SCALE = 100;
 export const barFraction = (v) => Math.max(0, Math.min(1, v / METER_SCALE));
 

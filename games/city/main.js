@@ -32,10 +32,10 @@ import { raceTracks, raceStateAt, result, togglePick, leaderBlips } from './race
 import { renderRaceBar, showRaceMeters, updateRaceHud, showBanner } from './race-view.js';
 import { LADDER_KEY, cardFor, matchStep, parseRan, markRan, ladderModel } from './ladder.js';
 import { buildLadder, updateLadder } from './ladder-view.js';
+import { signed } from './receipt.js';
 
 const $ = id => document.getElementById(id);
 const peopleFor = events => bakePeople(world, cityData, events, { seed: SEED }); // the people of one trip, the same on every device; they only react, never change pay or training
-const signed = n => (n > 0 ? '+' : '') + n;
 
 let world = null, cityData = null, walls = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
 let picks = [], raceRun = null; // garage ids picked for a race; the race on screen: { race, names, ended }
@@ -93,7 +93,7 @@ function hudFrame(state, at, overhead) {
   hud.wasOverhead = !!overhead;
   const m = meterAt(hud.events, state.progress);
   setText($('meterTotal'), meterText(m.total));
-  setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`);
+  setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · footpath ${m.counts.off} · red light ${m.counts.red} · wrong way ${m.counts.wrong}`);
   setBar($('meterBar'), payFraction(m.total, hud.range));
   const g = goalAt(hud.events, hud.people.scaresAt(Math.floor(state.progress)), state.progress, GOAL_SECONDS);
   setText($('meterGoalTotal'), String(g));
@@ -151,7 +151,7 @@ async function runTrain(req, onProgress) {
     try { return await viaWorker(req, onProgress); } catch {
       if (mine !== latest) return null;
       workerOk = false; killWorker();
-      say('Training in the background did not start, so it runs here instead. It may take a few seconds.');
+      say('Training on this tab. The page may pause for a few seconds.');
     }
   }
   return trainInChunks(world, req, onProgress, 50, () => mine !== latest);
@@ -176,7 +176,7 @@ function go(event) {
   $('driveProgress').hidden = !(screen === 'driving' || screen === 'racing');
   $('raceBanner').hidden = screen !== 'raced';
   $('train').disabled = busy || !stage;
-  $('train').textContent = busy ? 'TRAINING…' : 'TRAIN & DRIVE';
+  $('train').textContent = busy ? 'Training…' : 'Train and drive';
   if (busy) showGarage(false);
   showRates();
   updateInset();
@@ -208,6 +208,7 @@ function pickStep(id) {
   rewards = cardFor(id); $('train').dataset.stale = 'true';
   showRates();
 }
+let endNextId = null;
 
 // ---------- The rate card ----------
 function showRates() {
@@ -234,27 +235,30 @@ function showStage() {
 // ---------- The end card ----------
 function showEnd(t) {
   const m = endCardModel(t.rewards, t.analysis, GOAL_SECONDS, honestReward(world, t.rewards), t.people.scares.length);
-  $('endTitle').textContent = `TRIP DONE · TRY ${t.tries}`;
+  $('endTitle').textContent = `Trip done · try ${t.tries}`;
   const flag = $('endFlag');
   flag.textContent = m.timeOk ? 'Legal and on time' : m.legal ? 'Legal, but slow' : 'Not legal';
   flag.className = 'end-flag' + (m.timeOk ? ' ok' : '');
   $('endTime').textContent = `${t.analysis.seconds} s`;
-  $('endTime').className = 'big ' + (m.timeOk ? 'pay' : 'fine');
+  $('endTime').className = 'big ' + m.timeTone;
   $('endGoal').textContent = m.timeLine;
   $('endEarned').textContent = signed(m.earned);
   $('endEarned').className = 'big ' + (m.earned >= 0 ? 'pay' : 'fine');
+  $('endcard').classList.toggle('has-next', !!m.next); $('endNext').hidden = !m.next; endNextId = m.next ? m.next.id : null;
+  if (m.next) $('endNext').textContent = m.next.label;
+  $('endEdit').className = m.next ? 'btn' : 'go small'; // the primary action is Next on a ladder card, else Change the rates
   const row = (cls, left, right) => {
     const d = document.createElement('div'); d.className = cls;
     for (const x of [left, right]) { const s = document.createElement('span'); s.textContent = x; d.append(s); }
     return d;
   };
   $('receipt').replaceChildren(
-    ...m.lines.map(l => row('row', l.detail ? `${l.label}: ${l.detail}` : l.label, signed(l.amount))),
+    ...m.lines.map(l => row('row', l.detail ? `${l.label}: ${l.detail}` : l.label, l.free ? 'free' : signed(l.amount))),
     row('row total', 'Total', signed(m.earned)));
   $('endVerdict').textContent = m.verdict;
   $('endHonest').hidden = !m.honest;
   $('endHonestLine').textContent = m.honestLine;
-  $('endCity').textContent = `What the city wanted: ${m.city} out of 100`;
+  $('endCity').textContent = `City score: ${m.city} out of 100`;
   $('endScared').textContent = m.scaredLine; $('endScared').hidden = !m.scaredLine;
   $('endCheats').replaceChildren(...m.cheats.map(c => { const li = document.createElement('li'); li.textContent = c.reason; return li; }));
   const fixed = goalReached(t.analysis);
@@ -267,7 +271,7 @@ function finish(t, event) {
   if (t.ended || t !== trip) return;
   t.ended = true;
   go(event); showEnd(t);
-  $('endEdit').focus({ preventScroll: true });
+  (t.rewards && !$('endNext').hidden ? $('endNext') : $('endEdit')).focus({ preventScroll: true });
 }
 
 // ---------- One drive, and one training run ----------
@@ -402,7 +406,7 @@ function finishRace(run, event) {
   run.ended = true;
   go(event);
   updateRaceHud(world, run.race, raceStateAt(run.race, run.race.total));
-  $('announce').textContent = `Race done. ${showBanner(run.race, result(run.race), run.names)}`;
+  $('announce').textContent = `Race done. ${showBanner(run.race, result(run.race), run.names, run.race.cars.map(c => peopleFor(c.events).scares.length))}`;
 }
 
 // ---------- Wiring ----------
@@ -430,6 +434,7 @@ function build() {
     stage.setMapView(on);
   });
   $('endEdit').addEventListener('click', () => { toMap('edit'); $('fareInc').focus({ preventScroll: true }); });
+  $('endNext').addEventListener('click', () => { if (!endNextId) return; toMap('edit'); pickStep(endNextId); $('train').focus({ preventScroll: true }); });
   $('endKeep').addEventListener('click', () => { if (trip) keepTrip(trip); });
   $('garage').addEventListener('click', () => { if ($('garageDrawer').hidden) openGarage(); else closeGarage(); });
   $('garageClose').addEventListener('click', closeGarage);
@@ -525,7 +530,7 @@ async function start() {
   loadGarage();
   enable(true);
   setupChase();
-  go('none'); // the map screen: the rate card and TRAIN & DRIVE
+  go('none'); // the map screen: the rate card and Train and drive
   showGarage(false);
   if (recCfg) await startRecord(recCfg);
 }

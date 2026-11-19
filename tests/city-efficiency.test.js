@@ -102,7 +102,7 @@ describe('RATE_KEYS and chips', () => {
   it('RATE_KEYS is the six keys in field order and every field has a chip label', () => {
     expect(RATE_KEYS).toEqual(['fare', 'time', 'off', 'red', 'wrong', 'perTile']);
     expect(FIELDS.map((f) => f.key)).toEqual(RATE_KEYS);
-    expect(FIELDS.map((f) => f.chip)).toEqual(['Fare', 'Second', 'Park', 'Red', 'Wrong way', 'Per tile']);
-    expect(rateChips({ fare: 100, time: 1, off: 0, red: 0, wrong: 0, perTile: 0 })).toEqual(['Fare +100', 'Second −1']);
+    expect(FIELDS.map((f) => f.chip)).toEqual(['Fare', 'Clock', 'Footpath', 'Red light', 'Wrong way', 'Per tile']);
+    expect(rateChips({ fare: 100, time: 1, off: 0, red: 0, wrong: 0, perTile: 0 })).toEqual(['Fare +100', 'Clock −1']);
   });
 });

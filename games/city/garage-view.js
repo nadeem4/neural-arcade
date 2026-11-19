@@ -1,5 +1,6 @@
 // The garage drawer: one card per kept taxi, dashed empty bays for the rest. Thin DOM code; the logic is in garage.js and naming.js.
 import { stripeFor, rateChips } from './naming.js';
+import { signed } from './receipt.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -26,7 +27,7 @@ function card(taxi, i, { onDrive, onRemove, onPick, canDrive, picks = [], canRac
   head.append(taxiIcon(), el('span', 'bay-name', taxi.name), el('span', 'bay-try', `Try ${taxi.tries}`));
   const chips = el('div', 'bay-chips');
   chips.append(...rateChips(taxi.rewards).map(c => el('span', 'chip-rate', c)));
-  const drive = el('button', 'go small', 'DRIVE');
+  const drive = el('button', 'go small', 'Drive');
   drive.type = 'button'; drive.disabled = !canDrive;
   drive.setAttribute('aria-label', `Drive ${taxi.name}`);
   drive.addEventListener('click', () => onDrive(taxi));
@@ -44,7 +45,7 @@ function card(taxi, i, { onDrive, onRemove, onPick, canDrive, picks = [], canRac
   const actions = el('div', 'bay-actions'); actions.append(drive, raceWrap, del);
   const earned = Math.round(taxi.analysis.reward * 10) / 10 + 0;
   const stats = el('div', 'bay-stats');
-  stats.append(el('span', 'bay-time', `${taxi.bestSeconds} s`), el('span', `bay-earned ${earned >= 0 ? 'pay' : 'fine'}`, `${earned > 0 ? '+' : ''}${earned}`));
+  stats.append(el('span', 'bay-time', `${taxi.bestSeconds} s`), el('span', `bay-earned ${earned >= 0 ? 'pay' : 'fine'}`, signed(earned)));
   li.append(stripe, head, chips, stats, el('span', 'bay-note', taxi.note), actions);
   return li;
 }

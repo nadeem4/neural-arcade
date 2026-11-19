@@ -57,10 +57,10 @@ describe('tagsFor', () => {
     expect(tagsFor(step({}), R)).toEqual([]);
   });
   it('names each fine with its amount and kind', () => {
-    expect(tagsFor(step({ off: true, park: true }), R)).toEqual([{ text: '-20 park tile', kind: 'fine' }]);
-    expect(tagsFor(step({ off: true }), R)).toEqual([{ text: '-20 footpath tile', kind: 'fine' }]);
-    expect(tagsFor(step({ red: true }), R)).toEqual([{ text: '-30 red light run', kind: 'fine' }]);
-    expect(tagsFor(step({ wrong: true }), R)).toEqual([{ text: '-30 wrong way', kind: 'fine' }]);
+    expect(tagsFor(step({ off: true, park: true }), R)).toEqual([{ text: '−20 footpath', kind: 'fine' }]);
+    expect(tagsFor(step({ off: true }), R)).toEqual([{ text: '−20 footpath', kind: 'fine' }]);
+    expect(tagsFor(step({ red: true }), R)).toEqual([{ text: '−30 red light', kind: 'fine' }]);
+    expect(tagsFor(step({ wrong: true }), R)).toEqual([{ text: '−30 wrong way', kind: 'fine' }]);
   });
   it('shows a fare tag on arrival, and a zero-rate fine that says free', () => {
     expect(tagsFor(step({ done: true }), R)).toEqual([{ text: '+100 fare', kind: 'pay' }]);
@@ -121,13 +121,13 @@ describe('offence tags you cannot miss', () => {
   it('a 0 fine says free, for all four kinds', () => {
     const rw = { off: 0, red: 0, wrong: 0 };
     const text = (step) => tagsFor(step, rw).map((t) => t.text);
-    expect(text({ off: true, park: true })).toEqual(['park tile: free']);
-    expect(text({ off: true, park: false })).toEqual(['footpath tile: free']);
+    expect(text({ off: true, park: true })).toEqual(['footpath: free']);
+    expect(text({ off: true, park: false })).toEqual(['footpath: free']);
     expect(text({ red: true })).toEqual(['red light: free']);
     expect(text({ wrong: true })).toEqual(['wrong way: free']);
   });
   it('a fined offence keeps its wording', () => {
-    expect(tagsFor({ red: true }, { red: 5 }).map((t) => t.text)).toEqual(['-5 red light run']);
+    expect(tagsFor({ red: true }, { red: 5 }).map((t) => t.text)).toEqual(['−5 red light']);
   });
   it('the tag text is 22px on a desktop and at least 20px down to a 360px phone', () => {
     const size = css.match(/#labels span\.tag \{[^}]*font: 700 clamp\((\d+)px, ([\d.]+)vw, (\d+)px\)/);
