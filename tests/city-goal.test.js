@@ -85,7 +85,7 @@ describe('goalAt', () => {
     expect(goalAt(ev, 0, first + 1, GOAL_SECONDS)).toBe(60);
   });
   it('loses the on-time points when the goal time passes, and 5 per scared person', () => {
-    const ev = { steps: new Array(100).fill({}), totals: { arrived: true, seconds: 100, offTiles: 0, redRuns: 0, wrongWays: 0 } };
+    const ev = { steps: new Array(GOAL_SECONDS + 50).fill({}), totals: { arrived: true, seconds: GOAL_SECONDS + 50, offTiles: 0, redRuns: 0, wrongWays: 0 } };
     expect(goalAt(ev, 0, GOAL_SECONDS - 1, GOAL_SECONDS)).toBe(100);
     expect(goalAt(ev, 0, GOAL_SECONDS, GOAL_SECONDS)).toBe(80);
     expect(goalAt(ev, 2, 10, GOAL_SECONDS)).toBe(90);

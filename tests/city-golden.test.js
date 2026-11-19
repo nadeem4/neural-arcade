@@ -13,7 +13,8 @@ function hash(f64) {
 }
 
 const CITY = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
-const GOLDEN = { q: "411edc19", visits: "5c2fd9d6", len: 400, route: "98cb114a" };
+// Re-captured on purpose for RV1b (solid trees, the bridge, footbridge and rail rules, the Columbus cut, the slip-road and footbridge fixes, the Michigan Avenue to State and Van Buren trip and its tuned EPISODES, HYPER and STEP_CAP).
+const GOLDEN = { q: "bc6e1368", visits: "ea984ef7", len: 250, route: "72dbf91a" };
 
 describe('golden training run', () => {
   it('seed 1, 1500 episodes: same Q-table and same greedy route as before the efficiency change', () => {

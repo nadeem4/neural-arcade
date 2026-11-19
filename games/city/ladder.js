@@ -13,10 +13,10 @@ export const LADDER_KEY = 'rc-ladder-v1';
 const WORDS = [
   { id: 'speed', title: 'The taxi knows only the pay',
     watch: 'Only the clock costs money. Nothing says to stay on the road.',
-    showed: 'It drove straight across the park. Nothing on the card made that cost anything.' },
+    showed: 'It drove along the footpaths beside the park. Nothing on the card made that cost anything.' },
   { id: 'walk', title: 'Any gap gets exploited',
     watch: `The park and footpaths cost ${card('walk').off} a tile now. Look for what is still free.`,
-    showed: 'It left the park and ran red lights instead, because nothing fined them.' },
+    showed: 'It left the footpaths and ran red lights instead, because nothing fined them.' },
   { id: 'lights', title: 'Patch one hole and the cheat moves',
     watch: `Each red light run costs ${card('lights').red} now. Look for what is still free.`,
     showed: 'It stopped at the lights, then went the wrong way down a one-way street to save time.' },

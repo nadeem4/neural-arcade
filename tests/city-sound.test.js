@@ -12,10 +12,10 @@ function stubFactory() {
 }
 
 describe('TONES', () => {
-  it('has a distinct frequency for each of tick, fine, red and fare', () => {
-    expect(Object.keys(TONES).sort()).toEqual(['fare', 'fine', 'red', 'tick']);
+  it('has a distinct frequency for each of tick, fine, red, fare and horn', () => {
+    expect(Object.keys(TONES).sort()).toEqual(['fare', 'fine', 'horn', 'red', 'tick']);
     const freqs = Object.values(TONES).map((t) => t.freq);
-    expect(new Set(freqs).size).toBe(4);
+    expect(new Set(freqs).size).toBe(5);
     for (const t of Object.values(TONES)) { expect(t.ms).toBeGreaterThan(0); expect(typeof t.type).toBe('string'); }
   });
 });
@@ -26,6 +26,16 @@ describe('createSound', () => {
     const s = createSound({ muted: true, reducedMotion: false, ctxFactory: factory });
     s.play('fine'); s.unlock();
     expect(log).toEqual({ made: 0, osc: 0, started: 0 });
+  });
+  it('a horn is silent when muted or under reduced motion, and plays otherwise', () => {
+    for (const opts of [{ muted: true }, { reducedMotion: true }]) {
+      const { log, factory } = stubFactory();
+      createSound({ ctxFactory: factory, ...opts }).play('horn');
+      expect(log.made + log.osc).toBe(0);
+    }
+    const { log, factory } = stubFactory();
+    createSound({ ctxFactory: factory }).play('horn');
+    expect(log.started).toBe(1);
   });
   it('makes no audio calls under reduced motion', () => {
     const { log, factory } = stubFactory();

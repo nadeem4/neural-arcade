@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-import { convert, project, rasterise, estimateHeight } from '../scripts/city/convert.js';
+import { convert, project, rasterise, estimateHeight, solidTrees } from '../scripts/city/convert.js';
 
 const config = JSON.parse(
   readFileSync(new URL('../scripts/city/chicago.config.json', import.meta.url), 'utf8'),
@@ -106,6 +106,129 @@ describe('rasterise', () => {
       3, 3, 12,
     );
     expect(kind).toEqual(['bbb', 'bbb', 'bbb']);
+  });
+});
+
+describe('rasterise bridges and rail', () => {
+  // 5 x 3 grid, cellM 12: row 1 is y 12..24, centre y 18. A fence runs north to south through column 2 (x 30).
+  const fence = [{ pts: [[30, 0], [30, 36]] }];
+  const road = [[0, 18], [60, 18]];
+  it('a plain road is cut by a fence, a bridge road is not', () => {
+    expect(rasterise({ roads: [{ pts: road, w: 8 }], fences: fence }, 5, 3, 12)[1]).toBe('rrxrr');
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], fences: fence }, 5, 3, 12)[1]).toBe('rrrrr');
+  });
+  it('a bridge road wins over water and rail below it, but not over a building', () => {
+    const lake = [[24, 0], [36, 0], [36, 36], [24, 36], [24, 0]];
+    const rail = [{ pts: [[30, 0], [30, 36]] }];
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], water: [lake], rail }, 5, 3, 12)[1]).toBe('rrrrr');
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], buildings: [lake] }, 5, 3, 12)[1]).toBe('rrbrr');
+  });
+  it('railway on the ground or in a cut is solid, a plain road over it too, a bridge road is not', () => {
+    const rail = [{ pts: [[30, 0], [30, 36]] }];
+    expect(rasterise({ rail }, 5, 3, 12).map((r) => r[2])).toEqual(['x', 'x', 'x']);
+    expect(rasterise({ roads: [{ pts: road, w: 8 }], rail }, 5, 3, 12)[1]).toBe('rrxrr');
+    expect(rasterise({ roads: [{ pts: road, w: 8, bridge: true }], rail }, 5, 3, 12)[1]).toBe('rrrrr');
+  });
+});
+
+describe('rasterise footbridges', () => {
+  const rail = [{ pts: [[30, 0], [30, 36]] }];
+  const walk = [[0, 18], [60, 18]];
+  it('a footpath over rail stays open when it is a bridge, and is cut when it is not', () => {
+    expect(rasterise({ paths: [{ pts: walk, w: 2 }], rail }, 5, 3, 12)[1]).toBe('ffxff');
+    expect(rasterise({ paths: [{ pts: walk, w: 2, bridge: true }], rail }, 5, 3, 12)[1]).toBe('fffff');
+  });
+  it('a footbridge is still stopped by a building', () => {
+    const b = [[24, 0], [36, 0], [36, 36], [24, 36], [24, 0]];
+    expect(rasterise({ paths: [{ pts: walk, w: 2, bridge: true }], buildings: [b] }, 5, 3, 12)[1]).toBe('ffbff');
+  });
+});
+
+describe('rasterise footbridges over roads', () => {
+  it('a footbridge over a street leaves the street road', () => {
+    const road = { pts: [[0, 18], [60, 18]], w: 8 };
+    const walk = { pts: [[30, 0], [30, 36]], w: 2, bridge: true };
+    const kind = rasterise({ roads: [road], paths: [walk] }, 5, 3, 12);
+    expect(kind[1]).toBe('rrrrr');
+    expect(kind[0][2]).toBe('f');
+  });
+});
+
+describe('convert link roads', () => {
+  // Road B is two-way, north to south at x 150 (col 12). A one-way slip road runs beside it, then on its own.
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const link = way(9301, { highway: 'secondary_link', oneway: 'yes' }, [[152, 20], [152, 60]]);
+  const alone = way(9302, { highway: 'secondary_link', oneway: 'yes' }, [[198, 200], [198, 230]]);
+  const city = convert({ elements: [...osm.elements, link, alone] }, miniConfig());
+  const rowOf = (y) => city.rows - 1 - Math.floor(y / 12);
+  it('a one-way link does not give a two-way road a direction', () => {
+    for (const y of [30, 42, 54]) expect(city.oneway[rowOf(y)][12]).toBe('.');
+  });
+  it('a one-way link on its own keeps its direction', () => {
+    expect(city.oneway[rowOf(210)][16]).toBe('N');
+  });
+});
+
+describe('rasterise cuts', () => {
+  it('a cut is solid even over a bridge road, so levels OSM does not join stay apart', () => {
+    const road = { pts: [[0, 18], [60, 18]], w: 8, bridge: true };
+    expect(rasterise({ roads: [road], cuts: [{ pts: [[30, 0], [30, 36]] }] }, 5, 3, 12)[1]).toBe('rrxrr');
+  });
+});
+
+describe('convert cuts', () => {
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const road = way(9201, { highway: 'secondary' }, [[0, 112], [130, 112]]);
+  const cfg = miniConfig({ cuts: [{ from: unproject(78, 100), to: unproject(78, 124) }] });
+  const city = convert({ elements: [...osm.elements, road] }, cfg);
+  it('config cuts become solid cells', () => {
+    const row = city.rows - 1 - Math.floor(112 / 12);
+    expect(kindAt(city, 6, row)).toBe('x');
+    expect(kindAt(city, 3, row)).toBe('r');
+  });
+});
+
+describe('convert footbridges', () => {
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const extra = [
+    way(9101, { railway: 'rail' }, [[102, 90], [102, 160]]),
+    way(9102, { highway: 'footway', bridge: 'yes' }, [[60, 112], [130, 112]]),
+    way(9103, { highway: 'footway', layer: '1' }, [[60, 136], [130, 136]]),
+    way(9104, { highway: 'footway' }, [[60, 124], [130, 124]]),
+  ];
+  const city = convert({ elements: [...osm.elements, ...extra] }, miniConfig());
+  const rowOf = (y) => city.rows - 1 - Math.floor(y / 12);
+  it('footbridges (bridge tag or layer 1) stay open over the rail; a ground footpath is cut', () => {
+    expect(kindAt(city, 8, rowOf(112))).toBe('f');
+    expect(kindAt(city, 8, rowOf(136))).toBe('f');
+    expect(kindAt(city, 8, rowOf(124))).toBe('x');
+  });
+});
+
+describe('convert bridges, tunnels and the rail cut', () => {
+  // Own tiny map: a fence and a railway run north to south at x 78 and x 102; roads cross east to west.
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const extra = [
+    way(9001, { barrier: 'fence' }, [[78, 90], [78, 160]]),
+    way(9002, { railway: 'rail' }, [[102, 90], [102, 160]]),
+    way(9003, { highway: 'secondary', bridge: 'yes', layer: '1' }, [[60, 112], [130, 112]]), // over both
+    way(9004, { highway: 'secondary' }, [[60, 124], [130, 124]]), // plain road, level with both
+    way(9005, { highway: 'secondary', layer: '1' }, [[60, 136], [130, 136]]), // layer 1 alone is a bridge
+    way(9006, { highway: 'secondary', tunnel: 'yes', layer: '-1' }, [[60, 148], [130, 148]]), // underneath
+  ];
+  const city = convert({ elements: [...osm.elements, ...extra] }, miniConfig());
+  const rowOf = (y) => city.rows - 1 - Math.floor(y / 12);
+  it('a bridge road stays road over a fence and a railway; a plain road is cut by them', () => {
+    for (const x of [78, 102]) expect(kindAt(city, Math.floor(x / 12), rowOf(112))).toBe('r');
+    expect(kindAt(city, 6, rowOf(124))).toBe('x');
+    expect(kindAt(city, 8, rowOf(124))).toBe('x');
+    expect(kindAt(city, 6, rowOf(136))).toBe('r'); // layer >= 1 counts as a bridge
+  });
+  it('a tunnel road paints nothing: the fence above it stays solid', () => {
+    expect(kindAt(city, 6, rowOf(148))).toBe('x');
+  });
+  it('the railway cells away from any bridge are solid, whatever they were before', () => {
+    expect(kindAt(city, 8, rowOf(96))).toBe('x');
   });
 });
 
@@ -383,5 +506,45 @@ describe('fetch-overpass buildQuery', () => {
     expect(q).not.toContain('way[railway]');
     expect(q).not.toContain('way[footway=');
     expect(q).toContain('(1,2,3,4)');
+  });
+});
+
+describe('solidTrees', () => {
+  // 3 x 1 strip, cellM 10, rows 1: cell c has x in [10c, 10c+10], y in [0, 10].
+  const trees3 = [[1, 1], [2, 2], [3, 3]];
+  it('a cell with 3 trees becomes x, with 2 trees it is unchanged', () => {
+    expect(solidTrees(['fpf'], [...trees3, [11, 1], [12, 2]], 3, 1, 10, 3)).toEqual(['xpf']);
+  });
+  it('road cells never turn solid, and so do buildings and water stay as they are', () => {
+    expect(solidTrees(['rbw'], [...trees3, ...trees3.map(([x, y]) => [x + 10, y]), ...trees3.map(([x, y]) => [x + 20, y])], 3, 1, 10, 3)).toEqual(['rbw']);
+  });
+  it('counts the 3 trees in the cell, not 3 trees in the map', () => {
+    expect(solidTrees(['fff'], [[1, 1], [11, 1], [21, 1]], 3, 1, 10, 3)).toEqual(['fff']);
+  });
+});
+
+describe('the real map', () => {
+  const real = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
+  it('no footpath or park cell holds 3 or more trees, and the trees are all kept', () => {
+    const n = new Map();
+    for (const [x, y] of real.trees) {
+      const k = (real.rows - 1 - Math.floor(y / real.cellM)) * real.cols + Math.floor(x / real.cellM);
+      n.set(k, (n.get(k) ?? 0) + 1);
+    }
+    for (const [k, count] of n) {
+      if (count >= 3) expect(['f', 'p']).not.toContain(real.kind[Math.floor(k / real.cols)][k % real.cols]);
+    }
+    expect(real.trees.length).toBe(4128);
+  });
+});
+
+describe('the real map: footbridges and slip roads', () => {
+  const real = JSON.parse(readFileSync(new URL('../games/city/chicago.json', import.meta.url), 'utf8'));
+  it('streets under footbridges stay road (North Wabash, Ida B. Wells)', () => {
+    for (let r = 30; r <= 39; r++) expect(real.kind[r][12]).toBe('r');
+    expect(real.kind[93][39]).toBe('r');
+  });
+  it('the Ida B. Wells slip road (OSM way 59667610) leaves two-way Columbus Drive two-way', () => {
+    for (const [c, r] of [[51, 91], [50, 92]]) expect(real.oneway[r][c]).toBe('.');
   });
 });
