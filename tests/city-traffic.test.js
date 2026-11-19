@@ -150,7 +150,7 @@ describe('cars react to the taxi', () => {
       const t = createTraffic(world, { seed: 1, count: trafficTier().count, cellM: 12, taxi: taxiOf(events) });
       const p = newPoses(t.count);
       let hits = 0;
-      for (let ms = 0; ms <= track.total; ms += track.tickMs / 4) {
+      for (let ms = 0; ms <= track.total; ms += track.tickMs / 16) {
         const s = stateAt(track, ms);
         t.posesAt(ms / track.tickMs, p);
         for (let i = 0; i < t.count; i++) if (boxesOverlap(s.x, s.z, s.heading, p.x[i], p.z[i], p.h[i])) hits++;
@@ -165,7 +165,7 @@ describe('cars react to the taxi', () => {
       const t = createTraffic(world, { seed: 1, count: trafficTier().count, cellM: 12, taxi: taxiOf(events) });
       const p = newPoses(t.count);
       let hits = 0;
-      for (let ms = 0; ms <= track.total; ms += track.tickMs / 4) {
+      for (let ms = 0; ms <= track.total; ms += track.tickMs / 16) {
         t.posesAt(ms / track.tickMs, p);
         for (let i = 0; i < t.count; i++) for (let j = i + 1; j < t.count; j++) if (boxesOverlap(p.x[i], p.z[i], p.h[i], p.x[j], p.z[j], p.h[j])) hits++;
       }

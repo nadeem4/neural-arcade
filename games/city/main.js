@@ -168,6 +168,7 @@ function updateInset() {
   stage?.setInset(screen === 'map' && matchMedia('(max-width: 720px)').matches ? $('play').clientHeight - sheet.offsetTop : 0);
 }
 addEventListener('resize', updateInset);
+if (typeof ResizeObserver !== 'undefined') new ResizeObserver(updateInset).observe($('rateCard')); // the card grows and shrinks with its content
 
 // Back to the map from the end card or race result: the route, meters and trip are cleared, then the screen event runs.
 function toMap(event) {

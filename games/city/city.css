@@ -172,7 +172,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .endcard .end-actions { position: sticky; bottom: -12px; padding: 8px 0 0; background: var(--navy); }
 .racebanner .end-actions { position: static; background: none; }
 
-/* Phone: the rate card and the end card are bottom sheets of at most 35% of the screen, scrolling inside; the map stays visible above. */
+/* Phone: the rate card and the end card are bottom sheets of at most 35% (end card 60%) of the screen, scrolling inside; the map stays visible above. */
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
   .topright .info, .chase { min-height: 44px; height: 44px; }
