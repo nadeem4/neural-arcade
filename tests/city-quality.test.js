@@ -11,6 +11,8 @@ describe('tierFor', () => {
     expect(phone.facadeDetail).toBeLessThan(desk.facadeDetail);
     expect(desk.roofBoxes).toBe(true);
     expect(phone.roofBoxes).toBe(false);
+    expect(desk.laneDashes && desk.arrows).toBe(true);
+    expect(phone.laneDashes || phone.arrows).toBe(false);
   });
   it('both tiers have shadows, phones with the cheaper hard-edged filter', () => {
     expect(phone.shadowSize).toBeGreaterThan(0);
@@ -18,8 +20,8 @@ describe('tierFor', () => {
     expect(phone.softShadows).toBe(false);
   });
   it('holds the plan values', () => {
-    expect(desk).toEqual({ shadowSize: 2048, pixelRatio: 2, cloudCount: 6, facadeDetail: 2, roofBoxes: true, softShadows: true });
-    expect(phone).toEqual({ shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, facadeDetail: 1, roofBoxes: false, softShadows: false });
+    expect(desk).toEqual({ shadowSize: 2048, pixelRatio: 2, cloudCount: 6, facadeDetail: 2, roofBoxes: true, softShadows: true, laneDashes: true, arrows: true });
+    expect(phone).toEqual({ shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, facadeDetail: 1, roofBoxes: false, softShadows: false, laneDashes: false, arrows: false });
   });
   it('reduced motion never makes a tier heavier', () => {
     expect(tierFor({ phone: false, reducedMotion: true }).shadowSize).toBeLessThanOrEqual(desk.shadowSize);
@@ -41,7 +43,7 @@ describe('scene wiring', async () => {
   it('keeps exact colours (trails, signal lamps, brake lamps) out of tone mapping', async () => {
     const taxi = readFileSync(new URL('../games/city/scene-taxi.js', import.meta.url), 'utf8');
     for (const name of ['trail', 'trailB', 'lamp']) expect(scene).toMatch(new RegExp(String.raw`mats\.${name} = new THREE\.\w+Material\(\{[^}]*toneMapped: false`));
-    expect(taxi.match(/MeshBasicMaterial\(\{[^}]*toneMapped: false/g)).toHaveLength(2);
+    expect(taxi.match(/MeshBasicMaterial\(\{[^}]*toneMapped: false/g)).toHaveLength(3); // head lamp, brake lamp, contact shadow
   });
   it('gives the taxi and pins the city environment intensity', () => {
     const taxi = readFileSync(new URL('../games/city/scene-taxi.js', import.meta.url), 'utf8');

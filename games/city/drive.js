@@ -3,11 +3,11 @@
 // and a stop for every wait (red lights and the like). Presentation only: it never changes what the sim decided.
 import { tickMsFor } from './playback.js';
 
-const TURN_IN = 0.3;   // first 30% of a tile after a corner: finish the turn
-const TURN_OUT = 0.6;  // last 40% of a tile before a corner: start the turn
+const TURN_IN = 0.45;  // a U-turn (no arc is possible): stop, then swing round while pulling away from rest (the first 45% of the tile)
 
 const smooth = (u) => u * u * (3 - 2 * u);
 const diff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a)); // shortest signed turn from a to b
+const angle = (a, b) => Math.abs(diff(a, b));
 const towards = (a, b, t) => a + diff(a, b) * t;
 
 // Position along a tile as a cubic with end slopes m0 and m1 (0 = at rest, 1 = cruising); f(0)=0, f(1)=1.
@@ -18,7 +18,49 @@ function ease(u, m0, m1) {
   return [f, df];
 }
 
-// segs[i] describes tick i. A move has h0, h1, h2: the heading before, during and after it. A wait has from and to.
+// A corner between two moves is one circular arc, tangent to both streets, that starts and ends half a tile either side of
+// the tile centre P (radius = half a tile, so the car stays on its own lane's tile). Heading follows the arc, so the car
+// never slides: it points where it goes. The car passes the arc's middle exactly at the tick boundary.
+const rot = (x, z, a) => [x * Math.cos(a) + z * Math.sin(a), -x * Math.sin(a) + z * Math.cos(a)]; // turn (x, z) the way heading turns
+function cornerAt(P, h1, h2, prev, next) {
+  const th = diff(h1, h2);
+  if (Math.abs(th) < 0.2 || Math.abs(th) > 2.9) return null; // straight, or a U-turn (stop and turn on the spot)
+  const R = Math.min(Math.hypot(P.x - prev.x, P.z - prev.z), Math.hypot(next.x - P.x, next.z - P.z)) / 2;
+  const d1 = [Math.sin(h1), Math.cos(h1)], d2 = [Math.sin(h2), Math.cos(h2)];
+  const S = [P.x - d1[0] * R, P.z - d1[1] * R];
+  const C = [S[0] + d2[0] * R, S[1] + d2[1] * R];
+  return { th, R, h1, C, r0: [S[0] - C[0], S[1] - C[1]], len: Math.abs(th) * R };
+}
+// At a corner tick boundary the taxi is on the arc's middle, about 0.21 cell from the cell centre but still inside the cell.
+// The point and heading a fraction t (0..1) round the arc.
+function arcAt(c, t) {
+  const [rx, rz] = rot(c.r0[0], c.r0[1], c.th * t);
+  return { x: c.C[0] + rx, z: c.C[1] + rz, heading: c.h1 + c.th * t, curvature: Math.sign(c.th) / c.R };
+}
+
+// The path of move i as pieces (a straight, or half an arc), each with a length and at(s) -> { x, z, heading, curvature }.
+function movePath(frames, i, cin, cout, h1) {
+  const a = frames[i], b = frames[i + 1];
+  const pieces = [];
+  if (cin) pieces.push({ len: cin.len / 2, at: (s) => arcAt(cin, 0.5 + s / cin.len) });
+  const p0 = cin ? arcAt(cin, 1) : a, p1 = cout ? arcAt(cout, 0) : b;
+  const dx = p1.x - p0.x, dz = p1.z - p0.z, len = Math.hypot(dx, dz);
+  pieces.push({ len, at: (s) => ({ x: p0.x + (len ? dx * s / len : 0), z: p0.z + (len ? dz * s / len : 0), heading: h1, curvature: 0 }) });
+  if (cout) pieces.push({ len: cout.len / 2, at: (s) => arcAt(cout, s / cout.len) });
+  return { pieces, len: pieces.reduce((t, p) => t + p.len, 0) };
+}
+function pathAt(path, s) {
+  let rest = Math.max(0, Math.min(path.len, s));
+  for (const p of path.pieces) {
+    if (rest <= p.len) return p.at(rest);
+    rest -= p.len;
+  }
+  const last = path.pieces[path.pieces.length - 1];
+  return last.at(last.len);
+}
+
+// segs[i] describes tick i. A move has h0, h1, h2: the heading before, during and after it, and its path and the distance
+// driven before it (dist0). A wait has from and to.
 export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length) } = {}) {
   const n = frames.length - 1;
   const stepAt = (i) => events.steps[i];
@@ -49,7 +91,26 @@ export function driveTrack(frames, events, { tickMs = tickMsFor(frames.length) }
     });
     hold = hb;
   }
-  return { frames, segs, tickMs, total: tickMs * n };
+  // Corners sit at the tile centre between two moves with no wait between them; then each move gets its path.
+  const corner = new Array(n + 1).fill(null);
+  for (let j = 1; j < n; j++) {
+    const a = segs[j - 1], b = segs[j];
+    if (a.wait || b.wait) continue;
+    corner[j] = cornerAt(frames[j], a.h1, b.h1, frames[j - 1], frames[j + 1]);
+    if (!corner[j] && angle(a.h1, b.h1) > 2.9) { a.m1 = 0; b.m0 = 0; b.uturn = true; } // a U-turn: brake to a stop first
+  }
+  let dist = 0;
+  segs.forEach((g, i) => {
+    g.dist0 = dist;
+    if (g.wait) return;
+    g.path = movePath(frames, i, corner[i], corner[i + 1], g.h1);
+    g.cornerIn = !!corner[i]; // already turned by the arc, so no separate heading easing
+    const chord = Math.hypot(frames[i + 1].x - frames[i].x, frames[i + 1].z - frames[i].z);
+    if (g.m0) g.m0 = chord / g.path.len; // cruising speed is the same on a straight and on an arc (a shorter path is not driven slower)
+    if (g.m1) g.m1 = chord / g.path.len;
+    dist += g.path.len;
+  });
+  return { frames, segs, tickMs, total: tickMs * n, length: dist };
 }
 
 // The taxi `ms` into the drive. stepIndex is the tick being driven (the tick count once done), so steps below it are
@@ -59,27 +120,24 @@ export function stateAt(track, ms) {
   const n = segs.length;
   if (n === 0 || ms >= total) {
     const f = frames[n];
-    return { x: f.x, z: f.z, heading: f.heading, facing: f.heading, speed: 0, braking: false, stepIndex: n, progress: n, tick: f.tick, done: true };
+    return { x: f.x, z: f.z, heading: f.heading, facing: f.heading, speed: 0, braking: false, curvature: 0, dist: track.length ?? 0, stepIndex: n, progress: n, tick: f.tick, done: true };
   }
   const t = Math.max(0, ms) / tickMs;
   const i = Math.floor(t), u = t - i;
   const s = segs[i], a = frames[i], b = frames[i + 1];
   if (s.wait) {
-    return { x: a.x, z: a.z, heading: towards(s.from, s.to, smooth(u)), facing: s.to, speed: 0, braking: true, stepIndex: i, progress: i, tick: a.tick, done: false };
+    return { x: a.x, z: a.z, heading: towards(s.from, s.to, smooth(u)), facing: s.to, speed: 0, braking: true, curvature: 0, dist: s.dist0, stepIndex: i, progress: i, tick: a.tick, done: false };
   }
-  const [f, df] = ease(u, s.m0, s.m1);
-  let heading = s.h1;
-  if (s.h0 !== s.h1 || s.h1 !== s.h2) {
-    const from = s.prevMoved ? towards(s.h0, s.h1, 0.5) : s.h0; // a moving car already turned half way at the corner
-    const to = towards(s.h1, s.h2, 0.5);
-    if (u < TURN_IN) heading = towards(from, s.h1, smooth(u / TURN_IN));
-    else if (u > TURN_OUT) heading = towards(s.h1, to, smooth((u - TURN_OUT) / (1 - TURN_OUT)));
-  }
-  const dist = Math.hypot(b.x - a.x, b.z - a.z);
+  // A U-turn has no arc: the car yaws round while creeping away from rest, so it barely moves while it points the wrong way.
+  const turning = s.uturn && u < TURN_IN;
+  const [f, df] = ease(u, s.m0, s.m1); // the whole tile is driven, so a U-turn exit peaks like any start from rest (about 1.33 x cruise)
+  const p = pathAt(s.path, f * s.path.len);
+  const heading = turning ? towards(s.h0, s.h1, smooth(u / TURN_IN)) : p.heading;
   return {
-    x: a.x + (b.x - a.x) * f, z: a.z + (b.z - a.z) * f, heading, facing: s.h1,
-    speed: Math.abs(df) * dist / (tickMs / 1000),
-    braking: s.m1 === 0 && u > 0.5,
+    x: p.x, z: p.z, heading, facing: s.h1,
+    speed: Math.abs(df) * s.path.len / (tickMs / 1000),
+    braking: turning || (s.m1 === 0 && u > 0.5),
+    curvature: p.curvature, dist: s.dist0 + f * s.path.len,
     stepIndex: i, progress: i + f, tick: a.tick, done: false,
   };
 }

@@ -2,10 +2,10 @@
 // Desktop: 3 draw calls (bodies and glass, head lamps, tail lamps). Phone: 1 draw call (bodies only, no lamps).
 import * as THREE from './vendor/three.module.min.js';
 import { createTraffic, taxiOf, newPoses, carColour } from './traffic.js';
+import { ROAD_Y } from './scene-math.js';
 
 const TRAFFIC_SEED = 1;       // every drive on the same route shows the same cars
 export const CAR_SCALE = 1.5; // the same metres-to-scene scale as the taxi
-const CAR_Y = 0.8;            // wheel bottoms sit on the road surface. replace with ROAD_Y from scene-math.js
 const TAIL_DIM = 0.3, TAIL_BRAKE = 1; // linear brightness of the red lamps
 const FLASH_HZ = 6;           // headlamp flash rate while a car is braking hard
 
@@ -94,7 +94,7 @@ export function createTrafficLayer({ tier }) {
       traffic.posesAt(tf, poses);
       const n = traffic.count, flash = Math.floor(Math.max(0, tf) * FLASH_HZ) % 2 === 0;
       const ma = bodies.instanceMatrix.array;
-      for (let i = 0; i < n; i++) setPose(ma, i * 16, poses.x[i], CAR_Y, poses.z[i], poses.h[i], CAR_SCALE);
+      for (let i = 0; i < n; i++) setPose(ma, i * 16, poses.x[i], ROAD_Y, poses.z[i], poses.h[i], CAR_SCALE);
       bodies.instanceMatrix.needsUpdate = true;
       if (heads) {
         heads.instanceMatrix.array.set(ma.subarray(0, n * 16)); tails.instanceMatrix.array.set(ma.subarray(0, n * 16));

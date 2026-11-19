@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { buildReceipt } from '../games/city/receipt.js';
-import { tripEvents, tagsFor } from '../games/city/events.js';
+import { tripEvents, tagsFor, layoutTags, TAG_SLOT_PX, MAX_TAG_SLOTS } from '../games/city/events.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const world = loadWorld(read('chicago.json'));
@@ -64,5 +64,53 @@ describe('tagsFor', () => {
   it('shows a fare tag on arrival, and a zero-rate fine without an amount', () => {
     expect(tagsFor(step({ done: true }), R)).toEqual([{ text: '+100 fare', kind: 'pay' }]);
     expect(tagsFor(step({ red: true }), { ...R, red: 0 })).toEqual([{ text: 'red light run', kind: 'fine' }]);
+  });
+});
+
+describe('layoutTags', () => {
+  it('three tags on one step get three different slots, lowest first', () => {
+    const out = layoutTags([{}, {}, {}]);
+    expect(out.map((t) => t.slot)).toEqual([0, 1, 2]);
+  });
+  it('a tag that already has a slot keeps it, and a newcomer takes the lowest free slot', () => {
+    const out = layoutTags([{ slot: 1 }, {}]);
+    expect(out.map((t) => t.slot)).toEqual([1, 0]);
+    expect(layoutTags([{ slot: 0 }, { slot: 1 }, {}])[2].slot).toBe(2);
+  });
+  it('a freed slot is used again, and no two live tags ever share one', () => {
+    let live = layoutTags([{}, {}, {}]);
+    live = live.filter((t) => t.slot !== 1);          // the middle tag has expired
+    live = layoutTags([...live, {}]); // three slots in all: the freed one is the only one left
+    const slots = live.map((t) => t.slot);
+    expect(new Set(slots).size).toBe(slots.length);
+    expect(slots).toContain(1);
+  });
+  it('slots are a whole tag-height apart on screen so tags never overlap', () => {
+    expect(TAG_SLOT_PX).toBeGreaterThanOrEqual(30);
+  });
+});
+
+describe('layoutTags with a ceiling', () => {
+  it('uses at most three slots: a fourth tag takes the oldest one', () => {
+    expect(MAX_TAG_SLOTS).toBe(3);
+    const live = layoutTags([{}, {}, {}]);
+    const out = layoutTags([...live, {}]);
+    expect(out.map((t) => t.slot)).toEqual([0, 1, 2, 0]);
+    expect(Math.max(...layoutTags([{}, {}, {}, {}, {}]).map((t) => t.slot))).toBe(2);
+  });
+  it('a second newcomer takes the next oldest', () => {
+    const out = layoutTags([...layoutTags([{}, {}, {}]), {}, {}]);
+    expect(out.slice(3).map((t) => t.slot)).toEqual([0, 1]);
+  });
+});
+
+describe('the tag pop animation', () => {
+  it('rises less than one slot, so a tag never passes through the one above', () => {
+    const css = readFileSync(new URL('../games/city/city.css', import.meta.url), 'utf8');
+    const frames = css.match(/@keyframes tag-pop \{([^\n]*)\}/)[1];
+    const ys = [...frames.matchAll(/translate\(-50%, (-?\d+)%\)/g)].map((m) => Number(m[1]));
+    const tagPx = 30; // a 15px label with 4px padding top and bottom
+    const up = ys.map((y) => -y); // how far above the anchor, in % of the tag's height
+    expect(((Math.max(...up) - Math.min(...up)) / 100) * tagPx).toBeLessThan(TAG_SLOT_PX);
   });
 });
