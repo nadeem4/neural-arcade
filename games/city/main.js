@@ -8,7 +8,7 @@ import { createJobs, trainInChunks } from './jobs.js';
 import { INFO, goalReached, shareLine, goalLine } from './words.js';
 import { goalAt } from './goal.js';
 import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
-import { webglAvailable, chooseStage } from './stage.js';
+import { webglAvailable, chooseStage, noWebglFlag } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
 import { tripEvents, tagsFor, foldTag, layoutTags, TAG_SLOT_PX } from './events.js';
@@ -165,7 +165,9 @@ function go(event) {
 // On a phone the map screen has a rate card sheet over the stage's lower part; the stage keeps the map centre above it.
 function updateInset() {
   const sheet = $('rateCard');
-  stage?.setInset(screen === 'map' && matchMedia('(max-width: 720px)').matches ? $('play').clientHeight - sheet.offsetTop : 0);
+  const phone = screen === 'map' && matchMedia('(max-width: 720px)').matches;
+  const top = Math.max(0, document.querySelector('.topright').getBoundingClientRect().bottom - $('play').getBoundingClientRect().top) + 8; // the top buttons, plus a margin
+  stage?.setInset(phone ? $('play').clientHeight - sheet.offsetTop : 0, top);
 }
 addEventListener('resize', updateInset);
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(updateInset).observe($('rateCard')); // the card grows and shrinks with its content
@@ -476,7 +478,7 @@ async function start() {
     const city = await (await fetch(new URL('./chicago.json', import.meta.url))).json();
     cityData = city; world = loadWorld(city); cellM = city.cellM; // the one map load: the worker gets it by message
     // scene.js (and three.js) load only when WebGL exists; if that import fails, chooseStage shows the no-WebGL note.
-    const webgl = webglAvailable();
+    const webgl = !noWebglFlag(location.search) && webglAvailable();
     const scene = webgl ? await import('./scene.js').catch(() => null) : null;
     const make3d = scene ? (el, c) => scene.createScene(el, c, { phone: scene.isPhone(), labels: $('labels'), manualClock: !!recCfg, onChaseOff: () => { $('chase').setAttribute('aria-pressed', 'false'); if (!motionAllowed()) { $('chase').disabled = true; $('chase').title = 'Off because your device asks for reduced motion.'; } } }) : null;
     stage = chooseStage($('stage'), city, { webgl, make3d });

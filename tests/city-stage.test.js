@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { webglAvailable, createFallbackStage, chooseStage } from '../games/city/stage.js';
+import { webglAvailable, createFallbackStage, chooseStage, noWebglFlag } from '../games/city/stage.js';
 
 const fakeEl = () => {
   const note = { textContent: '' };
@@ -56,5 +56,31 @@ describe('stage', () => {
     expect(webglAvailable({ createElement: () => ({ getContext: () => null }) })).toBe(false);
     expect(webglAvailable({ createElement: () => { throw new Error('x'); } })).toBe(false);
     expect(webglAvailable({ createElement: () => ({ getContext: () => ({}) }) })).toBe(true);
+  });
+});
+
+describe('?nowebgl=1', () => {
+  it('is on only for nowebgl=1, whatever else is in the query', () => {
+    expect(noWebglFlag('?nowebgl=1')).toBe(true);
+    expect(noWebglFlag('?record=1&nowebgl=1')).toBe(true);
+    expect(noWebglFlag('?nowebgl=0')).toBe(false);
+    expect(noWebglFlag('?nowebgl')).toBe(false);
+    expect(noWebglFlag('')).toBe(false);
+    expect(noWebglFlag(undefined)).toBe(false);
+  });
+  it('main.js turns webgl off with it, so chooseStage gives the fallback', async () => {
+    const { readFileSync } = await import('node:fs');
+    const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
+    expect(main).toMatch(/noWebglFlag\(location\.search\)/);
+    const el = fakeEl();
+    expect(chooseStage(el, {}, { webgl: !noWebglFlag('?nowebgl=1') && true, make3d: () => ({ ready: true }) }).ready).toBe(false);
+  });
+  it('the end card is built from the trip alone, so the fallback shows the same numbers as the 3D stage', async () => {
+    const { readFileSync } = await import('node:fs');
+    const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
+    const showEnd = main.slice(main.indexOf('function showEnd'), main.indexOf('function finish'));
+    expect(showEnd).toMatch(/endCardModel\(t\.rewards, t\.analysis/);
+    expect(showEnd).toMatch(/t\.people\.scares\.length/);
+    expect(showEnd).not.toMatch(/stage/);
   });
 });

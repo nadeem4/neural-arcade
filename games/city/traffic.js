@@ -215,3 +215,11 @@ export function createTraffic(world, { seed = 1, count = 40, cellM = 12, taxi = 
 }
 
 export const nearMissCount = (traffic, upTo = Infinity) => traffic.nearMisses(upTo).length;
+
+// How a car's lamps look at tick-time tf (a float, from the clock). A honking car flashes at 4 Hz: head lamps full then nearly dark, a halo of
+// big lamp blocks on the front and a glow on the whole body, so the flash reads from the chase camera whichever way the car faces.
+const FLASH_HZ = 4;
+export function honkLook(alarm, tf) {
+  if (!alarm) return { head: 0.55, halo: 0, bodyMix: 0 };
+  return Math.floor(Math.max(0, tf) * FLASH_HZ) % 2 === 0 ? { head: 1, halo: 1, bodyMix: 0.6 } : { head: 0.02, halo: 0, bodyMix: 0 };
+}

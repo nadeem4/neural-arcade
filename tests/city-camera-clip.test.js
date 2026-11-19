@@ -148,6 +148,12 @@ describe('insetOffset', () => {
     expect(insetOffset(800, -20)).toBe(0);
     expect(insetOffset(800, 700)).toBe(160);
   });
+  it('with the top buttons reserved, the map centre sits halfway between their bottom edge and the sheet', () => {
+    // 844 tall, sheet 300, buttons to 116: free area 116..544, centre 330; the stage centre 422 moves up by 92
+    expect(insetOffset(844, 300, 116)).toBe(92);
+    expect(844 / 2 - insetOffset(844, 300, 116)).toBe((116 + (844 - 300)) / 2);
+    expect(insetOffset(844, 300, 0)).toBe(150);
+  });
 });
 
 // The real map and the five preset routes: walk the chase camera through clipCamera at every 100 ms.
