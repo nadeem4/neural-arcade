@@ -162,6 +162,21 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .end-honest ul { margin: 6px 0 0; padding-left: 18px; }
 .endcard .share-line output { color: #C5CEDA; }
 .end-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Desktop only, never footage: the city score is a third big stat and the card is tighter, so it fits 1280x720 without scrolling. */
+.end-city[hidden] { display: none; }
+@media (min-width: 721px) {
+  body:not(.rc-record) .end-city:not([hidden]) { display: grid; align-content: start; gap: 2px; }
+  body:not(.rc-record) #endCity { display: none; }
+  body:not(.rc-record) .endcard { gap: 6px; padding: 16px 20px; }
+  body:not(.rc-record) .end-stats { gap: 20px; }
+  body:not(.rc-record) .end-stats .big { font-size: 34px; }
+  body:not(.rc-record) .end-stats > div:first-child { grid-template-columns: auto auto; justify-content: start; align-items: center; }
+  body:not(.rc-record) .end-stats > div:first-child .big { grid-column: 1 / -1; }
+  body:not(.rc-record) .end-stats .info { margin: -12px -8px -12px 0; }
+  body:not(.rc-record) .end-stats > div:first-child small { white-space: nowrap; }
+  body:not(.rc-record) .endcard .receipt .row { padding: 2px 0; }
+  body:not(.rc-record) .end-verdict { padding: 10px 14px; }
+}
 .toast { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 4; margin: 0; padding: 10px 16px; border-radius: 12px; background: var(--navy); color: #E8EDF4; font: 600 14px var(--sans); }
 .toast[hidden] { display: none; }
 

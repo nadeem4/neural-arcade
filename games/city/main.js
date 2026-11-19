@@ -261,6 +261,7 @@ function showEnd(t) {
   $('endHonest').hidden = !m.honest;
   $('endHonestLine').textContent = m.honestLine;
   $('endCity').textContent = `City score: ${m.city} out of 100`;
+  $('endCityNum').textContent = String(m.city); $('endCityStat').hidden = !m.honest;
   $('endScared').textContent = m.scaredLine; $('endScared').hidden = !m.scaredLine;
   $('endCheats').replaceChildren(...m.cheats.map(c => { const li = document.createElement('li'); li.textContent = c.reason; return li; }));
   const fixed = goalReached(t.analysis);

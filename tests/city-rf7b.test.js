@@ -93,6 +93,18 @@ describe('RF7b: small polish (F11, F27, F30, F32, F35)', () => {
   });
 });
 
+describe('RF7b: the desktop end card fits 1280x720 without scrolling (F12)', () => {
+  it('has a city score stat beside time and pay, filled from the same number as the city score line', () => {
+    expect(html).toMatch(/<div class="end-city" id="endCityStat" hidden><b class="big" id="endCityNum"><\/b><small>city score<\/small><\/div>/);
+    expect(main).toContain("$('endCityNum').textContent = String(m.city); $('endCityStat').hidden = !m.honest;");
+  });
+  it('shows the stat and drops the city score line on desktop only, never in footage mode', () => {
+    expect(rules('body:not(.rc-record) .end-city:not([hidden])')).toContain('display: grid');
+    expect(rules('body:not(.rc-record) #endCity')).toContain('display: none');
+    expect(css).toMatch(/@media \(min-width: 721px\) \{[^@]*body:not\(\.rc-record\) \.end-city/);
+  });
+});
+
 describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
   const hudHtml = html.slice(html.indexOf('<div class="hud">'), html.indexOf('<div class="notes">'));
   it('the minimap sits in the HUD grid, beside the city score, so no meter runs under it', () => {
