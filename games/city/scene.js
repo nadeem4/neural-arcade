@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
-import { buildBuildings, buildRoadStrips, buildFlats, treePositions, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, treesToHide } from './scene-math.js';
+import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
+import { clampPitch, clampDistance, cameraFar, readColors } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -12,14 +12,13 @@ import { buildAsphalt, buildRoadMarks, buildCrosswalks, buildRaisedWalks, buildS
 import { buildSignalHeads, paintLamps } from './signal-heads.js';
 import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
 import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, ENV_GROUND, WINDOW_GLOW } from './scene-look.js';
-import { tierFor } from './quality.js';
+import { tierFor, furnitureTier } from './quality.js';
+import { buildFurniture } from './scene-furniture.js';
 import { applyFacade, buildingGeometry } from './facade.js';
 import { createTaxiMaker, TAXI_SCALE } from './scene-taxi.js';
 
 const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
-
-const TREE_SEED = 7;
 
 function meshOf(geo, mat, { cast = false, receive = false } = {}) {
   const m = new THREE.Mesh(geo, mat);
@@ -58,7 +57,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const { cx, cz, radius } = cityBounds(city);
   const colors = readColors(getComputedStyle(document.documentElement));
   const mats = {};
-  for (const key of ['road', 'walk', 'park', 'water', 'building', 'ground', 'farGround', 'leaf']) {
+  for (const key of ['road', 'walk', 'park', 'water', 'building', 'ground', 'farGround']) {
     mats[key] = new THREE.MeshStandardMaterial({ color: colors[key], roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: ['road', 'walk', 'park', 'ground', 'farGround'].includes(key) ? ENV_GROUND : ENV_INTENSITY });
   }
   mats.building.side = THREE.FrontSide; // so the chase cam sees through a wall it passes
@@ -106,25 +105,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   scene.add(meshOf(buildingGeometry(buildBuildings(city.buildings ?? [], { roofBoxes: tier.roofBoxes })), mats.building, { cast: true, receive: true }));
   applyFacade(mats.building, { detail: tier.facadeDetail, glow: WINDOW_GLOW });
 
-  // Instanced trees: one cone each, shared geometry.
-  const pos = treePositions(city.parks ?? [], TREE_SEED);
-  let trees = null, hiddenTrees = [];
-  const treeMat = new THREE.Matrix4(), treeOff = new THREE.Matrix4().makeScale(0, 0, 0);
-  const placeTree = (i, on) => trees.setMatrixAt(i, on ? treeMat.setPosition(pos[i * 3], 0.4, pos[i * 3 + 2]) : treeOff);
-  // In the chase, trees near the camera or on its line to the taxi are scaled to nothing so they never block the view.
-  const clearTrees = (cam, taxiAt) => {
-    if (!trees) return;
-    const next = cam ? treesToHide(pos, cam, taxiAt) : [];
-    if (next.length === hiddenTrees.length && next.every((v, k) => v === hiddenTrees[k])) return;
-    for (const i of hiddenTrees) placeTree(i, true);
-    for (const i of next) placeTree(i, false);
-    hiddenTrees = next; trees.instanceMatrix.needsUpdate = true;
-  };
-  if (pos.length) {
-    trees = new THREE.InstancedMesh(new THREE.ConeGeometry(2.4, 8, 6).translate(0, 4, 0), mats.leaf, pos.length / 3);
-    for (let i = 0; i < pos.length / 3; i++) placeTree(i, true);
-    scene.add(trees);
-  }
+  // Street lamps, OSM trees and the L (scene-furniture.js); in the chase it also clears trees off the camera's view.
+  const furniture = buildFurniture({ scene, city, furnitureTier: furnitureTier({ phone }), leaf: colors.leaf, envIntensity: ENV_INTENSITY });
+  const clearTrees = furniture.clearTrees;
 
   // Pickup and drop-off: a pin over a coloured pad, centred on the grid cell.
   const heads = [], pins = [];
@@ -504,6 +487,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       for (const [type, fn] of [['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up], ['wheel', wheel], ['pointerleave', disengage]]) canvas.removeEventListener(type, fn);
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
       for (const m of Object.values(mats)) m.dispose();
+      furniture.dispose();
       renderer.dispose(); canvas.remove();
     },
   };

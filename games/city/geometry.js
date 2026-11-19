@@ -1,4 +1,3 @@
-import { mulberry32 } from '../../engine/rng.js';
 import { buildingSpec, drawnBuildings, roofBoxes, linearRgb } from './buildings-model.js';
 
 // Pure geometry for the 3D city: map metres in (x east, y north), typed arrays out (y up, north is -z).
@@ -224,36 +223,6 @@ export function buildRoadStrips(roads, y = 0.05) {
   return finishFlat(positions, indices);
 }
 
-const pointInRing = (x, y, ring) => {
-  let c = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
-  }
-  return c;
-};
-const TREE_AREA = 120, TREE_CAP = 600;
-
-// x, y, z triples (y = 0), about one tree per 120 m2 of park, at most 600. Same seed, same trees.
-export function treePositions(parks, seed) {
-  const rng = mulberry32(seed);
-  const rings = parks.map(open);
-  const want = rings.map((r) => Math.abs(signedArea(r)) / TREE_AREA);
-  const total = want.reduce((a, b) => a + b, 0);
-  const scale = total > TREE_CAP ? TREE_CAP / total : 1;
-  const out = [];
-  rings.forEach((r, k) => {
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    for (const [x, y] of r) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-    const count = Math.round(want[k] * scale);
-    let placed = 0;
-    for (let tries = 0; placed < count && tries < count * 50 && out.length < TREE_CAP * 3; tries++) {
-      const x = x0 + rng() * (x1 - x0), y = y0 + rng() * (y1 - y0);
-      if (pointInRing(x, y, r)) { out.push(x, 0, -y); placed++; }
-    }
-  });
-  return new Float32Array(out);
-}
 
 // Centre and radius (world x, z) containing every feature, for the camera.
 export function cityBounds(city) {
