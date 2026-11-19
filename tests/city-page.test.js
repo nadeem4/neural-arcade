@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { LESSON, INFO } from '../games/city/words.js';
 import { RANGES, DEFAULT_REWARDS } from '../games/city/presets.js';
 import { FIELDS } from '../games/city/reward.js';
+import { garageLabel } from '../games/city/garage.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = read('games/city/index.html');
@@ -252,7 +253,7 @@ describe('opening the Garage collapses the rate card (RF5)', () => {
   it('the phone drawer is tall and compact, the desktop drawer has two bay columns', () => {
     const from = css.indexOf('.drawer { top: auto');
     const phone = css.slice(from).split(/^\}/m)[0]; // only the phone media block
-    expect(phone).toMatch(/max-height:\s*calc\(100% - 68px\)/);
+    expect(phone).toMatch(/max-height:\s*calc\(100% - 68px - env\(safe-area-inset-bottom\)\)/); // the lifted drawer must not reach the top button row
     expect(phone).toMatch(/bottom:\s*calc\(8px \+ env\(safe-area-inset-bottom\)\)/); // clears the home indicator
     expect(phone).toMatch(/\.bay-chips\s*\{\s*display:\s*none/);
     expect(phone).toMatch(/\.drawer \.btn,[^}]*height:\s*44px/); // real tap targets
@@ -292,7 +293,7 @@ describe('phone pass (RF6)', () => {
     expect(rules('#mute .off, #mute[aria-pressed="true"] .on')).toContain('display: none');
   });
   it('lets the stage be shorter than 420 px in landscape, so the bottom bar stays on screen', () => {
-    expect(block('@media (max-height: 500px)')).toMatch(/\.play \{[^}]*min-height: 0/);
+    expect(block('@media (max-height: 500px) and (max-width: 950px)')).toMatch(/\.play \{[^}]*min-height: 0/); // landscape phones only; a short desktop window keeps the minimum
   });
   it('makes the (i) text on the navy cards readable', () => {
     expect(rules('.ratecard .info-text, .endcard .info-text')).toContain('background: var(--navy-soft)');
@@ -307,11 +308,11 @@ describe('phone pass (RF6)', () => {
   });
   it('stops a scrolled sheet from scrolling the page behind it, and keeps the open Garage below the top buttons', () => {
     expect(rules('.ratecard, .endcard')).toContain('overscroll-behavior: contain');
-    expect(css).toMatch(/\.drawer \{[^}]*max-height: calc\(100% - 68px\)/);
+    expect(css).toMatch(/\.drawer \{[^}]*max-height: calc\(100% - 68px - env\(safe-area-inset-bottom\)\)/);
   });
   it('lets a long goal line wrap inside a rounded chip, not a pill, on a phone', () => {
-    expect(block('@media (max-width: 720px)')).toMatch(/\.chip \{[^}]*border-radius: 16px/);
-    expect(block('@media (max-width: 720px)')).toMatch(/\.chip \{[^}]*height: auto/); // studio.css fixes a chip at 38 px, which a wrapped goal line spills out of
+    expect(block('@media (max-width: 720px)')).toMatch(/\.notes \.chip \{[^}]*border-radius: 16px/); // only the HUD chips, not the concept chips under About
+    expect(block('@media (max-width: 720px)')).toMatch(/\.notes \.chip \{[^}]*height: auto/); // studio.css fixes a chip at 38 px, which a wrapped goal line spills out of
     expect(block('@media (max-width: 720px)')).toMatch(/\.notes \{[^}]*width: calc\(100% - 16px\)/);
   });
 });
@@ -323,8 +324,27 @@ describe('phone end card (RF6)', () => {
     expect(phone).toMatch(/\.end-stats \.info \{[^}]*margin: -12px/);
   });
   it('keeps the three actions on one equal-width row that may wrap its labels', () => {
-    expect(phone).toMatch(/\.endcard \.end-actions \{[^}]*display: grid[^}]*grid-template-columns: repeat\(3, 1fr\)/);
-    expect(phone).toMatch(/\.endcard \.end-actions \.btn, \.endcard \.end-actions \.go \{[^}]*white-space: normal/);
+    expect(phone).toMatch(/#endcard \.end-actions \{[^}]*display: grid[^}]*grid-template-columns: repeat\(3, 1fr\)/);
+    expect(phone).toMatch(/#endcard \.end-actions \.btn, #endcard \.end-actions \.go \{[^}]*white-space: normal/);
+  });
+});
+
+describe('phone review fixes (RF6)', () => {
+  it('keeps the race result buttons centred: the 3-column grid is only for #endcard', () => {
+    expect(css).not.toMatch(/\.endcard \.end-actions \{[^}]*grid-template-columns/);
+    expect(rules('.racebanner .end-actions')).toMatch(/justify-content: center/);
+    expect(css).not.toMatch(/\.racebanner \.end-actions \{[^}]*display: grid/);
+  });
+  it('makes the garage count badge 13 px', () => { expect(rules('.badge')).toMatch(/font: 700 13px/); });
+  it('sits the HUD and minimap under one row of top buttons at phone widths', () => {
+    expect(css).toMatch(/\.hud \{[^}]*top: 60px/);
+    expect(css).toMatch(/\.minimap \{[^}]*top: 60px/);
+  });
+  it('words the garage button for no, one and several kept taxis', () => {
+    expect(garageLabel(0)).toBe('Garage');
+    expect(garageLabel(1)).toBe('Garage, 1 kept');
+    expect(garageLabel(4)).toBe('Garage, 4 kept');
+    expect(read(mainPath)).toContain('garageLabel(garage.taxis.length)');
   });
 });
 

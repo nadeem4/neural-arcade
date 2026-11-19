@@ -23,7 +23,7 @@ import { createSound } from './sound.js';
 import { stepRate, rateRows } from './rates.js';
 import { nextScreen, canToggleView } from './screens.js';
 import { endCardModel } from './endcard.js';
-import { createGarage, keep, remove, serialize, parse, validTaxi } from './garage.js';
+import { createGarage, keep, remove, serialize, parse, validTaxi, garageLabel } from './garage.js';
 import { nameFor, behaviourNames, uniqueName, noteFor } from './naming.js';
 import { honestReward } from './honest.js';
 import { renderGarage } from './garage-view.js';
@@ -333,7 +333,7 @@ function showGarage(open, focusIndex) {
   updateInset();
   $('garage').setAttribute('aria-expanded', String(open));
   $('garageCount').textContent = garage.taxis.length; $('garageCount').hidden = garage.taxis.length === 0;
-  $('garage').setAttribute('aria-label', garage.taxis.length ? `Garage, ${garage.taxis.length} kept` : 'Garage');
+  $('garage').setAttribute('aria-label', garageLabel(garage.taxis.length));
   $('garageEmpty').hidden = garage.taxis.length > 0;
   picks = picks.filter(id => garage.taxis.some(t => t.id === id));
   renderGarage($('garageList'), garage, {

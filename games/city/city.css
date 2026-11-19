@@ -98,7 +98,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .chase.ibtn { height: 44px; padding: 0; }
 .ibtn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .citybar nav a.ibtn { color: var(--ink-2); }
-.badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--hud-taxi); color: #141C27; font: 700 12px/18px var(--sans); text-align: center; }
+.badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--hud-taxi); color: #141C27; font: 700 13px/18px var(--sans); text-align: center; }
 .badge[hidden] { display: none; }
 #mute .off, #mute[aria-pressed="true"] .on { display: none; }
 #mute[aria-pressed="true"] .off { display: inline; }
@@ -185,7 +185,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
   .topright .info, .chase { min-height: 44px; height: 44px; }
-  .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: 16px; line-height: 1.4; }
+  .notes .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: 16px; line-height: 1.4; }
   .citybar .logo, .citybar h1 { font-size: 16px; }
   #labels span { font-size: 13px; }
   .meter-label { font-size: 13px; }
@@ -194,8 +194,8 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .ratecard .info-text, .endcard .info-text { font-size: 16px; line-height: 1.45; }
   .topright .info-text { font-size: 16px; line-height: 1.45; }
   .topright .info { width: 44px; }
-  .hud { top: 108px; left: 8px; } /* below the two rows of top buttons */
-  .minimap { top: 108px; right: 8px; width: 84px; height: 84px; }
+  .hud { top: 60px; left: 8px; } /* just under the single row of 44 px top buttons */
+  .minimap { top: 60px; right: 8px; width: 84px; height: 84px; }
   .meter { min-width: 120px; padding: 8px 12px; }
   .meter-total { font-size: 26px; }
   .meter-goal { padding: 6px 12px; }
@@ -232,8 +232,8 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 16px; line-height: 1.45; } .end-honest { order: 3; font-size: 14px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
   .end-honest ul { max-height: 22svh; overflow-y: auto; }
   .end-actions .btn, .end-actions .go { height: 44px; padding: 0 12px; font-size: 14px; }
-  .endcard .end-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } /* all three on one row */
-  .endcard .end-actions .btn, .endcard .end-actions .go { padding: 0 6px; line-height: 1.2; white-space: normal; }
+  #endcard .end-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } /* all three on one row */
+  #endcard .end-actions .btn, #endcard .end-actions .go { padding: 0 6px; line-height: 1.2; white-space: normal; }
   .end-stats > div:first-child { grid-template-columns: auto auto; justify-content: start; align-items: center; }
   .end-stats > div:first-child .big { grid-column: 1 / -1; }
   .end-stats .info { margin: -12px -8px -12px 0; } /* the (i) sits at the end of the goal label with a 44 px tap target, without growing the row */
@@ -313,7 +313,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .race-detail { font-size: 14px; line-height: 1.4; }
 }
 @media (max-width: 720px) {
-  .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: calc(100% - 68px); padding: 10px; gap: 8px; }
+  .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: calc(100% - 68px - env(safe-area-inset-bottom)); padding: 10px; gap: 8px; }
   .drawer .bays { grid-template-columns: 1fr; gap: 8px; padding-bottom: 6px; }
   .bay { padding: 8px 10px; gap: 4px; }
   .bay-head svg { width: 54px; height: 27px; } /* a smaller taxi icon, so four bays and the race bar fit a 660 px phone */
@@ -344,6 +344,6 @@ body.rc-record #endcard :focus, body.rc-record #endcard :focus-visible { outline
 body.rc-record.rc-endcard .play[data-screen="done"] .meter, body.rc-record.rc-endcard .play[data-screen="done"] .minimap, body.rc-record.rc-endcard .play[data-screen="done"] #labels .tag { display: none !important; } /* the card is the whole picture: no meters, minimap or leftover tags over it */
 
 /* Landscape phone: the stage is only as tall as the screen minus the header, so the bottom bar stays on screen. */
-@media (max-height: 500px) {
+@media (max-height: 500px) and (max-width: 950px) {
   .play { min-height: 0; }
 }
