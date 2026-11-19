@@ -14,7 +14,7 @@ export function createSky({ radius, cx, cz, cloudCount }) {
   canvas.width = 512; canvas.height = 256;
   const ctx = canvas.getContext('2d');
   const g = ctx.createLinearGradient(0, 0, 0, canvas.height / 2); // zenith to horizon over the top half; the lower half is the horizon colour
-  g.addColorStop(0, top); g.addColorStop(0.88, mid); g.addColorStop(1, bottom); // clear blue overhead, only a pale warm band at the horizon
+  g.addColorStop(0, top); g.addColorStop(0.88, mid); g.addColorStop(1, bottom); // clear blue overhead, the haze colour at the horizon
   ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = haze; ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
   const { u, v } = sunUv(sunDirection());

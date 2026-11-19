@@ -21,15 +21,17 @@ export function steerAngle(curvature) {
 }
 
 export function taxiParts() {
-  const wheel = (x, z, front) => ({ kind: 'wheel', front, size: [0.24, WHEEL_RADIUS * 2, WHEEL_RADIUS * 2], pos: [x, WHEEL_RADIUS, z], colour: '#1B1F27', role: 'wheel' });
-  const lamp = (role, x, z, colour) => ({ size: [0.4, 0.16, 0.08], pos: [x, 0.7, z], colour, role });
+  const wheel = (x, z, front) => ({ kind: 'wheel', front, size: [0.3, WHEEL_RADIUS * 2, WHEEL_RADIUS * 2], pos: [x, WHEEL_RADIUS, z], colour: '#1B1F27', role: 'wheel' });
+  const lamp = (role, x, z, colour) => ({ size: [0.36, 0.2, 0.12], pos: [x, 0.72, z], colour, role }); // a lamp block, standing a little proud of the body
+  const arch = (x, z) => ({ size: [0.06, 0.46, 0.82], pos: [x, 0.5, z], colour: '#14171D', role: 'arch' }); // a dark patch on the body side round each wheel, so the tyre reads against it
   return [
     { kind: 'extrude', profile: BODY, size: [1.9, 0.64, 4.2], pos: [0, 0.62, 0], colour: TAXI_YELLOW, role: 'body' },
     { kind: 'extrude', profile: CABIN, size: [1.6, 0.46, 2.25], pos: [0, 1.17, -0.125], colour: '#243542', role: 'glass' },
     { size: [1.62, 0.06, 1.5], pos: [0, 1.43, -0.2], colour: '#FFD25A', role: 'cab' },
     { size: [0.6, 0.12, 0.3], pos: [0, 1.52, -0.2], colour: '#1B1F27', role: 'sign' },
-    wheel(-0.86, 1.3, true), wheel(0.86, 1.3, true), wheel(-0.86, 1.3 - WHEELBASE, false), wheel(0.86, 1.3 - WHEELBASE, false),
-    lamp('brake', -0.62, -2.1, '#7A1F1F'), lamp('brake', 0.62, -2.1, '#7A1F1F'),
-    lamp('head', -0.62, 2.1, '#FFF3C4'), lamp('head', 0.62, 2.1, '#FFF3C4'),
+    wheel(-0.9, 1.3, true), wheel(0.9, 1.3, true), wheel(-0.9, 1.3 - WHEELBASE, false), wheel(0.9, 1.3 - WHEELBASE, false),
+    arch(-0.97, 1.3), arch(0.97, 1.3), arch(-0.97, 1.3 - WHEELBASE), arch(0.97, 1.3 - WHEELBASE),
+    lamp('brake', -0.62, -2.12, '#6A1818'), lamp('brake', 0.62, -2.12, '#6A1818'),
+    lamp('head', -0.62, 2.12, '#FFF3C4'), lamp('head', 0.62, 2.12, '#FFF3C4'),
   ];
 }

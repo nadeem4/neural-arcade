@@ -4,7 +4,7 @@ import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames, chaseCamera } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
-import { clipCamera, clipEased, cellHeights, pinFade, CHASE, MIN_CAM_DIST, ROAD_Y } from '../games/city/scene-math.js';
+import { clipCamera, clipEased, cellHeights, pinFade, insetOffset, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y } from '../games/city/scene-math.js';
 
 // A tiny world: 8 columns x 5 rows, 10 m cells. Row 0 is the north edge, z = -(rows - 1 - r + 0.5) * cellM.
 // Row 2 is a road; rows 0-1 are buildings from column 3 on; everything else is road.
@@ -125,6 +125,28 @@ describe('pinFade', () => {
     expect(pinFade([0, 8, 0], [5, 1, 5])).toBe(0);
     expect(pinFade([0, 8, 0], [500, 1, 0])).toBe(1);
     expect(pinFade([0, 8, 0], [35, 1, 0])).toBeGreaterThan(pinFade([0, 8, 0], [25, 1, 0]));
+  });
+});
+
+describe('heatQuad', () => {
+  it('is a flat square a little smaller than its cell, so neighbouring cells share no edge', () => {
+    const a = heatQuad(6, 6, 6), b = heatQuad(18, 6, 6);
+    const xs = (q) => [q[0], q[3], q[6], q[9]];
+    expect(Math.max(...xs(a))).toBeCloseTo(12 - HEAT_INSET, 6);
+    expect(Math.min(...xs(b))).toBeGreaterThan(Math.max(...xs(a)));
+    for (const k of [1, 4, 7, 10]) expect(a[k]).toBe(1.2);
+    expect(HEAT_INSET).toBeLessThan(0.5);
+  });
+});
+
+describe('insetOffset', () => {
+  it('shifts the picture up by half the sheet, so the map centre moves to the middle of what the sheet leaves visible', () => {
+    expect(insetOffset(844, 300)).toBe(150);
+    expect(insetOffset(844, 0)).toBe(0);
+  });
+  it('never shifts for a negative sheet, and caps a huge sheet at 40% of the view height', () => {
+    expect(insetOffset(800, -20)).toBe(0);
+    expect(insetOffset(800, 700)).toBe(160);
   });
 });
 

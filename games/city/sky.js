@@ -4,7 +4,7 @@ import { SWOOP_MS, PULLBACK_MS } from './director.js';
 // One time of day for map and chase, whatever the page theme: late afternoon. Colours are named here so they are easy to tune.
 const SUN_AZIMUTH = 0.0, SUN_ELEVATION = 0.38; // radians: elevation about 22 degrees, a low warm sun
 export function skyColours() {
-  return { top: '#3E78C2', mid: '#8DB9EA', bottom: '#E6DCCB', haze: '#C9D8E8', sun: '#FFE9CF', sunGlow: '#FFE6C4', hemiSky: '#D9DEE4', hemiGround: '#8A8A88' };
+  return { top: '#3E78C2', mid: '#8DB9EA', bottom: '#C9D8E8', haze: '#C9D8E8', sun: '#FFE9CF', sunGlow: '#FFE6C4', hemiSky: '#D9DEE4', hemiGround: '#8A8A88' };
 }
 
 // The direction towards the sun, a unit vector [x, y, z].

@@ -55,10 +55,12 @@ function box(P, N, I, o, u, a, [u0, u1], [a0, a1], [y0, y1]) {
 }
 
 // All the heads as two meshes: `body` (poles, arms, housings; positions, normals, indices) and `lamps` (positions, indices, a colour per vertex,
-// and `list`, one {axis, role, first} per lamp quad, `first` being its first vertex, so paintLamps can recolour them).
+// and `list`, one {axis, role, first} per lamp quad, `first` being its first vertex, so paintLamps can recolour them). `heads` has each head's world x, z and its
+// index ranges in both parts, for hideHeads.
 export function buildSignalHeads(heads, roads) {
-  const bp = [], bn = [], bi = [], lp = [], li = [], list = [];
+  const bp = [], bn = [], bi = [], lp = [], li = [], list = [], spots = [];
   for (const head of heads) {
+    const bi0 = bi.length, li0 = li.length;
     const p = headPlacement(head, roads), o = [p.x, p.y], u = [p.ux, p.uy], a = [p.ax, p.ay];
     const axis = headAxis(head.dir); // 0 is the north-south phase, 1 the east-west; scene.js repaints the lamps by axis
     const top = Y_ROAD + POLE_H;
@@ -76,11 +78,27 @@ export function buildSignalHeads(heads, roads) {
         list.push({ axis, role, first: base });
       });
     }
+    spots.push({ x: p.x, z: -p.y, body: [bi0, bi.length], lamps: [li0, li.length] });
   }
   return {
     body: { positions: new Float32Array(bp), normals: new Float32Array(bn), indices: new Uint32Array(bi) },
     lamps: { positions: new Float32Array(lp), indices: new Uint32Array(li), colors: new Float32Array(lp.length), list },
+    heads: spots,
   };
+}
+
+// Hides the heads whose indices are in `hidden` (collapses their triangles to nothing) and restores the rest, in place on the two index arrays.
+// Returns false when the hidden set is what it already was. The caller marks the geometry's index as needing an update after a true.
+export function hideHeads(sig, hidden) {
+  const key = hidden.join(',');
+  if (key === (sig.hiddenKey ?? '')) return false;
+  sig.keep ??= { body: sig.body.indices.slice(), lamps: sig.lamps.indices.slice() };
+  for (const part of ['body', 'lamps']) {
+    sig[part].indices.set(sig.keep[part]);
+    for (const i of hidden) sig[part].indices.fill(0, sig.heads[i][part][0], sig.heads[i][part][1]);
+  }
+  sig.hiddenKey = key;
+  return true;
 }
 
 // Colour every lamp for the states { 0: 'stop' | 'go', 1: ... } by axis: red lit on stop, green lit on go, amber always dim.

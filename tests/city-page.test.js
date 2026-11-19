@@ -206,11 +206,11 @@ describe('city.css', () => {
   it('shows keyboard focus on buttons', () => {
     expect(css).toMatch(/button:focus-visible/);
   });
-  it('fills the screen with the stage, switches panels by screen, and keeps the phone sheets to 35% of the viewport', () => {
+  it('fills the screen with the stage, switches panels by screen, and keeps the phone rate card to 35% of the viewport and the end card to 60%', () => {
     expect(css).toMatch(/100svh/);
     expect(css).toMatch(/\[data-screen=/);
     const phone = css.slice(css.indexOf('@media (max-width: 720px)'));
-    for (const sel of ['.ratecard', '.endcard']) expect(phone).toMatch(new RegExp(sel.replace('.', String.raw`\.`) + String.raw`[^{}]*\{[^}]*max-height:\s*35svh`));
+    for (const [sel, h] of [['.ratecard', 35], ['.endcard', 60]]) expect(phone).toMatch(new RegExp(sel.replace('.', String.raw`\.`) + String.raw`[^{}]*\{[^}]*max-height:\s*` + h + 'svh'));
   });
   it('loads Space Grotesk from the vendored font files', () => {
     expect(css).toMatch(/font-family:\s*"Space Grotesk"[^}]*fonts\/space-grotesk-latin-700-normal\.woff2/);

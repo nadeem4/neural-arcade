@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, CHASE, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, heatQuad, treesToHide, CHASE, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -9,7 +9,7 @@ import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { headState } from './signals.js';
 import { buildAsphalt, buildRoadMarks, buildCrosswalks, buildRaisedWalks, buildStopLines, clipWalks } from './street-model.js';
-import { buildSignalHeads, paintLamps } from './signal-heads.js';
+import { buildSignalHeads, paintLamps, hideHeads } from './signal-heads.js';
 import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
 import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, ENV_GROUND, WINDOW_GLOW } from './scene-look.js';
 import { tierFor, furnitureTier } from './quality.js';
@@ -136,9 +136,12 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
   mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
   mats.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
-  let lampGeo = null;
+  let lampGeo = null, bodyGeo = null;
+  const sigFlat = new Float32Array(sig.heads.length * 3);
+  sig.heads.forEach((h, i) => { sigFlat[i * 3] = h.x; sigFlat[i * 3 + 2] = h.z; });
   if (sig.lamps.list.length) {
-    scene.add(meshOf(geoOf(sig.body), mats.post, { cast: true }));
+    bodyGeo = geoOf(sig.body);
+    scene.add(meshOf(bodyGeo, mats.post, { cast: true }));
     lampGeo = geoOf(sig.lamps);
     lampGeo.setAttribute('color', new THREE.BufferAttribute(sig.lamps.colors, 3));
     scene.add(meshOf(lampGeo, mats.lamp));
@@ -164,7 +167,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const half = city.cellM / 2;
   heatCells.forEach(([c, r], i) => {
     const [x, z] = cellCentre(c, r, city);
-    hPos.set([x - half, 1.2, z - half, x + half, 1.2, z - half, x + half, 1.2, z + half, x - half, 1.2, z + half], i * 12);
+    hPos.set(heatQuad(x, z, half), i * 12); // inset, so neighbours share no edge
     hIdx.set([i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3], i * 6);
   });
   const heatGeo = new THREE.BufferGeometry();
@@ -247,7 +250,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       const fade = phase === 'map' ? 1 : pinFade(shot.pos, [p.position.x, ROAD_Y, p.position.z]);
       p.visible = fade > 0.01; p.scale.setScalar(base * Math.max(fade, 0.01));
     }
-    clearTrees(play && phase !== 'map' ? [shot.pos[0], shot.pos[2]] : null, play && taxi ? [taxi.position.x, taxi.position.z] : null);
+    const chaseCam = play && phase !== 'map' ? [shot.pos[0], shot.pos[2]] : null, taxiXZ = play && taxi ? [taxi.position.x, taxi.position.z] : null;
+    clearTrees(chaseCam, taxiXZ);
+    if (bodyGeo && hideHeads(sig, chaseCam && taxiXZ ? treesToHide(sigFlat, chaseCam, taxiXZ, 12, 4) : [])) { bodyGeo.index.needsUpdate = true; lampGeo.index.needsUpdate = true; } // signal poles between the camera and the taxi
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
     renderer.render(scene, camera);
@@ -260,7 +265,14 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const w = Math.max(1, el.clientWidth), h = Math.max(1, el.clientHeight);
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
+    applyInset();
     draw();
+  };
+  // A phone bottom sheet covers the lower part of the stage: slide the picture up so the map centre stays visible above it.
+  let inset = 0;
+  const applyInset = () => {
+    const w = Math.max(1, el.clientWidth), h = Math.max(1, el.clientHeight);
+    if (inset > 0) camera.setViewOffset(w, h, 0, insetOffset(h, inset), w, h); else camera.clearViewOffset();
   };
   const ro = new ResizeObserver(resize);
   ro.observe(el);
@@ -499,6 +511,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     skipTrip() { if (play && !manualClock) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
     // The Map view toggle: the high map camera while the taxi drives, instead of the chase.
     setMapView(on) { mapView = !!on; if (!play) draw(); },
+    setInset(px) { inset = Math.max(0, px || 0); applyInset(); draw(); },
     clearRoute() { stopRoute(); draw(); },
     setChase(on) { chase = !!on && motionAllowed(); }, // on: a trip starts in the chase view, with no swoop in or out
     setShot(name) { chase = name === 'chase' && motionAllowed(); },

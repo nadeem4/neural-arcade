@@ -14,7 +14,7 @@ const STUCK_TICKS = 8;          // a car that has not moved for this long picks 
 const SPAWN_RADIUS = 14;        // cars start within this many cells of the taxi's route, so the drive shows them
 
 // Cars per quality tier. Phones get fewer and no lamp meshes.
-const TIERS = { desktop: { count: 40, lamps: true }, phone: { count: 16, lamps: false } };
+const TIERS = { desktop: { count: 90, lamps: true }, phone: { count: 16, lamps: false } };
 export const trafficTier = ({ phone = false } = {}) => ({ ...(phone ? TIERS.phone : TIERS.desktop) });
 
 // Body colours (sRGB hex), picked by a seeded hash of the car's number.
@@ -204,7 +204,7 @@ export function createTraffic(world, { seed = 1, count = 40, cellM = 12, taxi = 
           const [x1, z1] = centre(b.cell[i]);
           const f = (prev && prev.moved[i] && b.moved[i]) ? u : smooth(u);
           x += (x1 - x0) * f; z += (z1 - z0) * f;
-          h += turn(h, heading(b.dir[i])) * Math.min(1, u * 3);
+          h += turn(h, heading(b.dir[i])) * smooth(Math.min(1, u * 2)); // eased in and out, done by the half way mark
         }
         out.x[i] = x - Math.cos(h) * LANE_M; out.z[i] = z + Math.sin(h) * LANE_M; out.h[i] = h;
         out.braking[i] = !mv || (!b.moved[i] && u > 0.5) ? 1 : 0;

@@ -158,6 +158,20 @@ function go(event) {
   $('train').textContent = busy ? 'TRAINING…' : 'TRAIN & DRIVE';
   if (busy) showGarage(false);
   showRates();
+  updateInset();
+}
+// On a phone the map screen has a rate card sheet over the stage's lower part; the stage keeps the map centre above it.
+function updateInset() {
+  const sheet = $('rateCard');
+  stage?.setInset(screen === 'map' && matchMedia('(max-width: 720px)').matches ? $('play').clientHeight - sheet.offsetTop : 0);
+}
+addEventListener('resize', updateInset);
+
+// Back to the map from the end card or race result: the route, meters and trip are cleared, then the screen event runs.
+function toMap(event) {
+  jobs.cancel(); latest++; raceRun = null; stage.clearRoute(); hud = null; trip = null; showMeter(false); say('');
+  $('announce').textContent = '';
+  go(event);
 }
 
 // ---------- The ladder: five steps, each loads a rate card; the steps the player has run are ticked ----------
@@ -281,6 +295,8 @@ const saveGarage = () => { try { localStorage.setItem(GARAGE_KEY, serialize(gara
 // Focus goes to the first DRIVE (or Close when empty) on open, and to the Garage button when the player closes it; auto-closes leave focus alone.
 const driveButtons = () => [...$('garageList').querySelectorAll('.go')];
 function closeGarage() { showGarage(false); $('garage').focus(); }
+// The drawer never opens over the end card or the race result: those leave for the map first.
+function openGarage() { if (screen === 'done' || screen === 'raced') toMap('garage'); showGarage(true, 0); }
 function showGarage(open, focusIndex) {
   $('garageDrawer').hidden = !open;
   $('garage').setAttribute('aria-expanded', String(open));
@@ -304,7 +320,7 @@ function keepTrip(t) {
     rewards: { ...t.rewards }, route: t.route, analysis: t.analysis,
     bestSeconds: t.analysis.seconds, note: noteFor(t.analysis), keptAt: Date.now(),
   });
-  saveGarage(); showGarage(false);
+  saveGarage(); openGarage();
   toast(`Kept as ${garage.taxis[0].name}`);
 }
 // DRIVE from a bay: its rates go into the rate card, then the stored route plays through the same path as a fresh trip, with no training.
@@ -380,13 +396,9 @@ function build() {
     $('viewToggle').setAttribute('aria-pressed', String(on));
     stage.setMapView(on);
   });
-  $('endEdit').addEventListener('click', () => {
-    jobs.cancel(); latest++; raceRun = null; stage.clearRoute(); hud = null; trip = null; showMeter(false); say('');
-    $('announce').textContent = '';
-    go('edit'); $('fareInc').focus({ preventScroll: true });
-  });
+  $('endEdit').addEventListener('click', () => { toMap('edit'); $('fareInc').focus({ preventScroll: true }); });
   $('endKeep').addEventListener('click', () => { if (trip) keepTrip(trip); });
-  $('garage').addEventListener('click', () => { if ($('garageDrawer').hidden) showGarage(true, 0); else closeGarage(); });
+  $('garage').addEventListener('click', () => { if ($('garageDrawer').hidden) openGarage(); else closeGarage(); });
   $('garageClose').addEventListener('click', closeGarage);
   $('garageDrawer').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeGarage(); } });
   $('endAgain').addEventListener('click', () => {

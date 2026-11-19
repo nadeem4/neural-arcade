@@ -8,19 +8,23 @@ import { treesToHide } from './scene-math.js';
 import { headPlacement } from './signal-heads.js';
 import { treeSpecs, crownBlobs, lampSpecs, pairRails, railParts, RAIL_COLOURS, SURFACE } from './street-furniture.js';
 
-const LAMP_H = 9, POLE_H = SURFACE.lampBase + LAMP_H - SURFACE.grass, TRUNK_Y = SURFACE.grass, GLOW = '#ffd9a0';
+const LAMP_H = 9, POLE_H = SURFACE.lampBase + LAMP_H - SURFACE.grass, TRUNK_Y = SURFACE.grass, GLOW = '#ffb866';
+const ARM = 1.5, HEAD_R = 0.45; // a slim arm reaching out from the top of the pole, and a small warm head at its end
+export const LAMP_HIDE = { near: 14, lineR: 5 }; // lamps this close to the chase camera, or to its line to the taxi, are hidden
 
-// A crown of low-poly blobs merged into one geometry (flat shaded, so the facets read as leaves at street scale).
-function crownGeometry(n) {
+// Several geometries joined into one (positions only; normals recomputed, so flat shaded).
+function joined(geos) {
   const pos = [];
-  for (const b of crownBlobs(n)) {
-    const g = new THREE.IcosahedronGeometry(b.r, 0).translate(b.x, b.y, b.z);
-    pos.push(...g.attributes.position.array); g.dispose();
-  }
+  for (const g of geos) { const n = g.index ? g.toNonIndexed() : g; pos.push(...n.attributes.position.array); if (n !== g) n.dispose(); g.dispose(); }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
   geo.computeVertexNormals();
   return geo;
+}
+
+// A crown of low-poly blobs merged into one geometry (flat shaded, so the facets read as leaves at street scale).
+function crownGeometry(n) {
+  return joined(crownBlobs(n).map((b) => new THREE.IcosahedronGeometry(b.r, 0).translate(b.x, b.y, b.z)));
 }
 
 export function buildFurniture({ scene, city, furnitureTier: tier, leaf = '#4E9A48', envIntensity = 1 }) {
@@ -52,15 +56,18 @@ export function buildFurniture({ scene, city, furnitureTier: tier, leaf = '#4E9A
     const poleMat = material(new THREE.MeshStandardMaterial({ color: '#3b3f46', roughness: 0.7, envMapIntensity: envIntensity }));
     const headMat = material(tier.lampGlow
       ? new THREE.MeshStandardMaterial({ color: GLOW, emissive: GLOW, emissiveIntensity: 1.6, toneMapped: false })
-      : new THREE.MeshStandardMaterial({ color: '#c9c2b0', roughness: 0.6, envMapIntensity: envIntensity }));
-    const poles = mesh(new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28, 0.4, POLE_H, 6).translate(0, SURFACE.grass + POLE_H / 2, 0), poleMat, lamps.length));
-    const heads = mesh(new THREE.InstancedMesh(new THREE.SphereGeometry(1.1, 8, 6).scale(1, 0.6, 1).translate(0, SURFACE.lampBase + LAMP_H + 0.3, 0), headMat, lamps.length));
+      : new THREE.MeshStandardMaterial({ color: '#d9b98a', roughness: 0.6, envMapIntensity: envIntensity }));
+    const poles = mesh(new THREE.InstancedMesh(joined([
+      new THREE.CylinderGeometry(0.16, 0.26, POLE_H, 6).translate(0, SURFACE.grass + POLE_H / 2, 0),
+      new THREE.BoxGeometry(ARM, 0.12, 0.12).translate(ARM / 2, SURFACE.lampBase + LAMP_H, 0),
+    ]), poleMat, lamps.length));
+    const heads = mesh(new THREE.InstancedMesh(new THREE.SphereGeometry(HEAD_R, 8, 6).scale(1.3, 0.5, 1).translate(ARM, SURFACE.lampBase + LAMP_H - 0.05, 0), headMat, lamps.length));
     const lampAt = (i) => { m.makeTranslation(lamps[i].x, 0, lamps[i].z); poles.setMatrixAt(i, m); heads.setMatrixAt(i, m); };
     lamps.forEach((l, i) => lampAt(i));
     scene.add(poles, heads);
     const flatLamps = new Float32Array(lamps.length * 3);
     lamps.forEach((l, i) => { flatLamps[i * 3] = l.x; flatLamps[i * 3 + 2] = l.z; });
-    const run = hider(flatLamps, lampAt, (i) => { nothing(poles, i); nothing(heads, i); }, 12, 3);
+    const run = hider(flatLamps, lampAt, (i) => { nothing(poles, i); nothing(heads, i); }, LAMP_HIDE.near, LAMP_HIDE.lineR);
     clearLamps = (cam, taxiAt) => { if (run(cam, taxiAt)) { poles.instanceMatrix.needsUpdate = true; heads.instanceMatrix.needsUpdate = true; } };
   }
 
