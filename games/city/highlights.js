@@ -3,6 +3,14 @@
 export const HOLD_MS = 1700; // as long as a tag stays up (events.js TAG_LIFE_MS)
 const PULSE_HZ = 2;
 
+export const OVERHEAD_BOOST = 1.6; // from the overhead shot the arrow and ring are this much bigger
+// How a highlight is drawn at pulse k (0 to 1): its opacity and size multiplier. Overhead the tile flash is near opaque, the arrow and ring bigger.
+export function highlightLook(type, k, overhead) {
+  const base = type === 'wrong' ? 0.6 : 0.3;
+  const opacity = overhead && type === 'off' ? 0.7 + 0.3 * k : base + 0.4 * k;
+  return { opacity, boost: overhead && type !== 'off' ? OVERHEAD_BOOST : 1 };
+}
+
 // offences: buildOffences result. Returns [{ type, x, z, heading, k }] for each offence 0 <= clockMs - ms < HOLD_MS.
 // k (0 to 1) pulses at 2 Hz from the offence's own age; under reduced motion it is a constant 1, so the highlight is static.
 export function highlightsAt(offences, clockMs, { reduced = false } = {}) {

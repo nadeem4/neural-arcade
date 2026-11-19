@@ -448,7 +448,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     trafficLayer.update(ms / play.track.tickMs, play.onHonk); // a no-op unless a single trip started traffic
     play.phase = phase; play.t = t;
     play.clock = elapsed + (SWOOP_MS - intro); // offence and cut times are on the clock that starts with the swoop
-    highlights.update(highlightsAt(play.offences, play.clock, { reduced: !motionAllowed() }));
+    highlights.update(highlightsAt(play.offences, play.clock, { reduced: !motionAllowed() }), phase === 'chase' && !mapView && !!cutAt(cuts, play.clock)); // bigger and brighter from overhead
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
     play.onFrame?.(st, play.race ? null : taxiScreen(), play.overhead); // the last frame (already 'map' when there is no pullback) still carries the fare tag
