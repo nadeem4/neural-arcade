@@ -40,10 +40,10 @@ describe('presets', () => {
 describe('checkPromise', () => {
   const run = (o) => ({ arrived: true, seconds: 50, tiles: 50, offTiles: 0, parkTiles: 0, redRuns: 0, wrongWays: 0, ...o });
 
-  it('speed: arrives across the park', () => {
+  it('speed: arrives by cutting across park or footpath', () => {
     expect(checkPromise('speed', run({ offTiles: 3, parkTiles: 3 }), 60)).toBe(true);
     expect(checkPromise('speed', run({}), 60)).toBe(false);
-    expect(checkPromise('speed', run({ offTiles: 3, parkTiles: 0 }), 60)).toBe(false); // footpath only
+    expect(checkPromise('speed', run({ offTiles: 3, parkTiles: 0 }), 60)).toBe(true); // footpath only
     expect(checkPromise('speed', run({ offTiles: 3, parkTiles: 3, arrived: false }), 60)).toBe(false);
   });
 

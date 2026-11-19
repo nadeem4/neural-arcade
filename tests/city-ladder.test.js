@@ -36,6 +36,14 @@ describe('the five steps', () => {
     expect(STEPS[4].title).toMatch(/side effects/i);
     expect(STEPS[4].showed).toMatch(/drive/i);
   });
+  it('say what the recorded speed run really drove over: footpaths, not park grass', () => {
+    const speed = JSON.parse(read('games/city/story.json')).cards.find(c => c.id === 'speed').analysis;
+    expect(speed.offTiles).toBeGreaterThan(0);
+    expect(speed.parkTiles).toBe(0);
+    expect(STEPS[0].showed).toMatch(/footpath/i);
+    expect(STEPS[0].showed).not.toMatch(/across the park/i);
+    expect(STEPS[1].showed).toMatch(/footpath/i);
+  });
 });
 
 describe('cardFor and matchStep', () => {

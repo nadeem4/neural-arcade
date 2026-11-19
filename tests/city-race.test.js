@@ -127,9 +127,10 @@ describe('raceBarLine', () => {
 });
 
 describe('leaderBlips', () => {
+  const mid = Math.floor(Math.min(...race.cars.map(c => c.track.total)) / 2); // halfway to the first finish, so both cars are still driving
   const lenOf = i => race.cars[i].events.steps.length;
   it('plays only the steps the leader finished since the last frame, and moves both counts on', () => {
-    const s = raceStateAt(race, 6000), lead = s.leader;
+    const s = raceStateAt(race, mid), lead = s.leader;
     const upTo = i => Math.min(s.cars[i].state.stepIndex, lenOf(i));
     const r = leaderBlips(race, s, [0, 0]);
     expect(r.steps).toEqual(race.cars[lead].events.steps.slice(0, upTo(lead)));
@@ -138,7 +139,7 @@ describe('leaderBlips', () => {
   });
   it('is silent when nobody leads, and never plays the trailing car', () => {
     expect(leaderBlips(race, raceStateAt(race, 0), [0, 0]).steps).toEqual([]);
-    const t = raceStateAt(race, 6000), trail = 1 - t.leader;
+    const t = raceStateAt(race, mid), trail = 1 - t.leader;
     const r = leaderBlips(race, t, [0, 0]);
     expect(r.steps.every(x => race.cars[t.leader].events.steps.includes(x))).toBe(true);
     expect(r.done[trail]).toBeGreaterThan(0); // its count still advances, so it never replays later
