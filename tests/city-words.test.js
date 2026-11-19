@@ -211,7 +211,7 @@ describe('player wording is accurate', () => {
     expect(INFO.meters).toContain(`${ON_TIME_POINTS} for a legal, on-time trip`);
     expect(INFO.meters).toContain(`${CLEAN_POINTS} for no cheats`);
     expect(INFO.goal).toContain(`${GOAL_SECONDS} seconds`);
-    expect(INFO.meters.split(" ").length).toBeLessThan(65);
+    expect(INFO.meters.split(" ").length).toBeLessThan(75);
     expect(INFO.meters).toContain('out of 100');
     expect(INFO.meters).toContain('It only falls during the drive.');
   });

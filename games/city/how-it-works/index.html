@@ -39,11 +39,11 @@
   <section class="step">
     <p class="num-tag">01</p>
     <h2>The map is real</h2>
-    <p>The streets are a few blocks of the Chicago Loop, taken from OpenStreetMap and turned into a grid of small squares. Each square is a road, a footpath, a park, a building, water or a fence. Buildings, water and fences are solid. Parks and footpaths are open, so a taxi can drive on them.</p>
+    <p>The streets are a few blocks of the Chicago Loop, taken from OpenStreetMap and turned into a grid of small tiles. Each tile is a road, a footpath, a park, a building, water or a fence. Buildings, water and fences are solid. Parks and footpaths are open, so a taxi can drive on them.</p>
     <p>Some roads are one-way, and some corners have traffic lights. The trip starts on Michigan Avenue beside Millennium Park, a short walk from Cloud Gate. The drop-off is at State Street and Van Buren. A driver who obeys every rule goes south on Michigan, then west on Van Buren, and takes 77 seconds. The goal is a legal trip in under 85 seconds.</p>
     <p>On the page the grid is drawn as real streets: asphalt, lane marks, crossings, traffic lights, lamps, trees and the elevated L. The grid is what the taxi learns on. The streets are what you watch.</p>
     <figure class="fig" id="fig1">
-      <canvas id="canvasMap" class="map" role="img" aria-label="Map of the Chicago Loop as a grid: roads, footpaths, parks, buildings, water and fences, with one-way arrows, traffic lights, the pickup square and the drop-off square"></canvas>
+      <canvas id="canvasMap" class="map" role="img" aria-label="Map of the Chicago Loop as a grid: roads, footpaths, parks, buildings, water and fences, with one-way arrows, traffic lights, the pickup tile and the drop-off tile"></canvas>
       <p class="key"><span><i class="k-road"></i>Road</span><span><i class="k-walk"></i>Footpath</span><span><i class="k-park"></i>Park</span><span><i class="k-bld"></i>Building</span><span><i class="k-water"></i>Water</span><span><i class="k-light"></i>Traffic light</span><span><i class="k-pick"></i>Pickup</span><span><i class="k-drop"></i>Drop-off</span></p>
       <figcaption><b>Fig. 1</b> The grid the taxi learns on. Small arrows show the direction of one-way streets. The dark dot is the pickup and the red dot is the drop-off.</figcaption>
     </figure>
@@ -53,18 +53,18 @@
   <section class="step">
     <p class="num-tag">02</p>
     <h2>The rate card</h2>
-    <p>You write the taxi's reward on a rate card. It has six lines: a <em>fare</em> for arriving, a cost for every second on the clock, a fine for each park or footpath square, a fine for each red light run, a fine for each wrong-way move on a one-way street, and pay for every square driven.</p>
+    <p>You write the taxi's reward on a rate card. It has six lines: a <em>fare</em> for arriving, a cost for every second on the clock, a fine for each footpath tile (the park counts too), a fine for each red light, a fine for each wrong-way tile on a one-way street, and pay for every tile driven.</p>
     <p>A new game starts with only the fare and the clock. Every fine is zero. The taxi only maximises the total on that card, and nothing else. A line that is not on the card is worth nothing to it.</p>
   </section>
 
   <section class="step">
     <p class="num-tag">03</p>
     <h2>Learning by trial and error</h2>
-    <p>The taxi starts knowing nothing. It tries a trip from the pickup, mostly by moving at random, and gets the total pay for it. It keeps a score for each square and move, and nudges that score up when a move led to good pay and down when it did not. This is Q-learning, the same idea as in Treasure Maze.</p>
-    <p>It also looks at the traffic light, because a move that is fine on green can be a fine on red. After thousands of trips, the squares it visits most are the ones on its best route.</p>
+    <p>The taxi starts knowing nothing. It tries a trip from the pickup, mostly by moving at random, and gets the total pay for it. It keeps a score for each tile and move, and nudges that score up when a move led to good pay and down when it did not. This is Q-learning, the same idea as in Treasure Maze.</p>
+    <p>It also looks at the traffic light, because a move that is fine on green can be a fine on red. After thousands of trips, the tiles it visits most are the ones on its best route.</p>
     <figure class="fig wide" id="fig2">
       <div class="minis" id="learnGrids"></div>
-      <figcaption><b>Fig. 2</b> Where the taxi has been, after <span id="snaps"></span> trips on the first reward. Brighter squares were visited more. Early on it wanders. By the end the brightest squares trace one route.</figcaption>
+      <figcaption><b>Fig. 2</b> Where the taxi has been, after <span id="snaps"></span> trips on the first reward. Brighter tiles were visited more. Early on it wanders. By the end the brightest tiles trace one route.</figcaption>
     </figure>
   </section>
 
@@ -72,22 +72,22 @@
     <p class="num-tag">04</p>
     <h2>Each loophole, in order</h2>
     <p>The game gives you five rate cards, as five steps on the rate card. They come in an order where each result leads to the next. The taxi is trained live on each, so what you see is what it learned.</p>
-    <p><b>1. Pay it for speed.</b> Only the clock costs money, so the shortest path wins, and that path drives along the footpaths beside the park. Any gap gets exploited. <b>2. Fine the park and footpaths.</b> Now it stays on the road, but it runs red lights, because nothing fines a red light, and waiting costs time. Patch one hole and the cheat moves. <b>3. Fine red lights too.</b> It stops at lights, then goes the wrong way down a one-way street to save time.</p>
+    <p><b>1. Pay it for speed.</b> Only the clock costs money, so the shortest path wins, and that path drives along the footpaths beside the park. Any gap gets exploited. <b>2. Fine the footpaths.</b> Now it stays on the road, but it runs red lights, because nothing fines a red light, and waiting costs time. Patch one hole and the cheat moves. <b>3. Fine red lights too.</b> It stops at lights, then goes the wrong way down a one-way street to save time.</p>
     <figure class="fig wide" id="fig3">
       <div class="trio" id="loopholes"></div>
       <figcaption><b>Fig. 3</b> The route the taxi drives after each of the first three rate cards, from the pickup to the drop-off. Each one closes one loophole and the taxi finds the next.</figcaption>
     </figure>
-    <p><b>4. Pay it by the mile.</b> Paying for every square driven is a stand-in for arriving, and it backfires. The taxi earns more by driving around than by arriving, so it never drops the passenger off. <b>5. Fine everything.</b> This is the fix: pay for the outcome, which is the fare, and put a price on every side effect. Now the taxi drives legally. It takes longer than the cheats, and that is the right trade. Judge the driving, not the pay: the end card sets the honest route beside what the taxi did, and lists every cheat it used.</p>
+    <p><b>4. Pay it by the mile.</b> Paying for every tile driven is a stand-in for arriving, and it backfires. The taxi earns more by driving around than by arriving, so it never drops the passenger off. <b>5. Fine everything.</b> This is the fix: pay for the outcome, which is the fare, and put a price on every side effect. Now the taxi drives legally. It takes longer than the cheats, and that is the right trade. Judge the driving, not the pay: the end card sets the legal route beside what the taxi did, and lists every cheat it used.</p>
     <figure class="fig wide" id="fig4">
       <div class="duo" id="endings"></div>
-      <figcaption><b>Fig. 4</b> The route when the taxi is paid per square on the left (step 4), and the legal route on the right (step 5). The first circles until the clock runs out.</figcaption>
+      <figcaption><b>Fig. 4</b> The route when the taxi is paid per tile on the left (step 4), and the legal route on the right (step 5). The first circles until the clock runs out.</figcaption>
     </figure>
   </section>
 
   <section class="step">
     <p class="num-tag">05</p>
     <h2>What the city wanted</h2>
-    <p>The page keeps two scores. <b>Pay</b> is what the taxi earns under your card. <b>What the city wanted</b> is the real goal, out of 100: 60 for arriving, 20 for a legal trip under the goal time, 20 for a clean trip that arrives, and 5 off for each person it scares, at most 30 off. During the drive it shows the best score still possible, so it only falls.</p>
+    <p>The page keeps two scores. <b>Pay</b> is what the taxi earns under your card. <b>City score</b> is the real goal, out of 100: 60 for arriving, 20 for a legal trip under the goal time, 20 for a clean trip that arrives, and 5 off for each person it scares, at most 30 off. During the drive it shows the best score still possible, so it only falls.</p>
     <p>The taxi never sees the second score. It only sees Pay. When the two drift apart, you are watching the taxi do what you paid for, not what you meant.</p>
     <figure class="fig wide" id="fig5">
       <ol class="scores" id="cityScores"></ol>
@@ -107,10 +107,10 @@
     <h2>Why the reward is the hard part</h2>
     <p>Nothing about the taxi was broken in any of those trips. It did exactly what the reward asked, as well as it could. What was wrong was the rate card: it left out something we cared about, so nothing on the card made the taxi avoid it.</p>
     <p class="lesson"><small>The lesson</small>The taxi does what you paid for, not what you meant.</p>
-    <p>This is called reward design, and an agent that exploits a gap in it is reward hacking. <a href="../../../concepts/reward-design/">Try it on a smaller map</a>, where one lawn and one slider show the same idea in seconds.</p>
+    <p>This is called reward design, and an agent that exploits a gap in it is reward hacking. <a href="../../../concepts/reward-design/">Try it on a smaller map</a>, where one lawn and one setting show the same idea in seconds.</p>
     <ul class="notes">
-      <li><b>It is a table, not a brain.</b> The taxi keeps one score per square, light phase and move. It only knows this map, and a new reward means training again.</li>
-      <li><b>The figures come from one recorded run</b> (seed <span id="seed"></span>), so they are the same on every visit.</li>
+      <li><b>It is a table, not a brain.</b> The taxi keeps one score per tile, light phase and move. It only knows this map, and a new reward means training again.</li>
+      <li><b>The figures come from one recorded run</b>, so they are the same on every visit.</li>
     </ul>
   </section>
 

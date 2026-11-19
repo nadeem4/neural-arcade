@@ -46,7 +46,7 @@ describe('city page markup', () => {
     expect(tag('meterGoal')).toContain('aria-hidden="true"');
     expect(tag('meterGoal')).toMatch(/\shidden[\s>]/);
     expect(tag('meterGoal')).not.toContain('aria-live');
-    expect(html).toContain('What the city wanted');
+    expect(html).toContain('City score');
     expect(html).toContain('>Pay<');
     expect(tag('mapGoal')).toMatch(/^<p /);
     expect(read('games/city/main.js')).toContain('goalLine()');
@@ -178,9 +178,15 @@ describe('city page layout', () => {
     const at = x => html.indexOf(x);
     expect(at('id="reset"')).toBeGreaterThan(at('id="rateCard"'));
     expect(at('id="train"')).toBeGreaterThan(at('id="reset"'));
-    expect(at('id="endEdit"')).toBeGreaterThan(at('id="train"'));
+    expect(at('id="endNext"')).toBeGreaterThan(at('id="train"'));
+    expect(at('id="endEdit"')).toBeGreaterThan(at('id="endNext"'));
     expect(at('id="endKeep"')).toBeGreaterThan(at('id="endEdit"'));
     expect(at('id="endAgain"')).toBeGreaterThan(at('id="endKeep"'));
+  });
+  it('has a hidden Next step button on the end card, and sentence case on every button', () => {
+    expect(html).toMatch(/id="endNext"[^>]*hidden|hidden[^>]*id="endNext"/);
+    const labels = [...html.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map(m => m[1].trim()).filter(t => /[A-Z]{3,}/.test(t));
+    expect(labels).toEqual([]);
   });
   it('starts on the map screen', () => {
     expect(html).toMatch(/id="play"[^>]*data-screen="map"/);

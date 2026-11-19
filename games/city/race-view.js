@@ -3,12 +3,14 @@
 import { minimapModel, drawMinimap, COLOURS_B } from './minimap.js';
 import { meterText } from './meter.js';
 import { raceBarLine, bannerLine, TINTS } from './race.js';
+import { trueGoal } from './goal.js';
+import { GOAL_SECONDS } from './presets.js';
+import { signed } from './receipt.js';
 
 const $ = id => document.getElementById(id);
-const signed = n => (n > 0 ? '+' : '') + n;
-const counts = m => `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`;
+const counts = m => `${m.seconds} s · ${m.counts.tiles} tiles · footpath ${m.counts.off} · red light ${m.counts.red} · wrong way ${m.counts.wrong}`;
 
-// The garage's race bar: hidden until a taxi is picked; START RACE waits for two.
+// The garage's race bar: hidden until a taxi is picked; Start race waits for two.
 export function renderRaceBar(names) {
   $('raceBar').hidden = names.length === 0;
   $('raceLine').textContent = raceBarLine(names);
@@ -18,7 +20,7 @@ export function renderRaceBar(names) {
 // The two meters: A in the usual place, B beside it. Each is labelled with its taxi's name.
 export function showRaceMeters(on, names = ['', '']) {
   $('meter').hidden = !on; $('meterB').hidden = !on; $('minimap').hidden = !on;
-  $('meterLabel').textContent = on ? names[0] : 'earned this trip';
+  $('meterLabel').textContent = on ? names[0] : 'this trip';
   $('meterBLabel').textContent = names[1];
   $('meterTotal').style.color = on ? TINTS[0].css : '';
   if (!on) for (const id of ['meter', 'meterB']) $(id).classList.remove('leading');
@@ -37,11 +39,30 @@ export function updateRaceHud(world, race, rs) {
   drawMinimap(ctx, model(1), c.width, COLOURS_B, { clear: false });
 }
 
-// The line under the result: each taxi's time and pay, and why a dead heat is not decided by pay.
+// What a taxi did that was against the rules, in words: "ran 3 red lights, went the wrong way 10 times", or "legal".
+const did = (t) => {
+  if (!t.arrived) return 'did not arrive';
+  const out = [
+    t.offTiles && `drove ${plural(t.offTiles, 'tile')} on footpaths`,
+    t.redRuns && `ran ${plural(t.redRuns, 'red light')}`,
+    t.wrongWays && `went the wrong way ${plural(t.wrongWays, 'time')}`,
+  ].filter(Boolean);
+  return out.length ? out.join(', ') : 'legal';
+};
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const score = (t) => trueGoal({ analysis: t, scares: 0, goalSeconds: GOAL_SECONDS }).score; // races do not bake people, so scares are not counted
+
+// The line under the result: each taxi's time and whether it kept to the rules; when the winner broke them, what the city scored.
+// A dead heat is not decided by pay, and says so.
 export function raceDetailOf(res, t, names) {
-  const line = (i) => `${names[i]}: ${t[i].arrived ? `${t[i].seconds} s` : 'did not arrive'}, earned ${signed(Math.round(t[i].reward * 10) / 10 + 0)}`;
-  const heat = res.winner === 'tie' && res.reason === 'time' && t[0].reward !== t[1].reward ? ' Same time, so nobody wins, even though one earned more.' : '';
-  return `${line(0)}. ${line(1)}.${heat}`;
+  const line = (i) => `${names[i]}: ${t[i].arrived ? `${t[i].seconds} s, ${did(t[i])}` : did(t[i])}`;
+  const heat = res.winner === 'tie' && res.reason === 'time' && t[0].reward !== t[1].reward ? ' Same time, so nobody wins. Pay does not decide a race.' : '';
+  let city = '';
+  if (res.winner !== 'tie' && did(t[res.winner]) !== 'legal') {
+    const w = res.winner, l = 1 - w;
+    city = ` ${res.reason === 'time' ? 'Faster, but the' : 'But the'} city scored it ${score(t[w])}. ${names[l]} scored ${score(t[l])}.`;
+  }
+  return `${line(0)}. ${line(1)}.${heat}${city}`;
 }
 
 // The result banner. It takes focus, so a keyboard or screen reader player lands on the result.
