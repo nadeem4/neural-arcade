@@ -316,6 +316,18 @@ describe('phone pass (RF6)', () => {
   });
 });
 
+describe('phone end card (RF6)', () => {
+  const phone = css.slice(css.indexOf('@media (max-width: 720px)'));
+  it('puts the (i) inline at the end of the goal label, not on a row of its own', () => {
+    expect(phone).toMatch(/\.end-stats > div:first-child \{[^}]*grid-template-columns: auto auto/);
+    expect(phone).toMatch(/\.end-stats \.info \{[^}]*margin: -12px/);
+  });
+  it('keeps the three actions on one equal-width row that may wrap its labels', () => {
+    expect(phone).toMatch(/\.endcard \.end-actions \{[^}]*display: grid[^}]*grid-template-columns: repeat\(3, 1fr\)/);
+    expect(phone).toMatch(/\.endcard \.end-actions \.btn, \.endcard \.end-actions \.go \{[^}]*white-space: normal/);
+  });
+});
+
 describe('phone type scale (RF6): 16 px to read, 14 px labels, 13 px captions, nothing smaller', () => {
   const phones = [...css.matchAll(/@media \(max-width: (?:720|600)px\) \{/g)].map(m => { let d = 0, j = m.index + m[0].length - 1; const a = j; for (; j < css.length; j++) { if (css[j] === '{') d++; if (css[j] === '}' && --d === 0) break; } return css.slice(a, j); }).join('\n');
   const size = (sel) => { const esc = sel.replace(/[.#*+?^${}()|[\]\\]/g, '\\$&'); const m = phones.match(new RegExp('(?:^|[\\n}{; ])' + esc + '\\s*\\{[^}]*?font-size:\\s*(\\d+(?:\\.\\d+)?)px')); return m && Number(m[1]); };

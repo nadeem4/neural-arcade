@@ -232,6 +232,11 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 16px; line-height: 1.45; } .end-honest { order: 3; font-size: 14px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
   .end-honest ul { max-height: 22svh; overflow-y: auto; }
   .end-actions .btn, .end-actions .go { height: 44px; padding: 0 12px; font-size: 14px; }
+  .endcard .end-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } /* all three on one row */
+  .endcard .end-actions .btn, .endcard .end-actions .go { padding: 0 6px; line-height: 1.2; white-space: normal; }
+  .end-stats > div:first-child { grid-template-columns: auto auto; justify-content: start; align-items: center; }
+  .end-stats > div:first-child .big { grid-column: 1 / -1; }
+  .end-stats .info { margin: -12px -8px -12px 0; } /* the (i) sits at the end of the goal label with a 44 px tap target, without growing the row */
 }
 /* Phone ladder: one row of five 44 px steps, the current step's title and one line under it; roomy taps for Reset and (i). */
 @media (max-width: 600px) {
