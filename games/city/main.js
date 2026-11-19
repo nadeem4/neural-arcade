@@ -11,7 +11,7 @@ import { FIELDS, defaultRewards, createSession, recordTry } from './reward.js';
 import { webglAvailable, chooseStage } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
-import { tripEvents, tagsFor, foldTag } from './events.js';
+import { tripEvents, tagsFor, foldTag, layoutTags, TAG_SLOT_PX } from './events.js';
 import { driveTrack } from './drive.js';
 import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
@@ -53,10 +53,16 @@ function popTag(tag, at, i) {
   const prev = hud.lastTag?.[tag.text];
   const run = foldTag(prev, tag, i);
   let span = run.count > 1 && prev.span.isConnected ? prev.span : null;
-  if (!span) { span = document.createElement('span'); $('labels').append(span); }
-  hud.lastTag = { ...hud.lastTag, [tag.text]: { ...run, span } };
+  let slot = span ? prev.slot : undefined;
+  if (!span) { // a new bubble takes the lowest free slot above the taxi, so live tags never overlap
+    span = document.createElement('span'); $('labels').append(span);
+    const live = Object.values(hud.lastTag ?? {}).filter((t) => t.span.isConnected).map((t) => ({ slot: t.slot }));
+    slot = layoutTags([...live, {}]).at(-1).slot;
+    for (const t of Object.values(hud.lastTag ?? {})) if (t.slot === slot && t.span.isConnected) { t.span.remove(); if (rec) rec.tags = rec.tags.filter((x) => x.span !== t.span); } // all slots busy: the oldest tag gives way
+  }
+  hud.lastTag = { ...hud.lastTag, [tag.text]: { ...run, span, slot } };
   span.className = `tag ${tag.kind}`; span.textContent = run.label;
-  span.style.left = at.x + 'px'; span.style.top = at.y + 'px';
+  span.style.left = at.x + 'px'; span.style.top = at.y - slot * TAG_SLOT_PX + 'px';
   span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
   if (rec) { rec.tags = rec.tags.filter(t => t.span !== span); rec.tags.push({ span, born: rec.now }); return; } // expiry follows seek time, not the wall clock
   clearTimeout(span._t); span._t = setTimeout(() => span.remove(), 1400);
@@ -77,7 +83,7 @@ function hudFrame(state, at) {
     if (!at || hud.skipped) continue; // the end jump under reduced motion, or Skip: no tags, no sound
     const step = hud.events.steps[hud.done];
     const tags = tagsFor(step, hud.rewards);
-    tags.forEach((t, k) => popTag(t, { x: at.x, y: at.y - k * 26 }, hud.done));
+    tags.forEach((t) => popTag(t, at, hud.done));
     if (!rec) sound.play(step.red ? 'red' : step.done ? 'fare' : step.off || step.wrong ? 'fine' : step.moved ? 'tick' : null);
   }
 }
@@ -232,7 +238,7 @@ function drive(t) {
   $('driveProgress').value = 0;
   startHud(t.events, t.route, t.rewards);
   t.ended = false;
-  stage.playTrip({ track: t.track, events: t.events, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onDone() { finish(t, 'arrived'); } });
+  stage.playTrip({ track: t.track, events: t.events, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
 }
 async function train(req) {
   const progress = $('progress');
