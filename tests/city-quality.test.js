@@ -20,8 +20,8 @@ describe('tierFor', () => {
     expect(phone.softShadows).toBe(false);
   });
   it('holds the plan values', () => {
-    expect(desk).toEqual({ shadowSize: 2048, pixelRatio: 2, cloudCount: 6, facadeDetail: 2, roofBoxes: true, softShadows: true, laneDashes: true, arrows: true });
-    expect(phone).toEqual({ shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, facadeDetail: 1, roofBoxes: false, softShadows: false, laneDashes: false, arrows: false });
+    expect(desk).toEqual({ shadowSize: 2048, pixelRatio: 2, cloudCount: 6, facadeDetail: 2, roofBoxes: true, softShadows: true, laneDashes: true, arrows: true, peopleDrawn: 60 });
+    expect(phone).toEqual({ shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, facadeDetail: 1, roofBoxes: false, softShadows: false, laneDashes: false, arrows: false, peopleDrawn: 24 });
   });
   it('reduced motion never makes a tier heavier', () => {
     expect(tierFor({ phone: false, reducedMotion: true }).shadowSize).toBeLessThanOrEqual(desk.shadowSize);
