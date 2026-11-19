@@ -105,3 +105,34 @@ describe('the no-WebGL route plot', () => {
     expect(done).toBe(1);
   });
 });
+
+describe('the no-WebGL canvas', () => {
+  const frames = [{ x: 0, z: 0 }, { x: 10, z: -10 }];
+  const fake = () => {
+    const rafs = new Map(); let id = 0, canvases = 0;
+    globalThis.requestAnimationFrame = (f) => { rafs.set(++id, f); return id; };
+    globalThis.cancelAnimationFrame = (i) => rafs.delete(i);
+    const ctx = new Proxy({}, { get: () => () => {}, set: () => true });
+    const el = { clientWidth: 100, clientHeight: 100, appended: [], ownerDocument: { getElementById: () => null, createElement: () => ({ getContext: () => ctx, style: {}, remove() { canvases--; this.gone = true; } }), defaultView: { devicePixelRatio: 3 } }, appendChild(c) { canvases++; this.appended.push(c); } };
+    return { el, rafs, count: () => canvases };
+  };
+  it('skipTrip removes the canvas, stops the animation and still ends the trip once', () => {
+    const f = fake(); const st = createFallbackStage(f.el, 'x'); let done = 0;
+    st.playTrip({ track: { frames, total: 1000 }, onDone: () => { done++; } });
+    expect(f.count()).toBe(1);
+    st.skipTrip();
+    expect(f.count()).toBe(0); expect(f.rafs.size).toBe(0); expect(done).toBe(1);
+  });
+  it('clearRoute and a second playTrip never leave two canvases', () => {
+    const f = fake(); const st = createFallbackStage(f.el, 'x');
+    st.playTrip({ track: { frames, total: 1000 } });
+    st.playTrip({ track: { frames, total: 1000 } });
+    expect(f.count()).toBe(1);
+    st.clearRoute();
+    expect(f.count()).toBe(0); expect(f.rafs.size).toBe(0);
+  });
+  it('sizes the canvas for the pixel ratio, capped at 2', () => {
+    const f = fake(); createFallbackStage(f.el, 'x').playTrip({ track: { frames, total: 1000 } });
+    expect(f.el.appended[0].width).toBe(200);
+  });
+});

@@ -23,40 +23,51 @@ export function routePlot(frames, w, h, pad = 24) {
 }
 
 // The no-WebGL trip: the route as a line and the taxi as a dot on a flat canvas (at most 12 s), then onDone.
+// Returns { stop(), finish() }: stop removes the canvas and cancels the animation; finish also ends the trip (once).
 function drawTrip(el, track, onDone) {
   const doc = el && el.ownerDocument, cv = doc && doc.createElement && doc.createElement('canvas');
   const ctx = cv && cv.getContext && cv.getContext('2d');
-  if (!ctx || !track || !track.frames || !track.frames.length) { if (onDone) onDone(); return; }
-  const w = cv.width = Math.max(1, el.clientWidth), h = cv.height = Math.max(1, el.clientHeight);
+  if (!ctx || !track || !track.frames || !track.frames.length) { if (onDone) onDone(); return null; }
+  const dpr = Math.min(2, (doc.defaultView && doc.defaultView.devicePixelRatio) || 1);
+  const w = Math.max(1, el.clientWidth), h = Math.max(1, el.clientHeight);
+  cv.width = w * dpr; cv.height = h * dpr;
   cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
   el.appendChild(cv);
   const plot = routePlot(track.frames, w, h), n = track.frames.length, t0 = performance.now();
+  let raf = 0, over = false;
+  const stop = () => { over = true; if (raf) cancelAnimationFrame(raf); raf = 0; cv.remove(); };
+  const finish = () => { if (over) return; stop(); if (onDone) onDone(); };
   const step = (now) => {
     const u = Math.max(0, Math.min(1, (now - t0) / Math.min(track.total || 12000, 12000))), upto = Math.floor(u * (n - 1));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     ctx.lineWidth = 3; ctx.strokeStyle = '#4fc3f7'; ctx.beginPath();
     for (let i = 0; i <= upto; i++) { const [px, py] = plot(track.frames[i].x, track.frames[i].z); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
     ctx.stroke();
     const [dx, dy] = plot(track.frames[upto].x, track.frames[upto].z);
     ctx.fillStyle = '#f5b921'; ctx.beginPath(); ctx.arc(dx, dy, 7, 0, 6.2832); ctx.fill();
-    if (u < 1) requestAnimationFrame(step); else { cv.remove(); if (onDone) onDone(); }
+    raf = u < 1 ? requestAnimationFrame(step) : 0;
+    if (u >= 1) finish();
   };
-  requestAnimationFrame(step);
+  raf = requestAnimationFrame(step);
+  return { stop, finish };
 }
 
 // ready:false. Writes the message into #stageNote; playTrip draws the route as a line with a moving taxi dot (never onFrame), then calls onDone.
 export function createFallbackStage(el, message) {
   const note = el && el.ownerDocument && el.ownerDocument.getElementById('stageNote');
   if (note) note.textContent = message;
+  let run = null; // the canvas drawing now, if any
+  const stopRun = () => { if (run) run.stop(); run = null; };
   return {
     ready: false,
     setHeat() {},
-    playTrip({ track, onDone } = {}) { drawTrip(el, track, onDone); },
+    playTrip({ track, onDone } = {}) { stopRun(); run = drawTrip(el, track, onDone); },
     playRace({ onDone } = {}) { if (onDone) onDone(); },
-    clearRoute() {},
+    clearRoute() { stopRun(); },
     setChase() {},
     setShot() {},
-    skipTrip() {},
+    skipTrip() { if (run) { const r = run; run = null; r.finish(); } },
     renderAt() { return { phase: 'map', done: true }; },
     setMapView() {},
     setInset() {},
