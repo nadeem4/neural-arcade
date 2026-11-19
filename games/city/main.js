@@ -14,7 +14,9 @@ import { parseRecord, tripMs, recordApi, runSummary, pruneTags, cardRewards } fr
 import { buildOffences } from './offences.js';
 import { tripEvents, tagsFor, foldTag, layoutTags, TAG_LIFE_MS, tagPlace } from './events.js';
 import { bakePeople } from './people.js';
-import { driveTrack } from './drive.js';
+import { driveTrack, stateAt } from './drive.js';
+import { overheadCuts } from './cuts.js';
+import { SWOOP_MS } from './director.js';
 import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
 import { createSound } from './sound.js';
@@ -68,7 +70,7 @@ function popTag(tag, at, i) {
   hud.lastTag = { ...others, [tag.text]: { ...run, span, slot } };
   span.className = `tag ${tag.kind}`; span.textContent = run.label;
   const lab = $('labels').getBoundingClientRect(); // tags stay on screen: clamped sideways, and below the meters on a phone
-  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top });
+  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top, height: lab.height });
   span.style.left = pos.left + 'px'; span.style.top = pos.top + 'px';
   span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
   if (run.count > 1) span.style.animationDelay = `-${TAG_LIFE_MS * 0.05}ms`; // a folded tag restarts already opaque (past the 5% fade-in), so a run of offences does not blink
@@ -470,6 +472,8 @@ async function startRecord(cfg) {
   await train({ ...rewards });
   if (!trip) { rc.failure = 'training failed'; return; }
   rc.summary = runSummary({ card: cfg.card, rewards: trip.rewards, analysis: trip.analysis, scared: trip.people.scares.length, offences: trip.offences, goalSeconds: GOAL_SECONDS });
+  if (cfg.cam === 'map') stage.setMapView(true); // after train(): drive() resets the map view
+  if (cfg.cam === 'auto') stage.setCuts(overheadCuts(trip.offences, { introMs: SWOOP_MS, driveMs: trip.track.total, posAt: (ms) => stateAt(trip.track, ms - SWOOP_MS) }));
   rc.totalMs = tripMs(trip.track.total);
 }
 

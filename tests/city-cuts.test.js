@@ -71,3 +71,25 @@ describe('overheadCuts', () => {
     }
   });
 });
+
+describe('cam wiring', () => {
+  const src = (f) => readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8');
+  it('the scene takes the cuts, uses the overhead shot inside one and skips the building clip there', () => {
+    const s = src('scene.js');
+    expect(s).toContain("from './cuts.js'");
+    expect(s).toContain('setCuts(');
+    expect(s).toContain('cutAt(');
+    expect(s).toContain('overheadShot(cut.points');
+    expect(s).toMatch(/!cut/); // clipCamera and clipEased only outside a cut
+  });
+  it('the fallback stage has setCuts', () => {
+    expect(src('stage.js')).toContain('setCuts() {}');
+  });
+  it('main applies cam after training: map view for map, cuts for auto, and keeps tags on screen', () => {
+    const m = src('main.js');
+    expect(m).toMatch(/cfg\.cam === 'map'[^\n]*stage\.setMapView\(true\)/);
+    expect(m).toMatch(/cfg\.cam === 'auto'[^\n]*stage\.setCuts\(overheadCuts\(/);
+    expect(m.indexOf('await train(')).toBeLessThan(m.indexOf("cfg.cam === 'map'"));
+    expect(m).toMatch(/tagPlace\([^\n]*height: lab\.height/);
+  });
+});

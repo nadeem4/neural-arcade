@@ -4,7 +4,8 @@ import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } f
 import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, CHASE, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
-import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
+import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
+import { cutAt } from './cuts.js';
 import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { headState } from './signals.js';
@@ -198,6 +199,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, cameraFar(radius));
   const view = { yaw: 0.6, pitch: 0.95, dist: radius * 1.25 };
   let queued = 0, dead = false;
+  let cuts = []; // footage cam=auto: the overhead cuts (cuts.js), on the seek clock
   let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;
   let taxiB = null, trailB = null, trailPtsB = null; // the second car of a race
   let peopleLayer = null; // the pedestrians of the trip on screen (scene-people.js)
@@ -242,7 +244,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       ? shotAt(play.phase, play.t, mapShot, chaseAt(play.t, play.state), { reduced: !motionAllowed() })
       : mapShot;
     const phase = play ? play.phase : 'map';
-    if (play && phase !== 'map' && !mapView) { // keep the camera out of buildings and above the road
+    const cut = play && phase === 'chase' && !mapView ? cutAt(cuts, play.clock) : null;
+    if (cut) shot = overheadShot(cut.points, { aspect: camera.aspect }); // an overhead cut: framed on the offence and the taxi, nothing to clip
+    if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
       const at0 = play.race ? [(play.state.cars[0].state.x + play.state.cars[1].state.x) / 2, 0, (play.state.cars[0].state.z + play.state.cars[1].state.z) / 2] : [play.state.x, 0, play.state.z]; // clip from the taxi: in the swoop and pullback shot.target is a map point, which can sit inside a building
       const target = [at0[0], ROAD_Y, at0[2]];
@@ -252,7 +256,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (c.clipped || c.pos[1] !== shot.pos[1]) shot = { ...shot, pos: c.pos };
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;
-    const look = mapView ? 'map' : phase; // the Map view toggle looks like the map: its fog and heat, not the chase's
+    const look = mapView || cut ? 'map' : phase; // the Map view toggle looks like the map: its fog and heat, not the chase's
     Object.assign(scene.fog, fogFor(1 - heatOpacity(look, play ? play.t : 0), radius, phone)); // the same 0..1 curve as the heat fade
     mats.heat.opacity = play ? heatOpacity(look, play.t) : 1; // the heat is for the map; it fades out in the chase
     if (play && taxi) focusShadow(phase !== 'map', taxi.position.x, taxi.position.z);
@@ -436,7 +440,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     furniture.setTrains(ms); // trains on the L: a pure function of the trip's ms
     trafficLayer.update(ms / play.track.tickMs, play.onHonk); // a no-op unless a single trip started traffic
     play.phase = phase; play.t = t;
-    highlights.update(highlightsAt(play.offences, elapsed + (SWOOP_MS - intro), { reduced: !motionAllowed() })); // offence times are on the clock that starts with the swoop
+    play.clock = elapsed + (SWOOP_MS - intro); // offence and cut times are on the clock that starts with the swoop
+    highlights.update(highlightsAt(play.offences, play.clock, { reduced: !motionAllowed() }));
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
     play.onFrame?.(st, play.race ? null : taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
@@ -548,6 +553,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     skipTrip() { if (play && !manualClock) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
     // The Map view toggle: the high map camera while the taxi drives, instead of the chase.
     setMapView(on) { mapView = !!on; if (!play) draw(); },
+    setCuts(list) { cuts = list ?? []; }, // footage cam=auto: overheadCuts result
     setInset(px, topPx = 0) { inset = Math.max(0, px || 0); insetTop = inset > 0 ? Math.max(0, topPx || 0) : 0; applyInset(); draw(); },
     clearRoute() { stopRoute(); draw(); },
     setChase(on) { chase = !!on && motionAllowed(); }, // on: a trip starts in the chase view, with no swoop in or out
