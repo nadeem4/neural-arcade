@@ -166,7 +166,7 @@ function go(event) {
 // On a phone the map screen has a rate card sheet over the stage's lower part; the stage keeps the map centre above it.
 function updateInset() {
   const sheet = $('rateCard');
-  const phone = screen === 'map' && matchMedia('(max-width: 720px)').matches;
+  const phone = screen === 'map' && $('garageDrawer').hidden && matchMedia('(max-width: 720px)').matches; // the Garage hides the card, so its offsetTop is 0
   const top = Math.max(0, document.querySelector('.topright').getBoundingClientRect().bottom - $('play').getBoundingClientRect().top) + 8; // the top buttons, plus a margin
   stage?.setInset(phone ? $('play').clientHeight - sheet.offsetTop : 0, top);
 }
@@ -306,6 +306,8 @@ function closeGarage() { showGarage(false); $('garage').focus(); }
 function openGarage() { if (screen === 'done' || screen === 'raced') toMap('garage'); showGarage(true, 0); }
 function showGarage(open, focusIndex) {
   $('garageDrawer').hidden = !open;
+  $('play').dataset.garage = String(open); // the open Garage hides the rate card so every Race button fits
+  updateInset();
   $('garage').setAttribute('aria-expanded', String(open));
   $('garageCount').textContent = garage.taxis.length;
   $('garageEmpty').hidden = garage.taxis.length > 0;

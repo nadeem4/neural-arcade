@@ -259,7 +259,9 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .drawer .bay-race { flex: 0 0 auto; }
 .drawer .bay-race[aria-pressed="true"] { background: var(--hud-route); border-color: var(--hud-route); color: #0E1A2B; font-weight: 700; }
 .drawer .bay-race:disabled { opacity: .5; cursor: not-allowed; }
-.drawer .bays { grid-row: 3; } .drawer .racebar { grid-row: 4; }
+.drawer .bays { grid-row: 3; grid-template-columns: 1fr 1fr; } .drawer .racebar { grid-row: 4; } /* two columns: four bays fit without scrolling */
+.drawer { width: 600px; }
+.play[data-garage="true"] .ratecard { display: none; }
 .racebar { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--navy-line); }
 .racebar[hidden] { display: none; }
 .racebar p { margin: 0; font-size: 13px; color: #C5CEDA; }
@@ -284,8 +286,10 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .race-title { font-size: 19px; }
 }
 @media (max-width: 720px) {
-  .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 50svh; padding: 12px; }
+  .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 78svh; padding: 12px; }
+  .drawer .bays { grid-template-columns: 1fr; }
   .bay { padding: 12px 10px 8px; gap: 4px; }
+  .bay-chips, .bay-note { display: none; } /* the name and the time say enough on a phone; this keeps four bays on screen */
   .bay-time { font-size: 18px; }
   .bay.empty { display: none; }
 }
