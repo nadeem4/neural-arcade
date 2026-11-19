@@ -52,8 +52,10 @@ export function wallHits(rewards, route) {
   return hits;
 }
 
-// The mile card's route U-turns in dead ends narrower than the car (7 tiles, around tiles 12 to 22): no shift within a cell clears
-// them, so the drawn car clips there a little (the sim's route is what is too tight). Every other card is clear everywhere.
+// The mile card has 7 tiles where no clear place exists, both in the map data, not the drawing (checked pose by pose, shifts up to 6 m):
+// tiles 12 to 15 (cells 18,73 and 18,74): a dead-end pocket beside a building (x 222.9 to 237.6) whose width is less than the car's
+// 6.3 m length, so the car cannot swing round at 90 degrees; tiles 20 and 21 (cells 12,74 and 13,74): a 1.9 m gap between two buildings, narrower than the 2.85 m car.
+// The sim's route is what is too tight. Every other card is clear everywhere.
 const PINCHED = { mile: 7 };
 const clean = story.cards.filter((c) => !PINCHED[c.id]);
 describe('the taxi never sinks into a building', () => {
