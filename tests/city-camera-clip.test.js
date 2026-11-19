@@ -4,7 +4,7 @@ import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames, chaseCamera } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
-import { clipCamera, clipEased, roofAt, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y, chaseForAspect } from '../games/city/scene-math.js';
+import { clipCamera, clipEased, roofAt, wallPush, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y, chaseForAspect } from '../games/city/scene-math.js';
 import { shotAt, raceShot, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
 import { raceTracks, raceStateAt } from '../games/city/race.js';
 import { solidRings } from '../games/city/walls.js';
@@ -221,16 +221,16 @@ describe('the camera through the swoop and the pullback', () => {
   const views = [];
   for (const yaw of [0, 0.6, 1.6, 3.1, 4.7]) for (const pitch of [0.3, 0.95, 1.4]) for (const zoom of [0.4, 1.25, 3]) views.push({ yaw, pitch, zoom });
   const mapShotOf = ({ yaw, pitch, zoom }) => { const cp = Math.cos(pitch), r = radius * zoom; return { pos: [cx + Math.sin(yaw) * cp * r, Math.sin(pitch) * r, cz + Math.cos(yaw) * cp * r], target: [cx, 0, cz], fov: 38 }; };
-  const rig = (chaseAt, driveMs, mapShot) => {
+  const rig = (chaseAt, driveMs, mapShot, cut = false) => { // cut: the drive was cut short, so its pull-back gets the wall drift (as in scene.js)
     const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; };
     const chaseCam = (t) => ({ ...chaseAt(t), pos: clipEased(line, t, realWorld, cm, clip).pos }); // the chase phase, as on main
     const from = { swoop: chaseCam(0), pullback: chaseCam(driveMs) }; // the chase pose at each boundary, worked out once
-    const cam = (phase, t) => shotAt(phase, t, mapShot, from[phase], { roof });
+    const cam = (phase, t) => shotAt(phase, t, mapShot, from[phase], { roof, ...(cut && phase === 'pullback' ? { push: (x, z, y) => wallPush(realWorld, cm, x, z, y) } : {}) });
     return { from, cam };
   };
   // Every frame of both phases and the frames either side of both chase boundaries; returns the worst of each measure.
-  const fly = (chaseAt, driveMs, view) => {
-    const mapShot = mapShotOf(view), rigged = rig(chaseAt, driveMs, mapShot), { cam } = rigged, w = { inside: 0, move: 0, turn: 0, steep: 0, from: 0, ends: 0 };
+  const fly = (chaseAt, driveMs, view, cut = false) => {
+    const mapShot = mapShotOf(view), rigged = rig(chaseAt, driveMs, mapShot, cut), { cam } = rigged, w = { inside: 0, move: 0, turn: 0, steep: 0, from: 0, ends: 0 };
     for (const [phase, ms] of [['swoop', SWOOP_MS], ['pullback', PULLBACK_MS]]) {
       const from = rigged.from[phase], bound = Math.max(60, (2.5 * d(from.pos, mapShot.pos)) / (ms / frame)); // 60 m, or 2.5 times the straight line's average speed
       let prev = null;
@@ -266,7 +266,7 @@ describe('the camera through the swoop and the pullback', () => {
         expectGood(worst(views.map((v) => fly(chaseAt, track.total, v))), `${card.id}, the whole drive`);
         [0.2, 0.37, 0.61, 0.83].forEach((f, i) => { // each cut with a third of the views, in turn, so every view meets a cut
           const driveMs = Math.round(track.total * f);
-          expectGood(worst(views.filter((_, j) => j % 3 === i % 3).map((v) => fly(chaseAt, driveMs, v))), `${card.id}, drive cut at ${driveMs} ms`);
+          expectGood(worst(views.filter((_, j) => j % 3 === i % 3).map((v) => fly(chaseAt, driveMs, v, true))), `${card.id}, drive cut at ${driveMs} ms`);
         });
       }, 30000);
     }

@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipEased, roofAt, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipEased, roofAt, wallPush, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -256,7 +256,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (phase === 'chase') shot = { ...shot, pos: clipEased(line, play.t, world, city.cellM, clip).pos }; // the pull-in eased over +-0.5 s of the trip (a pure function of the trip time)
       else { // the swoop and pullback: the director's crane between the clipped chase pose at the chase boundary and the map shot, held over the roofs (never pulled toward the taxi)
         const bt = phase === 'swoop' ? 0 : play.driveMs, from = { ...chaseAt(bt), pos: clipEased(line, bt, world, city.cellM, clip).pos };
-        shot = shotAt(phase, play.t, mapShot, from, { reduced: !motionAllowed(), roof: (x, z) => roofAt(world, city.cellM, x, z) });
+        shot = shotAt(phase, play.t, mapShot, from, { reduced: !motionAllowed(), roof: (x, z) => roofAt(world, city.cellM, x, z), ...(phase === 'pullback' && play.driveMs < play.track.total ? { push: (x, z, y) => wallPush(world, city.cellM, x, z, y) } : {}) }); // the sideways drift is only for a pull-back from a drive cut short (maxms)
       }
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;

@@ -57,6 +57,23 @@ export function roofAt(world, cellM, x, z) {
   return (world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL) + ROOF_CLEAR; // a camera skimming a roof just above it is clipped too
 }
 
+const PUSH_REACH = 20; // metres from a building cell's centre inside which it pushes a low camera away
+// Which way a camera at (x, y, z) should drift to get clear of building walls: the sum of the push of every building cell within PUSH_REACH m whose
+// roof is above y (nearer pushes harder), as [dx, dz] of length at most 1, or null in the open, above the roofs, or between two walls that cancel.
+// The director's crane uses it while it climbs, so a camera that starts right beside a tower rises away from the wall, not up its face.
+export function wallPush(world, cellM, x, z, y) {
+  const c0 = Math.floor(x / cellM), r0 = world.rows - 1 - Math.floor(-z / cellM), n = Math.ceil(PUSH_REACH / cellM);
+  let px = 0, pz = 0;
+  for (let r = r0 - n; r <= r0 + n; r++) for (let c = c0 - n; c <= c0 + n; c++) {
+    if (c < 0 || c >= world.cols || r < 0 || r >= world.rows || world.kind[r * world.cols + c] !== BUILDING) continue;
+    const mx = (c + 0.5) * cellM, mz = -(world.rows - 1 - r + 0.5) * cellM, d = Math.hypot(x - mx, z - mz);
+    if (d >= PUSH_REACH || d === 0 || roofAt(world, cellM, mx, mz) <= y) continue;
+    const w = (PUSH_REACH - d) / PUSH_REACH / d; px += (x - mx) * w; pz += (z - mz) * w;
+  }
+  const m = Math.hypot(px, pz);
+  return m < 0.05 ? null : [px / Math.max(1, m), pz / Math.max(1, m)];
+}
+
 // Keeps the chase camera out of buildings and above the ground. Marches from the taxi (target) out towards the camera in
 // quarter-cell steps; at the first building the line passes through (below that cell's roof plus ROOF_CLEAR) it stops, backs off by
 // `margin` m, and puts the camera there on the same line (never closer than MIN_CAM_DIST).
