@@ -225,7 +225,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const phase = play ? play.phase : 'map';
     if (play && phase !== 'map' && !mapView) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
-      const target = [shot.target[0], ROAD_Y, shot.target[2]];
+      const at0 = play.race ? [(play.state.cars[0].state.x + play.state.cars[1].state.x) / 2, 0, (play.state.cars[0].state.z + play.state.cars[1].state.z) / 2] : [play.state.x, 0, play.state.z]; // clip from the taxi: in the swoop and pullback shot.target is a map point, which can sit inside a building
+      const target = [at0[0], ROAD_Y, at0[2]];
       const c = phase === 'chase' // in the chase the pull-in is eased over +-0.5 s of the trip (a pure function of the trip time)
         ? clipEased((t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }, play.t, world, city.cellM, clip)
         : clipCamera(shot.pos, target, world, city.cellM, clip.margin, clip.minY);

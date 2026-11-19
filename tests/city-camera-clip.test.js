@@ -58,10 +58,15 @@ describe('clipCamera', () => {
     expect(out.clipped).toBe(false);
     expect(out.pos).toEqual([45, 200, zOfRow(0)]);
   });
+  it('does not skim a roof: a camera a metre above a roof is pulled in', () => {
+    const w = { ...world, height: new Float32Array(cols * rows).fill(30) };
+    const out = clipCamera([45, 31, zOfRow(0)], [45, 1, zOfRow(2)], w, cellM, 2);
+    expect(out.clipped).toBe(true);
+  });
   it('uses the real building height: a camera above a low building is left alone, one below a tall roof is pulled in', () => {
-    const low = { ...world, height: new Float32Array(cols * rows).fill(5) }, tall = { ...world, height: new Float32Array(cols * rows).fill(60) };
+    const low = { ...world, height: new Float32Array(cols * rows).fill(2) }, tall = { ...world, height: new Float32Array(cols * rows).fill(60) };
     const cam = [45, 30, zOfRow(0)], target = [45, 1, zOfRow(2)];
-    expect(clipCamera(cam, target, low, cellM, 2).clipped).toBe(false); // the line clears a 5 m roof
+    expect(clipCamera(cam, target, low, cellM, 2).clipped).toBe(false); // the line clears a 2 m roof
     expect(clipCamera(cam, target, tall, cellM, 2).clipped).toBe(true); // but not a 60 m one
   });
   it('is pure: the same inputs give the same camera, and the inputs are not changed', () => {

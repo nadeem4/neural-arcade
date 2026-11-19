@@ -47,13 +47,14 @@ export function cellHeights(city) {
 // height } as sim.js loadWorld plus cellHeights (without it every building is DEFAULT_TALL m). Row 0 is the north edge, z = -y.
 // Returns { pos, clipped, k }. Pure: a function of its arguments only, so record mode stays deterministic.
 const DEFAULT_TALL = 40;
+const ROOF_CLEAR = 6; // metres a camera must stay above a roof it passes over
 export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
   const dx = camPos[0] - target[0], dy = camPos[1] - target[1], dz = camPos[2] - target[2];
   const len = Math.hypot(dx, dy, dz);
   const roof = (x, z) => { // the height of the building at (x, z), or 0
     const c = Math.floor(x / cellM), r = world.rows - 1 - Math.floor(-z / cellM);
     if (c < 0 || c >= world.cols || r < 0 || r >= world.rows || world.kind[r * world.cols + c] !== BUILDING) return 0;
-    return world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL;
+    return (world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL) + ROOF_CLEAR; // a camera skimming a roof just above it is clipped too
   };
   let pos = [camPos[0], Math.max(minY, camPos[1]), camPos[2]], clipped = false, k = 1;
   if (len > 0 && !roof(target[0], target[2])) {
