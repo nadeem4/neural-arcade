@@ -4,7 +4,9 @@ import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames, chaseCamera } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
-import { clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y } from '../games/city/scene-math.js';
+import { clipCamera, clipEased, liftPath, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y, chaseForAspect } from '../games/city/scene-math.js';
+import { shotAt, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
+import { cityBounds } from '../games/city/geometry.js';
 
 // A tiny world: 8 columns x 5 rows, 10 m cells. Row 0 is the north edge, z = -(rows - 1 - r + 0.5) * cellM.
 // Row 2 is a road; rows 0-1 are buildings from column 3 on; everything else is road.
@@ -57,14 +59,6 @@ describe('clipCamera', () => {
     const out = clipCamera([45, 200, zOfRow(0)], [45, 1, zOfRow(2)], world, cellM, 2);
     expect(out.clipped).toBe(false);
     expect(out.pos).toEqual([45, 200, zOfRow(0)]);
-  });
-  it('leaves a camera above every roof alone even when the steep line down to the taxi crosses a tower (the pullback on a phone)', () => {
-    const cam = [45, 300, zOfRow(0) - 100], target = [45, 1, zOfRow(2)];
-    expect(clipCamera(cam, target, world, cellM, 2).clipped).toBe(true); // no roof height known: the line is judged on its own
-    const out = clipCamera(cam, target, { ...world, maxRoof: 46 }, cellM, 2); // the tallest building here is 40 m
-    expect(out.clipped).toBe(false);
-    expect(out.pos).toEqual(cam);
-    expect(clipCamera([45, 30, zOfRow(0) - 100], target, { ...world, maxRoof: 46 }, cellM, 2).pos[1]).toBeLessThan(30); // below the roofs it still clips
   });
   it('does not skim a roof: a camera a metre above a roof is pulled in', () => {
     const w = { ...world, height: new Float32Array(cols * rows).fill(30) };
@@ -210,38 +204,82 @@ describe('the pickup pin at the start of a drive', () => {
   });
 });
 
-// The swoop in and the pullback out, on the real map at a phone's aspect, frame by frame at 60 fps: the camera path is continuous.
-import { shotAt, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
-import { chaseForAspect, maxRoof } from '../games/city/scene-math.js';
-import { cityBounds } from '../games/city/geometry.js';
+// The swoop in and the pullback out, on the real map, every card, a phone and a desktop aspect and several map views, frame by frame at 60 fps.
+// The camera is built as scene.js builds it: the director's path from the clipped chase pose at the chase boundary to the map shot, lifted over the roofs.
 describe('the camera through the swoop and the pullback', () => {
   const { cx, cz, radius } = cityBounds(city);
-  const w = { ...realWorld, maxRoof: maxRoof(realWorld.height) };
   const clip = { margin: 2, minY: ROAD_Y + 2.7 };
-  const mapShot = (() => { const cp = Math.cos(0.95), d = radius * 1.25; return { pos: [cx + Math.sin(0.6) * cp * d, Math.sin(0.95) * d, cz + Math.cos(0.6) * cp * d], target: [cx, 0, cz], fov: 38 }; })();
+  const cm = city.cellM, CLEAR = 6;
+  const roofAt = (p) => { // the roof plus the clearance a camera keeps over it, for the cell the camera stands in (0 off the buildings)
+    const c = Math.floor(p[0] / cm), r = realWorld.rows - 1 - Math.floor(-p[2] / cm);
+    if (c < 0 || c >= realWorld.cols || r < 0 || r >= realWorld.rows || realWorld.kind[r * realWorld.cols + c] !== 3) return 0;
+    return (realWorld.height[r * realWorld.cols + c] || 12) + CLEAR;
+  };
+  const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const views = [[0.6, 0.95], [0, 0.6], [1.6, 0.35], [2.6, 0.95], [3.6, 0.6], [4.6, 0.35], [5.6, 0.95]];
+  const mapShotOf = ([yaw, pitch]) => { const cp = Math.cos(pitch), r = radius * 1.25; return { pos: [cx + Math.sin(yaw) * cp * r, Math.sin(pitch) * r, cz + Math.cos(yaw) * cp * r], target: [cx, 0, cz], fov: 38 }; };
+  const rig = (card, aspect, mapShot) => {
+    const track = driveTrack(routeFrames(realWorld, cm, card.route), tripEvents(realWorld, card.rewards, card.route));
+    const chaseAt = (t) => ({ ...chaseCamera(stateAt(track, t), chaseForAspect(aspect)), fov: 55 });
+    const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; };
+    const chaseCam = (t) => clipEased(line, t, realWorld, cm, clip).pos; // the chase phase, as on main
+    const cam = (phase, t) => { // the swoop or pullback camera at t ms into the phase
+      const bt = phase === 'swoop' ? 0 : track.total, ch = { ...chaseAt(bt), pos: chaseCam(bt) };
+      return liftPath((s) => shotAt(phase, s, mapShot, ch).pos, t, phase === 'swoop' ? SWOOP_MS : PULLBACK_MS, realWorld, cm);
+    };
+    return { track, chaseCam, cam };
+  };
   for (const aspect of [390 / 844, 1280 / 720]) {
     for (const card of story.cards) {
-      it(`has no jump from frame to frame on the ${card.id} card at aspect ${aspect.toFixed(2)}`, () => {
-        const frames = routeFrames(realWorld, city.cellM, card.route);
-        const track = driveTrack(frames, tripEvents(realWorld, card.rewards, card.route));
-        for (const [phase, ms, at] of [['swoop', SWOOP_MS, 0], ['pullback', PULLBACK_MS, track.total]]) {
-          const st = stateAt(track, at);
-          const chase = { ...chaseCamera(st, chaseForAspect(aspect)), fov: 55 };
-          const target = [st.x, ROAD_Y, st.z];
-          const camAt = (t) => ({ pos: shotAt(phase, t, mapShot, chase).pos, target });
-          let prev = null, worst = 0;
-          for (let t = 0; t <= ms; t += 1000 / 60) {
-            const p = clipEased(camAt, t, w, city.cellM, { ...clip, openFrom: w.maxRoof / 5 }).pos;
-            if (prev) worst = Math.max(worst, Math.hypot(p[0] - prev[0], p[1] - prev[1], p[2] - prev[2]));
-            prev = p;
+      it(`stays out of buildings with no jump on the ${card.id} card at aspect ${aspect.toFixed(2)}`, () => {
+        for (const view of views) {
+          const mapShot = mapShotOf(view);
+          const { track, chaseCam, cam } = rig(card, aspect, mapShot);
+          for (const [phase, ms] of [['swoop', SWOOP_MS], ['pullback', PULLBACK_MS]]) {
+            let prev = null, worst = 0;
+            for (let t = 0; t <= ms + 1e-9; t += 1000 / 60) {
+              const p = cam(phase, t);
+              expect(p[1], `${phase} ${Math.round(t)} ms, view ${view}: inside a building`).toBeGreaterThanOrEqual(roofAt(p) - 1e-6);
+              if (prev) worst = Math.max(worst, d(p, prev));
+              prev = p;
+            }
+            expect(worst, `${phase} worst per-frame move, view ${view}`).toBeLessThan(60); // the unclipped path moves about 35 m a frame at its fastest
           }
-          expect(worst, `${phase} worst per-frame move`).toBeLessThan(60); // the unclipped path moves about 35 m a frame at its fastest; the old plain clip threw it about 400 m in one frame
+          const end = track.total, frame = 1000 / 60;
+          expect(d(cam('pullback', 0), chaseCam(end)), 'chase to pullback').toBeLessThanOrEqual(d(chaseCam(end), chaseCam(end - frame)) + 1e-6);
+          expect(d(cam('swoop', SWOOP_MS), chaseCam(0)), 'swoop to chase').toBeLessThanOrEqual(d(chaseCam(frame), chaseCam(0)) + 1e-6);
+          expect(cam('pullback', PULLBACK_MS)).toEqual(mapShot.pos); // the pullback ends on the map shot, over the city
+          expect(cam('swoop', 0)).toEqual(mapShot.pos);
         }
       });
     }
   }
-  it('maxRoof is the tallest roof plus the clearance a camera keeps over it', () => {
-    expect(maxRoof(new Float32Array([10, 352, 40]))).toBe(358);
-    expect(maxRoof([])).toBe(6);
+  it('is a function of the trip time only: frames worked out in any order are the same', () => {
+    const { cam } = rig(story.cards.find((c) => c.id === 'walk') ?? story.cards[0], 390 / 844, mapShotOf([0.6, 0.95]));
+    const ts = [0, 50, 217, 233, 250, 600, 1199];
+    const fwd = ts.map((t) => cam('pullback', t)), back = [...ts].reverse().map((t) => cam('pullback', t)).reverse();
+    expect(back).toEqual(fwd);
+  });
+});
+
+describe('liftPath', () => {
+  const tall = { ...world, height: new Float32Array(cols * rows).fill(40) }; // rows 0-1 from column 3: 40 m buildings
+  const path = (ms) => [45, 10, zOfRow(4) - ms * 0.05]; // flies north at 10 m into the block: the wall of row 1 at 500 ms, row 0 from 700 ms
+  it('leaves a path in open air alone', () => {
+    expect(liftPath((ms) => [10, 10, zOfRow(4) - ms * 0.01], 300, 1000, tall, cellM)).toEqual([10, 10, zOfRow(4) - 3]);
+  });
+  it('lifts a point over a building to its roof plus the clearance, and climbs there before it reaches the wall', () => {
+    const over = liftPath(path, 800, 1000, tall, cellM); // over row 0
+    expect(over[1]).toBeGreaterThanOrEqual(46);
+    expect(over[0]).toBe(45); expect(over[2]).toBe(path(800)[2]); // straight up: the path is not bent sideways
+    const before = liftPath(path, 480, 1000, tall, cellM); // still over the road of row 2, a metre from the wall (reached at 500 ms)
+    expect(before[1]).toBeGreaterThan(10);
+  });
+  it('climbs at most about a metre a millisecond (no pop at the wall), and is pure in ms', () => {
+    const frame = 1000 / 60;
+    let prev = liftPath(path, 0, 1000, tall, cellM), worst = 0;
+    for (let ms = frame; ms <= 1000; ms += frame) { const p = liftPath(path, ms, 1000, tall, cellM); worst = Math.max(worst, Math.abs(p[1] - prev[1])); prev = p; }
+    expect(worst).toBeLessThan(25); // a 36 m climb in one frame would be a pop
+    expect(liftPath(path, 777, 1000, tall, cellM)).toEqual(liftPath(path, 777, 1000, tall, cellM));
   });
 });

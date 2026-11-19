@@ -77,13 +77,15 @@ export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBott
   const left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
   let top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - clear - slot * TAG_SLOT_PX;
   if (phone && at.top !== undefined) { // the drawn tag runs from top - 1.5 tagH to top - 0.5 tagH: keep it 8 px off the taxi's screen box (at.top to at.bottom), else put it below the taxi
-    if (top - 0.5 * tagH > at.top - 8) {
-      const below = Math.min(at.bottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX, height === null ? Infinity : height - 4);
-      // below the taxi, kept on screen; if the bottom edge would push the tag back over the taxi, above it instead, but never over the meters:
-      // when it fits neither side it sits just under the meters (covering the roof rather than the meters), one slot lower per tag
-      const above = at.top - 8 + 0.5 * tagH - slot * TAG_SLOT_PX, floor = meterBottom + 8 + 1.5 * tagH;
-      top = below - 1.5 * tagH >= at.bottom + 8 ? below : above >= floor ? above : Math.min(floor + slot * TAG_SLOT_PX, height === null ? Infinity : height - 4);
-    }
+    const band = (s) => meterBottom + 8 + 1.5 * tagH + s * TAG_SLOT_PX; // the stack under the meters
+    const hits = (s) => band(s) - 0.5 * tagH > at.top - 8; // that slot of the band would come within 8 px of the roof
+    // Below the taxi, one slot lower per tag; near the bottom edge the whole stack moves up together, so its slots never squash onto each other.
+    const lift = height === null ? 0 : Math.max(0, at.bottom + 8 + 1.5 * tagH + (MAX_TAG_SLOTS - 1) * TAG_SLOT_PX - (height - 4));
+    const below = (s) => at.bottom + 8 + 1.5 * tagH + s * TAG_SLOT_PX - lift;
+    // A slot that cannot sit below clear of the taxi falls back to the band, covering the roof rather than the meters. If any slot that has to
+    // move falls back, they all do, so the tags are one stack (the band) or two stacks on either side of the taxi, never one tag over another.
+    const fallback = Array.from({ length: MAX_TAG_SLOTS }, (_, s) => s).some((s) => hits(s) && below(s) - 1.5 * tagH < at.bottom + 8);
+    if (hits(slot)) top = fallback ? Math.min(band(slot), height === null ? Infinity : height - 4) : below(slot);
   }
   if (height !== null && !phone) {
     if (top - 1.5 * tagH < 0) top = at.y + clear + 1.5 * tagH + 4 + slot * TAG_SLOT_PX; // below the taxi, clear of it

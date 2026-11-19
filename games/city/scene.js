@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipEased, maxRoof, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipEased, liftPath, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -139,7 +139,6 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const trafficLayer = createTrafficLayer({ tier: trafficTier({ phone }) }); // other cars: scenery that reacts to the taxi, shown only while a trip plays
   scene.add(trafficLayer.group);
   world.height = cellHeights(city); // real building heights, for the camera clip
-  world.maxRoof = maxRoof(world.height); // a camera above this is over every roof (clipCamera)
   const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
   mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
   mats.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
@@ -253,12 +252,13 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     }
     if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
-      const at0 = play.race ? [(play.state.cars[0].state.x + play.state.cars[1].state.x) / 2, 0, (play.state.cars[0].state.z + play.state.cars[1].state.z) / 2] : [play.state.x, 0, play.state.z]; // clip from the taxi: in the swoop and pullback shot.target is a map point, which can sit inside a building
-      const target = [at0[0], ROAD_Y, at0[2]];
-      const c = phase === 'chase' // in the chase the pull-in is eased over +-0.5 s of the trip (a pure function of the trip time)
-        ? clipEased((t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }, play.t, world, city.cellM, clip)
-        : clipEased((t) => ({ pos: shotAt(phase, t, mapShot, chaseAt(t, play.state), { reduced: !motionAllowed() }).pos, target }), play.t, world, city.cellM, { ...clip, openFrom: world.maxRoof / 5 }); // the swoop and pullback: the pull eased in time and faded out with height, so the path has no jump
-      if (c.clipped || c.pos[1] !== shot.pos[1]) shot = { ...shot, pos: c.pos };
+      const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }; // the chase camera and the taxi it looks at
+      if (phase === 'chase') shot = { ...shot, pos: clipEased(line, play.t, world, city.cellM, clip).pos }; // the pull-in eased over +-0.5 s of the trip (a pure function of the trip time)
+      else { // the swoop and pullback: the director's crane between the clipped chase pose at the chase boundary and the map shot, lifted over any roof on the way (never pulled toward the taxi)
+        const bt = phase === 'swoop' ? 0 : play.driveMs, from = { ...chaseAt(bt), pos: clipEased(line, bt, world, city.cellM, clip).pos }, reduced = !motionAllowed();
+        const pathAt = (t) => shotAt(phase, t, mapShot, from, { reduced });
+        shot = { ...pathAt(play.t), pos: liftPath((t) => pathAt(t).pos, play.t, phase === 'swoop' ? SWOOP_MS : PULLBACK_MS, world, city.cellM) };
+      }
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;
     const look = mapView || cut ? 'map' : phase; // the Map view toggle looks like the map: its fog and heat, not the chase's

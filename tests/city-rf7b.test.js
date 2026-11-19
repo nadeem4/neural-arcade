@@ -24,9 +24,11 @@ describe('RF7b: phone tags keep off the taxi', () => {
     const scene = read('games/city/scene.js');
     expect(scene).toMatch(/return \{ x: [^\n]*y: sy\(tmp\), \.\.\.\(top < bottom \? \{ top, bottom \} : \{\}\) \}/);
   });
-  it('the swoop and pullback camera is eased in time and faded out with height (no plain clipCamera, which jumped when the camera passed the tallest roof)', () => {
+  it('the swoop and pullback camera starts from the clipped chase pose and is lifted over the roofs, never pulled toward the taxi', () => {
     const scene = read('games/city/scene.js');
-    expect(scene).toContain('openFrom: world.maxRoof / 5');
+    expect(scene).toContain('liftPath(');
+    expect(scene).not.toContain('openFrom');
+    expect(scene).not.toContain('maxRoof');
     expect(scene).not.toMatch(/clipCamera\(/);
   });
   it('the box is worked out only at phone width, and leaves the flat contact shadow out of it', () => {

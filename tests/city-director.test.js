@@ -47,6 +47,16 @@ describe('shotAt', () => {
     const mid = shotAt('pullback', PULLBACK_MS / 2, MAP, CHASE), swoopMid = shotAt('swoop', SWOOP_MS / 2, MAP, CHASE);
     for (let k = 0; k < 3; k++) expect(mid.pos[k]).toBeCloseTo(swoopMid.pos[k]);
   });
+  it('cranes: leaving the chase it rises over the taxi before it pulls away, and the swoop comes down last', () => {
+    const t = PULLBACK_MS * 0.25, p = shotAt('pullback', t, MAP, CHASE).pos;
+    const up = (p[1] - CHASE.pos[1]) / (MAP.pos[1] - CHASE.pos[1]);
+    const away = Math.hypot(p[0] - CHASE.pos[0], p[2] - CHASE.pos[2]) / Math.hypot(MAP.pos[0] - CHASE.pos[0], MAP.pos[2] - CHASE.pos[2]);
+    expect(away).toBeLessThan(up * 0.5);
+    const s = shotAt('swoop', SWOOP_MS * 0.75, MAP, CHASE).pos;
+    const down = (MAP.pos[1] - s[1]) / (MAP.pos[1] - CHASE.pos[1]);
+    const over = Math.hypot(s[0] - MAP.pos[0], s[2] - MAP.pos[2]) / Math.hypot(MAP.pos[0] - CHASE.pos[0], MAP.pos[2] - CHASE.pos[2]);
+    expect(over).toBeGreaterThan(down); // over the taxi before it is down at the chase height
+  });
   it('with reduced motion goes straight to the shot the phase ends on', () => {
     expect(shotAt('swoop', 0, MAP, CHASE, { reduced: true })).toEqual(CHASE);
     expect(shotAt('pullback', 0, MAP, CHASE, { reduced: true })).toEqual(MAP);

@@ -46,28 +46,26 @@ export function cellHeights(city) {
   return out;
 }
 
-// Keeps the camera out of buildings and above the ground. Marches from the taxi (target) out towards the camera in
-// quarter-cell steps; at the first building the line passes through (below that cell's height) it stops, backs off by
-// `margin` m, and puts the camera there on the same line (never closer than MIN_CAM_DIST). world: { cols, rows, kind,
-// height } as sim.js loadWorld plus cellHeights (without it every building is DEFAULT_TALL m). Row 0 is the north edge, z = -y.
-// Returns { pos, clipped, k }. Pure: a function of its arguments only, so record mode stays deterministic.
 const DEFAULT_TALL = 40;
 const ROOF_CLEAR = 6; // metres a camera must stay above a roof it passes over
-// Height above which a camera is over every roof: the tallest building plus the clearance. Set as world.maxRoof for clipCamera.
-export const maxRoof = (heights) => heights.reduce((m, h) => Math.max(m, h), 0) + ROOF_CLEAR;
+// The height a camera at (x, z) must keep: the building's roof there plus ROOF_CLEAR, or 0 off the buildings. world: { cols, rows, kind, height }
+// as sim.js loadWorld plus cellHeights (without height every building is DEFAULT_TALL m). Row 0 is the north edge, z = -y.
+const roofAt = (world, cellM, x, z) => {
+  const c = Math.floor(x / cellM), r = world.rows - 1 - Math.floor(-z / cellM);
+  if (c < 0 || c >= world.cols || r < 0 || r >= world.rows || world.kind[r * world.cols + c] !== BUILDING) return 0;
+  return (world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL) + ROOF_CLEAR; // a camera skimming a roof just above it is clipped too
+};
+
+// Keeps the chase camera out of buildings and above the ground. Marches from the taxi (target) out towards the camera in
+// quarter-cell steps; at the first building the line passes through (below that cell's roof plus ROOF_CLEAR) it stops, backs off by
+// `margin` m, and puts the camera there on the same line (never closer than MIN_CAM_DIST).
+// Returns { pos, clipped, k }. Pure: a function of its arguments only, so record mode stays deterministic.
 export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
   const dx = camPos[0] - target[0], dy = camPos[1] - target[1], dz = camPos[2] - target[2];
   const len = Math.hypot(dx, dy, dz);
-  const roof = (x, z) => { // the height of the building at (x, z), or 0
-    const c = Math.floor(x / cellM), r = world.rows - 1 - Math.floor(-z / cellM);
-    if (c < 0 || c >= world.cols || r < 0 || r >= world.rows || world.kind[r * world.cols + c] !== BUILDING) return 0;
-    return (world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL) + ROOF_CLEAR; // a camera skimming a roof just above it is clipped too
-  };
+  const roof = (x, z) => roofAt(world, cellM, x, z);
   let pos = [camPos[0], Math.max(minY, camPos[1]), camPos[2]], clipped = false, k = 1;
-  // world.maxRoof (the tallest roof plus clearance, if the caller knows it): a camera above it is in open air, and a steep line from it down to a street
-  // crosses towers near the taxi, which would drag the camera to the street while it still looks at the far map point (flat blue facades after a phone trip).
-  const aboveAll = world.maxRoof !== undefined && camPos[1] >= world.maxRoof;
-  if (len > 0 && !aboveAll && !roof(target[0], target[2])) {
+  if (len > 0 && !roof(target[0], target[2])) {
     const step = cellM / 4;
     for (let t = step; t <= len + step; t += step) {
       const s = Math.min(t, len) / len;
@@ -86,27 +84,32 @@ export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
   return { pos, clipped, k }; // k: the fraction of the way from the taxi to the camera that was kept
 }
 
-// clipCamera with the pull-in eased over time, so the camera slides in before a wall and out after it instead of popping.
+// clipCamera with the pull-in eased over time, so the chase camera slides in before a wall and out after it instead of popping.
 // Samples the trip every 50 ms over ms - span .. ms + span; a clip at a sample counts less the further that sample is
 // from ms (linearly, to nothing at span), and the camera takes the strongest pull. at(ms) -> { pos, target }. Pure in ms.
-// openFrom (a height, for the swoop and pullback): the pull fades out as the camera climbs from openFrom to world.maxRoof, so it
-// is gone by the time the camera is over every roof. The clip never switches off in one step, because that would throw the camera
-// hundreds of metres in a frame; the samples then ignore world.maxRoof.
-export function clipEased(at, ms, world, cellM, { margin = 2, minY = 1, span = 500, openFrom = null } = {}) {
+export function clipEased(at, ms, world, cellM, { margin = 2, minY = 1, span = 500 } = {}) {
   const now = at(ms), step = 50;
-  const w = openFrom === null ? world : { ...world, maxRoof: undefined };
   let k = 1;
   for (let o = -span; o <= span; o += step) {
     const c = at(Math.max(0, ms + o));
-    const out = clipCamera(c.pos, c.target, w, cellM, margin, minY);
+    const out = clipCamera(c.pos, c.target, world, cellM, margin, minY);
     if (out.clipped) k = Math.min(k, 1 - (1 - out.k) * (1 - Math.abs(o) / span));
-  }
-  if (openFrom !== null && world.maxRoof > openFrom) { // fade the pull out with height
-    const p = Math.min(1, Math.max(0, (now.pos[1] - openFrom) / (world.maxRoof - openFrom)));
-    k += (1 - k) * p * p * (3 - 2 * p);
   }
   const t = now.target;
   return { pos: [t[0] + (now.pos[0] - t[0]) * k, Math.max(minY, t[1] + (now.pos[1] - t[1]) * k), t[2] + (now.pos[2] - t[2]) * k], clipped: k < 1 };
+}
+
+// The swoop and pullback camera: path(ms) -> [x, y, z] over a phase of len ms (the director's crane from the clipped chase pose to the
+// map shot). Never pulled toward the taxi: where the path is below a roof plus ROOF_CLEAR the camera rises straight up over it, and the lift
+// is spread in time (it climbs at most `rate` m per ms toward any lift the path needs, sampled every `step` ms), so it rises before the
+// building and settles after it with no pop. Where the path is clear, the lift is 0, so a path that starts and ends in open air starts and
+// ends on it. Pure in ms: record mode draws the same frame for the same ms.
+export function liftPath(path, ms, len, world, cellM, { rate = 1, step = 1000 / 120 } = {}) {
+  const need = (s) => { const p = path(s); return Math.max(0, roofAt(world, cellM, p[0], p[2]) - p[1]); };
+  let lift = need(ms);
+  for (let s = 0; s <= len + 1e-9; s += step) lift = Math.max(lift, need(s) - rate * Math.abs(ms - s));
+  const p = path(ms);
+  return lift > 0 ? [p[0], p[1] + lift, p[2]] : p;
 }
 
 // 0..1: how much of the pickup or drop-off pin to show, from how far the camera is from it on the ground. The pin is

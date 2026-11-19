@@ -5,7 +5,16 @@ export const PULLBACK_MS = 1200;
 
 const smooth = (p) => p * p * (3 - 2 * p);
 const mix = (a, b, p) => a.map((v, k) => v + (b[k] - v) * p);
-const blend = (from, to, p) => ({ pos: mix(from.pos, to.pos, p), target: mix(from.target, to.target, p), fov: from.fov + (to.fov - from.fov) * p });
+// The crane between the chase and the map shot, q of the way to the map: the height, aim and lens move with q, the ground position with q^1.5,
+// so leaving the chase the camera rises over the taxi before it pulls away (the swoop, played backwards, flies over the taxi and then comes down).
+// Rising first keeps it off the wall beside the street that the chase camera was pulled in front of.
+const crane = (chase, map, q) => {
+  if (q <= 0) return chase;
+  if (q >= 1) return map;
+  const h = q ** 1.5, pos = mix(chase.pos, map.pos, h);
+  pos[1] = chase.pos[1] + (map.pos[1] - chase.pos[1]) * q;
+  return { pos, target: mix(chase.target, map.target, q), fov: chase.fov + (map.fov - chase.fov) * q };
+};
 
 // The camera for `phase` at `t` ms into it. Under reduced motion a swoop or pullback is its end shot at once.
 export function shotAt(phase, t, mapShot, chaseShot, { reduced = false } = {}) {
@@ -13,11 +22,11 @@ export function shotAt(phase, t, mapShot, chaseShot, { reduced = false } = {}) {
     case 'chase': return chaseShot;
     case 'swoop': {
       const p = reduced ? 1 : smooth(Math.min(1, Math.max(0, t / SWOOP_MS)));
-      return p >= 1 ? chaseShot : blend(mapShot, chaseShot, p);
+      return crane(chaseShot, mapShot, 1 - p);
     }
     case 'pullback': {
       const p = reduced ? 1 : smooth(Math.min(1, Math.max(0, t / PULLBACK_MS)));
-      return p >= 1 ? mapShot : blend(chaseShot, mapShot, p); // the swoop played backwards
+      return crane(chaseShot, mapShot, p); // the swoop played backwards
     }
     default: return mapShot;
   }
