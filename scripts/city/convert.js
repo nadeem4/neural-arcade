@@ -28,6 +28,9 @@
 // the Metra cut in Grant Park. A road in a tunnel (tunnel=yes or a negative layer) is skipped: it is not street level
 // and paints nothing above it. Railway on the ground or below grade (not bridge, not layer 1 and up) is solid x,
 // like a fence, wherever no bridge road crosses it: a taxi cannot drive across a railway trench.
+// Cuts: config `cuts` are short walls ([{from, to}] lat/lon) painted x last, for two levels that sit in adjacent cells
+// but that OSM does not join. One cut: street-level North Columbus Drive (ends at node 930257373, which joins only a
+// covered tunnel) lies one cell south of the East Randolph Street bridge deck, so its first row is walled off.
 // Ground that no feature covers is 'f' (open pavement: drivable, but fined like a footpath).
 // Lines (roads, paths, fences) are rasterised at least MIN_HALF_CELLS * cellM either side of the line,
 // so a street is never thinner than a cell and stays connected on a four-move grid.
@@ -105,7 +108,7 @@ function eachCellNear(a, b, pad, cols, rows, cellM, fn) {
 const halfWidth = (w, cellM) => Math.max(w / 2, MIN_HALF_CELLS * cellM);
 const FENCE_HALF_CELLS = 0.5; // fences are thin: about the cells the line passes through
 
-// features: { parks, plazas, buildings, water: rings; paths, roads: {pts, w, bridge?}; fences, rail: {pts} } (all optional).
+// features: { parks, plazas, buildings, water: rings; paths, roads: {pts, w, bridge?} (a bridge passes over rail, fences and water); fences, rail: {pts} } (all optional).
 // rail is ground-level or below-grade railway only (elevated track passes over the street and is left out).
 // Returns one string per row, one char per cell, by cell-centre sampling in priority order.
 export function rasterise(features, cols, rows, cellM) {
@@ -134,16 +137,19 @@ export function rasterise(features, cols, rows, cellM) {
   for (const p of features.rail ?? []) paintLine('x', p.pts, FENCE_HALF_CELLS * cellM); // ground or below grade: a trench, not a road
   for (const ring of features.water ?? []) paintArea('w', ring);
   for (const ring of features.buildings ?? []) paintArea('b', ring);
-  // A bridge road passes over fences, walls, rail and water, so it is painted last; only a building stops it.
-  for (const p of features.roads ?? []) {
-    if (!p.bridge) continue;
+  // A bridge road or footbridge passes over fences, walls, rail and water, so it is painted last; only a building stops it.
+  const paintBridge = (ch, p) => {
     const half = halfWidth(p.w, cellM);
     for (let i = 0; i + 1 < p.pts.length; i++) {
       eachCellNear(p.pts[i], p.pts[i + 1], half, cols, rows, cellM, (c, r, cx, cy) => {
-        if (grid[r][c] !== 'b' && distToSegment(cx, cy, p.pts[i], p.pts[i + 1]) <= half) grid[r][c] = 'r';
+        if (grid[r][c] !== 'b' && distToSegment(cx, cy, p.pts[i], p.pts[i + 1]) <= half) grid[r][c] = ch;
       });
     }
-  }
+  };
+  for (const p of features.paths ?? []) if (p.bridge) paintBridge('f', p);
+  for (const p of features.roads ?? []) if (p.bridge) paintBridge('r', p);
+  // Cuts are painted after everything: a wall between two levels that OSM does not join (see config `cuts`).
+  for (const p of features.cuts ?? []) paintLine('x', p.pts, FENCE_HALF_CELLS * cellM);
   return grid.map((row) => row.join(''));
 }
 
@@ -302,7 +308,8 @@ export function convert(osm, config) {
   const footprints = []; // every ring tagged building (even if also a part) paints the grid
   const buildings = [], roads = [], paths = [], sidewalks = [], parks = [], water = [], plazas = [], fences = [];
   const signalPts = [];
-  const bridges = new Set(); // roads that pass over whatever lies below them: bridge=yes or layer >= 1
+  const bridges = new Set(); // roads and footpaths that pass over whatever lies below them: bridge=yes or layer >= 1
+  const isBridge = (t) => (t.bridge && t.bridge !== 'no') || parseInt(t.layer, 10) >= 1;
   for (const el of osm.elements) {
     const t = el.tags ?? {};
     if (el.type === 'node') {
@@ -337,7 +344,7 @@ export function convert(osm, config) {
         if (pts) {
           const road = { pts, w: roadWidth(t, hw), oneway: oneWayOf(t), lanes: parseInt(t.lanes, 10) > 0 ? parseInt(t.lanes, 10) : null, cls: hw, name: t.name ?? null };
           roads.push(road);
-          if ((t.bridge && t.bridge !== 'no') || parseInt(t.layer, 10) >= 1) bridges.add(road);
+          if (isBridge(t)) bridges.add(road);
         }
       } else if (PATH_WIDTH[hw] && t.area === 'yes') {
         const ring = ringOf(el.geometry);
@@ -346,10 +353,11 @@ export function convert(osm, config) {
         const pts = lineOf(el.geometry);
         if (!pts) continue;
         // sidewalks and crossings shape the grid (as footpaths) and are emitted separately below
-        if (t.footway === 'sidewalk') sidewalks.push({ pts, w: PATH_WIDTH[hw] });
+        const path = { pts, w: PATH_WIDTH[hw] };
+        if (t.footway === 'sidewalk') { sidewalks.push(path); if (isBridge(t)) bridges.add(path); }
         else if (t.footway === 'crossing') {
           wayCrossings.push(pts);
-        } else paths.push({ pts, w: PATH_WIDTH[hw] });
+        } else { paths.push(path); if (isBridge(t)) bridges.add(path); }
       } else if (t['area:highway'] === 'footway') {
         const ring = ringOf(el.geometry);
         if (ring) plazas.push(ring);
@@ -376,8 +384,9 @@ export function convert(osm, config) {
   }
 
   const kind = solidTrees(rasterise(
-    { parks, plazas, paths: [...paths, ...sidewalks, ...wayCrossings.map((pts) => ({ pts, w: PATH_WIDTH.footway }))],
-      roads: roads.map((r) => (bridges.has(r) ? { ...r, bridge: true } : r)), fences, rail: rail.filter((r) => !r.elevated), water, buildings: footprints },
+    { parks, plazas, paths: [...paths, ...sidewalks, ...wayCrossings.map((pts) => ({ pts, w: PATH_WIDTH.footway }))].map((p) => (bridges.has(p) ? { ...p, bridge: true } : p)),
+      roads: roads.map((r) => (bridges.has(r) ? { ...r, bridge: true } : r)), fences, rail: rail.filter((r) => !r.elevated), water, buildings: footprints,
+      cuts: (config.cuts ?? []).map((c) => ({ pts: [project(c.from.lat, c.from.lon, bbox), project(c.to.lat, c.to.lon, bbox)] })) },
     cols, rows, cellM,
   ), trees, cols, rows, cellM);
   const oneway = onewayRows(roads, kind, cols, rows, cellM);

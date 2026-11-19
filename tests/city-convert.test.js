@@ -131,6 +131,55 @@ describe('rasterise bridges and rail', () => {
   });
 });
 
+describe('rasterise footbridges', () => {
+  const rail = [{ pts: [[30, 0], [30, 36]] }];
+  const walk = [[0, 18], [60, 18]];
+  it('a footpath over rail stays open when it is a bridge, and is cut when it is not', () => {
+    expect(rasterise({ paths: [{ pts: walk, w: 2 }], rail }, 5, 3, 12)[1]).toBe('ffxff');
+    expect(rasterise({ paths: [{ pts: walk, w: 2, bridge: true }], rail }, 5, 3, 12)[1]).toBe('fffff');
+  });
+  it('a footbridge is still stopped by a building', () => {
+    const b = [[24, 0], [36, 0], [36, 36], [24, 36], [24, 0]];
+    expect(rasterise({ paths: [{ pts: walk, w: 2, bridge: true }], buildings: [b] }, 5, 3, 12)[1]).toBe('ffbff');
+  });
+});
+
+describe('rasterise cuts', () => {
+  it('a cut is solid even over a bridge road, so levels OSM does not join stay apart', () => {
+    const road = { pts: [[0, 18], [60, 18]], w: 8, bridge: true };
+    expect(rasterise({ roads: [road], cuts: [{ pts: [[30, 0], [30, 36]] }] }, 5, 3, 12)[1]).toBe('rrxrr');
+  });
+});
+
+describe('convert cuts', () => {
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const road = way(9201, { highway: 'secondary' }, [[0, 112], [130, 112]]);
+  const cfg = miniConfig({ cuts: [{ from: unproject(78, 100), to: unproject(78, 124) }] });
+  const city = convert({ elements: [...osm.elements, road] }, cfg);
+  it('config cuts become solid cells', () => {
+    const row = city.rows - 1 - Math.floor(112 / 12);
+    expect(kindAt(city, 6, row)).toBe('x');
+    expect(kindAt(city, 3, row)).toBe('r');
+  });
+});
+
+describe('convert footbridges', () => {
+  const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
+  const extra = [
+    way(9101, { railway: 'rail' }, [[102, 90], [102, 160]]),
+    way(9102, { highway: 'footway', bridge: 'yes' }, [[60, 112], [130, 112]]),
+    way(9103, { highway: 'footway', layer: '1' }, [[60, 136], [130, 136]]),
+    way(9104, { highway: 'footway' }, [[60, 124], [130, 124]]),
+  ];
+  const city = convert({ elements: [...osm.elements, ...extra] }, miniConfig());
+  const rowOf = (y) => city.rows - 1 - Math.floor(y / 12);
+  it('footbridges (bridge tag or layer 1) stay open over the rail; a ground footpath is cut', () => {
+    expect(kindAt(city, 8, rowOf(112))).toBe('f');
+    expect(kindAt(city, 8, rowOf(136))).toBe('f');
+    expect(kindAt(city, 8, rowOf(124))).toBe('x');
+  });
+});
+
 describe('convert bridges, tunnels and the rail cut', () => {
   // Own tiny map: a fence and a railway run north to south at x 78 and x 102; roads cross east to west.
   const way = (id, tags, pts) => ({ type: 'way', id, tags, geometry: pts.map(([x, y]) => unproject(x, y)) });
