@@ -7,6 +7,7 @@ import { driveTrack } from '../games/city/drive.js';
 import { SWOOP_MS } from '../games/city/director.js';
 import { buildOffences } from '../games/city/offences.js';
 import { overheadCuts, cutAt, CUT_SPREAD_MAX } from '../games/city/cuts.js';
+import { offencesWithin } from '../games/city/record.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const city = read('chicago.json'), story = read('story.json');
@@ -50,8 +51,9 @@ describe('overheadCuts', () => {
   });
   it('a cut clipped by a shortened drive (maxms) keeps its spread and ends where the drive ends', () => {
     const offs = [fake(5000, 0), fake(6000, 60), fake(9000, 0)];
-    const [c] = synth(offs.slice(0, 2), 4000); // the drive ends at 5400; offencesWithin keeps the first two
-    expect(c.to).toBe(5400);
+    const [c, ...rest] = synth(offencesWithin(offs, 5000), 5000); // the drive ends at 6400; the offence at 9000 is cut off
+    expect(rest).toEqual([]);
+    expect(c.to).toBe(6400);
     expect(c.spread).toBeCloseTo(30);
   });
   it('cutAt finds the cut holding a time, else null', () => {
