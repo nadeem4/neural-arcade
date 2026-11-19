@@ -32,6 +32,26 @@ describe('highlightsAt', () => {
   });
 });
 
+describe('the pool', () => {
+  it('when more highlights of one kind are live than the pool holds, the newest take the pool', async () => {
+    const { createHighlights } = await import('../games/city/scene-highlights.js');
+    const meshes = [];
+    const hl = createHighlights({ add: (m) => meshes.push(m), remove() {} }, 10);
+    const list = [1, 2, 3, 4, 5, 6].map((n) => ({ type: 'off', x: n, z: 0, heading: 0, k: 1 })); // oldest first
+    hl.update(list);
+    const shown = meshes.filter((m) => m.visible).map((m) => m.position.x).sort();
+    expect(shown).toEqual([3, 4, 5, 6]);
+  });
+  it('a wrong-way arrow is drawn exactly where highlightsAt says, with no extra offset', () => {
+    const src = readFileSync(new URL('../games/city/scene-highlights.js', import.meta.url), 'utf8');
+    expect(src).not.toContain('AHEAD');
+  });
+  it('highlightsAt puts the wrong-way arrow at ax, az when the offence has them', () => {
+    expect(highlightsAt([o(0, 'wrong', { ax: 7, az: 8 })], 10)[0]).toMatchObject({ x: 7, z: 8 });
+    expect(highlightsAt([o(0, 'off', { ax: 7, az: 8 })], 10)[0]).toMatchObject({ x: 10, z: 20 });
+  });
+});
+
 describe('the scene wiring', () => {
   const read = (f) => readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8');
   it('scene.js imports the pool and highlightsAt, makes the pool once, updates it each frame and clears it', () => {
@@ -45,6 +65,11 @@ describe('the scene wiring', () => {
   it('the pool is built from arrowPolys with transparent, no-depth-write, offset materials', () => {
     const src = read('scene-highlights.js');
     for (const s of ['arrowPolys', 'depthWrite: false', 'polygonOffset', 'transparent: true']) expect(src).toContain(s);
+  });
+  it('a folded tag restarts already opaque, and a refreshed fold moves to the back of the eviction order', () => {
+    const main = read('main.js');
+    expect(main).toMatch(/run\.count > 1[^;\n]*animationDelay\s*=\s*`?-\$\{TAG_LIFE_MS \* 0\.05\}ms/);
+    expect(main).toMatch(/delete others\[tag\.text\]/);
   });
   it('main.js passes the offences into playTrip', () => {
     expect(read('main.js')).toMatch(/playTrip\(\{[^}]*offences: t\.offences/);

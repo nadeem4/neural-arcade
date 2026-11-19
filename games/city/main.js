@@ -64,12 +64,14 @@ function popTag(tag, at, i) {
     slot = layoutTags([...live, {}]).at(-1).slot;
     for (const t of Object.values(hud.lastTag ?? {})) if (t.slot === slot && t.span.isConnected) { t.span.remove(); if (rec) rec.tags = rec.tags.filter((x) => x.span !== t.span); } // all slots busy: the oldest tag gives way
   }
-  hud.lastTag = { ...hud.lastTag, [tag.text]: { ...run, span, slot } };
+  const others = { ...hud.lastTag }; delete others[tag.text]; // re-added last, so "oldest" means least recently refreshed
+  hud.lastTag = { ...others, [tag.text]: { ...run, span, slot } };
   span.className = `tag ${tag.kind}`; span.textContent = run.label;
   const lab = $('labels').getBoundingClientRect(); // tags stay on screen: clamped sideways, and below the meters on a phone
   const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top });
   span.style.left = pos.left + 'px'; span.style.top = pos.top + 'px';
   span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
+  if (run.count > 1) span.style.animationDelay = `-${TAG_LIFE_MS * 0.05}ms`; // a folded tag restarts already opaque (past the 5% fade-in), so a run of offences does not blink
   if (rec) { rec.tags = rec.tags.filter(t => t.span !== span); rec.tags.push({ span, born: rec.now }); return; } // expiry follows seek time, not the wall clock
   clearTimeout(span._t); span._t = setTimeout(() => span.remove(), TAG_LIFE_MS);
 }
@@ -282,7 +284,7 @@ async function train(req) {
     stage.setHeat(res.visits);
     const events = tripEvents(world, req, res.route);
     const track = driveTrack(routeFrames(world, cellM, res.route), events, { walls });
-    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), offences: buildOffences(events, req, track), ended: false };
+    trip = { tries: session.tries, rewards: { ...req }, analysis: res.analysis, events, route: res.route, track, people: peopleFor(events), offences: buildOffences(events, req, track, { world }), ended: false };
     go('trained');
     drive(trip);
   } catch {
@@ -341,7 +343,7 @@ function driveKept(taxi) {
   rewards = { ...taxi.rewards };
   const events = tripEvents(world, taxi.rewards, taxi.route);
   const track = driveTrack(routeFrames(world, cellM, taxi.route), events, { walls });
-  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), offences: buildOffences(events, taxi.rewards, track), ended: false };
+  trip = { tries: taxi.tries, rewards: { ...taxi.rewards }, analysis: taxi.analysis, events, route: taxi.route, track, people: peopleFor(events), offences: buildOffences(events, taxi.rewards, track, { world }), ended: false };
   raceRun = null; stage.clearRoute(); $('train').dataset.stale = 'false'; $('announce').textContent = '';
   go('replay');
   drive(trip);

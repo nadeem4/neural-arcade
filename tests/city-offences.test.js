@@ -14,7 +14,7 @@ const trip = (id) => {
   const c = story.cards.find((x) => x.id === id);
   const events = tripEvents(world, c.rewards, c.route);
   const track = driveTrack(routeFrames(world, city.cellM, c.route), events);
-  return { c, events, track, list: buildOffences(events, c.rewards, track) };
+  return { c, events, track, list: buildOffences(events, c.rewards, track, { world }) };
 };
 const count = (list, type) => list.filter((o) => o.type === type).length;
 
@@ -57,6 +57,22 @@ describe('buildOffences', () => {
         expect(o.fine).toBe(c.rewards[o.type]);
       }
     }
+  });
+  it('a wrong-way arrow is drawn one tile on only onto a road cell with the same one-way, else at the offence spot', () => {
+    let n = 0, m = 0;
+    for (const id of ['speed', 'walk', 'lights', 'mile']) {
+      const { events, track, list } = trip(id);
+      for (const o of list.filter((x) => x.type === 'wrong')) {
+        n++;
+        expect(Number.isFinite(o.ax) && Number.isFinite(o.az), id).toBe(true);
+        const next = track.frames[o.i + 2];
+        const ahead = o.acell !== o.cell;
+        if (ahead) { m++; expect(world.kind[o.acell], id).toBe(0); expect(world.oneway[o.acell], id).toBe(world.oneway[o.cell]); expect([o.ax, o.az]).toEqual([next.x, next.z]); expect(next.heading).toBe(track.frames[o.i + 1].heading); expect(o.acell).toBe(events.steps[o.i + 1].cell); }
+        else { expect([o.ax, o.az]).toEqual([o.x, o.z]); expect(o.acell).toBe(o.cell); }
+      }
+    }
+    expect(n).toBeGreaterThan(0);
+    expect(m).toBeGreaterThan(0); // some arrows do move one tile on
   });
   it('offenceLabel keeps the fined wording and says free when the fine is 0', () => {
     expect(offenceLabel('off', 20, false)).toBe('-20 footpath tile');

@@ -141,7 +141,8 @@ describe('offence tags you cannot miss', () => {
     expect(dur).toBeGreaterThanOrEqual(1500);
     const frames = css.match(/@keyframes tag-pop \{([^\n]*)\}/)[1];
     const hold = Number(frames.match(/(\d+)% \{ opacity: 1; transform: translate\(-50%, -\d+%\) scale\(1\)/)[1]);
-    expect((dur * hold) / 100).toBeGreaterThanOrEqual(1500); // fully visible until at least here
+    const rise = Number(frames.match(/(\d+)% \{ opacity: 1/)[1]);
+    expect((dur * (hold - rise)) / 100).toBeGreaterThanOrEqual(1500); // fully opaque for at least 1.5 s
   });
   it('layoutTags never drops a live tag: three at once keep three distinct slots', () => {
     const out = layoutTags(layoutTags([{}, {}, {}]));

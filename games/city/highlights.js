@@ -10,7 +10,7 @@ export function highlightsAt(offences, clockMs, { reduced = false } = {}) {
   for (const o of offences ?? []) {
     const age = clockMs - o.ms;
     if (age < 0 || age >= HOLD_MS) continue;
-    out.push({ type: o.type, x: o.x, z: o.z, heading: o.heading, k: reduced ? 1 : 0.5 + 0.5 * Math.cos(2 * Math.PI * PULSE_HZ * (age / 1000)) });
+    out.push({ type: o.type, x: o.type === 'wrong' ? o.ax ?? o.x : o.x, z: o.type === 'wrong' ? o.az ?? o.z : o.z, heading: o.heading, k: reduced ? 1 : 0.5 + 0.5 * Math.cos(2 * Math.PI * PULSE_HZ * (age / 1000)) });
   }
   return out;
 }
