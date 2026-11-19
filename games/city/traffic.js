@@ -219,7 +219,8 @@ export const nearMissCount = (traffic, upTo = Infinity) => traffic.nearMisses(up
 // How a car's lamps look at tick-time tf (a float, from the clock). A honking car flashes at 4 Hz: head lamps full then nearly dark, a halo of
 // big lamp blocks on the front and a glow on the whole body, so the flash reads from the chase camera whichever way the car faces.
 const FLASH_HZ = 4;
-export function honkLook(alarm, tf) {
-  if (!alarm) return { head: 0.55, halo: 0, bodyMix: 0 };
-  return Math.floor(Math.max(0, tf) * FLASH_HZ) % 2 === 0 ? { head: 1, halo: 1, bodyMix: 0.6 } : { head: 0.02, halo: 0, bodyMix: 0 };
+const CALM = Object.freeze({ head: 0.55, halo: 0, bodyMix: 0 }), FLASH_ON = Object.freeze({ head: 1, halo: 1, bodyMix: 0.6 }), FLASH_OFF = Object.freeze({ head: 0.02, halo: 0, bodyMix: 0 });
+export function honkLook(alarm, tf) { // shared constants: no allocation per car per frame; do not change the result
+  if (!alarm) return CALM;
+  return Math.floor(Math.max(0, tf) * FLASH_HZ) % 2 === 0 ? FLASH_ON : FLASH_OFF;
 }

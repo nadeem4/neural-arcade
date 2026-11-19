@@ -11,7 +11,7 @@ export function pickLine(rails) {
   for (const r of rails) {
     if (!r.elevated || !(r.sep > 0)) continue;
     const len = trainPath(r.pts).len;
-    if (len > bestLen) { best = r; bestLen = len; }
+    if (len >= 2 * TRAIN.l && len > bestLen) { best = r; bestLen = len; }
   }
   return best;
 }
@@ -33,13 +33,15 @@ function along(path, s) {
 }
 
 // Both trains at `ms`: [{ x, y, z, yaw }] (yaw as street-furniture.js railSegments: a box's length runs along x after turning by yaw).
-// One goes out while the other comes back, each on its own track, turning round at the ends.
+// One goes out while the other comes back, each on its own track, turning round half a train length short of each end, so no train hangs past the deck.
+const OUT = [{ x: 0, y: 0, z: 0, yaw: 0 }, { x: 0, y: 0, z: 0, yaw: 0 }]; // reused every call; read the result before the next call
 export function trainsAt(line, path, ms) {
-  const L = path.len, u = (Math.max(0, ms) * TRAIN.speed) / 1000;
+  const span = path.len - TRAIN.l, u = (Math.max(0, ms) * TRAIN.speed) / 1000;
   const y = Y_ROAD + line.h + (line.lift ?? 0) + RAIL_TOP + TRAIN.h / 2;
-  return [0, 1].map((k) => {
-    const v = (u + k * L) % (2 * L), back = v >= L, s = back ? 2 * L - v : v;
+  for (let k = 0; k < 2; k++) {
+    const v = (u + k * span) % (2 * span), back = v >= span, s = TRAIN.l / 2 + (back ? 2 * span - v : v);
     const p = along(path, s), d = back ? -1 : 1, lat = (k === 0 ? -1 : 1) * line.sep / 2; // the track is fixed to the line, not the direction
-    return { x: p.x - p.uz * lat, z: p.z + p.ux * lat, y, yaw: Math.atan2(-p.uz * d, p.ux * d) };
-  });
+    const o = OUT[k]; o.x = p.x - p.uz * lat; o.z = p.z + p.ux * lat; o.y = y; o.yaw = Math.atan2(-p.uz * d, p.ux * d);
+  }
+  return OUT;
 }

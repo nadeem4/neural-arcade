@@ -4,6 +4,7 @@
 import * as THREE from './vendor/three.module.min.js';
 
 export const SIGNAL_GLOW = 0.8, LAMP_GLOW = 0.5, BRAKE_GLOW = 0.9; // linear strength of each kind of dot
+export const MAX_DOT_PX = 40; // the biggest a dot gets on screen, in pixels
 export const LIT = 0.5; // a signal lamp whose brightest channel is above this is on (signal-heads.js COLOURS: on >= 0.76, off <= 0.3)
 
 // The middle of each lamp quad of signal-heads.js buildSignalHeads: [{ x, y, z }] in the order of lamps.list.
@@ -46,13 +47,16 @@ export function createGlow(items, { size = 4 } = {}) {
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   const mat = new THREE.PointsMaterial({ size, map: dotTexture(), vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  // Size attenuation has no cap, so a dot beside the camera would grow to the GPU's largest point: clamp it the same way on every GPU.
+  mat.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <fog_vertex>', `#include <fog_vertex>
+ gl_PointSize = min(gl_PointSize, ${MAX_DOT_PX.toFixed(1)});`); };
   const points = new THREE.Points(geo, mat);
   points.frustumCulled = false; points.renderOrder = 3;
   return {
     points,
     colours: col,
-    move(i, x, y, z) { pos.set([x, y, z], i * 3); geo.attributes.position.needsUpdate = true; },
-    setColour(i, r, g, b) { col.set([r, g, b], i * 3); geo.attributes.color.needsUpdate = true; },
+    move(i, x, y, z) { pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z; geo.attributes.position.needsUpdate = true; },
+    setColour(i, r, g, b) { col[i * 3] = r; col[i * 3 + 1] = g; col[i * 3 + 2] = b; geo.attributes.color.needsUpdate = true; },
     refresh() { geo.attributes.color.needsUpdate = true; },
     dispose() { geo.dispose(); mat.dispose(); },
   };

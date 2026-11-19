@@ -41,7 +41,7 @@ export function createTaxiMaker(tint = null, { glow = false } = {}) {
   const std = (colour, role, extra = {}) => (cache[colour + role] ??= new THREE.MeshStandardMaterial({ color: colour, roughness: 0.6, emissive: role === 'body' || role === 'cab' ? colour : '#000000', emissiveIntensity: 0.3, envMapIntensity: ENV_INTENSITY, ...extra }));
   const lampMat = (colour) => (cache[colour + 'lamp'] ??= new THREE.MeshBasicMaterial({ color: colour, toneMapped: false }));
   const brakeMats = [];
-  let brakeDots = null; // bloom (high tier): a red dot over each brake lamp of the last car made, lit while braking
+  let brakeDots = null, braking = null; // bloom (high tier): a red dot over each brake lamp of the last car made, lit while braking
   let wheels = []; // { steer: Group | null, spin: Group } for the last car made
   return {
     // A group at the origin; `setBraking(on)` lights both brake lamps, `setPose(distance, curvature)` spins the wheels and
@@ -77,7 +77,7 @@ export function createTaxiMaker(tint = null, { glow = false } = {}) {
         const lamps = taxiParts().filter((p) => p.role === 'brake');
         brakeDots?.dispose();
         brakeDots = createGlow(lamps.map((p) => ({ x: p.pos[0], y: p.pos[1], z: p.pos[2], r: 0, g: 0, b: 0 })), { size: 2.2 });
-        g.add(brakeDots.points);
+        g.add(brakeDots.points); braking = null;
       }
       g.add(contactShadow((cache.shadow ??= shadowMaterial()))); // one texture and material for every car this maker makes
       g.scale.setScalar(TAXI_SCALE);
@@ -85,7 +85,7 @@ export function createTaxiMaker(tint = null, { glow = false } = {}) {
     },
     setBraking(on) {
       for (const m of brakeMats) m.color.set(on ? BRAKE_ON : BRAKE_OFF);
-      if (brakeDots) { const k = brakeGlow(on); for (let i = 0; i < brakeDots.colours.length / 3; i++) brakeDots.setColour(i, k, k * 0.25, k * 0.2); }
+      if (brakeDots && braking !== on) { braking = on; const k = brakeGlow(on); for (let i = 0; i < brakeDots.colours.length / 3; i++) brakeDots.setColour(i, k, k * 0.25, k * 0.2); }
     },
     setPose(distance, curvature) {
       const spin = wheelAngle(distance ?? 0), steer = steerAngle(curvature ?? 0);

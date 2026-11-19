@@ -65,7 +65,7 @@ export function buildFurniture({ scene, city, furnitureTier: tier, glow = false,
     ]), poleMat, lamps.length));
     const heads = mesh(new THREE.InstancedMesh(new THREE.SphereGeometry(HEAD_R, 8, 6).scale(1.3, 0.5, 1).translate(ARM, SURFACE.lampBase + LAMP_H - 0.05, 0), headMat, lamps.length));
     // Bloom (high tier): a soft dot over each lit head, off while the head is hidden near the chase camera.
-    const lampGlow = glow && tier.lampGlow ? createGlow(lamps.map((l) => ({ x: l.x + ARM, y: SURFACE.lampBase + LAMP_H - 0.05, z: l.z, r: LAMP_GLOW, g: LAMP_GLOW * 0.7, b: LAMP_GLOW * 0.35 })), { size: 5 }) : null;
+    const lampGlow = glow && tier.lampGlow ? createGlow(lamps.map((l) => ({ x: l.x + ARM, y: SURFACE.lampBase + LAMP_H - 0.05 + HEAD_R, z: l.z, r: LAMP_GLOW, g: LAMP_GLOW * 0.7, b: LAMP_GLOW * 0.35 })), { size: 5 }) : null;
     if (lampGlow) { scene.add(lampGlow.points); glowOff = lampGlow; }
     const lampAt = (i) => { m.makeTranslation(lamps[i].x, 0, lamps[i].z); poles.setMatrixAt(i, m); heads.setMatrixAt(i, m); lampGlow?.setColour(i, LAMP_GLOW, LAMP_GLOW * 0.7, LAMP_GLOW * 0.35); };
     lamps.forEach((l, i) => lampAt(i));
@@ -118,14 +118,20 @@ export function buildFurniture({ scene, city, furnitureTier: tier, glow = false,
     clearRail = (cam, taxiAt) => { if (run(cam, taxiAt)) { rail.instanceMatrix.needsUpdate = true; } };
   }
 
-  // Trains: two boxes shuttling on one two-track line (trains.js); where they are is a function of the trip's ms, and at rest they stand where ms is 0.
+  // Trains: two boxes shuttling on one two-track line (trains.js); where they are is a function of the trip's ms. After a trip they stay where it ended.
+  // Like the raised L, a train between the chase camera and the taxi is hidden.
   const line = pickLine(pairRails(city.rail ?? [])), path = line ? trainPath(line.pts) : null;
-  let trains = null;
-  const setTrains = (ms) => {
+  const trainFlat = new Float32Array(6);
+  let trains = null, lastMs = 0, trainHidden = [], camState = null;
+  const placeTrains = () => {
     if (!trains) return;
-    trainsAt(line, path, ms).forEach((t, i) => place(trains, i, t.x, t.y, t.z, t.yaw, 1, 1, 1));
+    const at = trainsAt(line, path, lastMs);
+    trainFlat[0] = at[0].x; trainFlat[2] = at[0].z; trainFlat[3] = at[1].x; trainFlat[5] = at[1].z;
+    trainHidden = camState ? treesToHide(trainFlat, camState[0], camState[1], 12, 4) : [];
+    for (let i = 0; i < 2; i++) { if (trainHidden.includes(i)) nothing(trains, i); else place(trains, i, at[i].x, at[i].y, at[i].z, at[i].yaw, 1, 1, 1); }
     trains.instanceMatrix.needsUpdate = true;
   };
+  const setTrains = (ms) => { lastMs = ms; placeTrains(); };
   if (line) {
     trains = mesh(new THREE.InstancedMesh(new THREE.BoxGeometry(TRAIN.l, TRAIN.h, TRAIN.w), material(new THREE.MeshStandardMaterial({ color: '#c9ced6', roughness: 0.5, metalness: 0.3, envMapIntensity: envIntensity })), 2));
     trains.frustumCulled = false; scene.add(trains); setTrains(0);
@@ -134,7 +140,7 @@ export function buildFurniture({ scene, city, furnitureTier: tier, glow = false,
   return {
     setTrains,
     // In the chase (cam is the camera's [x, z], taxiAt the taxi's), hide what would block the view; null cam brings everything back.
-    clearTrees(cam, taxiAt) { clearTrees(cam, taxiAt); clearLamps(cam, taxiAt); clearRail(cam, taxiAt); },
+    clearTrees(cam, taxiAt) { clearTrees(cam, taxiAt); clearLamps(cam, taxiAt); clearRail(cam, taxiAt); camState = cam && taxiAt ? [cam, taxiAt] : null; placeTrains(); },
     dispose() { glowOff?.dispose(); for (const x of mats) x.dispose(); for (const m of meshes) m.dispose(); },
   };
 }
