@@ -1,9 +1,10 @@
 // The street surfaces, pure (no DOM, no three.js): asphalt from the OSM roads, lane marks, one-way arrows, zebra crossings and raised
 // sidewalks with kerbs. Map metres in (x east, y north), typed arrays out (y up, north is -z). scene.js turns the arrays into a few merged meshes.
 import { ribbon, ribbonEdges, finishFlat, cellCentre } from './geometry.js';
+import { ROAD_Y, MARK_Y } from './scene-math.js';
 
 // Heights, named so nothing fights: ground -0.5, water 0.2, park 0.4, footpath 0.6, then these. The heat overlay sits at 1.2, above all of them.
-export const Y_ROAD = 0.8, Y_MARK = 1.0, Y_CROSS = 1.05, WALK_RISE = 0.3, Y_WALK = Y_ROAD + WALK_RISE;
+export const Y_ROAD = ROAD_Y, Y_MARK = MARK_Y, Y_CROSS = 1.05, WALK_RISE = 0.3, Y_WALK = Y_ROAD + WALK_RISE;
 
 const LANE_W = 3.5;
 const CLASS_W = { trunk: 14, primary: 14, secondary: 10.5, tertiary: 8.5, residential: 7, unclassified: 7, service: 4 };

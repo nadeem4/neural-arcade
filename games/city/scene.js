@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, CHASE, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -15,9 +15,8 @@ import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, ENV_GROUND, WINDOW_GLOW }
 import { tierFor, furnitureTier } from './quality.js';
 import { buildFurniture } from './scene-furniture.js';
 import { applyFacade, buildingGeometry } from './facade.js';
-import { createTaxiMaker, TAXI_SCALE } from './scene-taxi.js';
+import { createTaxiMaker, TAXI_SCALE, TAXI_Y } from './scene-taxi.js';
 
-const CHASE = { back: 18, up: 8, ahead: 14 }; // behind and above the taxi, looking down the street ahead of it
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
 function meshOf(geo, mat, { cast = false, receive = false } = {}) {
@@ -129,6 +128,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   // Traffic signals: a real head (pole, arm, housing, three lamps on both faces) at each mapped signal. A head's lamps show the sim's own light for the road it
   // stands beside (headState), so a car that runs a red runs a red you can see. All the lamps are one mesh whose vertex colours are repainted when the lights change.
   const world = loadWorld(city);
+  world.height = cellHeights(city); // real building heights, for the camera clip
   const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
   mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
   mats.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
@@ -212,20 +212,37 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const cp = Math.cos(view.pitch);
     return { pos: [cx + Math.sin(view.yaw) * cp * view.dist, Math.sin(view.pitch) * view.dist, cz + Math.cos(view.yaw) * cp * view.dist], target: [cx, 0, cz], fov: 38 };
   };
+  // The chase camera at drive time t (state: the state already worked out for that time, if any).
+  const chaseAt = (t, state) => play.race
+    ? (() => { const s = state ?? raceStateAt(play.race, t); return raceShot(s.cars[0].state, s.cars[1].state); })()
+    : { ...chaseCamera(state ?? stateAt(play.track, t), CHASE), fov: 55 };
   const renderNow = () => {
     if (dead) return;
     const mapShot = orbitShot();
-    const shot = play && play.phase !== 'map' && !mapView
-      ? shotAt(play.phase, play.t, mapShot, play.race ? raceShot(play.state.cars[0].state, play.state.cars[1].state) : { ...chaseCamera(play.state, CHASE), fov: 55 })
+    let shot = play && play.phase !== 'map' && !mapView
+      ? shotAt(play.phase, play.t, mapShot, chaseAt(play.t, play.state))
       : mapShot;
     const phase = play ? play.phase : 'map';
+    if (play && phase !== 'map' && !mapView) { // keep the camera out of buildings and above the road
+      const clip = { margin: 2, minY: ROAD_Y + 2.7 };
+      const at0 = play.race ? [(play.state.cars[0].state.x + play.state.cars[1].state.x) / 2, 0, (play.state.cars[0].state.z + play.state.cars[1].state.z) / 2] : [play.state.x, 0, play.state.z]; // clip from the taxi: in the swoop and pullback shot.target is a map point, which can sit inside a building
+      const target = [at0[0], ROAD_Y, at0[2]];
+      const c = phase === 'chase' // in the chase the pull-in is eased over +-0.5 s of the trip (a pure function of the trip time)
+        ? clipEased((t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }, play.t, world, city.cellM, clip)
+        : clipCamera(shot.pos, target, world, city.cellM, clip.margin, clip.minY);
+      if (c.clipped || c.pos[1] !== shot.pos[1]) shot = { ...shot, pos: c.pos };
+    }
     const near = phase !== 'map' ? 2 : radius * 0.05;
     Object.assign(scene.fog, fogFor(1 - heatOpacity(phase, play ? play.t : 0), radius, phone)); // the same 0..1 curve as the heat fade
     mats.heat.opacity = play ? heatOpacity(phase, play.t) : 1; // the heat is for the map; it fades out in the chase
     if (play && taxi) focusShadow(phase !== 'map', taxi.position.x, taxi.position.z);
     else focusShadow(false);
     if (camera.fov !== shot.fov || camera.near !== near) { camera.fov = shot.fov; camera.near = near; camera.updateProjectionMatrix(); }
-    for (const p of pins) p.scale.setScalar(phase === 'chase' ? 0.15 : phase === 'map' ? 1 : phase === 'swoop' ? 1 - 0.85 * Math.min(1, play.t / SWOOP_MS) : 0.15 + 0.85 * Math.min(1, play.t / PULLBACK_MS));
+    for (const p of pins) { // street-sized in the chase, and faded out when the camera is right beside the pin so it never fills the lens
+      const base = phase === 'chase' ? 0.15 : phase === 'map' ? 1 : phase === 'swoop' ? 1 - 0.85 * Math.min(1, play.t / SWOOP_MS) : 0.15 + 0.85 * Math.min(1, play.t / PULLBACK_MS);
+      const fade = phase === 'map' ? 1 : pinFade(shot.pos, [p.position.x, ROAD_Y, p.position.z]);
+      p.visible = fade > 0.01; p.scale.setScalar(base * Math.max(fade, 0.01));
+    }
     clearTrees(play && phase !== 'map' ? [shot.pos[0], shot.pos[2]] : null, play && taxi ? [taxi.position.x, taxi.position.z] : null);
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
@@ -323,8 +340,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   }; // exactly once per trip
   const placeCar = (tx, tr, pts, maker, frames, st) => {
     const k = Math.min(st.stepIndex, frames.length - 1);
-    tx.position.set(st.x, 1, st.z); tx.rotation.y = st.heading;
-    maker.setBraking(st.braking);
+    tx.position.set(st.x, TAXI_Y, st.z); tx.rotation.y = st.heading;
+    maker.setBraking(st.braking); maker.setPose(st.dist, st.curvature);
     pts.set([frames[k].x, 1.4, frames[k].z], k * 3); // the point just left snaps back to its cell
     pts.set([st.x, 1.4, st.z], (k + 1) * 3); // the trail's last point rides with the taxi
     tr.geometry.setDrawRange(0, k + 2);
@@ -411,7 +428,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       stopRoute();
       const frames = track.frames;
       taxi = taxiMaker.make();
-      taxi.traverse((o) => { o.castShadow = true; });
+      taxi.traverse((o) => { o.castShadow = !o.userData.flat; });
       trailPts = new Float32Array((frames.length + 1) * 3);
       frames.forEach((f, i) => trailPts.set([f.x, 1.4, f.z], i * 3));
       const tg = new THREE.BufferGeometry();
@@ -437,7 +454,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       stopRoute();
       const make = (maker, mat, frames) => {
         const tx = maker.make(), pts = new Float32Array((frames.length + 1) * 3);
-        tx.traverse((o) => { o.castShadow = true; });
+        tx.traverse((o) => { o.castShadow = !o.userData.flat; });
         frames.forEach((f, i) => pts.set([f.x, 1.4, f.z], i * 3));
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.BufferAttribute(pts, 3));

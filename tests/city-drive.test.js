@@ -50,7 +50,7 @@ describe('stateAt', () => {
       worst = Math.max(worst, angle(s.heading, prev.heading));
       prev = s;
     }
-    expect(worst).toBeLessThan(1.5 * (Math.PI / 2) * dt / (0.3 * track.tickMs) + 1e-6); // half a turn is spread over 30% of a tile
+    expect(worst).toBeLessThan(1.5 * Math.PI * dt / (0.45 * track.tickMs) + 1e-6); // the worst case is a U-turn, spread over 45% of a tile
     expect(angle(prev.heading, frames[frames.length - 1].heading)).toBeLessThan(1e-6);
   });
   it('faces the move being made: a wait shows the next move direction from its first frame, a move its own', () => {
