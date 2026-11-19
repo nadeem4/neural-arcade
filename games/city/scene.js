@@ -6,6 +6,7 @@ import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
 import { cutAt } from './cuts.js';
+import { offencesWithin } from './record.js';
 import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { headState } from './signals.js';
@@ -247,7 +248,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const phase = play ? play.phase : 'map';
     const cut = play && phase === 'chase' && !mapView ? cutAt(cuts, play.clock) : null;
     if (cut) { // an overhead cut: centred on the taxi at the cut's one height, nothing to clip
-      shot = overheadShot([[play.state.x, play.state.z]], { aspect: camera.aspect, spread: cut.spread }); // one height for the whole cut
+      shot = overheadShot([play.state.x, play.state.z], { aspect: camera.aspect, spread: cut.spread }); // one height for the whole cut
     }
     if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
@@ -439,8 +440,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     if (dead || !play) return 'map';
     const intro = play.swoop ? SWOOP_MS : 0;
     const elapsed = now - play.t0;
-    const { phase, t } = timeline(play.track.total, elapsed, { swoop: play.swoop });
-    const ms = Math.max(0, elapsed - intro);
+    const { phase, t } = timeline(play.driveMs, elapsed, { swoop: play.swoop });
+    const ms = Math.min(Math.max(0, elapsed - intro), play.driveMs); // the taxi freezes at a cut drive
     const st = play.race ? raceStateAt(play.race, ms) : stateAt(play.track, ms);
     if (play.race) placeRace(st); else place(st);
     furniture.setTrains(ms); // trains on the L: a pure function of the trip's ms
@@ -489,7 +490,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (wait <= 0) { if (heatTimer) clearTimeout(heatTimer); applyHeat(); } else if (!heatTimer) heatTimer = setTimeout(applyHeat, wait);
     },
     // track: drive.js driveTrack; events: events.js tripEvents (the page reads those; the stage only needs the track).
-    playTrip({ track, events, people, offences, onFrame, onDone, onHonk } = {}) {
+    playTrip({ track, events, people, offences, driveMs, onFrame, onDone, onHonk } = {}) { // driveMs: footage maxms, cut the drive here (the pullback still plays)
       stopRoute();
       const frames = track.frames;
       taxi = taxiMaker.make();
@@ -501,7 +502,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       trail = new THREE.Line(tg, mats.trail); trail.frustumCulled = false;
       scene.add(taxi, trail);
       if (people) peopleLayer = createPeopleLayer(scene, people, { drawn: tier.peopleDrawn, shadows: !phone, seed: people.seed });
-      play = { track, offences, onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
+      const cutMs = Math.min(driveMs ?? track.total, track.total);
+      play = { track, driveMs: cutMs, offences: offences && offencesWithin(offences, cutMs), onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
       if (!motionAllowed() && !manualClock) { // no animation: the end state with the whole trail and the final numbers (record mode steps frames itself)
         const end = stateAt(track, track.total);
         place({ ...end, stepIndex: frames.length - 2 }); // place() draws the trail to stepIndex + 1, the last point, and the taxi at its end position
@@ -537,7 +539,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
         span.className = 'race-tag'; span.textContent = c.entry.name; span.style.color = TINTS[i].css;
         labelEl.append(span); return span;
       }) : [];
-      play = { race, track: { total: race.total }, onFrame, onDone, state: raceStateAt(race, 0), phase: 'map', t: 0, swoop: true };
+      play = { race, driveMs: race.total, track: { total: race.total }, onFrame, onDone, state: raceStateAt(race, 0), phase: 'map', t: 0, swoop: true };
       if (!motionAllowed()) { // no animation: both cars at their finish with the whole trails and final numbers
         const end = raceStateAt(race, race.total);
         placeRace(end);

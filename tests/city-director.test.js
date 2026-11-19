@@ -58,6 +58,7 @@ describe('timeline', () => {
     expect(timeline(5000, 0)).toEqual({ phase: 'swoop', t: 0 });
     expect(timeline(5000, SWOOP_MS + 100)).toEqual({ phase: 'chase', t: 100 });
     expect(timeline(5000, SWOOP_MS + 5000 + 10)).toEqual({ phase: 'pullback', t: 10 });
+    expect(timeline(3000, SWOOP_MS + 3000)).toEqual({ phase: 'pullback', t: 0 }); // a cut drive (maxms): the pullback starts at intro + driveMs
     expect(timeline(5000, SWOOP_MS + 5000 + PULLBACK_MS).phase).toBe('map');
   });
   it('can skip the swoop and the pullback', () => {
@@ -67,33 +68,21 @@ describe('timeline', () => {
 });
 
 describe('overheadShot', () => {
-  it('looks down at the middle of the points, a little from the south (+z) so north is up', () => {
-    const s = overheadShot([[0, 0], [40, 20]]);
-    expect(s.target[0]).toBeCloseTo(0); expect(s.target[2]).toBeCloseTo(0); // centred on the first point (the taxi), not between
-    expect(s.pos[1]).toBeGreaterThan(Math.abs(s.pos[2]) * 3); // steep
-    expect(s.pos[2]).toBeGreaterThan(0); // south of the target
-    expect(s.pos[0]).toBeCloseTo(0);
+  it('looks down at the centre point, a little from the south (+z) so north is up', () => {
+    const s = overheadShot([10, 20]);
+    expect(s.target).toEqual([10, 0, 20]);
+    expect(s.pos[1]).toBeGreaterThan(Math.abs(s.pos[2] - 20) * 3); // steep
+    expect(s.pos[2]).toBeGreaterThan(20); // south of the target
+    expect(s.pos[0]).toBeCloseTo(10);
   });
-  it('the other points only widen the frame: the same spread either side gives the same height', () => {
-    const a = overheadShot([[0, 0], [400, 0]]), b = overheadShot([[0, 0], [-400, 0]]);
-    expect(a.target).toEqual(b.target);
-    expect(a.pos[1]).toBeCloseTo(b.pos[1]);
-    expect(overheadShot([[0, 0], [400, 0]]).pos[1]).toBeGreaterThan(overheadShot([[0, 0], [200, 0]]).pos[1]);
-  });
-  it('rises as the points spread out, within limits', () => {
-    const near = overheadShot([[0, 0], [10, 0]]), mid = overheadShot([[0, 0], [400, 0]]), far = overheadShot([[0, 0], [50000, 0]]);
+  it('the height comes from the spread alone: it rises with it, within limits', () => {
+    const near = overheadShot([0, 0], { spread: 10 }), mid = overheadShot([0, 0], { spread: 100 }), far = overheadShot([0, 0], { spread: 50000 });
     expect(mid.pos[1]).toBeGreaterThan(near.pos[1]);
     expect(far.pos[1]).toBeLessThanOrEqual(800);
     expect(near.pos[1]).toBeGreaterThanOrEqual(346); // above the tallest tower on the map, so no building hides the road
   });
-  it('with a spread the height is fixed: the points no longer change it', () => {
-    const a = overheadShot([[0, 0], [500, 0]], { spread: 100 }), b = overheadShot([[0, 0], [10, 0]], { spread: 100 });
-    expect(a.pos[1]).toBeCloseTo(b.pos[1]);
-    expect(a.target).toEqual([0, 0, 0]);
-    expect(overheadShot([[0, 0]], { spread: 300 }).pos[1]).toBeGreaterThan(overheadShot([[0, 0]], { spread: 100 }).pos[1]);
-  });
-  it('a tall narrow screen needs more height for the same sideways spread', () => {
-    const wide = overheadShot([[0, 0], [150, 0]], { aspect: 1.78 }), tall = overheadShot([[0, 0], [150, 0]], { aspect: 0.46 });
+  it('a tall narrow screen needs more height for the same spread', () => {
+    const wide = overheadShot([0, 0], { spread: 50, aspect: 1.78 }), tall = overheadShot([0, 0], { spread: 50, aspect: 0.46 });
     expect(tall.pos[1]).toBeGreaterThan(wide.pos[1]);
   });
 });

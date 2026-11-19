@@ -4,7 +4,7 @@ import { SWOOP_MS, PULLBACK_MS } from './director.js';
 import { endCardModel } from './endcard.js';
 import { TAG_LIFE_MS } from './events.js';
 
-// Parse the query string. Returns null when not recording, else { card, fps, cam } (cam: default, map or auto).
+// Parse the query string. Returns null when not recording, else { card, fps, cam, endcard, maxms } (cam: default, map or auto; endcard: hold the end card; maxms: cut the drive to its first n ms, or null).
 export function parseRecord(search) {
   const q = new URLSearchParams(search);
   if (q.get('record') !== '1') return null;
@@ -15,14 +15,25 @@ export function parseRecord(search) {
   if (!(fps > 0)) throw new Error(`bad fps: ${q.get('fps')}`);
   const cam = q.get('cam') ?? 'default';
   if (!['default', 'map', 'auto'].includes(cam)) throw new Error(`bad cam: ${cam}`);
-  return { card, fps, cam };
+  const endcard = q.has('endcard') ? q.get('endcard') === '1' : false;
+  if (q.has('endcard') && !endcard) throw new Error(`bad endcard: ${q.get('endcard')} (use endcard=1)`);
+  const maxms = q.has('maxms') ? Number(q.get('maxms')) : null;
+  if (q.has('maxms') && !(maxms > 0 && Number.isFinite(maxms))) throw new Error(`bad maxms: ${q.get('maxms')}`);
+  return { card, fps, cam, endcard, maxms };
 }
 
 // The rewards of a preset card, as a fresh object.
 export const cardRewards = (id) => ({ ...PRESETS.find(p => p.id === id).rewards });
 
-// Whole trip: the track plus the intro swoop and outro pullback.
-export const tripMs = (trackTotalMs) => trackTotalMs + SWOOP_MS + PULLBACK_MS;
+// How long the end card is held after the pullback (endcard=1).
+export const ENDCARD_MS = 4000;
+
+// Whole trip: the (maybe cut, maxMs) drive plus the intro swoop and outro pullback, plus the end card hold if asked.
+export const tripMs = (trackTotalMs, { maxMs = null, endcard = false } = {}) =>
+  Math.min(trackTotalMs, maxMs ?? Infinity) + SWOOP_MS + PULLBACK_MS + (endcard ? ENDCARD_MS : 0);
+
+// The offences that happen inside a drive cut to driveMs (offence times are on the seek clock, swoop first). The rest still count in the summary.
+export const offencesWithin = (offences, driveMs) => offences.filter(o => o.ms <= SWOOP_MS + driveMs);
 
 export const frameCount = (totalMs, fps) => Math.floor((totalMs * fps) / 1000) + 1;
 

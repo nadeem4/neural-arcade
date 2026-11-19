@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { parseRecord, tripMs, frameCount, frameMs, pruneTags, recordApi, cardRewards } from '../games/city/record.js';
+import { parseRecord, tripMs, ENDCARD_MS, offencesWithin, frameCount, frameMs, pruneTags, recordApi, cardRewards } from '../games/city/record.js';
 import { SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
 import { readFileSync } from 'node:fs';
 import { runSummary } from '../games/city/record.js';
@@ -12,7 +12,7 @@ describe('parseRecord', () => {
     expect(parseRecord('?card=speed')).toBeNull();
   });
   it('reads card and fps, defaulting fps to 30', () => {
-    expect(parseRecord('?record=1&card=walk')).toEqual({ card: 'walk', fps: 30, cam: 'default' });
+    expect(parseRecord('?record=1&card=walk')).toEqual({ card: 'walk', fps: 30, cam: 'default', endcard: false, maxms: null });
     expect(parseRecord('?record=1&card=walk&fps=60').fps).toBe(60);
   });
   it('reads cam: default, map or auto', () => {
@@ -20,6 +20,15 @@ describe('parseRecord', () => {
     expect(parseRecord('?record=1&card=walk&cam=map').cam).toBe('map');
     expect(parseRecord('?record=1&card=walk&cam=auto').cam).toBe('auto');
     expect(() => parseRecord('?record=1&card=walk&cam=sky')).toThrow(/bad cam: sky/);
+  });
+  it('reads endcard=1 and maxms', () => {
+    expect(parseRecord('?record=1&card=mile&endcard=1&maxms=8000')).toMatchObject({ endcard: true, maxms: 8000 });
+    expect(parseRecord('?record=1&card=mile')).toMatchObject({ endcard: false, maxms: null });
+  });
+  it('rejects bad endcard and maxms', () => {
+    for (const bad of ['endcard=2', 'endcard=0', 'endcard=', 'maxms=abc', 'maxms=0', 'maxms=-5', 'maxms=']) {
+      expect(() => parseRecord(`?record=1&card=mile&${bad}`), bad).toThrow(/bad (endcard|maxms)/);
+    }
   });
   it('rejects bad input', () => {
     expect(() => parseRecord('?record=1&card=nope')).toThrow(/unknown card/);
@@ -38,6 +47,20 @@ describe('cardRewards', () => {
 describe('timing', () => {
   it('tripMs adds the swoop and pullback', () => {
     expect(tripMs(16000)).toBe(16000 + SWOOP_MS + PULLBACK_MS);
+  });
+  it('maxMs cuts only the drive; the swoop and pullback stay', () => {
+    expect(tripMs(16000, { maxMs: 8000 })).toBe(8000 + SWOOP_MS + PULLBACK_MS);
+    expect(tripMs(16000, { maxMs: 99999 })).toBe(tripMs(16000));
+  });
+  it('endcard adds the hold', () => {
+    expect(ENDCARD_MS).toBe(4000);
+    expect(tripMs(16000, { endcard: true })).toBe(tripMs(16000) + 4000);
+    expect(tripMs(16000, { maxMs: 8000, endcard: true })).toBe(8000 + SWOOP_MS + PULLBACK_MS + 4000);
+  });
+  it('offencesWithin keeps the offences up to the end of the cut drive', () => {
+    const o = [{ ms: SWOOP_MS + 1000 }, { ms: SWOOP_MS + 5000 }, { ms: SWOOP_MS + 9000 }];
+    expect(offencesWithin(o, 5000)).toEqual(o.slice(0, 2));
+    expect(offencesWithin(o, 20000)).toEqual(o);
   });
   it('frameCount and frameMs', () => {
     expect(frameCount(1000, 30)).toBe(31);
@@ -108,6 +131,16 @@ describe('runSummary', () => {
     expect(s).toMatchObject({ card: 'walk', seconds: walk.analysis.seconds, pay: m.earned, cityScore: m.city, legal: m.legal, onTime: m.timeOk });
     expect(s.offences).toEqual({ offTiles: walk.analysis.offTiles, red: walk.analysis.redRuns, wrong: walk.analysis.wrongWays, scared: 3 });
   });
+  it('is the full trip whatever the cut: main builds it from trip.offences, never the cut list', () => {
+    const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
+    const line = main.split('\n').find((l) => l.includes('rc.summary = runSummary('));
+    expect(line).toContain('offences: trip.offences');
+    expect(line).not.toMatch(/offencesWithin|maxms|driveMs/);
+    expect(main.match(/offencesWithin\(/g).length).toBe(1); // only the cam=auto cuts use the cut list
+  });
+  it('the scene and the page share one cut rule: offencesWithin', () => {
+    expect(readFileSync(new URL('../games/city/scene.js', import.meta.url), 'utf8')).toContain('offences && offencesWithin(offences, cutMs)');
+  });
   it('events are the offences as { ms, type, label }', () => {
     expect(runSummary(input).events).toEqual([{ ms: 2000, type: 'off', label: '-20 footpath tile' }, { ms: 3000, type: 'red', label: '-5 red light run' }]);
   });
@@ -118,6 +151,20 @@ describe('the scene under reduced motion', () => {
   it('only ends a trip at once when the clock is not manual', () => {
     expect(scene).toContain('!motionAllowed() && !manualClock');
     expect(scene).toContain('{ reduced: !motionAllowed() }');
+  });
+  it('clamps the drive clock to the cut', () => {
+    expect(scene).toContain('play.driveMs');
+    expect(scene).toMatch(/timeline\(play\.driveMs,/);
+    expect(scene).toContain('Math.min(Math.max(0, elapsed - intro), play.driveMs)');
+  });
+  it('the page wires maxms and the end card hold', () => {
+    const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
+    expect(main).toContain('driveMs: rec?.maxMs');
+    expect(main).toContain('tripMs(trip.track.total, { maxMs: cfg.maxms, endcard: cfg.endcard })');
+    expect(main).toContain("'rc-endcard'");
+    const css = readFileSync(new URL('../games/city/city.css', import.meta.url), 'utf8');
+    expect(css).toContain('body.rc-record.rc-endcard #endcard:not([hidden])');
+    expect(css).toContain('body.rc-record.rc-endcard .play[data-screen="done"] .meter'); // the held card is alone on screen
   });
   it('the page wires the summary', () => {
     const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');

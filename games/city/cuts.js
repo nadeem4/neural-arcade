@@ -1,6 +1,6 @@
 // cam=auto: when the footage cuts from the chase to an overhead shot. Pure, no DOM, no three.js.
 // Everything is on the seek(ms) clock. Cuts are worked out ahead of time from the offence list (offences.js).
-// The shot inside a cut is framed live by the scene (director.js overheadShot): the taxi and the offences still highlighted.
+// The shot inside a cut is framed live by the scene (director.js overheadShot): centred on the taxi, at the height the cut's spread gives.
 
 // offences: buildOffences result. Returns [{ from, to, spread }]; spread (metres, at most CUT_SPREAD_MAX) is how far the cut's offences lie from their
 // middle, and fixes the camera height for the whole cut (director.js overheadShot), so the zoom never jumps inside a cut. Offences past the cap may sit off screen:
