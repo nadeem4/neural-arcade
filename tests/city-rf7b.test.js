@@ -62,6 +62,37 @@ describe('RF7b: each (i) sits beside what it explains (F28)', () => {
   });
 });
 
+describe('RF7b: training shows its percent and can be stopped (F8)', () => {
+  it('has a Stop button beside the Train button, shown only while training', () => {
+    expect(tagOf('stopTrain')).toMatch(/^<button class="btn" type="button" id="stopTrain"[^>]*hidden/);
+    expect(main).toContain("$('stopTrain').hidden = !busy;");
+    expect(main).toContain("$('stopTrain').addEventListener('click', () => { $('progress').hidden = true; toMap('failed'); });");
+  });
+  it('the Train button carries the percent while it trains', () => {
+    expect(main).toContain("progress.value = Math.round(100 * p.done / p.total); $('train').textContent = `Training… ${progress.value}%`;");
+  });
+});
+
+describe('RF7b: small polish (F11, F27, F30, F32, F35)', () => {
+  it('F30: the live Pay number takes the fine or pay colour by its sign', () => {
+    expect(main).toContain("$('meterTotal').className = `meter-total tone-${m.total < 0 ? 'fine' : m.total > 0 ? 'pay' : 'zero'}`;");
+  });
+  it('F11: the rate card and end card scroll with a thin, dark scrollbar', () => {
+    expect(rules('.ratecard, .endcard')).toContain('scrollbar-width: thin');
+    expect(rules('.ratecard, .endcard')).toContain('scrollbar-color: #3A4A60 transparent');
+  });
+  it('F32: the goal chip steps aside while the Garage is open', () => {
+    expect(rules('.play[data-garage="true"] .chip-goal')).toContain('display: none');
+  });
+  it('F35: an empty bay is legible, not 3.3:1 grey', () => {
+    expect(rules('.bay.empty')).toContain('color: #9AA7B8');
+  });
+  it('F27: the bottom bar comes right after the rate card in tab order', () => {
+    expect(html.indexOf('id="bar"')).toBeGreaterThan(html.indexOf('id="rateCard"'));
+    expect(html.indexOf('id="bar"')).toBeLessThan(html.indexOf('id="garageDrawer"'));
+  });
+});
+
 describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
   const hudHtml = html.slice(html.indexOf('<div class="hud">'), html.indexOf('<div class="notes">'));
   it('the minimap sits in the HUD grid, beside the city score, so no meter runs under it', () => {

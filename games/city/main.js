@@ -93,6 +93,7 @@ function hudFrame(state, at, overhead) {
   hud.wasOverhead = !!overhead;
   const m = meterAt(hud.events, state.progress);
   setText($('meterTotal'), meterText(m.total));
+  $('meterTotal').className = `meter-total tone-${m.total < 0 ? 'fine' : m.total > 0 ? 'pay' : 'zero'}`;
   setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · footpath ${m.counts.off} · red light ${m.counts.red} · wrong way ${m.counts.wrong}`);
   setBar($('meterBar'), payFraction(m.total, hud.range));
   const g = goalAt(hud.events, hud.people.scaresAt(Math.floor(state.progress)), state.progress, GOAL_SECONDS);
@@ -177,6 +178,7 @@ function go(event) {
   $('raceBanner').hidden = screen !== 'raced';
   $('train').disabled = busy || !stage;
   $('train').textContent = busy ? 'Training…' : 'Train and drive';
+  $('stopTrain').hidden = !busy;
   if (busy) showGarage(false);
   showRates();
   updateInset();
@@ -294,7 +296,7 @@ async function train(req) {
   raceRun = null; stage.clearRoute(); hud = null; trip = null; showMeter(false);
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
-      p => { progress.value = Math.round(100 * p.done / p.total); if (p.visits) stage.setHeat(p.visits); });
+      p => { progress.value = Math.round(100 * p.done / p.total); $('train').textContent = `Training… ${progress.value}%`; if (p.visits) stage.setHeat(p.visits); });
     if (!res) return; // a newer run took over
     progress.hidden = true; say('');
     session = recordTry(session, res.analysis);
@@ -419,6 +421,7 @@ function build() {
     $(f.key + 'Inc').addEventListener('click', () => nudge(f.key, 1));
   }
   $('train').addEventListener('click', () => { sound.unlock(); showStage(); train({ ...rewards }); });
+  $('stopTrain').addEventListener('click', () => { $('progress').hidden = true; toMap('failed'); });
   $('reset').addEventListener('click', () => { rewards = defaultRewards(); $('train').dataset.stale = 'true'; showRates(); });
   $('skip').addEventListener('click', () => {
     if (raceRun) { raceRun.skipped = true; stage.skipTrip(); finishRace(raceRun, 'skip'); return; }
