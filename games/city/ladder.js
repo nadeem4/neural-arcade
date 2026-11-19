@@ -76,7 +76,7 @@ export function ladderModel(rewards, ran, runs = {}) {
   const run = runs[current];
   if (run && !checkPromise(current, run.analysis, run.honest?.tiles ?? 0)) return { current, steps, note: { kind: 'ran', head, text: ranLine(s.rewards, run.analysis, run.honest) } };
   if (current === 'legal' && STEPS.every(x => ran.includes(x.id))) {
-    return { current, steps, note: { kind: 'done', head: 'All five steps done', text: 'You found every loophole and fixed it. Now write your own card, or race your taxis in the Garage.' } };
+    return { current, steps, note: { kind: 'done', head, text: s.showed + ' All five steps done. Now write your own card, or race your taxis in the Garage.' } };
   }
   return { current, steps, note: { kind: 'showed', head, text: s.showed } };
 }

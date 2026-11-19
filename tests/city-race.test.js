@@ -172,7 +172,7 @@ describe('raceDetailOf', () => {
   it('says who was legal, and adds the city score line when a cheat wins', () => {
     const t = [T(true, 62, 38, { offTiles: 19, parkTiles: 0, redRuns: 3, wrongWays: 10 }), T(true, 77, 23)];
     const text = raceDetailOf(result(fake(...t)), t, ['Red runner', 'By the book']);
-    expect(text).toBe('Red runner: 62 s, drove 19 tiles on footpaths, ran 3 red lights, went the wrong way 10 times. By the book: 77 s, legal. Faster, but the city scored it 60. By the book scored 100.');
+    expect(text).toBe('Red runner: 62 s, drove 19 tiles on footpaths, ran 3 red lights, went the wrong way on 10 tiles. By the book: 77 s, legal. Faster, but the city scored it 60. By the book scored 100.');
   });
   it('a legal winner needs no city line, and a cheat that won by arriving is told so', () => {
     const legal = [T(true, 50, 40), T(true, 62, 38, { redRuns: 1 })];
@@ -180,4 +180,10 @@ describe('raceDetailOf', () => {
     const arrived = [T(true, 62, 38, { redRuns: 1 }), T(false, 100, -90)];
     expect(raceDetailOf(result(fake(...arrived)), arrived, names)).toBe('Speedy: 62 s, ran 1 red light. Legal: did not arrive. But the city scored it 60. Legal scored 0.');
   });
+  it('uses the people each car scared, so the race score equals that taxi end card score', () => {
+    const t = [T(true, 62, 38, { offTiles: 19, redRuns: 3, wrongWays: 10 }), T(true, 77, 23)];
+    const text = raceDetailOf(result(fake(...t)), t, ['Red runner', 'By the book'], [2, 0]);
+    expect(text).toContain('Faster, but the city scored it 50. By the book scored 100.');
+  });
 });
+

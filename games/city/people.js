@@ -1,8 +1,8 @@
 // Reward City people: pedestrians as scenery. Pure and deterministic, no DOM, no three.js.
 // They walk the footpath and park cells of the same world the sim uses, and cross a road only at a mapped crossing,
 // and only while the cars across them are on red. They only REACT to the taxi (they jump aside when it drives a
-// footpath or park tile close to them; a red light run scares nobody, because no mapped crossing lies beside a run's signal on this map). Nothing here feeds back into the sim, the reward,
-// the Q-table or training; the one number they touch is the city's score ("What the city wanted", goal.js).
+// footpath or park tile close to them; a red light scares nobody, because no mapped crossing lies beside a run's signal on this map). Nothing here feeds back into the sim, the reward,
+// the Q-table or training; the one number they touch is the city's score ("City score", goal.js).
 // Everything is baked once at trip start from (map, taxi route, seed) with a seeded generator and read by trip time
 // in ticks: no clock and no unseeded random numbers, so ?record=1 frames are identical on every run.
 import { mulberry32 } from '../../engine/rng.js';

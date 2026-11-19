@@ -2,7 +2,7 @@
 // The taxi is paid by the reward you write; this score is the real goal, so the two can drift apart.
 export const ARRIVE_POINTS = 60;   // it got there
 export const ON_TIME_POINTS = 20;  // and under the goal time, legally
-export const CLEAN_POINTS = 20;    // arrived with no park, red-light or wrong-way moves
+export const CLEAN_POINTS = 20;    // arrived with no footpath, red light or wrong-way moves
 export const SCARE_MAX = 30;       // the most scared people can take off, so a trip that arrives never scores as low as one that never does
 export const SCARE_COST = 5;       // per scared person (people.js)
 

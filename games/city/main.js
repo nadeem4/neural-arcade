@@ -406,7 +406,7 @@ function finishRace(run, event) {
   run.ended = true;
   go(event);
   updateRaceHud(world, run.race, raceStateAt(run.race, run.race.total));
-  $('announce').textContent = `Race done. ${showBanner(run.race, result(run.race), run.names)}`;
+  $('announce').textContent = `Race done. ${showBanner(run.race, result(run.race), run.names, run.race.cars.map(c => peopleFor(c.events).scares.length))}`;
 }
 
 // ---------- Wiring ----------

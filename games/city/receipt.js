@@ -38,7 +38,15 @@ export function verdictOf(rewards, a) {
       ? 'It never arrived. The fines outweigh the fare, so not driving pays best.'
       : 'It never arrived.';
   }
-  const tail = rewards.off > 0 ? 'the fine costs less than the time it saves.' : 'nobody fined that.';
+  if (a.offTiles > 0 && rewards.off <= 0) {
+    // Every cheat this card leaves free, named together, so the line agrees with the ladder note of the same card.
+    const free = [a.parkTiles > 0 ? 'cut across the park' : 'drove along the footpaths'];
+    if (a.redRuns > 0 && rewards.red <= 0) free.push('ran red lights');
+    if (a.wrongWays > 0 && rewards.wrong <= 0) free.push('went the wrong way down a one-way street');
+    const list = free.length > 1 ? `${free.slice(0, -1).join(', ')} and ${free[free.length - 1]}` : free[0];
+    return `It ${list}. Nothing fines that.`;
+  }
+  const tail = 'the fine costs less than the time it saves.';
   if (a.parkTiles > 0) return `It cut across the park: ${tail}`;
   if (a.offTiles > 0) return `It drove along the footpaths: ${tail}`;
   if (a.redRuns > 0) return 'It ran red lights: they cost less than waiting.';
@@ -63,7 +71,7 @@ export function cheatsOf(rewards, a, honest) {
   const foot = a.offTiles - a.parkTiles;
   if (foot > 0) add('footpath', `Drove ${plural(foot, 'tile')} on footpaths. ${fine(rewards.off, foot, 'a tile')}`);
   if (a.redRuns > 0) add('red', `Ran ${plural(a.redRuns, 'red light')}. ${fine(rewards.red, a.redRuns, 'each', a.redRuns > 1)}`);
-  if (a.wrongWays > 0) add('wrong', `Went the wrong way ${plural(a.wrongWays, 'time')}. ${fine(rewards.wrong, a.wrongWays, 'each')}`);
+  if (a.wrongWays > 0) add('wrong', `Went the wrong way on ${plural(a.wrongWays, 'tile')}. ${fine(rewards.wrong, a.wrongWays, 'each')}`);
   if (saved > 0) add('saved', `Together the cheats saved ${saved} s, worth ${round1(saved * rewards.time)} pay.`);
   return out;
 }

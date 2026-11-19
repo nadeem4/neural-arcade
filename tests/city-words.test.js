@@ -132,9 +132,9 @@ describe('player copy matches the reward', () => {
   });
 
   it('off-road line depends on the fine', () => {
-    expect(verdictOf({ ...R, off: 0 }, A({ offTiles: 2, parkTiles: 2 }))).toMatch(/nobody fined that/);
+    expect(verdictOf({ ...R, off: 0 }, A({ offTiles: 2, parkTiles: 2 }))).toMatch(/Nothing fines that\./);
     const v = verdictOf({ ...R, off: 5 }, A({ offTiles: 2, parkTiles: 2 }));
-    expect(v).not.toMatch(/nobody fined/);
+    expect(v).not.toMatch(/Nothing fines/);
     expect(v).toMatch(/costs less than the time it saves/);
     expect(verdictOf({ ...R, off: 5 }, A({ offTiles: 2, parkTiles: 0 }))).toMatch(/costs less than the time it saves/);
   });
@@ -211,6 +211,7 @@ describe('player wording is accurate', () => {
     expect(INFO.meters).toContain(`${ON_TIME_POINTS} for a legal, on-time trip`);
     expect(INFO.meters).toContain(`${CLEAN_POINTS} for no cheats`);
     expect(INFO.goal).toContain(`${GOAL_SECONDS} seconds`);
+    expect(INFO.goal).toContain('set a rate card that gets');
     expect(INFO.meters.split(" ").length).toBeLessThan(75);
     expect(INFO.meters).toContain('out of 100');
     expect(INFO.meters).toContain('It only falls during the drive.');
@@ -243,4 +244,9 @@ describe('hintOf: all the loopholes, not only the first', () => {
     expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1 }))).toBe('It used 2 loopholes. Add or raise the footpath and red light fines.');
     expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1, wrongWays: 2 }))).toBe('It used 3 loopholes. Add or raise the footpath, red light and wrong way fines.');
   });
+  it('with every cheat free on one card, the verdict names them all and says nothing fines that', () => {
+    expect(verdictOf({ ...R, off: 0, red: 0, wrong: 0 }, A({ offTiles: 2, parkTiles: 0, redRuns: 1, wrongWays: 3 }))).toBe('It drove along the footpaths, ran red lights and went the wrong way down a one-way street. Nothing fines that.');
+    expect(verdictOf({ ...R, off: 0 }, A({ offTiles: 2, parkTiles: 2 }))).toBe('It cut across the park. Nothing fines that.');
+  });
 });
+

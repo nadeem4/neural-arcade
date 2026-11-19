@@ -3,7 +3,7 @@
 // Pay-slip values. A new game starts with only the fare and the clock on.
 export const DEFAULT_REWARDS = { fare: 100, time: 1, off: 0, red: 0, wrong: 0, perTile: 0 };
 
-// Slider range per pay-slip line.
+// Slider range per rate card line.
 export const RANGES = {
   fare: { min: 0, max: 200, step: 10 },
   time: { min: 0, max: 3, step: 0.5 },
@@ -28,7 +28,7 @@ export const PRESETS = [
     rewards: { ...DEFAULT_REWARDS } },
   { id: 'walk', name: 'Fine the footpaths', text: `Driving on a footpath or across the park now costs ${FINES.off} a tile.`,
     rewards: { ...DEFAULT_REWARDS, off: FINES.off } },
-  { id: 'lights', name: 'Fine red lights too', text: `Each red light run costs ${FINES.red} as well.`,
+  { id: 'lights', name: 'Fine red lights too', text: `Each red light costs ${FINES.red} as well.`,
     rewards: { ...DEFAULT_REWARDS, off: FINES.off, red: FINES.red } },
   { id: 'legal', name: 'Fine everything', text: `Going the wrong way down a one-way street costs ${FINES.wrong} too.`,
     rewards: { ...DEFAULT_REWARDS, ...FINES } },

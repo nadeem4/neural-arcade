@@ -29,8 +29,8 @@ describe('honest notes', () => {
     const all = STEPS.map(s => s.id);
     const m = ladderModel(cardFor('legal'), all, {});
     expect(m.note.kind).toBe('done');
-    expect(m.note.head).toBe('All five steps done');
-    expect(m.note.text).toBe('You found every loophole and fixed it. Now write your own card, or race your taxis in the Garage.');
+    expect(m.note.head).toBe('5. Fine everything');
+    expect(m.note.text).toBe(STEPS[4].showed + ' All five steps done. Now write your own card, or race your taxis in the Garage.');
     expect(ladderModel(cardFor('walk'), all, {}).note.kind).toBe('showed');
     expect(ladderModel(cardFor('legal'), all.slice(1), {}).note.kind).toBe('showed');
   });

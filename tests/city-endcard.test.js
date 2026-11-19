@@ -98,13 +98,13 @@ describe('cheatsOf', () => {
     const red = cheatsOf(R, { ...legal, seconds: 55, redRuns: 2 }, honest)[0];
     expect(red.reason).toBe('Ran 2 red lights. The fine was 30 each (−60).');
     const wrong = cheatsOf(R, { ...legal, seconds: 55, wrongWays: 1 }, honest)[0];
-    expect(wrong.reason).toBe('Went the wrong way 1 time. The fine was 30 each (−30).');
+    expect(wrong.reason).toBe('Went the wrong way on 1 tile. The fine was 30 each (−30).');
   });
   it('states the saving once when a park cheat and a wrong-way cheat appear together', () => {
     const a = { ...legal, seconds: 37, offTiles: 16, parkTiles: 16, wrongWays: 2 };
     const out = cheatsOf(R, a, honest);
     expect(out[0].reason).toBe('Cut through the park on 16 tiles. The fine was 20 a tile (−320).');
-    expect(out[1].reason).toBe('Went the wrong way 2 times. The fine was 30 each (−60).');
+    expect(out[1].reason).toBe('Went the wrong way on 2 tiles. The fine was 30 each (−60).');
     expect(out.filter(c => /saved/.test(c.reason))).toEqual([{ kind: 'saved', reason: 'Together the cheats saved 27 s, worth 27 pay.' }]);
     expect(out.at(-1).kind).toBe('saved');
   });
