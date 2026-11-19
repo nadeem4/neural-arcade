@@ -62,7 +62,10 @@ export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
     return (world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL) + ROOF_CLEAR; // a camera skimming a roof just above it is clipped too
   };
   let pos = [camPos[0], Math.max(minY, camPos[1]), camPos[2]], clipped = false, k = 1;
-  if (len > 0 && !roof(target[0], target[2])) {
+  // world.maxRoof (the tallest roof plus clearance, if the caller knows it): a camera above it is in open air, and a steep line from it down to a street
+  // crosses towers near the taxi, which would drag the camera to the street while it still looks at the far map point (flat blue facades after a phone trip).
+  const aboveAll = world.maxRoof !== undefined && camPos[1] >= world.maxRoof;
+  if (len > 0 && !aboveAll && !roof(target[0], target[2])) {
     const step = cellM / 4;
     for (let t = step; t <= len + step; t += step) {
       const s = Math.min(t, len) / len;

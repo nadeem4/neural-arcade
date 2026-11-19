@@ -139,6 +139,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const trafficLayer = createTrafficLayer({ tier: trafficTier({ phone }) }); // other cars: scenery that reacts to the taxi, shown only while a trip plays
   scene.add(trafficLayer.group);
   world.height = cellHeights(city); // real building heights, for the camera clip
+  world.maxRoof = world.height.reduce((m, h) => Math.max(m, h), 0) + 6; // a camera above this is over every roof (clipCamera)
   const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
   mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
   mats.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });

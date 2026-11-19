@@ -58,6 +58,14 @@ describe('clipCamera', () => {
     expect(out.clipped).toBe(false);
     expect(out.pos).toEqual([45, 200, zOfRow(0)]);
   });
+  it('leaves a camera above every roof alone even when the steep line down to the taxi crosses a tower (the pullback on a phone)', () => {
+    const cam = [45, 300, zOfRow(0) - 100], target = [45, 1, zOfRow(2)];
+    expect(clipCamera(cam, target, world, cellM, 2).clipped).toBe(true); // no roof height known: the line is judged on its own
+    const out = clipCamera(cam, target, { ...world, maxRoof: 46 }, cellM, 2); // the tallest building here is 40 m
+    expect(out.clipped).toBe(false);
+    expect(out.pos).toEqual(cam);
+    expect(clipCamera([45, 30, zOfRow(0) - 100], target, { ...world, maxRoof: 46 }, cellM, 2).pos[1]).toBeLessThan(30); // below the roofs it still clips
+  });
   it('does not skim a roof: a camera a metre above a roof is pulled in', () => {
     const w = { ...world, height: new Float32Array(cols * rows).fill(30) };
     const out = clipCamera([45, 31, zOfRow(0)], [45, 1, zOfRow(2)], w, cellM, 2);
