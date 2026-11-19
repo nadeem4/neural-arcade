@@ -5,6 +5,10 @@
 const DESKTOP = { shadowSize: 2048, pixelRatio: 2, cloudCount: 6, facadeDetail: 2, roofBoxes: true, softShadows: true, laneDashes: true, arrows: true, peopleDrawn: 60, bloom: true };
 const PHONE = { shadowSize: 1024, pixelRatio: 1.5, cloudCount: 3, facadeDetail: 1, roofBoxes: false, softShadows: false, laneDashes: false, arrows: false, peopleDrawn: 24, bloom: false };
 
+// The one phone width: the same 720 px the CSS phone block uses. main.js (labels, sheets) and scene.js (the taxi box) both ask it.
+export const PHONE_WIDTH = '(max-width: 720px)';
+export const narrowScreen = () => !!(globalThis.matchMedia && matchMedia(PHONE_WIDTH).matches);
+
 export function tierFor({ phone = false } = {}) {
   return { ...(phone ? PHONE : DESKTOP) };
 }

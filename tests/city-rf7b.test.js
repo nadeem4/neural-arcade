@@ -24,10 +24,17 @@ describe('RF7b: phone tags keep off the taxi', () => {
     const scene = read('games/city/scene.js');
     expect(scene).toMatch(/return \{ x: [^\n]*y: sy\(tmp\), \.\.\.\(top < bottom \? \{ top, bottom \} : \{\}\) \}/);
   });
+  it('the swoop and pullback camera is eased in time and faded out with height (no plain clipCamera, which jumped when the camera passed the tallest roof)', () => {
+    const scene = read('games/city/scene.js');
+    expect(scene).toContain('openFrom: world.maxRoof / 5');
+    expect(scene).not.toMatch(/clipCamera\(/);
+  });
   it('the box is worked out only at phone width, and leaves the flat contact shadow out of it', () => {
     const scene = read('games/city/scene.js');
-    expect(scene).toContain("const narrow = () => !!(globalThis.matchMedia && matchMedia('(max-width: 720px)').matches);");
-    expect(scene).toContain('if (narrow()) {');
+    expect(scene).not.toContain('(max-width: 720px)'); // one shared phone width, in quality.js
+    expect(read('games/city/main.js')).not.toContain('(max-width: 720px)');
+    expect(read('games/city/quality.js')).toContain("PHONE_WIDTH = '(max-width: 720px)'");
+    expect(scene).toContain('if (narrowScreen()) {');
     expect(scene).toContain('taxiBox.makeEmpty(); for (const part of taxi.children) if (!part.userData.flat) taxiBox.expandByObject(part);');
     expect(scene).not.toContain('taxiBox.setFromObject(taxi)');
   });

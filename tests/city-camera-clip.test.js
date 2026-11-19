@@ -209,3 +209,39 @@ describe('the pickup pin at the start of a drive', () => {
     expect(pinFade(cam.pos, [st.x, 1, st.z])).toBe(0);
   });
 });
+
+// The swoop in and the pullback out, on the real map at a phone's aspect, frame by frame at 60 fps: the camera path is continuous.
+import { shotAt, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
+import { chaseForAspect, maxRoof } from '../games/city/scene-math.js';
+import { cityBounds } from '../games/city/geometry.js';
+describe('the camera through the swoop and the pullback', () => {
+  const { cx, cz, radius } = cityBounds(city);
+  const w = { ...realWorld, maxRoof: maxRoof(realWorld.height) };
+  const clip = { margin: 2, minY: ROAD_Y + 2.7 };
+  const mapShot = (() => { const cp = Math.cos(0.95), d = radius * 1.25; return { pos: [cx + Math.sin(0.6) * cp * d, Math.sin(0.95) * d, cz + Math.cos(0.6) * cp * d], target: [cx, 0, cz], fov: 38 }; })();
+  for (const aspect of [390 / 844, 1280 / 720]) {
+    for (const card of story.cards) {
+      it(`has no jump from frame to frame on the ${card.id} card at aspect ${aspect.toFixed(2)}`, () => {
+        const frames = routeFrames(realWorld, city.cellM, card.route);
+        const track = driveTrack(frames, tripEvents(realWorld, card.rewards, card.route));
+        for (const [phase, ms, at] of [['swoop', SWOOP_MS, 0], ['pullback', PULLBACK_MS, track.total]]) {
+          const st = stateAt(track, at);
+          const chase = { ...chaseCamera(st, chaseForAspect(aspect)), fov: 55 };
+          const target = [st.x, ROAD_Y, st.z];
+          const camAt = (t) => ({ pos: shotAt(phase, t, mapShot, chase).pos, target });
+          let prev = null, worst = 0;
+          for (let t = 0; t <= ms; t += 1000 / 60) {
+            const p = clipEased(camAt, t, w, city.cellM, { ...clip, openFrom: w.maxRoof / 5 }).pos;
+            if (prev) worst = Math.max(worst, Math.hypot(p[0] - prev[0], p[1] - prev[1], p[2] - prev[2]));
+            prev = p;
+          }
+          expect(worst, `${phase} worst per-frame move`).toBeLessThan(60); // the unclipped path moves about 35 m a frame at its fastest; the old plain clip threw it about 400 m in one frame
+        }
+      });
+    }
+  }
+  it('maxRoof is the tallest roof plus the clearance a camera keeps over it', () => {
+    expect(maxRoof(new Float32Array([10, 352, 40]))).toBe(358);
+    expect(maxRoof([])).toBe(6);
+  });
+});

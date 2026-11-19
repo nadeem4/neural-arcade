@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipEased, maxRoof, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -15,7 +15,7 @@ import { buildSignalHeads, paintLamps, hideHeads } from './signal-heads.js';
 import { createGlow, lampCentres, signalGlow } from './glow.js';
 import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
 import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, ENV_GROUND, WINDOW_GLOW } from './scene-look.js';
-import { tierFor, furnitureTier } from './quality.js';
+import { tierFor, furnitureTier, narrowScreen } from './quality.js';
 import { buildFurniture } from './scene-furniture.js';
 import { applyFacade, buildingGeometry } from './facade.js';
 import { createTaxiMaker, TAXI_SCALE, TAXI_Y } from './scene-taxi.js';
@@ -25,8 +25,7 @@ import { createPeopleLayer } from './scene-people.js';
 import { createHighlights } from './scene-highlights.js';
 import { highlightsAt } from './highlights.js';
 
-const narrow = () => !!(globalThis.matchMedia && matchMedia('(max-width: 720px)').matches);
-export const isPhone =() => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
+export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
 function meshOf(geo, mat, { cast = false, receive = false } = {}) {
   const m = new THREE.Mesh(geo, mat);
@@ -140,7 +139,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const trafficLayer = createTrafficLayer({ tier: trafficTier({ phone }) }); // other cars: scenery that reacts to the taxi, shown only while a trip plays
   scene.add(trafficLayer.group);
   world.height = cellHeights(city); // real building heights, for the camera clip
-  world.maxRoof = world.height.reduce((m, h) => Math.max(m, h), 0) + 6; // a camera above this is over every roof (clipCamera)
+  world.maxRoof = maxRoof(world.height); // a camera above this is over every roof (clipCamera)
   const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
   mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
   mats.lamp = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
@@ -258,7 +257,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       const target = [at0[0], ROAD_Y, at0[2]];
       const c = phase === 'chase' // in the chase the pull-in is eased over +-0.5 s of the trip (a pure function of the trip time)
         ? clipEased((t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }, play.t, world, city.cellM, clip)
-        : clipCamera(shot.pos, target, world, city.cellM, clip.margin, clip.minY);
+        : clipEased((t) => ({ pos: shotAt(phase, t, mapShot, chaseAt(t, play.state), { reduced: !motionAllowed() }).pos, target }), play.t, world, city.cellM, { ...clip, openFrom: world.maxRoof / 5 }); // the swoop and pullback: the pull eased in time and faded out with height, so the path has no jump
       if (c.clipped || c.pos[1] !== shot.pos[1]) shot = { ...shot, pos: c.pos };
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;
@@ -437,7 +436,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
     const sy = (v) => cr.top - br.top + (0.5 - v.y * 0.5) * cr.height;
     let top = Infinity, bottom = -Infinity; // the drawn taxi's box on screen (its bounding box's corners), so a phone tag can stay off its roof; only a phone-width layout uses it
-    if (narrow()) {
+    if (narrowScreen()) {
       taxiBox.makeEmpty(); for (const part of taxi.children) if (!part.userData.flat) taxiBox.expandByObject(part); // not the flat contact shadow
       const b = taxiBox;
       for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = corner.set(x, y, z).project(camera); if (p.z <= 1) { top = Math.min(top, sy(p)); bottom = Math.max(bottom, sy(p)); } }

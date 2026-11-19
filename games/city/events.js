@@ -79,8 +79,10 @@ export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBott
   if (phone && at.top !== undefined) { // the drawn tag runs from top - 1.5 tagH to top - 0.5 tagH: keep it 8 px off the taxi's screen box (at.top to at.bottom), else put it below the taxi
     if (top - 0.5 * tagH > at.top - 8) {
       const below = Math.min(at.bottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX, height === null ? Infinity : height - 4);
-      // below the taxi, kept on screen; if the bottom edge would push the tag back over the taxi, above it instead
-      top = below - 1.5 * tagH >= at.bottom + 8 ? below : Math.max(1.5 * tagH + 4, at.top - 8 + 0.5 * tagH - slot * TAG_SLOT_PX);
+      // below the taxi, kept on screen; if the bottom edge would push the tag back over the taxi, above it instead, but never over the meters:
+      // when it fits neither side it sits just under the meters (covering the roof rather than the meters), one slot lower per tag
+      const above = at.top - 8 + 0.5 * tagH - slot * TAG_SLOT_PX, floor = meterBottom + 8 + 1.5 * tagH;
+      top = below - 1.5 * tagH >= at.bottom + 8 ? below : above >= floor ? above : Math.min(floor + slot * TAG_SLOT_PX, height === null ? Infinity : height - 4);
     }
   }
   if (height !== null && !phone) {

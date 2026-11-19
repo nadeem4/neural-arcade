@@ -2,6 +2,7 @@
 // The footer is mounted by assets/game-page.js; the top bar is in the page and the lamp is wired here.
 import { wireLamp } from '../../assets/theme.js';
 import { SUN, MOON } from '../../assets/site.js';
+import { narrowScreen } from './quality.js';
 import { SEED, EPISODES, GOAL_SECONDS } from './presets.js';
 import { loadWorld } from './sim.js';
 import { createJobs, trainInChunks } from './jobs.js';
@@ -56,7 +57,7 @@ $('mapGoal').textContent = goalLine();
 const setBar = (el, x) => { if (el._x !== x) { el._x = x; el.style.transform = `scaleX(${x})`; } } // only write the style when the fraction changes
 // Put a tag by the taxi at `at`: kept on screen, clamped sideways, and below the meters on a phone.
 // overhead ({ clear } from the stage, or null) turns on the vertical rule and keeps the tag clear of the bigger taxi; null is the normal game, as before.
-const tagBox = () => { const lab = $('labels').getBoundingClientRect(); return { lab, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top }; };
+const tagBox = () => { const lab = $('labels').getBoundingClientRect(); return { lab, phone: narrowScreen(), meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top }; };
 function placeTag(span, at, slot, overhead, box = tagBox()) {
   const { lab, phone, meterBottom } = box;
   const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone, meterBottom, height: overhead || phone ? lab.height : null, clear: overhead ? overhead.clear : 0 });
@@ -199,7 +200,7 @@ function go(event) {
 // On a phone the map screen has a rate card sheet over the stage's lower part; the stage keeps the map centre above it.
 function updateInset() {
   const sheet = $('rateCard');
-  const phone = screen === 'map' && $('garageDrawer').hidden && matchMedia('(max-width: 720px)').matches; // the Garage hides the card, so its offsetTop is 0
+  const phone = screen === 'map' && $('garageDrawer').hidden && narrowScreen(); // the Garage hides the card, so its offsetTop is 0
   const top = Math.max(0, document.querySelector('.topright').getBoundingClientRect().bottom - $('play').getBoundingClientRect().top) + 8; // the top buttons, plus a margin
   stage?.setInset(phone ? $('play').clientHeight - sheet.offsetTop : 0, top);
 }

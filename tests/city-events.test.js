@@ -200,16 +200,20 @@ describe('tagPlace', () => {
     }
     expect(tagPlace({ x: 195, y: 300 }, 0, o).top).toBe(box.meterBottom + 8 + 1.5 * box.tagH); // no box (a stage with no taxi on screen): the band, as before
   });
-  it('on a phone with a tall taxi low on the screen, a tag that does not fit below goes above the taxi, never over it', () => {
+  it('on a phone with a tall taxi low on the screen, a tag that fits neither below nor above the taxi stays off the meters, even if it must cover the roof', () => {
     const o = { ...box, phone: true, height: 640 };
-    const at = { x: 195, y: 300, top: 360, bottom: 600 }; // the roof just under the meters, the wheels near the bottom bar
+    const at = { x: 195, y: 300, top: 360, bottom: 600 }; // the roof just under the meters (they end at 330), the wheels near the bottom bar: nothing fits clear of both
     const vis = (t) => ({ top: t - 1.5 * box.tagH, bottom: t - 0.5 * box.tagH });
+    const tops = [];
     for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) {
       const { top } = tagPlace(at, slot, o);
-      const v = vis(top);
-      expect(v.bottom <= at.top - 8 || v.top >= at.bottom + 8).toBe(true); // 8 px off the taxi, whichever side
+      tops.push(top);
+      expect(vis(top).top).toBeGreaterThanOrEqual(box.meterBottom + 8); // never over the meters
       expect(top).toBeLessThanOrEqual(640 - 4);
     }
+    expect(new Set(tops).size).toBe(MAX_TAG_SLOTS); // the slots still stack
+    const roomAbove = { x: 195, y: 300, top: 460, bottom: 600 }; // there is a band above this taxi: the tag goes there, 8 px off the roof
+    for (let slot = 0; slot < 2; slot++) expect(vis(tagPlace(roomAbove, slot, o).top).bottom).toBeLessThanOrEqual(460 - 8);
     const nearBottom = tagPlace({ x: 195, y: 300, top: 360, bottom: 560 }, 0, o).top; // there is room below this one (560 + 8 + 51 <= 636): below, as before
     expect(nearBottom).toBe(560 + 8 + 1.5 * box.tagH);
   });

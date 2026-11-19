@@ -53,6 +53,8 @@ export function cellHeights(city) {
 // Returns { pos, clipped, k }. Pure: a function of its arguments only, so record mode stays deterministic.
 const DEFAULT_TALL = 40;
 const ROOF_CLEAR = 6; // metres a camera must stay above a roof it passes over
+// Height above which a camera is over every roof: the tallest building plus the clearance. Set as world.maxRoof for clipCamera.
+export const maxRoof = (heights) => heights.reduce((m, h) => Math.max(m, h), 0) + ROOF_CLEAR;
 export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
   const dx = camPos[0] - target[0], dy = camPos[1] - target[1], dz = camPos[2] - target[2];
   const len = Math.hypot(dx, dy, dz);
@@ -87,13 +89,21 @@ export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
 // clipCamera with the pull-in eased over time, so the camera slides in before a wall and out after it instead of popping.
 // Samples the trip every 50 ms over ms - span .. ms + span; a clip at a sample counts less the further that sample is
 // from ms (linearly, to nothing at span), and the camera takes the strongest pull. at(ms) -> { pos, target }. Pure in ms.
-export function clipEased(at, ms, world, cellM, { margin = 2, minY = 1, span = 500 } = {}) {
+// openFrom (a height, for the swoop and pullback): the pull fades out as the camera climbs from openFrom to world.maxRoof, so it
+// is gone by the time the camera is over every roof. The clip never switches off in one step, because that would throw the camera
+// hundreds of metres in a frame; the samples then ignore world.maxRoof.
+export function clipEased(at, ms, world, cellM, { margin = 2, minY = 1, span = 500, openFrom = null } = {}) {
   const now = at(ms), step = 50;
+  const w = openFrom === null ? world : { ...world, maxRoof: undefined };
   let k = 1;
   for (let o = -span; o <= span; o += step) {
     const c = at(Math.max(0, ms + o));
-    const out = clipCamera(c.pos, c.target, world, cellM, margin, minY);
+    const out = clipCamera(c.pos, c.target, w, cellM, margin, minY);
     if (out.clipped) k = Math.min(k, 1 - (1 - out.k) * (1 - Math.abs(o) / span));
+  }
+  if (openFrom !== null && world.maxRoof > openFrom) { // fade the pull out with height
+    const p = Math.min(1, Math.max(0, (now.pos[1] - openFrom) / (world.maxRoof - openFrom)));
+    k += (1 - k) * p * p * (3 - 2 * p);
   }
   const t = now.target;
   return { pos: [t[0] + (now.pos[0] - t[0]) * k, Math.max(minY, t[1] + (now.pos[1] - t[1]) * k), t[2] + (now.pos[2] - t[2]) * k], clipped: k < 1 };
