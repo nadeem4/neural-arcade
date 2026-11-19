@@ -228,7 +228,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .hud { top: 60px; left: 8px; right: 8px; grid-template-columns: 1fr auto; } /* just under the single row of 44 px top buttons */
   .hud .meter { grid-column: 1 / -1; }
   .hud .meter-goal { grid-column: 1; align-self: start; }
-  .minimap { position: static; grid-column: 2; grid-row: 2; width: 84px; height: 84px; } /* beside the city score, so no meter runs under it */
+  .minimap { position: static; grid-column: 2; width: 84px; height: 84px; } /* beside the city score, so no meter runs under it */
   .play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap { display: none; }
   .play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar { display: none; } /* neither race meter has a bar, so the two boxes are the same height */
   .play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts { display: none; } /* the result banner says the same; two short meters side by side keep 8 px clear of the banner and cover less of the cars */
@@ -347,7 +347,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .race-detail { margin: 0; font-size: 14px; line-height: 1.5; color: #C5CEDA; }
 .racebanner .end-actions { justify-content: center; }
 @media (max-width: 720px) {
-  .hud { gap: 6px; }
+  .hud { gap: 8px; }
   .meter { min-width: 0; padding: 6px 10px; }
   .meter-total { font-size: 22px; }
   .racebanner { bottom: 76px; padding: 10px 14px; }

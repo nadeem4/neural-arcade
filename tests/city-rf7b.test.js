@@ -141,6 +141,13 @@ describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
     expect(css).toMatch(/\.hud \.meter \{[^}]*grid-column: 1 \/ -1/);
     expect(css).toMatch(/\.hud \.meter-goal \{[^}]*grid-column: 1/);
   });
+  it('the meter (i) text opens right under the Pay meter, before the city score and minimap row, and the HUD rows are 8 px apart', () => {
+    expect(hudHtml.indexOf('id="info-meters"')).toBeGreaterThan(hudHtml.indexOf('id="meter"'));
+    expect(hudHtml.indexOf('id="info-meters"')).toBeLessThan(hudHtml.indexOf('id="meterGoal"'));
+    expect(hudHtml.indexOf('id="info-meters"')).toBeLessThan(hudHtml.indexOf('id="minimap"'));
+    expect(css).toMatch(/@media \(max-width: 720px\) \{\s*\.hud \{ gap: 8px; \}/);
+    expect(rules('.minimap')).not.toContain('grid-row'); // auto-placed beside the city score, so an open (i) text pushes both down together
+  });
   it('a race has no minimap on a phone, and the finished race drops the counts lines so the banner has clear air under the meters', () => {
     expect(rules('.play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap')).toContain('display: none');
     expect(rules('.play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts')).toContain('display: none');
