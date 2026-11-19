@@ -131,8 +131,15 @@ describe('runSummary', () => {
     expect(s).toMatchObject({ card: 'walk', seconds: walk.analysis.seconds, pay: m.earned, cityScore: m.city, legal: m.legal, onTime: m.timeOk });
     expect(s.offences).toEqual({ offTiles: walk.analysis.offTiles, red: walk.analysis.redRuns, wrong: walk.analysis.wrongWays, scared: 3 });
   });
-  it('is the same whatever the cut: it reads no maxms', () => {
-    expect(runSummary({ ...input, maxms: 8000 })).toEqual(runSummary(input));
+  it('is the full trip whatever the cut: main builds it from trip.offences, never the cut list', () => {
+    const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
+    const line = main.split('\n').find((l) => l.includes('rc.summary = runSummary('));
+    expect(line).toContain('offences: trip.offences');
+    expect(line).not.toMatch(/offencesWithin|maxms|driveMs/);
+    expect(main.match(/offencesWithin\(/g).length).toBe(1); // only the cam=auto cuts use the cut list
+  });
+  it('the scene and the page share one cut rule: offencesWithin', () => {
+    expect(readFileSync(new URL('../games/city/scene.js', import.meta.url), 'utf8')).toContain('offences && offencesWithin(offences, cutMs)');
   });
   it('events are the offences as { ms, type, label }', () => {
     expect(runSummary(input).events).toEqual([{ ms: 2000, type: 'off', label: '-20 footpath tile' }, { ms: 3000, type: 'red', label: '-5 red light run' }]);

@@ -6,6 +6,7 @@ import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
 import { cutAt } from './cuts.js';
+import { offencesWithin } from './record.js';
 import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { headState } from './signals.js';
@@ -502,7 +503,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       scene.add(taxi, trail);
       if (people) peopleLayer = createPeopleLayer(scene, people, { drawn: tier.peopleDrawn, shadows: !phone, seed: people.seed });
       const cutMs = Math.min(driveMs ?? track.total, track.total);
-      play = { track, driveMs: cutMs, offences: offences?.filter((o) => o.ms <= SWOOP_MS + cutMs), onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
+      play = { track, driveMs: cutMs, offences: offences && offencesWithin(offences, cutMs), onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
       if (!motionAllowed() && !manualClock) { // no animation: the end state with the whole trail and the final numbers (record mode steps frames itself)
         const end = stateAt(track, track.total);
         place({ ...end, stepIndex: frames.length - 2 }); // place() draws the trail to stepIndex + 1, the last point, and the taxi at its end position
