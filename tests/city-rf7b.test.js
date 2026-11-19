@@ -45,8 +45,7 @@ describe('RF7b: phone tags keep off the taxi', () => {
 
 describe('RF7b: Skip pulls the camera back (F9)', () => {
   it('skipTrip jumps to the start of the pullback even from the chase view, which has no pullback of its own', () => {
-    const skip = read('games/city/scene.js').split('
-').find((l) => l.includes('skipTrip()')) ?? '';
+    const skip = read('games/city/scene.js').split('\n').find((l) => l.includes('skipTrip()')) ?? '';
     expect(skip).toMatch(/play\.swoop = true/); // the clock runs as if the swoop played, so the next phase is the pullback
     expect(skip).toMatch(/SWOOP_MS/);
     expect(skip).toMatch(/play\.track\.total/); // the whole drive counted as done, however it was cut
