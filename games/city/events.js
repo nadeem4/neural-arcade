@@ -66,3 +66,13 @@ export function layoutTags(tags) {
     return { ...t, slot };
   });
 }
+
+// Where a tag's anchor goes, in the label layer's pixels. The tag is drawn about 1.5 tag heights above its anchor.
+// Desktop: above the taxi, one slot higher per tag. Phone (phone: true): the taxi's anchor is under the meters, so the tags
+// sit just below them and grow downward. Either way the tag stays inside the screen sideways. Pure.
+export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0 }) {
+  const half = tagW / 2 + 4;
+  const left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
+  const top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - slot * TAG_SLOT_PX;
+  return { left, top };
+}

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
 import { buildReceipt } from '../games/city/receipt.js';
-import { tripEvents, tagsFor, layoutTags, TAG_SLOT_PX, MAX_TAG_SLOTS, TAG_LIFE_MS } from '../games/city/events.js';
+import { tripEvents, tagsFor, layoutTags, TAG_SLOT_PX, MAX_TAG_SLOTS, TAG_LIFE_MS, tagPlace } from '../games/city/events.js';
 import { pruneTags } from '../games/city/record.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
@@ -129,8 +129,10 @@ describe('offence tags you cannot miss', () => {
   it('a fined offence keeps its wording', () => {
     expect(tagsFor({ red: true }, { red: 5 }).map((t) => t.text)).toEqual(['-5 red light run']);
   });
-  it('the tag text is at least 20px', () => {
-    expect(Number(css.match(/#labels span\.tag \{[^}]*font: 700 (\d+)px/)[1])).toBeGreaterThanOrEqual(20);
+  it('the tag text is 22px on a desktop and at least 20px down to a 360px phone', () => {
+    const size = css.match(/#labels span\.tag \{[^}]*font: 700 clamp\((\d+)px, ([\d.]+)vw, (\d+)px\)/);
+    expect(Number(size[3])).toBeGreaterThanOrEqual(22);
+    expect(Math.min(Number(size[3]), Math.max(Number(size[1]), (Number(size[2]) * 360) / 100))).toBeGreaterThanOrEqual(20);
   });
   it('a tag lives at least 1.5 s: the constant, the animation and the record-mode prune', () => {
     expect(TAG_LIFE_MS).toBeGreaterThanOrEqual(1500);
@@ -149,5 +151,24 @@ describe('offence tags you cannot miss', () => {
     const main = readFileSync(new URL('../games/city/main.js', import.meta.url), 'utf8');
     expect(main).toContain('TAG_LIFE_MS');
     expect(main).not.toContain('1400)');
+  });
+});
+
+describe('tagPlace', () => {
+  const box = { width: 390, tagW: 250, tagH: 34, meterBottom: 330 };
+  it('on a desktop the tag rises from the taxi, one slot per tag', () => {
+    expect(tagPlace({ x: 600, y: 400 }, 0, { ...box, width: 1280 })).toEqual({ left: 600, top: 400 });
+    expect(tagPlace({ x: 600, y: 400 }, 2, { ...box, width: 1280 }).top).toBe(400 - 2 * TAG_SLOT_PX);
+  });
+  it('the tag stays inside the screen sideways', () => {
+    expect(tagPlace({ x: 10, y: 400 }, 0, box).left).toBe(129);
+    expect(tagPlace({ x: 400, y: 400 }, 0, box).left).toBe(261);
+  });
+  it('on a phone the tags sit below the meters, whole, and grow downward without touching them', () => {
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) {
+      const { top } = tagPlace({ x: 195, y: 300 }, slot, { ...box, phone: true });
+      expect(top - 1.5 * box.tagH).toBeGreaterThanOrEqual(box.meterBottom); // the tag's visible top (it is drawn 1.5 heights above `top`)
+    }
+    expect(tagPlace({ x: 195, y: 300 }, 1, { ...box, phone: true }).top - tagPlace({ x: 195, y: 300 }, 0, { ...box, phone: true }).top).toBe(TAG_SLOT_PX);
   });
 });

@@ -64,7 +64,7 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .play[data-screen="racing"] .meter-goal, .play[data-screen="raced"] .meter-goal { display: none; }
 .minimap { position: absolute; top: 60px; right: 12px; width: 120px; height: 120px; border-radius: 50%; background: var(--hud); border: 2px solid var(--hud-route); pointer-events: none; }
 .minimap[hidden] { display: none; }
-#labels span.tag { padding: 4px 10px; border-radius: 999px; font: 700 22px "Space Grotesk", var(--sans); background: var(--hud); animation: tag-pop 1.7s ease-out forwards; }
+#labels span.tag { padding: 4px 10px; border-radius: 999px; font: 700 clamp(17px, 5.6vw, 22px) "Space Grotesk", var(--sans); background: var(--hud); animation: tag-pop 1.7s ease-out forwards; }
 #labels span.tag.fine { color: var(--hud-fine); }
 #labels span.tag.pay { color: var(--hud-pay); }
 @keyframes tag-pop { from { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -140%) scale(1.1); } 90% { opacity: 1; transform: translate(-50%, -150%) scale(1); } to { opacity: 0; transform: translate(-50%, -160%) scale(1); } } /* up and fully visible for 90% of 1.7 s; rises 27px in all, less than a 46px slot, so tags never cross */

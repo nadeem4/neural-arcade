@@ -7,7 +7,8 @@ import { ROAD_Y } from './scene-math.js';
 
 const Y = ROAD_Y + 0.7;   // above the road and the raised footpaths (they sit at ROAD_Y + 0.3)
 const PER_TYPE = 4;       // the most highlights of one kind on screen at once
-const ARROW_SCALE = 3;    // the road arrow is about 9 m long
+const ARROW_SCALE = 4;    // the road arrow is about 12 m long and 6 m wide
+const AHEAD = 20;         // metres ahead of the taxi (the road arrow is drawn before the taxi reaches it)
 const COLOURS = { off: 0xffa030, red: 0xff2a20, wrong: 0xff2a20 };
 
 // The arrow of street-model.js at the origin, pointing +z (the mesh's forward before it is turned by heading).
@@ -54,7 +55,8 @@ export function createHighlights(scene, cellM) {
         m.visible = true;
         m.position.set(h.x, Y, h.z);
         m.rotation.y = h.type === 'wrong' ? h.heading : 0;
-        m.material.opacity = 0.3 + 0.5 * h.k;
+        if (h.type === 'wrong') m.position.set(h.x - Math.sin(h.heading) * AHEAD, Y, h.z - Math.cos(h.heading) * AHEAD); // the arrow points back at the taxi from the road ahead of it, where the camera sees it
+        m.material.opacity = (h.type === 'wrong' ? 0.6 : 0.3) + 0.4 * h.k;
         if (h.type === 'red') m.scale.setScalar(1.6 - 0.4 * h.k);
       }
     },
