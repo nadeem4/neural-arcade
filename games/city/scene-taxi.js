@@ -4,6 +4,7 @@ import * as THREE from './vendor/three.module.min.js';
 import { taxiParts, wheelAngle, steerAngle } from './taxi-model.js';
 import { ENV_INTENSITY } from './scene-look.js';
 import { ROAD_Y, MARK_Y } from './scene-math.js';
+import { createGlow, brakeGlow } from './glow.js';
 
 const BRAKE_ON = '#FF4A3A', BRAKE_OFF = '#6A1818'; // a dim dark red at rest, a bright hot red when braking
 export const TAXI_SCALE = 1.5; // metres to scene units: the 4.2 m model becomes a car about half a 12 m tile wide
@@ -35,11 +36,12 @@ function contactShadow(material) {
 }
 
 // tint: { body, cab } swaps the yellow for a second car's colours.
-export function createTaxiMaker(tint = null) {
+export function createTaxiMaker(tint = null, { glow = false } = {}) {
   const cache = {};
   const std = (colour, role, extra = {}) => (cache[colour + role] ??= new THREE.MeshStandardMaterial({ color: colour, roughness: 0.6, emissive: role === 'body' || role === 'cab' ? colour : '#000000', emissiveIntensity: 0.3, envMapIntensity: ENV_INTENSITY, ...extra }));
   const lampMat = (colour) => (cache[colour + 'lamp'] ??= new THREE.MeshBasicMaterial({ color: colour, toneMapped: false }));
   const brakeMats = [];
+  let brakeDots = null, braking = null; // bloom (high tier): a red dot over each brake lamp of the last car made, lit while braking
   let wheels = []; // { steer: Group | null, spin: Group } for the last car made
   return {
     // A group at the origin; `setBraking(on)` lights both brake lamps, `setPose(distance, curvature)` spins the wheels and
@@ -71,15 +73,24 @@ export function createTaxiMaker(tint = null) {
         if (p.kind !== 'extrude') m.position.set(...p.pos); // a profile is already placed in car coordinates
         g.add(m);
       }
+      if (glow) {
+        const lamps = taxiParts().filter((p) => p.role === 'brake');
+        brakeDots?.dispose();
+        brakeDots = createGlow(lamps.map((p) => ({ x: p.pos[0], y: p.pos[1], z: p.pos[2], r: 0, g: 0, b: 0 })), { size: 2.2 });
+        g.add(brakeDots.points); braking = null;
+      }
       g.add(contactShadow((cache.shadow ??= shadowMaterial()))); // one texture and material for every car this maker makes
       g.scale.setScalar(TAXI_SCALE);
       return g;
     },
-    setBraking(on) { for (const m of brakeMats) m.color.set(on ? BRAKE_ON : BRAKE_OFF); },
+    setBraking(on) {
+      for (const m of brakeMats) m.color.set(on ? BRAKE_ON : BRAKE_OFF);
+      if (brakeDots && braking !== on) { braking = on; const k = brakeGlow(on); for (let i = 0; i < brakeDots.colours.length / 3; i++) brakeDots.setColour(i, k, k * 0.25, k * 0.2); }
+    },
     setPose(distance, curvature) {
       const spin = wheelAngle(distance ?? 0), steer = steerAngle(curvature ?? 0);
       for (const w of wheels) { w.spin.rotation.x = spin; if (w.steer) w.steer.rotation.y = steer; }
     },
-    dispose() { for (const m of [...Object.values(cache), ...brakeMats]) { m.map?.dispose(); m.dispose(); } },
+    dispose() { brakeDots?.dispose(); for (const m of [...Object.values(cache), ...brakeMats]) { m.map?.dispose(); m.dispose(); } },
   };
 }

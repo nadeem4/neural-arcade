@@ -15,12 +15,12 @@ const make = (phone, count) => {
 };
 
 describe('traffic layer: draw calls and instances', () => {
-  it('desktop draws three instanced meshes (bodies, head lamps, tail lamps) for every car', () => {
+  it('desktop draws four instanced meshes (bodies, head lamps, tail lamps, honk halos) for every car', () => {
     const { layer, traffic } = make(false);
     layer.begin(traffic);
-    expect(layer.drawCalls).toBe(3);
+    expect(layer.drawCalls).toBe(4);
     expect(layer.instances).toBe(90);
-    expect(layer.group.children).toHaveLength(3);
+    expect(layer.group.children).toHaveLength(4);
     expect(layer.group.children.every((m) => m.isInstancedMesh && m.count === 90)).toBe(true);
     layer.dispose();
   });

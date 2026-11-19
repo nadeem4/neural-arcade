@@ -99,8 +99,16 @@ export function pinFade(camPos, pinPos, near = 20, far = 45) {
 }
 
 // Pixels to slide the picture up when a phone bottom sheet covers `sheetPx` of a `viewH` tall stage: half the sheet puts the
-// map centre (and so the drop-off pin) in the middle of the part still visible. At most 40% of the height.
-export const insetOffset = (viewH, sheetPx) => Math.min(Math.max(0, sheetPx), viewH * 0.4) / 2;
+// map centre (and so the drop-off pin) in the middle of the part still visible. At most 40% of the height. topPx is the strip the top buttons cover:
+// the free area is then between it and the sheet, so the centre sits halfway between the two, not halfway down the stage.
+export const insetOffset = (viewH, sheetPx, topPx = 0) => (Math.min(Math.max(0, sheetPx), viewH * 0.4) - Math.max(0, topPx)) / 2;
+
+// Zoom out from d0 in 10% steps until fits(d) is true, but never past dMax. The phone map uses it to bring both pins into the free area.
+export function fitDistance(d0, dMax, fits, step = 1.1) {
+  let d = d0;
+  while (d < dMax && !fits(d)) d = Math.min(dMax, d * step);
+  return d;
+}
 
 // One heat cell: the four corners (x y z each) of a square at height y, pulled in by HEAT_INSET on every side. Neighbouring cells then never share
 // an edge, so no pixel is covered twice by the additive blend and two renders of one frame match exactly (multisampling can disagree on a shared edge).

@@ -4,7 +4,7 @@ import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames, chaseCamera } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
-import { clipCamera, clipEased, cellHeights, pinFade, insetOffset, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y } from '../games/city/scene-math.js';
+import { clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y } from '../games/city/scene-math.js';
 
 // A tiny world: 8 columns x 5 rows, 10 m cells. Row 0 is the north edge, z = -(rows - 1 - r + 0.5) * cellM.
 // Row 2 is a road; rows 0-1 are buildings from column 3 on; everything else is road.
@@ -139,6 +139,18 @@ describe('heatQuad', () => {
   });
 });
 
+describe('fitDistance', () => {
+  it('keeps the start distance when it already fits', () => {
+    expect(fitDistance(100, 500, () => true)).toBe(100);
+  });
+  it('zooms out in steps until it fits, and stops at the limit when it never does', () => {
+    const d = fitDistance(100, 500, (x) => x >= 150);
+    expect(d).toBeGreaterThanOrEqual(150);
+    expect(d).toBeLessThan(150 * 1.1 + 1e-9);
+    expect(fitDistance(100, 500, () => false)).toBe(500);
+  });
+});
+
 describe('insetOffset', () => {
   it('shifts the picture up by half the sheet, so the map centre moves to the middle of what the sheet leaves visible', () => {
     expect(insetOffset(844, 300)).toBe(150);
@@ -147,6 +159,12 @@ describe('insetOffset', () => {
   it('never shifts for a negative sheet, and caps a huge sheet at 40% of the view height', () => {
     expect(insetOffset(800, -20)).toBe(0);
     expect(insetOffset(800, 700)).toBe(160);
+  });
+  it('with the top buttons reserved, the map centre sits halfway between their bottom edge and the sheet', () => {
+    // 844 tall, sheet 300, buttons to 116: free area 116..544, centre 330; the stage centre 422 moves up by 92
+    expect(insetOffset(844, 300, 116)).toBe(92);
+    expect(844 / 2 - insetOffset(844, 300, 116)).toBe((116 + (844 - 300)) / 2);
+    expect(insetOffset(844, 300, 0)).toBe(150);
   });
 });
 

@@ -1,13 +1,12 @@
 // Reward City traffic, drawn: other cars as instanced meshes. The positions come from traffic.js (pure); nothing here decides anything.
-// Desktop: 3 draw calls (bodies and glass, head lamps, tail lamps). Phone: 1 draw call (bodies only, no lamps).
+// Desktop: 4 draw calls (bodies and glass, head lamps, tail lamps, honk halos). Phone: 1 draw call (bodies only, no lamps).
 import * as THREE from './vendor/three.module.min.js';
-import { createTraffic, taxiOf, newPoses, carColour } from './traffic.js';
+import { createTraffic, taxiOf, newPoses, carColour, honkLook } from './traffic.js';
 import { ROAD_Y } from './scene-math.js';
 
 const TRAFFIC_SEED = 1;       // every drive on the same route shows the same cars
 export const CAR_SCALE = 1.5; // the same metres-to-scene scale as the taxi
 const TAIL_DIM = 0.3, TAIL_BRAKE = 1; // linear brightness of the red lamps
-const FLASH_HZ = 4;           // headlamp flash rate while a car is braking hard (slow enough to read as a flash)
 
 // Merges boxes ({ size: [w, h, l], pos: [x, y, z], rgb }) into one geometry with vertex colours. Forward is +z.
 function mergeBoxes(parts) {
@@ -33,6 +32,9 @@ const bodyGeometry = () => mergeBoxes([
   { size: [1.6, 0.45, 2.0], pos: [0, 1.05, -0.2], rgb: [0.09, 0.1, 0.12] },
   ...[[-0.85, 1.3], [0.85, 1.3], [-0.85, -1.3], [0.85, -1.3]].map(([x, z]) => ({ size: [0.2, 0.6, 0.6], pos: [x, 0.3, z], rgb: [0.06, 0.06, 0.07] })),
 ]);
+// The honk halo: two big white blocks over the front lamps, shown only on the flash of a honking car.
+const haloGeometry = () => mergeBoxes([-0.6, 0.6].map((x) => ({ size: [0.8, 0.5, 0.3], pos: [x, 0.7, 2.1], rgb: [1, 1, 1] })));
+const GLOW_RGB = [1, 0.93, 0.7];
 const lampGeometry = (z) => mergeBoxes([-0.6, 0.6].map((x) => ({ size: [0.5, 0.3, 0.1], pos: [x, 0.65, z], rgb: [1, 1, 1] })));
 
 // Writes a Y rotation of `h`, uniform scale `s` and translation (x, y, z) into 16 floats at `o`.
@@ -62,14 +64,15 @@ export function createTrafficLayer({ tier }) {
   };
   const bodies = make(geos[0], bodyMat);
   bodies.castShadow = true;
-  let heads = null, tails = null;
+  let heads = null, tails = null, halos = null;
   if (tier.lamps) {
-    geos.push(lampGeometry(2.06), lampGeometry(-2.06));
-    heads = make(geos[1], lampMat); tails = make(geos[2], lampMat);
+    geos.push(lampGeometry(2.06), lampGeometry(-2.06), haloGeometry());
+    heads = make(geos[1], lampMat); tails = make(geos[2], lampMat); halos = make(geos[3], lampMat);
+    halos.instanceColor.array.fill(1); halos.instanceColor.needsUpdate = true;
   }
   const meshes = group.children.slice();
   const poses = newPoses(max);
-  let traffic = null, honkIdx = 0, tmp = new THREE.Color();
+  let traffic = null, honkIdx = 0, tmp = new THREE.Color(), baseColour = new Float32Array(max * 3);
 
   return {
     group,
@@ -79,7 +82,7 @@ export function createTrafficLayer({ tier }) {
     begin(t) {
       traffic = t; honkIdx = 0;
       for (const m of meshes) m.count = t.count;
-      for (let i = 0; i < t.count; i++) bodies.setColorAt(i, tmp.setHex(carColour(t.seed, i)));
+      for (let i = 0; i < t.count; i++) { bodies.setColorAt(i, tmp.setHex(carColour(t.seed, i))); baseColour.set(bodies.instanceColor.array.subarray(i * 3, i * 3 + 3), i * 3); }
       bodies.instanceColor.needsUpdate = true;
       group.visible = true;
     },
@@ -92,21 +95,24 @@ export function createTrafficLayer({ tier }) {
     update(tf, onHonk) {
       if (!traffic) return;
       traffic.posesAt(tf, poses);
-      const n = traffic.count, flash = Math.floor(Math.max(0, tf) * FLASH_HZ) % 2 === 0;
+      const n = traffic.count;
       const ma = bodies.instanceMatrix.array;
       for (let i = 0; i < n; i++) setPose(ma, i * 16, poses.x[i], ROAD_Y, poses.z[i], poses.h[i], CAR_SCALE);
       bodies.instanceMatrix.needsUpdate = true;
       if (heads) {
         heads.instanceMatrix.array.set(ma.subarray(0, n * 16)); tails.instanceMatrix.array.set(ma.subarray(0, n * 16));
-        heads.instanceMatrix.needsUpdate = tails.instanceMatrix.needsUpdate = true;
+        const ha = halos.instanceMatrix.array, bc = bodies.instanceColor.array;
         const hc = heads.instanceColor.array, tc = tails.instanceColor.array;
         for (let i = 0; i < n; i++) {
-          const head = poses.alarm[i] ? (flash ? 1 : 0.02) : 0.55; // a honking car's lamps go full white then nearly dark
-          hc[i * 3] = head; hc[i * 3 + 1] = head * 0.93; hc[i * 3 + 2] = head * 0.7;
+          const look = honkLook(poses.alarm[i], tf); // a honking car flashes its lamps, a halo and its whole body
+          hc[i * 3] = look.head; hc[i * 3 + 1] = look.head * 0.93; hc[i * 3 + 2] = look.head * 0.7;
           const tail = poses.braking[i] ? TAIL_BRAKE : TAIL_DIM;
           tc[i * 3] = tail; tc[i * 3 + 1] = tail * 0.06; tc[i * 3 + 2] = tail * 0.06;
+          if (look.halo) ha.set(ma.subarray(i * 16, i * 16 + 16), i * 16); else ha.fill(0, i * 16, i * 16 + 16);
+          for (let k = 0; k < 3; k++) bc[i * 3 + k] = baseColour[i * 3 + k] + (GLOW_RGB[k] - baseColour[i * 3 + k]) * look.bodyMix;
         }
-        heads.instanceColor.needsUpdate = tails.instanceColor.needsUpdate = true;
+        heads.instanceMatrix.needsUpdate = tails.instanceMatrix.needsUpdate = halos.instanceMatrix.needsUpdate = true;
+        heads.instanceColor.needsUpdate = tails.instanceColor.needsUpdate = bodies.instanceColor.needsUpdate = true;
       }
       if (onHonk) {
         const honks = traffic.nearMisses(), k = Math.floor(Math.max(0, tf));
