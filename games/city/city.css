@@ -163,7 +163,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .endcard .share-line output { color: #C5CEDA; }
 .end-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 /* Desktop only, never footage: the city score is a third big stat and the card is tighter, so it fits 1280x720 without scrolling. */
-.end-city[hidden] { display: none; }
+.end-stats > .end-city { display: none; } /* phone and footage keep the City score line instead */
 @media (min-width: 721px) {
   body:not(.rc-record) .end-city:not([hidden]) { display: grid; align-content: start; gap: 2px; }
   body:not(.rc-record) #endCity { display: none; }

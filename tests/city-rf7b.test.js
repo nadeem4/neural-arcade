@@ -99,6 +99,7 @@ describe('RF7b: the desktop end card fits 1280x720 without scrolling (F12)', () 
     expect(main).toContain("$('endCityNum').textContent = String(m.city); $('endCityStat').hidden = !m.honest;");
   });
   it('shows the stat and drops the city score line on desktop only, never in footage mode', () => {
+    expect(rules('.end-stats > .end-city')).toContain('display: none'); // phone and footage; the selector must outrank `.end-stats > div { display: grid }`
     expect(rules('body:not(.rc-record) .end-city:not([hidden])')).toContain('display: grid');
     expect(rules('body:not(.rc-record) #endCity')).toContain('display: none');
     expect(css).toMatch(/@media \(min-width: 721px\) \{[^@]*body:not\(\.rc-record\) \.end-city/);
