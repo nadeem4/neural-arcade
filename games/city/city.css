@@ -43,7 +43,7 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
   .citybar .sep, .citybar #howTab, .citybar .long { display: none; }
 }
 @media (max-width: 360px) {
-  .receipt, .receipt .row { font-size: 13px; }
+  .receipt, .receipt .row { font-size: 14px; } /* the same 14 px as every other phone width: the narrowest phones keep their text size */
 }
 
 /* Drive HUD: dark navy panels over the map, in light and dark. Numbers use Space Grotesk where installed, else the page font. */
@@ -98,7 +98,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .chase.ibtn { height: 44px; padding: 0; }
 .ibtn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .citybar nav a.ibtn { color: var(--ink-2); }
-.badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--hud-taxi); color: #141C27; font: 700 11px/18px var(--sans); text-align: center; }
+.badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--hud-taxi); color: #141C27; font: 700 12px/18px var(--sans); text-align: center; }
 .badge[hidden] { display: none; }
 #mute .off, #mute[aria-pressed="true"] .on { display: none; }
 #mute[aria-pressed="true"] .off { display: inline; }
@@ -185,7 +185,14 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
   .topright .info, .chase { min-height: 44px; height: 44px; }
-  .chip { border-radius: 16px; }
+  .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: 16px; line-height: 1.4; }
+  .citybar .logo, .citybar h1 { font-size: 16px; }
+  #labels span { font-size: 13px; }
+  .meter-label { font-size: 13px; }
+  .meter-counts { font-size: 13px; }
+  .receipt, .receipt .row { font-size: 14px; }
+  .ratecard .info-text, .endcard .info-text { font-size: 16px; line-height: 1.45; }
+  .topright .info-text { font-size: 16px; line-height: 1.45; }
   .topright .info { width: 44px; }
   .hud { top: 108px; left: 8px; } /* below the two rows of top buttons */
   .minimap { top: 108px; right: 8px; width: 84px; height: 84px; }
@@ -199,30 +206,32 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .endcard { bottom: 8px; max-height: 60svh; display: flex; flex-direction: column; } /* the bottom bar is hidden on the end card, so it sits at the bottom edge */
   .rates { grid-template-columns: 1fr 1fr; gap: 4px 12px; }
   .ratecard { gap: 6px; padding: 10px 12px; }
-  .ratecard h2 { font-size: 13px; }
+  .ratecard h2 { font-size: 14px; }
+  .ladder h3 { font-size: 14px; }
   .link { padding: 0; }
-  .rate { grid-template-columns: 1fr; gap: 2px; font-size: 13px; }
+  .rate { grid-template-columns: 1fr; gap: 2px; font-size: 14px; }
   .rate-label { line-height: 1.2; white-space: nowrap; }
   .rate .long { display: none; } .rate .short { display: inline; }
   .stepper { justify-content: space-between; }
-  .rate output { font-size: 18px; }
+  .rate output { font-size: 20px; }
   .rstep { width: 44px; height: 44px; }
   .ladder { gap: 6px; }
   .step { height: 44px; }
-  .ladder-note { font-size: 13px; }
-  .ladder-note b { font-size: 15px; }
+  .ladder-note { font-size: 14px; line-height: 1.4; }
+  .ladder-note b { font-size: 16px; }
   .gbar { left: 8px; right: 8px; bottom: 8px; transform: none; justify-content: center; }
   .gbar .go { flex: 1; }
   .bar-drive { flex: 1; gap: 8px; }
   .bar-drive progress { flex: 1; width: auto; min-width: 40px; }
-  .gbar .btn { padding: 0 10px; font-size: 13px; }
-  .notes { bottom: calc(40svh + 96px); }
-  .toast { bottom: 76px; }
-  .endcard .big { font-size: 28px; }
+  .gbar .btn { padding: 0 10px; font-size: 14px; }
+  .notes { bottom: calc(40svh + 96px); width: calc(100% - 16px); }
+  .toast { bottom: 76px; font-size: 16px; }
+  .endcard .big { font-size: 32px; }
+  .end-head { font-size: 16px; }
   .end-stats { gap: 18px; order: 2; }
-  .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 14px; } .end-honest { order: 3; font-size: 13px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
+  .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 16px; line-height: 1.45; } .end-honest { order: 3; font-size: 14px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
   .end-honest ul { max-height: 22svh; overflow-y: auto; }
-  .end-actions .btn, .end-actions .go { height: 44px; padding: 0 12px; font-size: 13px; }
+  .end-actions .btn, .end-actions .go { height: 44px; padding: 0 12px; font-size: 14px; }
 }
 /* Phone ladder: one row of five 44 px steps, the current step's title and one line under it; roomy taps for Reset and (i). */
 @media (max-width: 600px) {
@@ -294,8 +303,9 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .hud { gap: 6px; }
   .meter { min-width: 0; padding: 6px 10px; }
   .meter-total { font-size: 22px; }
-  .racebanner { bottom: 76px; padding: 14px; }
-  .race-title { font-size: 19px; }
+  .racebanner { bottom: 76px; padding: 10px 14px; }
+  .race-title { font-size: 20px; }
+  .race-detail { font-size: 14px; line-height: 1.4; }
 }
 @media (max-width: 720px) {
   .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: calc(100% - 68px); padding: 10px; gap: 8px; }
@@ -303,10 +313,10 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .bay { padding: 8px 10px; gap: 4px; }
   .bay-head svg { width: 54px; height: 27px; } /* a smaller taxi icon, so four bays and the race bar fit a 660 px phone */
   .drawer .racebar { grid-template-columns: 1fr auto; align-items: center; padding-top: 8px; } /* the line and START RACE side by side */
-  .drawer .racebar p { font-size: 12px; line-height: 1.25; }
+  .drawer .racebar p { font-size: 13px; line-height: 1.3; }
   .bay-chips { display: none; } /* the name and the time say enough on a phone; this keeps four bays on screen */
-  .bay-time { font-size: 18px; }
-  .drawer .btn, .drawer .go.small { height: 44px; } /* real tap targets */
+  .bay-time { font-size: 20px; }
+  .drawer .btn, .drawer .go.small { height: 44px; font-size: 14px; } /* real tap targets */
   .bay { grid-template-columns: 1fr auto; align-items: center; } .bay-head { grid-column: 1; grid-row: 1; } .bay-stats { grid-column: 2; grid-row: 1; } .bay-actions { grid-column: 1 / -1; grid-row: 2; gap: 8px; } .bay-try { display: none; } .bay-race-wrap { flex: 1 1 0; min-width: 0; display: flex; } .bay-actions .btn, .bay-actions .go { flex: 1 1 0; min-width: 0; padding: 0 6px; white-space: nowrap; } /* name and time on one row, three full-width buttons below */
   .bay.empty { display: none; }
 }

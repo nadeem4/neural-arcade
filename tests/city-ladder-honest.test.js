@@ -72,9 +72,9 @@ describe('phone ladder css', () => {
     expect(phone).toMatch(/\.step\s*\{[^}]*min-width: 44px/);
     expect(phone).not.toMatch(/\.ladder-note[^{]*\{[^}]*(white-space: nowrap|text-overflow)/);
   });
-  it('gives Reset and (i) 40 px tap targets', () => {
+  it('gives Reset and (i) 44 px tap targets for (i) (RF6; Reset keeps 40)', () => {
     expect(phone).toMatch(/\.ratecard \.link\s*\{[^}]*min-height: 40px/);
-    expect(phone).toMatch(/\.ratecard \.info\s*\{[^}]*min-height: 40px/);
+    expect(phone).toMatch(/\.ratecard \.info, \.endcard \.info\s*\{[^}]*min-height: 44px/);
   });
   it('has no dead goal-line rule', () => {
     expect(css).not.toContain('.goal-line');

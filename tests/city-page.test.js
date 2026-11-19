@@ -311,5 +311,26 @@ describe('phone pass (RF6)', () => {
   });
   it('lets a long goal line wrap inside a rounded chip, not a pill, on a phone', () => {
     expect(block('@media (max-width: 720px)')).toMatch(/\.chip \{[^}]*border-radius: 16px/);
+    expect(block('@media (max-width: 720px)')).toMatch(/\.chip \{[^}]*height: auto/); // studio.css fixes a chip at 38 px, which a wrapped goal line spills out of
+    expect(block('@media (max-width: 720px)')).toMatch(/\.notes \{[^}]*width: calc\(100% - 16px\)/);
+  });
+});
+
+describe('phone type scale (RF6): 16 px to read, 14 px labels, 13 px captions, nothing smaller', () => {
+  const phones = [...css.matchAll(/@media \(max-width: (?:720|600)px\) \{/g)].map(m => { let d = 0, j = m.index + m[0].length - 1; const a = j; for (; j < css.length; j++) { if (css[j] === '{') d++; if (css[j] === '}' && --d === 0) break; } return css.slice(a, j); }).join('\n');
+  const size = (sel) => { const esc = sel.replace(/[.#*+?^${}()|[\]\\]/g, '\\$&'); const m = phones.match(new RegExp('(?:^|[\\n}{; ])' + esc + '\\s*\\{[^}]*?font-size:\\s*(\\d+(?:\\.\\d+)?)px')); return m && Number(m[1]); };
+  it('declares no font size under 13 px in the phone rules', () => {
+    const all = [...phones.matchAll(/font-size:\s*([\d.]+)px/g)].map(m => Number(m[1]));
+    expect(all.length).toBeGreaterThan(10);
+    expect(Math.min(...all)).toBeGreaterThanOrEqual(13);
+  });
+  it('lifts what the player reads to 16 px, the labels to 14 px and the small print to 13 px', () => {
+    for (const sel of ['.end-verdict', '.ratecard .info-text, .endcard .info-text']) expect(size(sel), sel).toBe(16);
+    for (const sel of ['.rate', '.ladder-note', '.end-honest', '.receipt, .receipt .row']) expect(size(sel), sel).toBe(14);
+    for (const sel of ['.meter-label', '.meter-counts', '#labels span']) expect(size(sel), sel).toBe(13);
+  });
+  it('keeps running text at a 1.4 to 1.5 line height', () => {
+    expect(phones).toMatch(/\.ladder-note \{[^}]*line-height: 1\.4/);
+    expect(phones).toMatch(/\.end-verdict[^{}]*\{[^}]*line-height: 1\.45/);
   });
 });
