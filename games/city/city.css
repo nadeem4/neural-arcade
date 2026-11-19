@@ -316,3 +316,4 @@ body.rc-record .play[data-screen="done"] .minimap:not([hidden]) { display: block
 body.rc-record.rc-endcard #endcard:not([hidden]) { display: grid !important; max-height: none; overflow: visible; }
 body.rc-record #endcard .end-actions, body.rc-record #endcard .share-line, body.rc-record #endcard .info { display: none !important; }
 body.rc-record #endcard :focus, body.rc-record #endcard :focus-visible { outline: none; }
+body.rc-record.rc-endcard .play[data-screen="done"] .meter, body.rc-record.rc-endcard .play[data-screen="done"] .minimap, body.rc-record.rc-endcard .play[data-screen="done"] #labels .tag { display: none !important; } /* the card is the whole picture: no meters, minimap or leftover tags over it */
