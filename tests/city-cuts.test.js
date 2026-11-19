@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames } from '../games/city/playback.js';
-import { driveTrack, stateAt } from '../games/city/drive.js';
+import { driveTrack } from '../games/city/drive.js';
 import { SWOOP_MS } from '../games/city/director.js';
 import { buildOffences } from '../games/city/offences.js';
 import { overheadCuts, cutAt } from '../games/city/cuts.js';
@@ -16,11 +16,10 @@ const cuts = (id) => {
   const events = tripEvents(world, c.rewards, c.route);
   const track = driveTrack(routeFrames(world, city.cellM, c.route), events);
   const offences = buildOffences(events, c.rewards, track);
-  const posAt = (ms) => { const s = stateAt(track, ms - SWOOP_MS); return { x: s.x, z: s.z }; };
-  return { track, offences, list: overheadCuts(offences, { introMs: SWOOP_MS, driveMs: track.total, posAt }) };
+  return { track, offences, list: overheadCuts(offences, { introMs: SWOOP_MS, driveMs: track.total }) };
 };
 const fake = (ms, x = 0) => ({ ms, type: 'red', x, z: 0 });
-const synth = (offs, driveMs = 30000) => overheadCuts(offs, { introMs: 1400, driveMs, posAt: (ms) => ({ x: ms / 100, z: 0 }) });
+const synth = (offs, driveMs = 30000) => overheadCuts(offs, { introMs: 1400, driveMs });
 
 describe('overheadCuts', () => {
   it('no offences, no cuts', () => { expect(synth([])).toEqual([]); });
@@ -43,12 +42,6 @@ describe('overheadCuts', () => {
     const [a] = synth([fake(1500)]), [b] = synth([fake(1400 + 30000 - 200)]);
     expect(a.from).toBeGreaterThanOrEqual(1400);
     expect(b.to).toBeLessThanOrEqual(1400 + 30000);
-  });
-  it('holds the offence spots and the taxi at both ends of the window', () => {
-    const [c] = synth([fake(10000, 55)]);
-    expect(c.points).toContainEqual([55, 0]);
-    expect(c.points).toContainEqual([90, 0]);
-    expect(c.points).toContainEqual([110, 0]);
   });
   it('cutAt finds the cut holding a time, else null', () => {
     const list = synth([fake(10000)]);
@@ -79,7 +72,8 @@ describe('cam wiring', () => {
     expect(s).toContain("from './cuts.js'");
     expect(s).toContain('setCuts(');
     expect(s).toContain('cutAt(');
-    expect(s).toContain('overheadShot(cut.points');
+    expect(s).toContain('overheadShot(');
+    expect(s).toContain('highlightsAt(play.offences, play.clock'); // framed on the taxi and the offences still highlighted
     expect(s).toMatch(/!cut/); // clipCamera and clipEased only outside a cut
   });
   it('the fallback stage has setCuts', () => {

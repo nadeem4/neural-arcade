@@ -14,7 +14,7 @@ import { parseRecord, tripMs, recordApi, runSummary, pruneTags, cardRewards } fr
 import { buildOffences } from './offences.js';
 import { tripEvents, tagsFor, foldTag, layoutTags, TAG_LIFE_MS, tagPlace } from './events.js';
 import { bakePeople } from './people.js';
-import { driveTrack, stateAt } from './drive.js';
+import { driveTrack } from './drive.js';
 import { overheadCuts } from './cuts.js';
 import { SWOOP_MS } from './director.js';
 import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
@@ -473,7 +473,7 @@ async function startRecord(cfg) {
   if (!trip) { rc.failure = 'training failed'; return; }
   rc.summary = runSummary({ card: cfg.card, rewards: trip.rewards, analysis: trip.analysis, scared: trip.people.scares.length, offences: trip.offences, goalSeconds: GOAL_SECONDS });
   if (cfg.cam === 'map') stage.setMapView(true); // after train(): drive() resets the map view
-  if (cfg.cam === 'auto') stage.setCuts(overheadCuts(trip.offences, { introMs: SWOOP_MS, driveMs: trip.track.total, posAt: (ms) => stateAt(trip.track, ms - SWOOP_MS) }));
+  if (cfg.cam === 'auto') stage.setCuts(overheadCuts(trip.offences, { introMs: SWOOP_MS, driveMs: trip.track.total }));
   rc.totalMs = tripMs(trip.track.total);
 }
 

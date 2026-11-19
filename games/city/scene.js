@@ -205,6 +205,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   let peopleLayer = null; // the pedestrians of the trip on screen (scene-people.js)
   const highlights = createHighlights(scene, city.cellM); // the flash, ring and arrow at each recent offence, made once
   let raceTags = []; // two name tags over the cars (DOM, in the label layer), alive for a race
+  const CUT_TAXI_SCALE = 2.5;
   const RACE_SCALE = 2.5; // both cars are drawn bigger in a race so they read from the high camera
   const clearRaceTags = () => { raceTags.forEach(s => s.remove()); raceTags = []; };
 
@@ -245,7 +246,10 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       : mapShot;
     const phase = play ? play.phase : 'map';
     const cut = play && phase === 'chase' && !mapView ? cutAt(cuts, play.clock) : null;
-    if (cut) shot = overheadShot(cut.points, { aspect: camera.aspect }); // an overhead cut: framed on the offence and the taxi, nothing to clip
+    if (cut) { // an overhead cut: framed on the taxi and the offences still highlighted (so it follows the taxi), nothing to clip
+      const spots = highlightsAt(play.offences, play.clock).map((h) => [h.x, h.z]);
+      shot = overheadShot([[play.state.x, play.state.z], ...spots], { aspect: camera.aspect });
+    }
     if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
       const at0 = play.race ? [(play.state.cars[0].state.x + play.state.cars[1].state.x) / 2, 0, (play.state.cars[0].state.z + play.state.cars[1].state.z) / 2] : [play.state.x, 0, play.state.z]; // clip from the taxi: in the swoop and pullback shot.target is a map point, which can sit inside a building
@@ -271,6 +275,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     clearTrees(chaseCam, taxiXZ);
     const hiddenHeads = chaseCam && taxiXZ ? treesToHide(sigFlat, chaseCam, taxiXZ, 12, 4) : [];
   if (bodyGeo && hideHeads(sig, hiddenHeads)) { bodyGeo.index.needsUpdate = true; lampGeo.index.needsUpdate = true; hiddenLamps = new Set(hiddenHeads.flatMap((i) => { const [a, b] = sig.heads[i].lamps; return Array.from({ length: (b - a) / 6 }, (_, k) => a / 6 + k); })); paintGlow(); } // signal poles between the camera and the taxi
+    if (taxi && !play?.race) taxi.scale.setScalar(TAXI_SCALE * (cut ? CUT_TAXI_SCALE : 1)); // the taxi is drawn bigger in an overhead cut so it reads from that height
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
     renderer.render(scene, camera);

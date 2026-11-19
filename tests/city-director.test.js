@@ -75,13 +75,13 @@ describe('overheadShot', () => {
     expect(s.pos[0]).toBeCloseTo(20);
   });
   it('rises as the points spread out, within limits', () => {
-    const near = overheadShot([[0, 0], [10, 0]]), mid = overheadShot([[0, 0], [150, 0]]), far = overheadShot([[0, 0], [5000, 0]]);
+    const near = overheadShot([[0, 0], [10, 0]]), mid = overheadShot([[0, 0], [400, 0]]), far = overheadShot([[0, 0], [50000, 0]]);
     expect(mid.pos[1]).toBeGreaterThan(near.pos[1]);
-    expect(far.pos[1]).toBeLessThanOrEqual(260);
-    expect(near.pos[1]).toBeGreaterThanOrEqual(60);
+    expect(far.pos[1]).toBeLessThanOrEqual(800);
+    expect(near.pos[1]).toBeGreaterThanOrEqual(346); // above the tallest tower on the map, so no building hides the road
   });
   it('a tall narrow screen needs more height for the same sideways spread', () => {
-    const wide = overheadShot([[0, 0], [120, 0]], { aspect: 1.78 }), tall = overheadShot([[0, 0], [120, 0]], { aspect: 0.46 });
+    const wide = overheadShot([[0, 0], [400, 0]], { aspect: 1.78 }), tall = overheadShot([[0, 0], [400, 0]], { aspect: 0.46 });
     expect(tall.pos[1]).toBeGreaterThan(wide.pos[1]);
   });
 });

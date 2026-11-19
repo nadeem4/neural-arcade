@@ -36,7 +36,7 @@ export function raceShot(a, b, { fov = 55 } = {}) {
 
 // The overhead footage shot: high above the middle of `points` ([[x, z], ...]), a little south of straight down so north stays up
 // and tall buildings lean away from the taxi. High enough that the spread plus a margin of road fits the screen (aspect: width / height).
-const OVERHEAD = { fov: 50, pad: 30, tilt: 0.12, min: 60, max: 260 };
+const OVERHEAD = { fov: 22, pad: 25, tilt: 0.03, min: 360, max: 800 }; // a long lens from above the tallest tower (346 m), so no building hides the road
 export function overheadShot(points, { aspect = 1.6 } = {}) {
   const xs = points.map((p) => p[0]), zs = points.map((p) => p[1]);
   const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
