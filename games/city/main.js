@@ -2,6 +2,7 @@
 // The footer is mounted by assets/game-page.js; the top bar is in the page and the lamp is wired here.
 import { wireLamp } from '../../assets/theme.js';
 import { SUN, MOON } from '../../assets/site.js';
+import { narrowScreen } from './quality.js';
 import { SEED, EPISODES, GOAL_SECONDS } from './presets.js';
 import { loadWorld } from './sim.js';
 import { createJobs, trainInChunks } from './jobs.js';
@@ -56,10 +57,10 @@ $('mapGoal').textContent = goalLine();
 const setBar = (el, x) => { if (el._x !== x) { el._x = x; el.style.transform = `scaleX(${x})`; } } // only write the style when the fraction changes
 // Put a tag by the taxi at `at`: kept on screen, clamped sideways, and below the meters on a phone.
 // overhead ({ clear } from the stage, or null) turns on the vertical rule and keeps the tag clear of the bigger taxi; null is the normal game, as before.
-const tagBox = () => { const lab = $('labels').getBoundingClientRect(); return { lab, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top }; };
+const tagBox = () => { const lab = $('labels').getBoundingClientRect(); return { lab, phone: narrowScreen(), meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top }; };
 function placeTag(span, at, slot, overhead, box = tagBox()) {
   const { lab, phone, meterBottom } = box;
-  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone, meterBottom, height: overhead ? lab.height : null, clear: overhead ? overhead.clear : 0 });
+  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone, meterBottom, height: overhead || phone ? lab.height : null, clear: overhead ? overhead.clear : 0 });
   span.style.left = pos.left + 'px'; span.style.top = pos.top + 'px';
 }
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
@@ -93,6 +94,7 @@ function hudFrame(state, at, overhead) {
   hud.wasOverhead = !!overhead;
   const m = meterAt(hud.events, state.progress);
   setText($('meterTotal'), meterText(m.total));
+  $('meterTotal').className = rec ? 'meter-total' : `meter-total tone-${m.total < 0 ? 'fine' : m.total > 0 ? 'pay' : 'zero'}`; // footage keeps the taxi yellow
   setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · footpath ${m.counts.off} · red light ${m.counts.red} · wrong way ${m.counts.wrong}`);
   setBar($('meterBar'), payFraction(m.total, hud.range));
   const g = goalAt(hud.events, hud.people.scaresAt(Math.floor(state.progress)), state.progress, GOAL_SECONDS);
@@ -166,9 +168,22 @@ function toast(text) {
   t.textContent = text; t.hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
 }
+// The (i) buttons: each opens the text(s) named in its aria-controls. infoOpen lists the open ones, oldest first.
+const infoOpen = [];
+const infoIds = btn => btn.getAttribute('aria-controls').split(' ');
+const visibleInfo = () => infoOpen.filter(b => b.getClientRects().length > 0);
+function setInfo(btn, open) {
+  btn.setAttribute('aria-expanded', String(open));
+  infoIds(btn).forEach(id => { $(id).hidden = !open; });
+  const i = infoOpen.indexOf(btn);
+  if (i >= 0) infoOpen.splice(i, 1);
+  if (open) infoOpen.push(btn);
+}
+function closeHiddenInfo() { infoOpen.filter(b => b.getClientRects().length === 0).forEach(b => setInfo(b, false)); }
 function go(event) {
   screen = nextScreen(screen, event);
   $('play').dataset.screen = screen;
+  closeHiddenInfo();
   const busy = screen === 'training';
   $('endcard').hidden = screen !== 'done';
   $('barDrive').hidden = !canToggleView(screen);
@@ -177,6 +192,7 @@ function go(event) {
   $('raceBanner').hidden = screen !== 'raced';
   $('train').disabled = busy || !stage;
   $('train').textContent = busy ? 'Training…' : 'Train and drive';
+  $('stopTrain').hidden = !busy;
   if (busy) showGarage(false);
   showRates();
   updateInset();
@@ -184,7 +200,7 @@ function go(event) {
 // On a phone the map screen has a rate card sheet over the stage's lower part; the stage keeps the map centre above it.
 function updateInset() {
   const sheet = $('rateCard');
-  const phone = screen === 'map' && $('garageDrawer').hidden && matchMedia('(max-width: 720px)').matches; // the Garage hides the card, so its offsetTop is 0
+  const phone = screen === 'map' && $('garageDrawer').hidden && narrowScreen(); // the Garage hides the card, so its offsetTop is 0
   const top = Math.max(0, document.querySelector('.topright').getBoundingClientRect().bottom - $('play').getBoundingClientRect().top) + 8; // the top buttons, plus a margin
   stage?.setInset(phone ? $('play').clientHeight - sheet.offsetTop : 0, top);
 }
@@ -259,6 +275,7 @@ function showEnd(t) {
   $('endHonest').hidden = !m.honest;
   $('endHonestLine').textContent = m.honestLine;
   $('endCity').textContent = `City score: ${m.city} out of 100`;
+  $('endCityNum').textContent = String(m.city); $('endCityStat').hidden = !m.honest;
   $('endScared').textContent = m.scaredLine; $('endScared').hidden = !m.scaredLine;
   $('endCheats').replaceChildren(...m.cheats.map(c => { const li = document.createElement('li'); li.textContent = c.reason; return li; }));
   const fixed = goalReached(t.analysis);
@@ -266,10 +283,12 @@ function showEnd(t) {
   $('shareText').textContent = shareText; $('share').hidden = !fixed;
   $('announce').textContent = `Trip done. ${m.timeLine}. ${m.verdict}` + (fixed ? ' Fixed.' : '');
 }
+function clearTags() { $('labels').querySelectorAll('.tag').forEach(s => { clearTimeout(s._t); s.remove(); }); if (hud) hud.lastTag = {}; } // none stays over the end card
 // The end of a drive, reached by arriving or by Skip; the first of the two wins.
 function finish(t, event) {
   if (t.ended || t !== trip) return;
   t.ended = true;
+  if (!rec) clearTags();
   go(event); showEnd(t);
   (t.rewards && !$('endNext').hidden ? $('endNext') : $('endEdit')).focus({ preventScroll: true });
 }
@@ -292,7 +311,7 @@ async function train(req) {
   raceRun = null; stage.clearRoute(); hud = null; trip = null; showMeter(false);
   try {
     const res = await jobs.start({ seed: SEED, rewards: req, episodes: EPISODES },
-      p => { progress.value = Math.round(100 * p.done / p.total); if (p.visits) stage.setHeat(p.visits); });
+      p => { progress.value = Math.round(100 * p.done / p.total); $('train').textContent = `Training… ${progress.value}%`; if (p.visits) stage.setHeat(p.visits); });
     if (!res) return; // a newer run took over
     progress.hidden = true; say('');
     session = recordTry(session, res.analysis);
@@ -417,6 +436,7 @@ function build() {
     $(f.key + 'Inc').addEventListener('click', () => nudge(f.key, 1));
   }
   $('train').addEventListener('click', () => { sound.unlock(); showStage(); train({ ...rewards }); });
+  $('stopTrain').addEventListener('click', () => { $('progress').hidden = true; toMap('failed'); $('train').focus(); }); // the focused button just hid: focus goes to Train
   $('reset').addEventListener('click', () => { rewards = defaultRewards(); $('train').dataset.stale = 'true'; showRates(); });
   $('skip').addEventListener('click', () => {
     if (raceRun) { raceRun.skipped = true; stage.skipTrip(); finishRace(raceRun, 'skip'); return; }
@@ -462,11 +482,11 @@ function build() {
     }
   });
   document.querySelectorAll('.info-text[data-info]').forEach(p => { p.textContent = INFO[p.dataset.info]; });
-  document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', () => {
-    const open = btn.getAttribute('aria-expanded') !== 'true';
-    btn.setAttribute('aria-expanded', String(open));
-    $(btn.getAttribute('aria-controls')).hidden = !open;
-  }));
+  document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', () => setInfo(btn, btn.getAttribute('aria-expanded') !== 'true')));
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return;
+    const btn = visibleInfo().find(b => b === document.activeElement || infoIds(b).some(id => $(id).contains(document.activeElement))) ?? visibleInfo().pop(); // the open (i) that holds focus, else the last opened
+    if (btn) { setInfo(btn, false); btn.focus(); }
+  });
 }
 
 const controls = () => [...FIELDS.flatMap(f => [$(f.key + 'Dec'), $(f.key + 'Inc')]), $('train'), $('reset'), ...ladderButtons.values()];

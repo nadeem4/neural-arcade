@@ -69,13 +69,24 @@ export function layoutTags(tags) {
 
 // Where a tag's anchor goes, in the label layer's pixels. The tag is drawn about 1.5 tag heights above its anchor.
 // Desktop: above the taxi, one slot higher per tag. Phone (phone: true): the taxi's anchor is under the meters, so the tags
-// sit just below them and grow downward. Either way the tag stays inside the screen sideways. Pure.
+// sit just below them and grow downward; when `at` carries the taxi's screen box (at.top, at.bottom) a tag that would come within 8 px of the taxi's roof goes below the taxi instead. Either way the tag stays inside the screen sideways. Pure.
 // With `height` (the label layer's height) the tag also stays inside the screen vertically, for the overhead shots where the taxi can be
 // anywhere: a tag that would rise off the top goes below the taxi instead; clear (px, the drawn taxi's half length) keeps it off the taxi either way (one slot lower per tag), and none is lower than the bottom edge.
 export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0, height = null, clear = 0 }) {
   const half = tagW / 2 + 4;
   const left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
   let top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - clear - slot * TAG_SLOT_PX;
+  if (phone && at.top !== undefined) { // the drawn tag runs from top - 1.5 tagH to top - 0.5 tagH: keep it 8 px off the taxi's screen box (at.top to at.bottom), else put it below the taxi
+    const band = (s) => meterBottom + 8 + 1.5 * tagH + s * TAG_SLOT_PX; // the stack under the meters
+    const hits = (s) => band(s) - 0.5 * tagH > at.top - 8; // that slot of the band would come within 8 px of the roof
+    // Below the taxi, one slot lower per tag; near the bottom edge the whole stack moves up together, so its slots never squash onto each other.
+    const lift = height === null ? 0 : Math.max(0, at.bottom + 8 + 1.5 * tagH + (MAX_TAG_SLOTS - 1) * TAG_SLOT_PX - (height - 4));
+    const below = (s) => at.bottom + 8 + 1.5 * tagH + s * TAG_SLOT_PX - lift;
+    // A slot that cannot sit below clear of the taxi falls back to the band, covering the roof rather than the meters. If any slot that has to
+    // move falls back, they all do, so the tags are one stack (the band) or two stacks on either side of the taxi, never one tag over another.
+    const fallback = Array.from({ length: MAX_TAG_SLOTS }, (_, s) => s).some((s) => hits(s) && below(s) - 1.5 * tagH < at.bottom + 8);
+    if (hits(slot)) top = fallback ? Math.min(band(slot), height === null ? Infinity : height - 4) : below(slot);
+  }
   if (height !== null && !phone) {
     if (top - 1.5 * tagH < 0) top = at.y + clear + 1.5 * tagH + 4 + slot * TAG_SLOT_PX; // below the taxi, clear of it
     top = Math.min(Math.max(top, 1.5 * tagH + 4), height - 4);

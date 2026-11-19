@@ -4,7 +4,11 @@ import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
 import { routeFrames, chaseCamera } from '../games/city/playback.js';
 import { driveTrack, stateAt } from '../games/city/drive.js';
-import { clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y } from '../games/city/scene-math.js';
+import { clipCamera, clipEased, roofAt, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, HEAT_INSET, CHASE, MIN_CAM_DIST, ROAD_Y, chaseForAspect } from '../games/city/scene-math.js';
+import { shotAt, raceShot, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
+import { raceTracks, raceStateAt } from '../games/city/race.js';
+import { solidRings } from '../games/city/walls.js';
+import { cityBounds } from '../games/city/geometry.js';
 
 // A tiny world: 8 columns x 5 rows, 10 m cells. Row 0 is the north edge, z = -(rows - 1 - r + 0.5) * cellM.
 // Row 2 is a road; rows 0-1 are buildings from column 3 on; everything else is road.
@@ -199,5 +203,96 @@ describe('the pickup pin at the start of a drive', () => {
     const st = stateAt(track, 0);
     const cam = chaseCamera(st, CHASE);
     expect(pinFade(cam.pos, [st.x, 1, st.z])).toBe(0);
+  });
+});
+
+// The swoop in and the pullback out, on the real map, frame by frame at 60 fps, built as scene.js builds them: the director's crane from the
+// clipped chase pose at the chase boundary to the map shot, held over the roofs. Every card at a phone and a desktop aspect, the drive cut short
+// (footage maxms) at four points, every race pair, and 45 map views (5 compass angles x 3 pitches x 3 zooms). Heavy (about 30 s in all), but well under the runner-presets file.
+describe('the camera through the swoop and the pullback', () => {
+  const { cx, cz, radius } = cityBounds(city);
+  const clip = { margin: 2, minY: ROAD_Y + 2.7 };
+  const cm = city.cellM, frame = 1000 / 60, walls = solidRings(city);
+  const roof = (x, z) => roofAt(realWorld, cm, x, z);
+  const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const dir = (s) => { const v = s.target.map((x, k) => x - s.pos[k]), l = Math.hypot(...v); return v.map((x) => x / l); };
+  const turn = (a, b) => { const u = dir(a), v = dir(b); return (Math.acos(Math.min(1, u[0] * v[0] + u[1] * v[1] + u[2] * v[2])) * 180) / Math.PI; };
+  const down = (s) => (Math.asin(-dir(s)[1]) * 180) / Math.PI; // degrees below the horizon
+  const views = [];
+  for (const yaw of [0, 0.6, 1.6, 3.1, 4.7]) for (const pitch of [0.3, 0.95, 1.4]) for (const zoom of [0.4, 1.25, 3]) views.push({ yaw, pitch, zoom });
+  const mapShotOf = ({ yaw, pitch, zoom }) => { const cp = Math.cos(pitch), r = radius * zoom; return { pos: [cx + Math.sin(yaw) * cp * r, Math.sin(pitch) * r, cz + Math.cos(yaw) * cp * r], target: [cx, 0, cz], fov: 38 }; };
+  const rig = (chaseAt, driveMs, mapShot) => {
+    const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; };
+    const chaseCam = (t) => ({ ...chaseAt(t), pos: clipEased(line, t, realWorld, cm, clip).pos }); // the chase phase, as on main
+    const from = { swoop: chaseCam(0), pullback: chaseCam(driveMs) }; // the chase pose at each boundary, worked out once
+    const cam = (phase, t) => shotAt(phase, t, mapShot, from[phase], { roof });
+    return { from, cam };
+  };
+  // Every frame of both phases and the frames either side of both chase boundaries; returns the worst of each measure.
+  const fly = (chaseAt, driveMs, view) => {
+    const mapShot = mapShotOf(view), rigged = rig(chaseAt, driveMs, mapShot), { cam } = rigged, w = { inside: 0, move: 0, turn: 0, steep: 0, from: 0, ends: 0 };
+    for (const [phase, ms] of [['swoop', SWOOP_MS], ['pullback', PULLBACK_MS]]) {
+      const from = rigged.from[phase], bound = Math.max(60, (2.5 * d(from.pos, mapShot.pos)) / (ms / frame)); // 60 m, or 2.5 times the straight line's average speed
+      let prev = null;
+      for (let t = 0; t <= ms + 1e-9; t += frame) {
+        const s = cam(phase, t);
+        w.inside = Math.max(w.inside, roof(s.pos[0], s.pos[2]) - s.pos[1]);
+        w.steep = Math.max(w.steep, down(s) - Math.max(80, (view.pitch * 180) / Math.PI));
+        if (prev) { w.move = Math.max(w.move, d(s.pos, prev.pos) / bound); w.turn = Math.max(w.turn, turn(s, prev)); }
+        prev = s;
+      }
+      const meet = cam(phase, phase === 'swoop' ? ms : 0), far = cam(phase, phase === 'swoop' ? 0 : ms);
+      // The crane meets the chase pose exactly, so its first (or last) frame step above is the step across the boundary; the step on the
+      // chase side is the chase's own motion, measured with the chase.
+      w.from = Math.max(w.from, d(meet.pos, from.pos), d(meet.target, from.target));
+      w.ends = Math.max(w.ends, d(far.pos, mapShot.pos), d(far.target, mapShot.target)); // and the map shot exactly
+    }
+    return w;
+  };
+  const worst = (ws) => ws.reduce((a, w) => Object.fromEntries(Object.keys(w).map((k) => [k, Math.max(a[k] ?? 0, w[k])])), {});
+  const expectGood = (w, what) => {
+    expect(w.inside, `${what}: metres inside a building`).toBeLessThanOrEqual(1e-6);
+    expect(w.move, `${what}: worst per-frame move over its bound`).toBeLessThanOrEqual(1);
+    expect(w.turn, `${what}: worst view turn in one frame (degrees)`).toBeLessThanOrEqual(15);
+    expect(w.steep, `${what}: degrees steeper than 80 (or the map's own pitch)`).toBeLessThanOrEqual(1e-6);
+    expect(w.from, `${what}: gap to the chase pose at the boundary`).toBeLessThanOrEqual(1e-6);
+    expect(w.ends, `${what}: gap to the map shot at the far end`).toBeLessThanOrEqual(1e-6);
+  };
+  for (const aspect of [390 / 844, 1280 / 720]) {
+    for (const card of story.cards) {
+      it(`stays out of buildings, turns slowly and meets both ends on the ${card.id} card at aspect ${aspect.toFixed(2)}, full and cut short`, () => {
+        const track = driveTrack(routeFrames(realWorld, cm, card.route), tripEvents(realWorld, card.rewards, card.route), { walls });
+        const chaseAt = (t) => ({ ...chaseCamera(stateAt(track, t), chaseForAspect(aspect)), fov: 55 });
+        expectGood(worst(views.map((v) => fly(chaseAt, track.total, v))), `${card.id}, the whole drive`);
+        [0.2, 0.37, 0.61, 0.83].forEach((f, i) => { // each cut with a third of the views, in turn, so every view meets a cut
+          const driveMs = Math.round(track.total * f);
+          expectGood(worst(views.filter((_, j) => j % 3 === i % 3).map((v) => fly(chaseAt, driveMs, v))), `${card.id}, drive cut at ${driveMs} ms`);
+        });
+      }, 30000);
+    }
+  }
+  it('stays out of buildings, turns slowly and meets both ends in every race', () => {
+    for (let i = 0; i < story.cards.length; i++) for (let j = i + 1; j < story.cards.length; j++) {
+      let race; try { race = raceTracks(realWorld, cm, [story.cards[i], story.cards[j]], walls); } catch { continue; } // only cards with the same pickup race
+      const chaseAt = (t) => { const s = raceStateAt(race, t); return raceShot(s.cars[0].state, s.cars[1].state); };
+      expectGood(worst(views.map((v) => fly(chaseAt, race.total, v))), `race ${story.cards[i].id} v ${story.cards[j].id}`);
+    }
+  }, 60000);
+  it('is a function of the trip time only: frames worked out in any order are the same', () => {
+    const card = story.cards.find((c) => c.id === 'walk') ?? story.cards[0];
+    const track = driveTrack(routeFrames(realWorld, cm, card.route), tripEvents(realWorld, card.rewards, card.route), { walls });
+    const { cam } = rig((t) => ({ ...chaseCamera(stateAt(track, t), chaseForAspect(390 / 844)), fov: 55 }), track.total, mapShotOf({ yaw: 0.6, pitch: 0.3, zoom: 0.4 }));
+    const ts = [0, 50, 217, 233, 250, 600, 1199];
+    const fwd = ts.map((t) => cam('pullback', t)), back = [...ts].reverse().map((t) => cam('pullback', t)).reverse();
+    expect(back).toEqual(fwd);
+  });
+});
+
+describe('roofAt', () => {
+  const tall = { ...world, height: new Float32Array(cols * rows).fill(40) }; // rows 0-1 from column 3: 40 m buildings
+  it('is the roof plus the 6 m a camera keeps over it, and 0 off the buildings', () => {
+    expect(roofAt(tall, cellM, 45, zOfRow(0))).toBe(46);
+    expect(roofAt(tall, cellM, 45, zOfRow(2))).toBe(0);
+    expect(roofAt(tall, cellM, -5, zOfRow(0))).toBe(0); // off the map
   });
 });

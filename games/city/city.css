@@ -63,13 +63,16 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .chip-goal, #info-meters { pointer-events: auto; }
 .play:not([data-screen="map"]) .chip-goal { display: none; }
 .play[data-screen="racing"] .meter-goal, .play[data-screen="raced"] .meter-goal { display: none; }
-.minimap { position: absolute; top: 60px; right: 12px; width: 120px; height: 120px; border-radius: 50%; background: var(--hud); border: 2px solid var(--hud-route); pointer-events: none; }
+.minimap { position: absolute; top: 48px; right: 0; width: 120px; height: 120px; border-radius: 50%; background: var(--hud); border: 2px solid var(--hud-route); pointer-events: none; }
 .minimap[hidden] { display: none; }
 #labels span.tag { padding: 4px 10px; border-radius: 999px; font: 700 clamp(17px, 5.6vw, 22px) "Space Grotesk", var(--sans); background: var(--hud); animation: tag-pop 1.7s ease-out forwards; }
 #labels span.tag.fine { color: var(--hud-fine); }
 #labels span.tag.pay { color: var(--hud-pay); }
 @keyframes tag-pop { from { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 5% { opacity: 1; transform: translate(-50%, -140%) scale(1.1); } 95% { opacity: 1; transform: translate(-50%, -150%) scale(1); } to { opacity: 0; transform: translate(-50%, -160%) scale(1); } } /* up and fully visible for 90% of 1.7 s; rises 27px in all, less than a 46px slot, so tags never cross */
 @media (prefers-reduced-motion: reduce) { #labels span.tag { animation: none; } }
+/* Nothing floats through the end card or the race banner, and the map's place labels belong to the map screen. Footage mode (body.rc-record) keeps its own rules. */
+body:not(.rc-record) .play[data-screen="done"] #labels .tag, body:not(.rc-record) .play[data-screen="raced"] #labels .tag { display: none; }
+body:not(.rc-record) .play:not([data-screen="map"]) #labels span:not(.tag):not(.race-tag) { display: none; }
 
 
 /* Space Grotesk (latin, OFL) for the numbers on the game screens. */
@@ -78,7 +81,7 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 
 /* Game screens. data-screen on #play is map, training, driving or done; the dark navy panels look the same in light and dark. */
 :root { --navy: #0E1A2B; --navy-line: #2A3647; --navy-soft: #1A2330; --grey: #8896A8; }
-.hud { position: absolute; top: 12px; left: 12px; display: grid; justify-items: start; gap: 8px; pointer-events: none; }
+.hud { position: absolute; top: 12px; left: 12px; right: 12px; display: grid; justify-items: start; gap: 8px; pointer-events: none; }
 .notes { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; max-width: calc(100% - 24px); pointer-events: none; }
 .chip { margin: 0; padding: 6px 12px; border-radius: 999px; background: var(--hud); color: var(--hud-ink); font: 600 14px/1.3 var(--sans); text-align: center; }
 .chip:empty, .chip[hidden] { display: none; }
@@ -89,8 +92,11 @@ progress::-webkit-progress-value { background: var(--hud-taxi); border-radius: 6
 progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 
 .topright { position: absolute; top: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; max-width: calc(100% - 24px); }
-.topright .info { margin: 0; color: var(--hud-ink); background: var(--hud); }
-.topright .info-text { flex-basis: 100%; max-width: 300px; margin: 0; background: var(--hud); color: var(--hud-ink); }
+.hud .info, .hud .info-text { pointer-events: auto; }
+.hud .info { margin: 0 0 0 4px; vertical-align: middle; color: var(--hud-ink); }
+.hud .info-text { max-width: 300px; margin: 0; background: var(--hud); color: var(--hud-ink); }
+.play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar { display: none; } /* neither race meter has a bar, so the two boxes are the same height */
+.play[data-screen="racing"] .meter .info, .play[data-screen="raced"] .meter .info, .play[data-screen="racing"] #info-meters, .play[data-screen="raced"] #info-meters { display: none; }
 .chase { height: 36px; padding: 0 14px; border: 1px solid var(--navy-line); background: var(--hud); color: var(--hud-ink); font-size: 13px; }
 .chase[aria-pressed="true"] { background: var(--hud-taxi); color: #141C27; }
 .chase:disabled { opacity: .5; cursor: not-allowed; }
@@ -105,6 +111,8 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 #mute[aria-pressed="true"] .off { display: inline; }
 
 .ratecard, .endcard { position: absolute; z-index: 3; display: grid; align-content: start; gap: 12px; padding: 18px 20px; border: 1px solid var(--navy-line); border-radius: 18px; background: var(--hud); color: #E8EDF4; font-family: var(--sans); overflow-y: auto; overscroll-behavior: contain; box-shadow: 0 8px 30px rgba(0, 0, 0, .35); }
+.ratecard, .endcard { scrollbar-width: thin; scrollbar-color: #3A4A60 transparent; }
+.play[data-garage="true"] .chip-goal { display: none; }
 .ratecard { top: 12px; left: 12px; width: 330px; max-height: calc(100% - 100px); background: var(--navy); }
 .ratecard h2 { display: flex; align-items: center; justify-content: space-between; margin: 0; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
 .ratecard .info, .endcard .info { margin: 0; color: #E8EDF4; }
@@ -155,6 +163,29 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .end-honest ul { margin: 6px 0 0; padding-left: 18px; }
 .endcard .share-line output { color: #C5CEDA; }
 .end-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Desktop only, never footage: the city score is a third big stat and the card is tighter, so it fits 1280x720 without scrolling. */
+.end-stats > .end-city { display: none; } /* phone and footage keep the City score line instead */
+@media (min-width: 721px) {
+  body:not(.rc-record) .end-city:not([hidden]) { display: grid; align-content: start; gap: 2px; }
+  body:not(.rc-record) #endCity { display: none; }
+  body:not(.rc-record) .endcard { gap: 6px; padding: 16px 20px; }
+  body:not(.rc-record) .end-stats { gap: 20px; }
+  body:not(.rc-record) .end-stats .big { font-size: 34px; }
+  body:not(.rc-record) .end-stats > div:first-child { grid-template-columns: auto auto; justify-content: start; align-items: center; }
+  body:not(.rc-record) .end-stats > div:first-child .big { grid-column: 1 / -1; }
+  body:not(.rc-record) .end-stats .info { margin: -12px -8px -12px 0; }
+  body:not(.rc-record) .end-stats > div:first-child small { white-space: nowrap; }
+  body:not(.rc-record) .endcard .receipt .row { padding: 2px 0; }
+  body:not(.rc-record) .end-verdict { padding: 10px 14px; }
+  /* the hint is what the player must read: it comes straight under the stats, the receipt after the legal-route lines, the buttons last (as on the phone) */
+  body:not(.rc-record) .endcard .end-stats { order: 1; }
+  body:not(.rc-record) .endcard .info-text { order: 1; }
+  body:not(.rc-record) .endcard .end-verdict { order: 2; }
+  body:not(.rc-record) .endcard .end-honest { order: 3; }
+  body:not(.rc-record) .endcard .receipt { order: 4; }
+  body:not(.rc-record) .endcard .share-line { order: 5; }
+  body:not(.rc-record) .endcard .end-actions { order: 6; }
+}
 .toast { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 4; margin: 0; padding: 10px 16px; border-radius: 12px; background: var(--navy); color: #E8EDF4; font: 600 14px var(--sans); }
 .toast[hidden] { display: none; }
 
@@ -185,7 +216,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 /* Phone: the rate card and the end card are bottom sheets of at most 35% (end card 60%) of the screen, scrolling inside; the map stays visible above. */
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
-  .topright .info, .chase { min-height: 44px; height: 44px; }
+  .chase { min-height: 44px; height: 44px; }
   .notes .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: 16px; line-height: 1.4; }
   .citybar .logo, .citybar h1 { font-size: 16px; }
   #labels span { font-size: 13px; }
@@ -193,10 +224,16 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .meter-counts { font-size: 13px; }
   .receipt, .receipt .row { font-size: 14px; }
   .ratecard .info-text, .endcard .info-text { font-size: 16px; line-height: 1.45; }
-  .topright .info-text { font-size: 16px; line-height: 1.45; }
-  .topright .info { width: 44px; }
-  .hud { top: 60px; left: 8px; } /* just under the single row of 44 px top buttons */
-  .minimap { top: 60px; right: 8px; width: 84px; height: 84px; }
+  .hud .info-text { grid-column: 1 / -1; font-size: 16px; line-height: 1.45; }
+  .hud .info { min-width: 44px; min-height: 44px; margin: -10px -8px -10px 0; }
+  .hud { top: 60px; left: 8px; right: 8px; grid-template-columns: 1fr auto; } /* just under the single row of 44 px top buttons */
+  .hud .meter { grid-column: 1 / -1; }
+  .hud .meter-goal { grid-column: 1; align-self: start; }
+  .minimap { position: static; grid-column: 2; width: 84px; height: 84px; } /* beside the city score, so no meter runs under it */
+  .play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap { display: none; }
+  .play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts { display: none; } /* the result banner says the same; two short meters side by side keep 8 px clear of the banner and cover less of the cars */
+  .play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud { grid-template-columns: 1fr 1fr; justify-items: stretch; }
+  .play[data-screen="racing"] .hud .meter, .play[data-screen="raced"] .hud .meter { grid-column: auto; }
   .meter { min-width: 120px; padding: 8px 12px; }
   .meter-total { font-size: 26px; }
   .meter-goal { padding: 6px 12px; }
@@ -271,7 +308,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .bay-earned { font: 700 16px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .bay-earned.pay { color: var(--hud-pay); }
 .bay-earned.fine { color: var(--hud-fine); }
-.bay.empty { border: 2px dashed var(--navy-line); background: none; color: #6F7C8E; text-align: center; padding: 12px; }
+.bay.empty { border: 2px dashed var(--navy-line); background: none; color: #9AA7B8; text-align: center; padding: 12px; }
 .bay-head { display: flex; align-items: center; gap: 10px; }
 .bay-name { font: 700 17px "Space Grotesk", var(--sans); }
 .bay-try { margin-left: auto; white-space: nowrap; font-size: 12px; color: #9AA7B8; }
@@ -310,7 +347,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .race-detail { margin: 0; font-size: 14px; line-height: 1.5; color: #C5CEDA; }
 .racebanner .end-actions { justify-content: center; }
 @media (max-width: 720px) {
-  .hud { gap: 6px; }
+  .hud { gap: 8px; }
   .meter { min-width: 0; padding: 6px 10px; }
   .meter-total { font-size: 22px; }
   .racebanner { bottom: 76px; padding: 10px 14px; }
@@ -336,6 +373,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 body.rc-record .citybar, body.rc-record footer, body.rc-record main > :not(#play),
 body.rc-record .ratecard, body.rc-record #bar, body.rc-record #endcard, body.rc-record #garageDrawer, body.rc-record #raceBar,
 body.rc-record #raceBanner, body.rc-record #toast, body.rc-record .notes, body.rc-record .topright { display: none !important; }
+body.rc-record .meter .info, body.rc-record #info-meters { display: none !important; } /* no (i) in footage */
 body.rc-record { margin: 0; overflow: hidden; }
 body.rc-record .play { position: fixed; inset: 0; width: 100vw; height: 100vh; min-height: 0; }
 body.rc-record #stage { width: 100vw; height: 100vh; }

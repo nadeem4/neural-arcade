@@ -39,7 +39,7 @@ describe('city page markup', () => {
   });
   it('has the drive HUD: a live meter and a round minimap hidden from screen readers until a drive starts, and a mute toggle', () => {
     for (const id of ['meter', 'minimap']) {
-      expect(tag(id), id).toContain('aria-hidden="true"');
+      if (id === 'minimap') expect(tag(id), id).toContain('aria-hidden="true"'); // the meter holds the (i) button now (RF7b), so it is not aria-hidden
       expect(tag(id), id).toMatch(/\shidden[\s>]/);
     }
     expect(tag('minimap')).toMatch(/^<canvas /);
@@ -354,7 +354,7 @@ describe('phone review fixes (RF6)', () => {
   it('makes the garage count badge 13 px', () => { expect(rules('.badge')).toMatch(/font: 700 13px/); });
   it('sits the HUD and minimap under one row of top buttons at phone widths', () => {
     expect(css).toMatch(/\.hud \{[^}]*top: 60px/);
-    expect(css).toMatch(/\.minimap \{[^}]*top: 60px/);
+    expect(css).toMatch(/\.minimap \{[^}]*top: 48px/); // inside the HUD, which sits 12 px down: 60 px from the page top
   });
   it('words the garage button for no, one and several kept taxis', () => {
     expect(garageLabel(0)).toBe('Garage');

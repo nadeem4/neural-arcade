@@ -46,21 +46,25 @@ export function cellHeights(city) {
   return out;
 }
 
-// Keeps the camera out of buildings and above the ground. Marches from the taxi (target) out towards the camera in
-// quarter-cell steps; at the first building the line passes through (below that cell's height) it stops, backs off by
-// `margin` m, and puts the camera there on the same line (never closer than MIN_CAM_DIST). world: { cols, rows, kind,
-// height } as sim.js loadWorld plus cellHeights (without it every building is DEFAULT_TALL m). Row 0 is the north edge, z = -y.
-// Returns { pos, clipped, k }. Pure: a function of its arguments only, so record mode stays deterministic.
 const DEFAULT_TALL = 40;
 const ROOF_CLEAR = 6; // metres a camera must stay above a roof it passes over
+// The height a camera at (x, z) must keep: the building's roof there plus ROOF_CLEAR, or 0 off the buildings. world: { cols, rows, kind, height }
+// as sim.js loadWorld plus cellHeights (without height every building is DEFAULT_TALL m). Row 0 is the north edge, z = -y. The director's
+// swoop and pullback crane keeps over it too (scene.js passes it to shotAt as `roof`).
+export function roofAt(world, cellM, x, z) {
+  const c = Math.floor(x / cellM), r = world.rows - 1 - Math.floor(-z / cellM);
+  if (c < 0 || c >= world.cols || r < 0 || r >= world.rows || world.kind[r * world.cols + c] !== BUILDING) return 0;
+  return (world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL) + ROOF_CLEAR; // a camera skimming a roof just above it is clipped too
+}
+
+// Keeps the chase camera out of buildings and above the ground. Marches from the taxi (target) out towards the camera in
+// quarter-cell steps; at the first building the line passes through (below that cell's roof plus ROOF_CLEAR) it stops, backs off by
+// `margin` m, and puts the camera there on the same line (never closer than MIN_CAM_DIST).
+// Returns { pos, clipped, k }. Pure: a function of its arguments only, so record mode stays deterministic.
 export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
   const dx = camPos[0] - target[0], dy = camPos[1] - target[1], dz = camPos[2] - target[2];
   const len = Math.hypot(dx, dy, dz);
-  const roof = (x, z) => { // the height of the building at (x, z), or 0
-    const c = Math.floor(x / cellM), r = world.rows - 1 - Math.floor(-z / cellM);
-    if (c < 0 || c >= world.cols || r < 0 || r >= world.rows || world.kind[r * world.cols + c] !== BUILDING) return 0;
-    return (world.height ? world.height[r * world.cols + c] || DEFAULT_H : DEFAULT_TALL) + ROOF_CLEAR; // a camera skimming a roof just above it is clipped too
-  };
+  const roof = (x, z) => roofAt(world, cellM, x, z);
   let pos = [camPos[0], Math.max(minY, camPos[1]), camPos[2]], clipped = false, k = 1;
   if (len > 0 && !roof(target[0], target[2])) {
     const step = cellM / 4;
@@ -81,7 +85,7 @@ export function clipCamera(camPos, target, world, cellM, margin = 2, minY = 1) {
   return { pos, clipped, k }; // k: the fraction of the way from the taxi to the camera that was kept
 }
 
-// clipCamera with the pull-in eased over time, so the camera slides in before a wall and out after it instead of popping.
+// clipCamera with the pull-in eased over time, so the chase camera slides in before a wall and out after it instead of popping.
 // Samples the trip every 50 ms over ms - span .. ms + span; a clip at a sample counts less the further that sample is
 // from ms (linearly, to nothing at span), and the camera takes the strongest pull. at(ms) -> { pos, target }. Pure in ms.
 export function clipEased(at, ms, world, cellM, { margin = 2, minY = 1, span = 500 } = {}) {

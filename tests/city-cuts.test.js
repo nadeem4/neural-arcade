@@ -99,7 +99,7 @@ describe('cam wiring', () => {
     expect(m).not.toMatch(/cfg\.cam === 'map'[^\n]*setMapView/);
     expect(m).toMatch(/cfg\.cam === 'auto'[^\n]*stage\.setCuts\(overheadCuts\(/);
     expect(m.indexOf('await train(')).toBeLessThan(m.indexOf("cfg.cam === 'map'"));
-    expect(m).toMatch(/tagPlace\([^\n]*height: overhead \? lab\.height : null/); // only the overhead shot uses the vertical rule; the default path is as before
+    expect(m).toMatch(/tagPlace\([^\n]*height: overhead \|\| phone \? lab\.height : null, clear: overhead \? overhead\.clear : 0/); // the overhead shot and a phone use the vertical rule; a desktop chase is as before
     expect(m).toContain('function placeTag(span, at, slot, overhead, box = tagBox())');
     expect(m).toContain('{ from: SWOOP_MS, to: SWOOP_MS + driveMs, spread: CUT_SPREAD_MAX }');
   });

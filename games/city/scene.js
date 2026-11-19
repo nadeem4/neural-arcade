@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipEased, roofAt, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -15,7 +15,7 @@ import { buildSignalHeads, paintLamps, hideHeads } from './signal-heads.js';
 import { createGlow, lampCentres, signalGlow } from './glow.js';
 import { skyColours, fogFor, heatOpacity, sunPlacement } from './sky.js';
 import { createSky, lightRig, EXPOSURE, ENV_INTENSITY, ENV_GROUND, WINDOW_GLOW } from './scene-look.js';
-import { tierFor, furnitureTier } from './quality.js';
+import { tierFor, furnitureTier, narrowScreen } from './quality.js';
 import { buildFurniture } from './scene-furniture.js';
 import { applyFacade, buildingGeometry } from './facade.js';
 import { createTaxiMaker, TAXI_SCALE, TAXI_Y } from './scene-taxi.js';
@@ -216,7 +216,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     if (labelEl) labelEl.append(span);
     return { span, v: new THREE.Vector3(l.x, 45, -l.y) };
   });
-  const tmp = new THREE.Vector3();
+  const tmp = new THREE.Vector3(), corner = new THREE.Vector3(), taxiBox = new THREE.Box3();
   const placeLabels = () => {
     if (!labelEl || !labels.length) return;
     const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
@@ -252,12 +252,12 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     }
     if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
-      const at0 = play.race ? [(play.state.cars[0].state.x + play.state.cars[1].state.x) / 2, 0, (play.state.cars[0].state.z + play.state.cars[1].state.z) / 2] : [play.state.x, 0, play.state.z]; // clip from the taxi: in the swoop and pullback shot.target is a map point, which can sit inside a building
-      const target = [at0[0], ROAD_Y, at0[2]];
-      const c = phase === 'chase' // in the chase the pull-in is eased over +-0.5 s of the trip (a pure function of the trip time)
-        ? clipEased((t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }, play.t, world, city.cellM, clip)
-        : clipCamera(shot.pos, target, world, city.cellM, clip.margin, clip.minY);
-      if (c.clipped || c.pos[1] !== shot.pos[1]) shot = { ...shot, pos: c.pos };
+      const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }; // the chase camera and the taxi it looks at
+      if (phase === 'chase') shot = { ...shot, pos: clipEased(line, play.t, world, city.cellM, clip).pos }; // the pull-in eased over +-0.5 s of the trip (a pure function of the trip time)
+      else { // the swoop and pullback: the director's crane between the clipped chase pose at the chase boundary and the map shot, held over the roofs (never pulled toward the taxi)
+        const bt = phase === 'swoop' ? 0 : play.driveMs, from = { ...chaseAt(bt), pos: clipEased(line, bt, world, city.cellM, clip).pos };
+        shot = shotAt(phase, play.t, mapShot, from, { reduced: !motionAllowed(), roof: (x, z) => roofAt(world, city.cellM, x, z) });
+      }
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;
     const look = mapView || cut ? 'map' : phase; // the Map view toggle looks like the map: its fog and heat, not the chase's
@@ -433,7 +433,14 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     tmp.set(taxi.position.x, 6, taxi.position.z).project(camera);
     if (tmp.z > 1) return null;
     const cr = canvas.getBoundingClientRect(), br = labelEl.getBoundingClientRect();
-    return { x: cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width, y: cr.top - br.top + (0.5 - tmp.y * 0.5) * cr.height };
+    const sy = (v) => cr.top - br.top + (0.5 - v.y * 0.5) * cr.height;
+    let top = Infinity, bottom = -Infinity; // the drawn taxi's box on screen (its bounding box's corners), so a phone tag can stay off its roof; only a phone-width layout uses it
+    if (narrowScreen()) {
+      taxiBox.makeEmpty(); for (const part of taxi.children) if (!part.userData.flat) taxiBox.expandByObject(part); // not the flat contact shadow
+      const b = taxiBox;
+      for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = corner.set(x, y, z).project(camera); if (p.z <= 1) { top = Math.min(top, sy(p)); bottom = Math.max(bottom, sy(p)); } }
+    }
+    return { x: cr.left - br.left + (tmp.x * 0.5 + 0.5) * cr.width, y: sy(tmp), ...(top < bottom ? { top, bottom } : {}) };
   };
   // One frame at time `now`. Every time-dependent value here (elapsed, taxi, camera, lights tick, head bob) derives from `now`, so a manual clock gives pure frames.
   const frame = (now) => {
@@ -558,7 +565,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       return { phase, done: phase === 'map' };
     },
     // Skip to the end of the drive: the taxi jumps to its last tile and the camera pulls back.
-    skipTrip() { if (play && !manualClock) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
+    skipTrip() { if (play && !manualClock) { play.swoop = true; play.t0 = performance.now() - SWOOP_MS - play.track.total; } }, // always into the pullback, so the camera eases out to the map under the end card (the chase view has no pullback of its own)
     // The Map view toggle: the high map camera while the taxi drives, instead of the chase.
     setMapView(on) { mapView = !!on; if (!play) draw(); },
     setCuts(list) { cuts = list ?? []; }, // footage cam=auto: overheadCuts result

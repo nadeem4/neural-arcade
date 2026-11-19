@@ -183,6 +183,51 @@ describe('tagPlace', () => {
     }
     expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBe(400); // plenty of room: unchanged
   });
+  it('on a phone with the taxi near, the tag keeps 8 px clear of the roof: in the band under the meters when there is room, else below the taxi', () => {
+    const o = { ...box, phone: true, height: 640 }; // visible tag box: top - 1.5 tagH to top - 0.5 tagH
+    const vis = (t) => ({ top: t - 1.5 * box.tagH, bottom: t - 0.5 * box.tagH });
+    const at = (roof) => ({ x: 195, y: roof - 90, top: roof, bottom: roof + 50 }); // the taxi's screen box, 50 px tall; the anchor y is far above it in a chase view
+    for (const roof of [345, 380, 440, 520]) for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) { // every slot is 8 px clear of the taxi's box, above or below it, and never over a meter
+      const v = vis(tagPlace(at(roof), slot, o).top);
+      expect(v.top).toBeGreaterThanOrEqual(box.meterBottom);
+      expect(v.bottom <= roof - 8 || v.top >= roof + 50 + 8).toBe(true);
+    }
+    expect(tagPlace(at(440), 0, o).top).toBe(box.meterBottom + 8 + 1.5 * box.tagH); // band position unchanged when it clears
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) { // the taxi right under the meters: the tag goes below it, whole, on screen
+      const { top } = tagPlace(at(345), slot, o);
+      expect(vis(top).top).toBeGreaterThanOrEqual(345 + 50 + 8);
+      expect(top).toBeLessThanOrEqual(640);
+    }
+    expect(tagPlace({ x: 195, y: 300 }, 0, o).top).toBe(box.meterBottom + 8 + 1.5 * box.tagH); // no box (a stage with no taxi on screen): the band, as before
+  });
+  it('on a phone with a tall taxi low on the screen, a tag that fits neither below nor above the taxi stays off the meters, even if it must cover the roof', () => {
+    const o = { ...box, phone: true, height: 640 };
+    const at = { x: 195, y: 300, top: 360, bottom: 600 }; // the roof just under the meters (they end at 330), the wheels near the bottom bar: nothing fits clear of both
+    const vis = (t) => ({ top: t - 1.5 * box.tagH, bottom: t - 0.5 * box.tagH });
+    const tops = [];
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) {
+      const { top } = tagPlace(at, slot, o);
+      tops.push(top);
+      expect(vis(top).top).toBeGreaterThanOrEqual(box.meterBottom + 8); // never over the meters
+      expect(top).toBeLessThanOrEqual(640 - 4);
+    }
+    expect(new Set(tops).size).toBe(MAX_TAG_SLOTS); // the slots still stack
+    const roomAbove = { x: 195, y: 300, top: 520, bottom: 600 }; // there is a band above this taxi for all three slots: the tags go there, 8 px off the roof
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) expect(vis(tagPlace(roomAbove, slot, o).top).bottom).toBeLessThanOrEqual(520 - 8);
+  });
+  it('on a phone no two live tags overlap, wherever the taxi is and however tall the screen (the stack below the taxi is not squashed at the bottom edge)', () => {
+    for (const height of [480, 560, 640, 760]) for (let top = 200; top <= height; top += 10) for (const tall of [30, 50, 120, 240]) {
+      const at = { x: 195, y: top - 90, top, bottom: top + tall };
+      const tops = Array.from({ length: MAX_TAG_SLOTS }, (_, slot) => tagPlace(at, slot, { ...box, phone: true, height }).top).sort((a, b) => a - b);
+      for (let k = 1; k < tops.length; k++) expect(tops[k] - tops[k - 1], `height ${height}, taxi ${top}..${top + tall}`).toBeGreaterThanOrEqual(box.tagH);
+    }
+    const o = { ...box, phone: true, height: 640 };
+    const band = (slot) => box.meterBottom + 8 + 1.5 * box.tagH + slot * TAG_SLOT_PX;
+    const roomForOne = { x: 195, y: 300, top: 360, bottom: 560 }; // room below for one tag (560 + 8 + 51 <= 636), not three: all three use the band, not two of them squashed at the bottom edge
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) expect(tagPlace(roomForOne, slot, o).top).toBe(band(slot));
+    const roomForAll = { x: 195, y: 300, top: 360, bottom: 420 }; // room below for all three: below, one slot lower per tag
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) expect(tagPlace(roomForAll, slot, o).top).toBe(420 + 8 + 1.5 * box.tagH + slot * TAG_SLOT_PX);
+  });
   it('with a clearance the tag sits clear of the taxi: above it with a gap, or below when there is no room above', () => {
     const o = { ...box, width: 1280, height: 720, clear: 40 };
     expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBeLessThanOrEqual(400 - 40); // the tag's lower edge is above the taxi's top
