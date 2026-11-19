@@ -72,9 +72,10 @@ export function layoutTags(tags) {
 // sit just below them and grow downward; when `at` carries the taxi's screen box (at.top, at.bottom) a tag that would come within 8 px of the taxi's roof goes below the taxi instead. Either way the tag stays inside the screen sideways. Pure.
 // With `height` (the label layer's height) the tag also stays inside the screen vertically, for the overhead shots where the taxi can be
 // anywhere: a tag that would rise off the top goes below the taxi instead; clear (px, the drawn taxi's half length) keeps it off the taxi either way (one slot lower per tag), and none is lower than the bottom edge.
-export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0, height = null, clear = 0 }) {
+// On a desktop `hud` ({ right, bottom }: the meters' corner in the label layer's pixels) keeps a tag that would sit under them just to their right.
+export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0, height = null, clear = 0, hud = null }) {
   const half = tagW / 2 + 4;
-  const left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
+  let left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
   let top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - clear - slot * TAG_SLOT_PX;
   if (phone && at.top !== undefined) { // the drawn tag runs from top - 1.5 tagH to top - 0.5 tagH: keep it 8 px off the taxi's screen box (at.top to at.bottom), else put it below the taxi
     const band = (s) => meterBottom + 8 + 1.5 * tagH + s * TAG_SLOT_PX; // the stack under the meters
@@ -91,5 +92,6 @@ export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBott
     if (top - 1.5 * tagH < 0) top = at.y + clear + 1.5 * tagH + 4 + slot * TAG_SLOT_PX; // below the taxi, clear of it
     top = Math.min(Math.max(top, 1.5 * tagH + 4), height - 4);
   }
+  if (!phone && hud && top - 1.5 * tagH < hud.bottom && left - tagW / 2 < hud.right + 8) left = Math.min(hud.right + 8 + tagW / 2, Math.max(half, width - half)); // desktop: a tag that would sit under the meters moves right of them
   return { left, top };
 }

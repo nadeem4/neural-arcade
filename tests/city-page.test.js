@@ -351,7 +351,7 @@ describe('phone review fixes (RF6)', () => {
     expect(rules('.racebanner .end-actions')).toMatch(/justify-content: center/);
     expect(css).not.toMatch(/\.racebanner \.end-actions \{[^}]*display: grid/);
   });
-  it('makes the garage count badge 13 px', () => { expect(rules('.badge')).toMatch(/font: 700 13px/); });
+  it('makes the garage count badge 13 px', () => { expect(px(rules('.badge'))).toMatch(/font: 700 13px/); });
   it('sits the HUD and minimap under one row of top buttons at phone widths', () => {
     expect(css).toMatch(/\.hud \{[^}]*top: 60px/);
     expect(css).toMatch(/\.minimap \{[^}]*top: 48px/); // inside the HUD, which sits 12 px down: 60 px from the page top
@@ -364,8 +364,10 @@ describe('phone review fixes (RF6)', () => {
   });
 });
 
+const px = (t) => t.replace(/var\((--fs-[a-z]+)\)/g, (_, n) => css.match(new RegExp(n + ':\\s*(\\d+px)'))[1]); // the city.css type tokens as pixels
+
 describe('phone type scale (RF6): 16 px to read, 14 px labels, 13 px captions, nothing smaller', () => {
-  const phones = [...css.matchAll(/@media \(max-width: (?:720|600)px\) \{/g)].map(m => { let d = 0, j = m.index + m[0].length - 1; const a = j; for (; j < css.length; j++) { if (css[j] === '{') d++; if (css[j] === '}' && --d === 0) break; } return css.slice(a, j); }).join('\n');
+  const phones = px([...css.matchAll(/@media \(max-width: (?:720|600)px\) \{/g)].map(m => { let d = 0, j = m.index + m[0].length - 1; const a = j; for (; j < css.length; j++) { if (css[j] === '{') d++; if (css[j] === '}' && --d === 0) break; } return css.slice(a, j); }).join('\n'));
   const size = (sel) => { const esc = sel.replace(/[.#*+?^${}()|[\]\\]/g, '\\$&'); const m = phones.match(new RegExp('(?:^|[\\n}{; ])' + esc + '\\s*\\{[^}]*?font-size:\\s*(\\d+(?:\\.\\d+)?)px')); return m && Number(m[1]); };
   it('declares no font size under 13 px in the phone rules', () => {
     const all = [...phones.matchAll(/font-size:\s*([\d.]+)px/g)].map(m => Number(m[1]));

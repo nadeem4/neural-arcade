@@ -57,10 +57,10 @@ $('mapGoal').textContent = goalLine();
 const setBar = (el, x) => { if (el._x !== x) { el._x = x; el.style.transform = `scaleX(${x})`; } } // only write the style when the fraction changes
 // Put a tag by the taxi at `at`: kept on screen, clamped sideways, and below the meters on a phone.
 // overhead ({ clear } from the stage, or null) turns on the vertical rule and keeps the tag clear of the bigger taxi; null is the normal game, as before.
-const tagBox = () => { const lab = $('labels').getBoundingClientRect(); return { lab, phone: narrowScreen(), meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top }; };
+const tagBox = () => { const lab = $('labels').getBoundingClientRect(); return { lab, phone: narrowScreen(), meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top, hud: { right: $('meter').getBoundingClientRect().right - lab.left, bottom: $('meterGoal').getBoundingClientRect().bottom - lab.top } }; };
 function placeTag(span, at, slot, overhead, box = tagBox()) {
-  const { lab, phone, meterBottom } = box;
-  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone, meterBottom, height: overhead || phone ? lab.height : null, clear: overhead ? overhead.clear : 0 });
+  const { lab, phone, meterBottom, hud } = box;
+  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone, meterBottom, hud, height: overhead || phone ? lab.height : null, clear: overhead ? overhead.clear : 0 });
   span.style.left = pos.left + 'px'; span.style.top = pos.top + 'px';
 }
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
