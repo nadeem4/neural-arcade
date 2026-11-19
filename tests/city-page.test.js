@@ -39,7 +39,7 @@ describe('city page markup', () => {
   });
   it('has the drive HUD: a live meter and a round minimap hidden from screen readers until a drive starts, and a mute toggle', () => {
     for (const id of ['meter', 'minimap']) {
-      expect(tag(id), id).toContain('aria-hidden="true"');
+      if (id === 'minimap') expect(tag(id), id).toContain('aria-hidden="true"'); // the meter holds the (i) button now (RF7b), so it is not aria-hidden
       expect(tag(id), id).toMatch(/\shidden[\s>]/);
     }
     expect(tag('minimap')).toMatch(/^<canvas /);

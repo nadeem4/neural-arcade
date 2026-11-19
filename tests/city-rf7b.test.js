@@ -5,6 +5,7 @@ const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = read('games/city/index.html');
 const css = read('games/city/city.css').replace(/\/\*[\s\S]*?\*\//g, '');
 const main = read('games/city/main.js');
+const tagOf = id => html.match(new RegExp(`<[a-z]+ [^>]*id="${id}"[^>]*>`))?.[0];
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 
 describe('RF7b: nothing floats through the end card or race banner (F10, F31)', () => {
@@ -30,6 +31,34 @@ describe('RF7b: Skip pulls the camera back (F9)', () => {
   it('skipTrip jumps to the start of the pullback even from the chase view, which has no pullback of its own', () => {
     const scene = read('games/city/scene.js');
     expect(scene).toContain('skipTrip() { if (play && !manualClock) { play.swoop = true; play.t0 = performance.now() - SWOOP_MS - play.track.total; } }');
+  });
+});
+
+describe('RF7b: each (i) sits beside what it explains (F28)', () => {
+  const topright = html.slice(html.indexOf('<div class="topright">'), html.indexOf('<div class="hud">'));
+  it('the top-right row holds only the four icon buttons', () => {
+    expect(topright).not.toContain('class="info"');
+    expect(topright).not.toContain('info-text');
+    expect(topright.match(/<button /g)).toHaveLength(3); // chase cam, sound, garage
+  });
+  it('the map explanation opens from the rate card (i), together with the rate card text', () => {
+    const card = html.slice(html.indexOf('<aside class="ratecard"'), html.indexOf('<section class="ladder"'));
+    expect(card).toContain('aria-controls="info-reward info-map"');
+    expect(card).toMatch(/id="info-map"[^>]*data-info="map"[^>]*hidden/);
+    expect(main).toContain("btn.getAttribute('aria-controls').split(' ').forEach(id => { $(id).hidden = !open; })");
+  });
+  it('the Pay and city score explanation opens from the Pay meter header, visible only while a drive is on screen', () => {
+    const meter = html.slice(html.indexOf('<div class="meter" id="meter"'), html.indexOf('<div class="meter meter-goal"'));
+    expect(meter).toContain('aria-controls="info-meters"');
+    expect(meter).not.toContain('aria-hidden="true"><svg'); // the button is not inside an aria-hidden box
+    expect(tagOf('meter')).not.toContain('aria-hidden');
+    expect(html.slice(html.indexOf('<div class="hud">'), html.indexOf('<div class="notes">'))).toMatch(/id="info-meters"[^>]*data-info="meters"[^>]*hidden/);
+    expect(rules('.hud .info, .hud .info-text')).toContain('pointer-events: auto');
+    expect(rules('.play[data-screen="racing"] .meter .info, .play[data-screen="raced"] .meter .info, .play[data-screen="racing"] #info-meters, .play[data-screen="raced"] #info-meters')).toContain('display: none');
+  });
+  it('the (i) popovers close on Escape and give focus back to their button', () => {
+    expect(main).toContain("document.addEventListener('keydown', e => { if (e.key !== 'Escape') return;");
+    expect(main).toContain(".info[aria-expanded=\"true\"]");
   });
 });
 

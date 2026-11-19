@@ -92,8 +92,10 @@ progress::-webkit-progress-value { background: var(--hud-taxi); border-radius: 6
 progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 
 .topright { position: absolute; top: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; max-width: calc(100% - 24px); }
-.topright .info { margin: 0; color: var(--hud-ink); background: var(--hud); }
-.topright .info-text { flex-basis: 100%; max-width: 300px; margin: 0; background: var(--hud); color: var(--hud-ink); }
+.hud .info, .hud .info-text { pointer-events: auto; }
+.hud .info { margin: 0 0 0 4px; vertical-align: middle; color: var(--hud-ink); }
+.hud .info-text { max-width: 300px; margin: 0; background: var(--hud); color: var(--hud-ink); }
+.play[data-screen="racing"] .meter .info, .play[data-screen="raced"] .meter .info, .play[data-screen="racing"] #info-meters, .play[data-screen="raced"] #info-meters { display: none; }
 .chase { height: 36px; padding: 0 14px; border: 1px solid var(--navy-line); background: var(--hud); color: var(--hud-ink); font-size: 13px; }
 .chase[aria-pressed="true"] { background: var(--hud-taxi); color: #141C27; }
 .chase:disabled { opacity: .5; cursor: not-allowed; }
@@ -188,7 +190,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 /* Phone: the rate card and the end card are bottom sheets of at most 35% (end card 60%) of the screen, scrolling inside; the map stays visible above. */
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
-  .topright .info, .chase { min-height: 44px; height: 44px; }
+  .chase { min-height: 44px; height: 44px; }
   .notes .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: 16px; line-height: 1.4; }
   .citybar .logo, .citybar h1 { font-size: 16px; }
   #labels span { font-size: 13px; }
@@ -196,8 +198,8 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .meter-counts { font-size: 13px; }
   .receipt, .receipt .row { font-size: 14px; }
   .ratecard .info-text, .endcard .info-text { font-size: 16px; line-height: 1.45; }
-  .topright .info-text { font-size: 16px; line-height: 1.45; }
-  .topright .info { width: 44px; }
+  .hud .info-text { grid-column: 1 / -1; font-size: 16px; line-height: 1.45; }
+  .hud .info { min-width: 44px; min-height: 44px; margin: -10px -8px -10px 0; }
   .hud { top: 60px; left: 8px; right: 8px; grid-template-columns: 1fr auto; } /* just under the single row of 44 px top buttons */
   .hud .meter { grid-column: 1 / -1; }
   .hud .meter-goal { grid-column: 1; align-self: start; }

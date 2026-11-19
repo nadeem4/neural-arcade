@@ -467,8 +467,12 @@ function build() {
   document.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', () => {
     const open = btn.getAttribute('aria-expanded') !== 'true';
     btn.setAttribute('aria-expanded', String(open));
-    $(btn.getAttribute('aria-controls')).hidden = !open;
+    btn.getAttribute('aria-controls').split(' ').forEach(id => { $(id).hidden = !open; });
   }));
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return;
+    const btn = document.querySelector('.info[aria-expanded="true"]');
+    if (btn) btn.click(), btn.focus();
+  });
 }
 
 const controls = () => [...FIELDS.flatMap(f => [$(f.key + 'Dec'), $(f.key + 'Inc')]), $('train'), $('reset'), ...ladderButtons.values()];
