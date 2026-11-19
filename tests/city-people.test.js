@@ -5,7 +5,8 @@ import { tripEvents } from '../games/city/events.js';
 import { trueGoal, goalAt } from '../games/city/goal.js';
 import { meterAt } from '../games/city/meter.js';
 import { GOAL_SECONDS, SEED } from '../games/city/presets.js';
-import { bakePeople, peopleTier, newPoses, crossingFlags, outfitOf, WALK_TICKS, SCARE_M } from '../games/city/people.js';
+import { bakePeople, POPULATION, newPoses, crossingFlags, outfitOf, WALK_TICKS, SCARE_M } from '../games/city/people.js';
+import { tierFor } from '../games/city/quality.js';
 import { cellCentre } from '../games/city/geometry.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
@@ -14,14 +15,20 @@ const world = loadWorld(city);
 const story = read('story.json');
 const card = (id) => story.cards.find((c) => c.id === id);
 const eventsOf = (id) => tripEvents(world, card(id).rewards, card(id).route);
-const tier = peopleTier();
-const bake = (id, o = {}) => bakePeople(world, city, eventsOf(id), { seed: SEED, ...tier, ...o });
+const bake = (id, o = {}) => bakePeople(world, city, eventsOf(id), { seed: SEED, ...o });
+const IDS = ['speed', 'walk', 'lights', 'legal', 'mile'];
 const WALKABLE = (c) => world.kind[c] === 1 || world.kind[c] === 2;
 
-describe('peopleTier', () => {
-  it('phones get fewer people', () => {
-    expect(peopleTier({ phone: true }).count).toBeLessThan(peopleTier().count);
-    expect(peopleTier({ phone: true }).count).toBeGreaterThan(0);
+describe('population and the phone tier', () => {
+  it('one population of 60 is baked everywhere; a phone only draws fewer', () => {
+    expect(POPULATION).toBe(60);
+    expect(tierFor({ phone: false }).peopleDrawn).toBe(POPULATION);
+    expect(tierFor({ phone: true }).peopleDrawn).toBeLessThan(POPULATION);
+    expect(tierFor({ phone: true }).peopleDrawn).toBeGreaterThan(0);
+  });
+  it('the scares do not depend on the device: the bake takes no tier', () => {
+    for (const id of IDS) expect(bake(id).scares).toEqual(bakePeople(world, city, eventsOf(id), { seed: SEED }).scares);
+    expect(bake('speed').count).toBe(POPULATION);
   });
 });
 
@@ -57,7 +64,7 @@ describe('bakePeople: determinism', () => {
 
 describe('bakePeople: where people are', () => {
   it('bakes the tier count of people', () => {
-    expect(bake('speed').count).toBe(tier.count);
+    expect(bake('speed').count).toBe(POPULATION);
   });
   it('every person stands on a footpath or park cell, or is crossing a road at a mapped crossing', () => {
     const flags = crossingFlags(world, city);
@@ -100,11 +107,14 @@ describe('bakePeople: where people are', () => {
 
 describe('bakePeople: crossings', () => {
   it('some people do cross a road on the real map', () => {
-    const b = bake('speed');
-    expect(b.crossings.length).toBeGreaterThan(0);
+    expect(IDS.some((id) => bake(id).crossings.length > 0)).toBe(true);
+  });
+  it('crossings exist only on signalled cells', () => {
+    const flags = crossingFlags(world, city);
+    flags.forEach((f, c) => { if (f) expect(world.signal[c]).toBe(1); });
   });
   it('nobody is on a crossing at a tick when the pedestrian light is red', () => {
-    for (const id of ['speed', 'legal']) {
+    for (const id of IDS) {
       const b = bake(id);
       for (const x of b.crossings) {
         for (let t = x.tEnter; t < x.tEnter + x.span; t++) {
@@ -117,7 +127,7 @@ describe('bakePeople: crossings', () => {
   });
   it('people only step onto a road from a mapped crossing cell', () => {
     const flags = crossingFlags(world, city);
-    const b = bake('speed');
+    const b = bake('mile');
     for (const x of b.crossings) {
       const first = x.from + [-world.cols, 1, world.cols, -1][x.dir];
       expect(world.kind[first]).toBe(0);
@@ -132,12 +142,12 @@ describe('scares', () => {
     expect(legal.scares.length).toBe(0);
     expect(speed.scares.length).toBeGreaterThan(0);
   });
-  it('scares come only from park or footpath driving or a red light run', () => {
+  it('scares come only from park or footpath driving', () => {
     for (const id of ['speed', 'walk', 'lights', 'legal', 'mile']) {
       const ev = eventsOf(id);
       for (const s of bake(id).scares) {
         const step = ev.steps[s.tick];
-        expect(step.off || step.red).toBeTruthy();
+        expect(step.off).toBeTruthy();
       }
     }
   });
@@ -235,5 +245,26 @@ describe('training is untouched', () => {
   });
   it('WALK_TICKS is a whole number of ticks per cell', () => {
     expect(Number.isInteger(WALK_TICKS) && WALK_TICKS > 0).toBe(true);
+  });
+});
+
+describe('people stay out of the way of the taxi', () => {
+  it('on the legal card nobody is ever in the cell the taxi is in', () => {
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]) {
+      const ev = eventsOf('legal');
+      const b = bakePeople(world, city, ev, { seed });
+      const p = newPoses(b.count);
+      for (let t = 0; t <= ev.steps.length; t++) {
+        const tc = t === 0 ? ev.steps[0].from : ev.steps[t - 1].cell;
+        b.fillPoses(t, p, { noJump: true });
+        for (let i = 0; i < b.count; i++) {
+          const c = (city.rows - 1 - Math.floor(-p.z[i] / city.cellM)) * world.cols + Math.floor(p.x[i] / city.cellM);
+          expect(c, `seed ${seed} person ${i} tick ${t}`).not.toBe(tc);
+        }
+      }
+    }
+  });
+  it('the legal card scares nobody on seeds 1 to 13', () => {
+    for (let seed = 1; seed <= 13; seed++) expect(bake('legal', { seed }).scares.length).toBe(0);
   });
 });

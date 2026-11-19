@@ -3,9 +3,11 @@
 export const ARRIVE_POINTS = 60;   // it got there
 export const ON_TIME_POINTS = 20;  // and under the goal time, legally
 export const CLEAN_POINTS = 20;    // arrived with no park, red-light or wrong-way moves
+export const SCARE_MAX = 30;       // the most scared people can take off, so a trip that arrives never scores as low as one that never does
 export const SCARE_COST = 5;       // per scared person (people.js)
 
 const clamp0 = (n) => Math.max(0, n);
+const scareCost = (n) => Math.min(SCARE_MAX, SCARE_COST * n);
 const countOf = (s) => (Array.isArray(s) ? s.length : s | 0);
 
 function score({ arrived, seconds, off, red, wrong, scares, goalSeconds }) {
@@ -15,7 +17,7 @@ function score({ arrived, seconds, off, red, wrong, scares, goalSeconds }) {
     arrive: arrived ? ARRIVE_POINTS : 0,
     onTime: onTime ? ON_TIME_POINTS : 0,
     clean: arrived && clean ? CLEAN_POINTS : 0, // a clean trip has to arrive
-    scared: scares ? -SCARE_COST * scares : 0,
+    scared: scares ? -scareCost(scares) : 0,
   };
   return { arrived, onTime, violations: { off, red, wrong }, scared: scares, score: clamp0(parts.arrive + parts.onTime + parts.clean + parts.scared), parts };
 }
@@ -42,5 +44,5 @@ export function goalAt(events, scaresSoFar, f, goalSeconds) {
   if (whole >= events.steps.length) return score({ arrived, seconds: whole, off, red, wrong, scares, goalSeconds }).score;
   const clean = off + red + wrong === 0;
   const onTime = clean && whole < goalSeconds;
-  return clamp0(ARRIVE_POINTS + (onTime ? ON_TIME_POINTS : 0) + (clean ? CLEAN_POINTS : 0) - SCARE_COST * scares);
+  return clamp0(ARRIVE_POINTS + (onTime ? ON_TIME_POINTS : 0) + (clean ? CLEAN_POINTS : 0) - scareCost(scares));
 }

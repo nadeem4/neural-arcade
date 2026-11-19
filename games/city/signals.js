@@ -1,6 +1,5 @@
 // Traffic signals as the taxi sees them. Pure, no DOM, no three.js.
 import { lightRed } from './sim.js';
-import { cellCentre } from './geometry.js';
 
 // Heading (radians, forward = (sin h, cos h), north is -z) to the nearest sim action: 0 north, 1 east, 2 south, 3 west.
 export function headingAction(heading) {
@@ -15,8 +14,9 @@ export function signalState(world, cell, heading, tick) {
   return lightRed(world, tick, headingAction(heading)) ? 'stop' : 'go';
 }
 
-// Where the lamp stands: the corner of the signal's cell (east, south side), never on the carriageway centre line.
-export function signalCorners(world, cell, cellM) {
-  const [x, z] = cellCentre(cell % world.cols, Math.floor(cell / world.cols), { cellM, rows: world.rows });
-  return { x: x + cellM / 2, z: z + cellM / 2 };
+// A mapped head beside a road with bearing `dirDeg` (0 to 179, clockwise from north) controls traffic along that road, both ways.
+// Both ways are on one phase (the sim keys red on the north-south or east-west axis), so a head has one state: the one signalState gives a taxi on that road.
+export const headAxis = (dirDeg) => headingAction(Math.PI - (dirDeg * Math.PI) / 180) % 2;
+export function headState(world, tick, dirDeg) {
+  return lightRed(world, tick, headAxis(dirDeg)) ? 'stop' : 'go';
 }

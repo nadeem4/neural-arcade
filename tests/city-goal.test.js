@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadWorld } from '../games/city/sim.js';
 import { tripEvents } from '../games/city/events.js';
-import { trueGoal, goalAt, ARRIVE_POINTS, ON_TIME_POINTS, CLEAN_POINTS, SCARE_COST } from '../games/city/goal.js';
+import { trueGoal, goalAt, ARRIVE_POINTS, ON_TIME_POINTS, CLEAN_POINTS, SCARE_COST, SCARE_MAX } from '../games/city/goal.js';
 import { GOAL_SECONDS } from '../games/city/presets.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
@@ -37,9 +37,9 @@ describe('trueGoal', () => {
     expect(g.parts.clean).toBe(0);
     expect(g.score).toBe(0);
   });
-  it('each scared person costs 5, and the score never goes below 0', () => {
+  it('each scared person costs 5, up to SCARE_MAX in all', () => {
     expect(trueGoal({ analysis: A({}), scares: [1, 2], goalSeconds: GOAL_SECONDS }).score).toBe(90);
-    expect(trueGoal({ analysis: A({}), scares: new Array(40).fill(0), goalSeconds: GOAL_SECONDS }).score).toBe(0);
+    expect(trueGoal({ analysis: A({}), scares: new Array(40).fill(0), goalSeconds: GOAL_SECONDS }).score).toBe(100 - SCARE_MAX);
   });
   it('scares default to none', () => {
     expect(trueGoal({ analysis: A({}), goalSeconds: GOAL_SECONDS }).scared).toBe(0);

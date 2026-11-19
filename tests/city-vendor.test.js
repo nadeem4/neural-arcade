@@ -40,6 +40,13 @@ describe('readColors', () => {
     const c = readColors(style);
     expect(c.sky).toBe('#101010');
     expect(c.road).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(c.road.toLowerCase()).toBe('#3a3d42'); // neutral dark asphalt
+    expect(c.walk.toLowerCase()).toBe('#a9a9a4'); // lighter grey sidewalks
+    const grey = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); return Math.max(...v) - Math.min(...v); };
+    const lum = (h) => [1, 3, 5].reduce((s, i) => s + parseInt(h.slice(i, i + 2), 16), 0) / 3;
+    // the land beyond the city is clearly darker than the pale city footing, so the city has an edge
+    expect(lum(c.farGround)).toBeLessThan(lum(c.ground) - 25);
+    for (const k of ['road', 'walk', 'ground']) expect(grey(c[k])).toBeLessThanOrEqual(10); // no pink or brown cast
   });
 });
 

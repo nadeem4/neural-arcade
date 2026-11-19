@@ -5,10 +5,12 @@ import { loadWorld } from '../games/city/sim.js';
 import { tripEvents, tagsFor } from '../games/city/events.js';
 import { endCardModel } from '../games/city/endcard.js';
 import { INFO } from '../games/city/words.js';
-import { SCARE_COST } from '../games/city/goal.js';
+import { SCARE_COST, SCARE_MAX, trueGoal } from '../games/city/goal.js';
+import { Y_CROSS, Y_WALK } from '../games/city/street-model.js';
+import { tierFor } from '../games/city/quality.js';
 import { GOAL_SECONDS, SEED } from '../games/city/presets.js';
-import { bakePeople, peopleTier } from '../games/city/people.js';
-import { createPeopleLayer } from '../games/city/scene-people.js';
+import { bakePeople, SURF_WALK, SURF_PARK, SURF_CROSS } from '../games/city/people.js';
+import { createPeopleLayer, surfaceY, Y_PARK } from '../games/city/scene-people.js';
 import { createFallbackStage } from '../games/city/stage.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
@@ -41,22 +43,24 @@ describe('the end card', () => {
 describe('the info text', () => {
   it('says scared people cost points, with the number from the constant', () => {
     expect(INFO.meters).toContain(`minus ${SCARE_COST} for each person it scares`);
+    expect(INFO.meters).toContain(`at most ${SCARE_MAX}`);
+    expect(INFO.meters).not.toMatch(/red light.*scares|scares.*red light/);
   });
 });
 
 describe('scene-people', () => {
   const scene = () => ({ children: [], add(...o) { this.children.push(...o); }, remove(...o) { this.children = this.children.filter((c) => !o.includes(c)); } });
-  const baked = (phone) => bakePeople(world, city, events, { seed: SEED, ...peopleTier({ phone }) });
+  const baked = () => bakePeople(world, city, events, { seed: SEED });
   it('two InstancedMesh with one instance per person: 60 on desktop, fewer on a phone', () => {
     const s = scene(), b = baked(false);
-    const layer = createPeopleLayer(s, b, { phone: false });
+    const layer = createPeopleLayer(s, b, { drawn: tierFor({ phone: false }).peopleDrawn, shadows: true });
     expect(s.children.length).toBe(2);
-    expect(s.children.every((m) => m.isInstancedMesh && m.count === b.count)).toBe(true);
-    expect(layer.count).toBe(peopleTier().count);
+    expect(s.children.every((m) => m.isInstancedMesh && m.count === 60)).toBe(true);
+    expect(layer.count).toBe(60);
     expect(layer.drawCalls).toBe(4); // two meshes, drawn again in the shadow pass
     layer.dispose();
-    const sp = scene(), lp = createPeopleLayer(sp, baked(true), { phone: true });
-    expect(lp.count).toBe(peopleTier({ phone: true }).count);
+    const sp = scene(), lp = createPeopleLayer(sp, baked(), { drawn: tierFor({ phone: true }).peopleDrawn, shadows: false });
+    expect(lp.count).toBe(tierFor({ phone: true }).peopleDrawn);
     expect(lp.drawCalls).toBe(2);
     expect(sp.children.some((m) => m.castShadow)).toBe(false);
   });
@@ -81,9 +85,9 @@ describe('the no-WebGL fallback', () => {
     expect(done).toBe(1);
   });
   it('the city score comes from people.js alone, so it is the same with or without a stage', () => {
-    const a = bakePeople(world, city, events, { seed: SEED, ...peopleTier() }).scares.length;
-    createPeopleLayer({ add() {}, remove() {} }, bakePeople(world, city, events, { seed: SEED, ...peopleTier() })).update(10);
-    expect(bakePeople(world, city, events, { seed: SEED, ...peopleTier() }).scares.length).toBe(a);
+    const a = bakePeople(world, city, events, { seed: SEED }).scares.length;
+    createPeopleLayer({ add() {}, remove() {} }, bakePeople(world, city, events, { seed: SEED }), { drawn: 24 }).update(10);
+    expect(bakePeople(world, city, events, { seed: SEED }).scares.length).toBe(a);
   });
 });
 
@@ -97,5 +101,33 @@ describe('the page wires people in', () => {
   });
   it('the end card has a scared line', () => {
     expect(readFileSync(new URL('../games/city/index.html', import.meta.url), 'utf8')).toContain('id="endScared"');
+  });
+});
+
+describe('feet on the surface', () => {
+  it('heights come from the surface constants', () => {
+    expect(surfaceY(SURF_WALK)).toBe(Y_WALK);
+    expect(surfaceY(SURF_CROSS)).toBe(Y_CROSS);
+    expect(surfaceY(SURF_PARK)).toBe(Y_PARK);
+    expect(Y_PARK).toBeGreaterThan(0);
+  });
+  it('nobody is drawn below the ground: every body starts at or above the lowest surface', () => {
+    const s = { children: [], add(...o) { this.children.push(...o); }, remove() {} };
+    const layer = createPeopleLayer(s, bakePeople(world, city, events, { seed: SEED }));
+    for (const t of [0, 4, 9, 20, 33]) {
+      layer.update(t);
+      const a = s.children[0].instanceMatrix.array;
+      for (let i = 0; i < layer.count; i++) expect(a[i * 16 + 13]).toBeGreaterThanOrEqual(Y_PARK);
+    }
+  });
+});
+
+describe('the scare cap', () => {
+  const A = { arrived: true, seconds: 50, offTiles: 0, redRuns: 0, wrongWays: 0 };
+  it('takes at most SCARE_MAX off, so an arriving trip never scores as low as one that never arrives', () => {
+    expect(SCARE_MAX).toBe(30);
+    const many = trueGoal({ analysis: { ...A, offTiles: 3 }, scares: 40, goalSeconds: GOAL_SECONDS }).score;
+    expect(many).toBe(60 - SCARE_MAX);
+    expect(many).toBeGreaterThan(trueGoal({ analysis: { ...A, arrived: false, offTiles: 3 }, scares: 40, goalSeconds: GOAL_SECONDS }).score);
   });
 });

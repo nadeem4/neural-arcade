@@ -12,7 +12,7 @@ import { webglAvailable, chooseStage } from './stage.js';
 import { motionAllowed, routeFrames } from './playback.js';
 import { parseRecord, tripMs, recordApi, pruneTags, cardRewards } from './record.js';
 import { tripEvents, tagsFor, foldTag } from './events.js';
-import { bakePeople, peopleTier } from './people.js';
+import { bakePeople } from './people.js';
 import { driveTrack } from './drive.js';
 import { meterAt, meterText, barFraction, payRange, payFraction } from './meter.js';
 import { minimapModel, drawMinimap } from './minimap.js';
@@ -30,8 +30,7 @@ import { LADDER_KEY, cardFor, matchStep, parseRan, markRan, ladderModel } from '
 import { buildLadder, updateLadder } from './ladder-view.js';
 
 const $ = id => document.getElementById(id);
-const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
-const peopleFor = events => bakePeople(world, cityData, events, { seed: SEED, ...peopleTier({ phone: isPhone() }) }); // the people of one trip; they only react, never change pay or training
+const peopleFor = events => bakePeople(world, cityData, events, { seed: SEED }); // the people of one trip, the same on every device; they only react, never change pay or training
 const signed = n => (n > 0 ? '+' : '') + n;
 
 let world = null, cityData = null, cellM = 12, stage = null, session = createSession(), rewards = defaultRewards();
