@@ -203,7 +203,9 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .hud .meter-goal { grid-column: 1; align-self: start; }
   .minimap { position: static; grid-column: 2; grid-row: 2; width: 84px; height: 84px; } /* beside the city score, so no meter runs under it */
   .play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap { display: none; }
-  .play[data-screen="raced"] .meter-counts { display: none; } /* the result banner says the same; this keeps 8 px clear between the meters and the banner */
+  .play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts { display: none; } /* the result banner says the same; two short meters side by side keep 8 px clear of the banner and cover less of the cars */
+  .play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud { grid-template-columns: 1fr 1fr; justify-items: stretch; }
+  .play[data-screen="racing"] .hud .meter, .play[data-screen="raced"] .hud .meter { grid-column: auto; }
   .meter { min-width: 120px; padding: 8px 12px; }
   .meter-total { font-size: 26px; }
   .meter-goal { padding: 6px 12px; }

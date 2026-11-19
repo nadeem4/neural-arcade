@@ -562,7 +562,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       return { phase, done: phase === 'map' };
     },
     // Skip to the end of the drive: the taxi jumps to its last tile and the camera pulls back.
-    skipTrip() { if (play && !manualClock) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
+    skipTrip() { if (play && !manualClock) { play.swoop = true; play.t0 = performance.now() - SWOOP_MS - play.track.total; } }, // always into the pullback, so the camera eases out to the map under the end card (the chase view has no pullback of its own)
     // The Map view toggle: the high map camera while the taxi drives, instead of the chase.
     setMapView(on) { mapView = !!on; if (!play) draw(); },
     setCuts(list) { cuts = list ?? []; }, // footage cam=auto: overheadCuts result

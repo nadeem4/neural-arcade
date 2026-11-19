@@ -26,6 +26,13 @@ describe('RF7b: phone tags keep off the taxi', () => {
   });
 });
 
+describe('RF7b: Skip pulls the camera back (F9)', () => {
+  it('skipTrip jumps to the start of the pullback even from the chase view, which has no pullback of its own', () => {
+    const scene = read('games/city/scene.js');
+    expect(scene).toContain('skipTrip() { if (play && !manualClock) { play.swoop = true; play.t0 = performance.now() - SWOOP_MS - play.track.total; } }');
+  });
+});
+
 describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
   const hudHtml = html.slice(html.indexOf('<div class="hud">'), html.indexOf('<div class="notes">'));
   it('the minimap sits in the HUD grid, beside the city score, so no meter runs under it', () => {
@@ -37,6 +44,10 @@ describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
   });
   it('a race has no minimap on a phone, and the finished race drops the counts lines so the banner has clear air under the meters', () => {
     expect(rules('.play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap')).toContain('display: none');
-    expect(rules('.play[data-screen="raced"] .meter-counts')).toContain('display: none');
+    expect(rules('.play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts')).toContain('display: none');
+  });
+  it('the two race meters sit side by side on a phone, so they cover less of the cars', () => {
+    expect(rules('.play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud')).toContain('grid-template-columns: 1fr 1fr');
+    expect(rules('.play[data-screen="racing"] .hud .meter, .play[data-screen="raced"] .hud .meter')).toContain('grid-column: auto');
   });
 });
