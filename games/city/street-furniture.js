@@ -41,7 +41,37 @@ const BLOBS = [
 export const crownBlobs = (n = 3) => BLOBS.slice(0, n).map((b) => ({ ...b }));
 
 // ---- Lamps ----
-export const lampSpecs = (lamps) => lamps.map(([x, y]) => ({ x, z: -y }));
+// With `roads`, a lamp inside a driving lane is moved straight out of the nearest road to 0.6 m past its edge (a few OSM lamps sit on the
+// median or in the road); one that still stands in a lane after three moves (a junction) is dropped.
+// `avoid` is a list of {x, z} (the signal poles): a lamp within LAMP_POLE_GAP of one is dropped so two poles never share a spot.
+export const LAMP_POLE_GAP = 2.5;
+export function lampSpecs(lamps, roads = [], avoid = []) {
+  const out = [];
+  for (const [x, y] of lamps) {
+    let p = { x, z: -y };
+    for (let n = 0; n < 3 && roads.length && clearanceFromRoads(p.x, p.z, roads) < 0.4; n++) p = nudgeOut(p, roads);
+    if (roads.length && clearanceFromRoads(p.x, p.z, roads) < 0.4) continue;
+    if (avoid.some((a) => Math.hypot(a.x - p.x, a.z - p.z) < LAMP_POLE_GAP)) continue;
+    out.push(p);
+  }
+  return out;
+}
+
+// One step out of the nearest road: along the line from its centre to the point (or the road's left side if the point is on the centre).
+function nudgeOut(p, roads) {
+  let best = { d: Infinity };
+  for (const r of roads) {
+    for (let i = 1; i < r.pts.length; i++) {
+      const [ax, ay] = r.pts[i - 1], [bx, by] = r.pts[i];
+      const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+      const t = l2 ? Math.max(0, Math.min(1, ((p.x - ax) * dx + (-p.z - ay) * dy) / l2)) : 0;
+      const ex = p.x - ax - t * dx, ey = -p.z - ay - t * dy, d = Math.hypot(ex, ey);
+      if (d - r.w / 2 < best.d) best = { d: d - r.w / 2, hw: r.w / 2, ux: d > 1e-6 ? ex / d : -dy / Math.sqrt(l2 || 1), uy: d > 1e-6 ? ey / d : dx / Math.sqrt(l2 || 1), d0: d, cx: p.x - ex, cy: -p.z - ey };
+    }
+  }
+  const far = best.hw + 0.6;
+  return { x: best.cx + best.ux * far, z: -(best.cy + best.uy * far) };
+}
 
 
 // ---- The L ----

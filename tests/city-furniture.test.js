@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { furnitureTier } from '../games/city/quality.js';
 import { Y_ROAD, Y_WALK } from '../games/city/street-model.js';
+import { headPlacement } from '../games/city/signal-heads.js';
 import {
   hash01, treeSpecs, crownBlobs, lampSpecs, railSegments, pairRails, railColumns, columnLegs, railParts, clearanceFromRoads, SURFACE,
 } from '../games/city/street-furniture.js';
@@ -55,6 +56,29 @@ describe('lampSpecs', () => {
   it('maps the data points to world x, z', () => {
     expect(lampSpecs([[3, 4], [5, -6]])).toEqual([{ x: 3, z: -4 }, { x: 5, z: 6 }]);
     expect(lampSpecs(city.lamps)).toHaveLength(city.lamps.length);
+  });
+  it('moves a lamp that sits in a lane out to the kerb, and leaves a clear one alone', () => {
+    const roads = [{ pts: [[0, 0], [100, 0]], w: 10 }]; // lanes reach 5 m either side
+    const [inLane, onKerb] = lampSpecs([[50, 2], [50, 8]], roads);
+    expect(onKerb).toEqual({ x: 50, z: -8 });
+    expect(clearanceFromRoads(inLane.x, inLane.z, roads)).toBeGreaterThanOrEqual(0.5);
+    expect(inLane.x).toBeCloseTo(50, 5);
+    expect(inLane.z).toBeLessThan(0); // pushed the way it already leaned (data y = 2 is world z = -2)
+  });
+  it('drops a lamp that would share a spot with a signal pole', () => {
+    const out = lampSpecs([[10, 10], [30, 10]], [], [{ x: 11, z: -10.5 }]);
+    expect(out).toEqual([{ x: 30, z: -10 }]);
+  });
+  it('on the real map no lamp is within 2.5 m of a signal pole', () => {
+    const poles = city.signalHeads.map((h) => { const p = headPlacement(h, city.roads); return { x: p.x, z: -p.y }; });
+    const out = lampSpecs(city.lamps, city.roads, poles);
+    expect(out.length).toBeGreaterThan(city.lamps.length * 0.8);
+    for (const l of out) for (const p of poles) expect(Math.hypot(l.x - p.x, l.z - p.z)).toBeGreaterThanOrEqual(2.5);
+  });
+  it('on the real map no lamp stands in a lane', () => {
+    const roads = city.roads;
+    const bad = lampSpecs(city.lamps, roads).filter((l) => clearanceFromRoads(l.x, l.z, roads) < 0.4);
+    expect(bad).toHaveLength(0);
   });
 });
 

@@ -5,9 +5,10 @@
 // Instances (Chicago Loop export): 410 lamps, 4,128 trees (2,064 on phones), about 1,700 L boxes.
 import * as THREE from './vendor/three.module.min.js';
 import { treesToHide } from './scene-math.js';
+import { headPlacement } from './signal-heads.js';
 import { treeSpecs, crownBlobs, lampSpecs, pairRails, railParts, RAIL_COLOURS, SURFACE } from './street-furniture.js';
 
-const LAMP_H = 9, TRUNK_Y = SURFACE.grass, GLOW = '#ffd9a0';
+const LAMP_H = 9, POLE_H = SURFACE.lampBase + LAMP_H - SURFACE.grass, TRUNK_Y = SURFACE.grass, GLOW = '#ffd9a0';
 
 // A crown of low-poly blobs merged into one geometry (flat shaded, so the facets read as leaves at street scale).
 function crownGeometry(n) {
@@ -44,14 +45,15 @@ export function buildFurniture({ scene, city, furnitureTier: tier, leaf = '#4E9A
   };
 
   // Lamps: a pole and a head at each OSM point. The head glows on desktop (untoned emissive, like the signal lamps).
-  const lamps = lampSpecs(city.lamps ?? []);
+  const poles = (city.signalHeads ?? []).map((h) => { const p = headPlacement(h, city.roads ?? []); return { x: p.x, z: -p.y }; });
+  const lamps = lampSpecs(city.lamps ?? [], city.roads ?? [], poles);
   let clearLamps = () => {};
   if (lamps.length) {
     const poleMat = material(new THREE.MeshStandardMaterial({ color: '#3b3f46', roughness: 0.7, envMapIntensity: envIntensity }));
     const headMat = material(tier.lampGlow
       ? new THREE.MeshStandardMaterial({ color: GLOW, emissive: GLOW, emissiveIntensity: 1.6, toneMapped: false })
       : new THREE.MeshStandardMaterial({ color: '#c9c2b0', roughness: 0.6, envMapIntensity: envIntensity }));
-    const poles = mesh(new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28, 0.4, LAMP_H, 6).translate(0, SURFACE.lampBase + LAMP_H / 2, 0), poleMat, lamps.length));
+    const poles = mesh(new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28, 0.4, POLE_H, 6).translate(0, SURFACE.grass + POLE_H / 2, 0), poleMat, lamps.length));
     const heads = mesh(new THREE.InstancedMesh(new THREE.SphereGeometry(1.1, 8, 6).scale(1, 0.6, 1).translate(0, SURFACE.lampBase + LAMP_H + 0.3, 0), headMat, lamps.length));
     const lampAt = (i) => { m.makeTranslation(lamps[i].x, 0, lamps[i].z); poles.setMatrixAt(i, m); heads.setMatrixAt(i, m); };
     lamps.forEach((l, i) => lampAt(i));
