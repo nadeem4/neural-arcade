@@ -246,9 +246,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       : mapShot;
     const phase = play ? play.phase : 'map';
     const cut = play && phase === 'chase' && !mapView ? cutAt(cuts, play.clock) : null;
-    if (cut) { // an overhead cut: framed on the taxi and the offences still highlighted (so it follows the taxi), nothing to clip
-      const spots = highlightsAt(play.offences, play.clock).map((h) => [h.x, h.z]);
-      shot = overheadShot([[play.state.x, play.state.z], ...spots], { aspect: camera.aspect });
+    if (cut) { // an overhead cut: centred on the taxi at the cut's one height, nothing to clip
+      shot = overheadShot([[play.state.x, play.state.z]], { aspect: camera.aspect, spread: cut.spread }); // one height for the whole cut
     }
     if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
@@ -276,7 +275,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const hiddenHeads = chaseCam && taxiXZ ? treesToHide(sigFlat, chaseCam, taxiXZ, 12, 4) : [];
   if (bodyGeo && hideHeads(sig, hiddenHeads)) { bodyGeo.index.needsUpdate = true; lampGeo.index.needsUpdate = true; hiddenLamps = new Set(hiddenHeads.flatMap((i) => { const [a, b] = sig.heads[i].lamps; return Array.from({ length: (b - a) / 6 }, (_, k) => a / 6 + k); })); paintGlow(); } // signal poles between the camera and the taxi
     furniture.setOverhead(!!cut); // from straight above the L deck, its trains and the tree crowns would hide the taxi
-    if (play) play.overhead = !!cut;
+    if (play) play.overhead = cut ? { clear: 2.1 * TAXI_SCALE * CUT_TAXI_SCALE * (canvas.clientHeight / (2 * shot.pos[1] * Math.tan((shot.fov * Math.PI) / 360))) + 6 } : null; // the drawn taxi's half length in pixels: tags stay clear of it
     if (taxi && !play?.race) taxi.scale.setScalar(TAXI_SCALE * (cut ? CUT_TAXI_SCALE : 1)); // the taxi is drawn bigger in an overhead cut so it reads from that height
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);

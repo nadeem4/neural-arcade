@@ -183,4 +183,10 @@ describe('tagPlace', () => {
     }
     expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBe(400); // plenty of room: unchanged
   });
+  it('with a clearance the tag sits clear of the taxi: above it with a gap, or below when there is no room above', () => {
+    const o = { ...box, width: 1280, height: 720, clear: 40 };
+    expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBeLessThanOrEqual(400 - 40); // the tag's lower edge is above the taxi's top
+    const lowTag = tagPlace({ x: 600, y: 30 }, 0, o).top - 1.5 * box.tagH; // too near the top: below, the tag's visible top under the taxi's bottom
+    expect(lowTag).toBeGreaterThanOrEqual(30 + 40);
+  });
 });

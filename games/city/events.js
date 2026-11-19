@@ -71,13 +71,13 @@ export function layoutTags(tags) {
 // Desktop: above the taxi, one slot higher per tag. Phone (phone: true): the taxi's anchor is under the meters, so the tags
 // sit just below them and grow downward. Either way the tag stays inside the screen sideways. Pure.
 // With `height` (the label layer's height) the tag also stays inside the screen vertically, for the overhead shots where the taxi can be
-// anywhere: a tag that would rise off the top goes below the taxi instead (one slot lower per tag), and none is lower than the bottom edge.
-export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0, height = null }) {
+// anywhere: a tag that would rise off the top goes below the taxi instead; clear (px, the drawn taxi's half length) keeps it off the taxi either way (one slot lower per tag), and none is lower than the bottom edge.
+export function tagPlace(at, slot, { width, tagW, tagH, phone = false, meterBottom = 0, height = null, clear = 0 }) {
   const half = tagW / 2 + 4;
   const left = Math.min(Math.max(at.x, half), Math.max(half, width - half));
-  let top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - slot * TAG_SLOT_PX;
+  let top = phone ? meterBottom + 8 + 1.5 * tagH + slot * TAG_SLOT_PX : at.y - clear - slot * TAG_SLOT_PX;
   if (height !== null && !phone) {
-    if (top - 1.5 * tagH < 0) top = at.y + 2.5 * tagH + slot * TAG_SLOT_PX; // below the taxi
+    if (top - 1.5 * tagH < 0) top = at.y + clear + 1.5 * tagH + 4 + slot * TAG_SLOT_PX; // below the taxi, clear of it
     top = Math.min(Math.max(top, 1.5 * tagH + 4), height - 4);
   }
   return { left, top };

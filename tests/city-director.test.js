@@ -86,6 +86,12 @@ describe('overheadShot', () => {
     expect(far.pos[1]).toBeLessThanOrEqual(800);
     expect(near.pos[1]).toBeGreaterThanOrEqual(346); // above the tallest tower on the map, so no building hides the road
   });
+  it('with a spread the height is fixed: the points no longer change it', () => {
+    const a = overheadShot([[0, 0], [500, 0]], { spread: 100 }), b = overheadShot([[0, 0], [10, 0]], { spread: 100 });
+    expect(a.pos[1]).toBeCloseTo(b.pos[1]);
+    expect(a.target).toEqual([0, 0, 0]);
+    expect(overheadShot([[0, 0]], { spread: 300 }).pos[1]).toBeGreaterThan(overheadShot([[0, 0]], { spread: 100 }).pos[1]);
+  });
   it('a tall narrow screen needs more height for the same sideways spread', () => {
     const wide = overheadShot([[0, 0], [150, 0]], { aspect: 1.78 }), tall = overheadShot([[0, 0], [150, 0]], { aspect: 0.46 });
     expect(tall.pos[1]).toBeGreaterThan(wide.pos[1]);

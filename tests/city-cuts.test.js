@@ -6,7 +6,7 @@ import { routeFrames } from '../games/city/playback.js';
 import { driveTrack } from '../games/city/drive.js';
 import { SWOOP_MS } from '../games/city/director.js';
 import { buildOffences } from '../games/city/offences.js';
-import { overheadCuts, cutAt } from '../games/city/cuts.js';
+import { overheadCuts, cutAt, CUT_SPREAD_MAX } from '../games/city/cuts.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../games/city/' + f, import.meta.url), 'utf8'));
 const city = read('chicago.json'), story = read('story.json');
@@ -43,6 +43,11 @@ describe('overheadCuts', () => {
     expect(a.from).toBeGreaterThanOrEqual(1400);
     expect(b.to).toBeLessThanOrEqual(1400 + 30000);
   });
+  it('each cut carries one spread for its whole length: how far its offences lie from their middle, capped so the taxi stays readable', () => {
+    expect(synth([fake(10000, 500)])[0].spread).toBe(0);
+    expect(synth([fake(10000, 0), fake(11000, 60)])[0].spread).toBeCloseTo(30);
+    expect(synth([fake(10000, 0), fake(11000, 4000)])[0].spread).toBe(CUT_SPREAD_MAX);
+  });
   it('cutAt finds the cut holding a time, else null', () => {
     const list = synth([fake(10000)]);
     expect(cutAt(list, 9000)).toBe(list[0]); expect(cutAt(list, 10999)).toBe(list[0]);
@@ -51,7 +56,8 @@ describe('overheadCuts', () => {
   });
   it('on the real cards: legal has none; the others cut for less than the whole drive and obey the rules', () => {
     expect(cuts('legal').list).toEqual([]);
-    for (const id of ['speed', 'walk', 'lights', 'mile']) {
+    expect(cuts('mile').list).toEqual([]); // the mile card breaks no rule, so cam=auto never leaves the chase there
+    for (const id of ['speed', 'walk', 'lights']) {
       const { list, track } = cuts(id);
       let total = 0;
       list.forEach((c, k) => {
@@ -81,11 +87,13 @@ describe('cam wiring', () => {
   });
   it('main applies cam after training: map is one cut over the whole drive (no map view), auto is the offence cuts, and keeps tags on screen', () => {
     const m = src('main.js');
-    expect(m).toMatch(/cfg\.cam === 'map'[^\n]*stage\.setCuts\(\[\{ from: SWOOP_MS, to: SWOOP_MS \+ trip\.track\.total \}\]\)/);
+    expect(m).toMatch(/cfg\.cam === 'map'[^\n]*stage\.setCuts\(\[\{ from: SWOOP_MS, to: SWOOP_MS \+ trip\.track\.total, spread: CUT_SPREAD_MAX \}\]\)/);
     expect(m).not.toMatch(/cfg\.cam === 'map'[^\n]*setMapView/);
     expect(m).toMatch(/cfg\.cam === 'auto'[^\n]*stage\.setCuts\(overheadCuts\(/);
     expect(m.indexOf('await train(')).toBeLessThan(m.indexOf("cfg.cam === 'map'"));
-    expect(m).toMatch(/tagPlace\([^\n]*height: lab\.height/);
+    expect(m).toMatch(/tagPlace\([^\n]*height: overhead \? lab\.height : null/); // only the overhead shot uses the vertical rule; the default path is as before
+    expect(m).toContain('function placeTag(span, at, slot, overhead, box = tagBox())');
+    expect(m).toContain('{ from: SWOOP_MS, to: SWOOP_MS + trip.track.total, spread: CUT_SPREAD_MAX }');
   });
   it('in an overhead cut the L, its trains and the trees are hidden, and restored after', () => {
     const f = src('scene-furniture.js'), s = src('scene.js');
@@ -97,7 +105,12 @@ describe('cam wiring', () => {
     expect(src('scene.js')).toMatch(/onFrame\?\.\(st, play\.race \? null : taxiScreen\(\), play\.overhead\)/);
     const m = src('main.js');
     expect(m).toMatch(/function hudFrame\(state, at, overhead\)/);
-    expect(m).toMatch(/if \(overhead && at\)[^\n]*placeTag\(/);
+    expect(m).toContain('(overhead || hud.wasOverhead) && at');
+    expect(m).toContain('placeTag(span, at, span._slot, overhead, box)');
     expect(m).toMatch(/hudFrame\(st, at, overhead\)/);
+    expect(m).toMatch(/popTag\(t, at, hud\.done, overhead\)/);
+    expect(m).toContain('hud.wasOverhead = !!overhead'); // the first frame after a cut puts the live tags back too
+    expect(m).toMatch(/const box = tagBox\(\);[^\n]*\n[^\n]*for \(const span of/); // layout read once, before the loop
+    expect(src('scene.js')).toContain('{ aspect: camera.aspect, spread: cut.spread }');
   });
 });
