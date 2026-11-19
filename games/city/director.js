@@ -34,6 +34,19 @@ export function raceShot(a, b, { fov = 55 } = {}) {
   return { pos: [mx - fx * back, up, mz - fz * back], target: [mx, 1, mz], fov };
 }
 
+// The overhead footage shot: high above points[0] ([[x, z], ...], the taxi first), a little south of straight down so north stays up
+// and tall buildings lean away from the taxi. High enough that the other points plus a margin of road fit the screen (aspect: width / height).
+const OVERHEAD = { fov: 22, pad: 25, tilt: 0.03, min: 360, max: 800 }; // a long lens from above the tallest tower (346 m), so no building hides the road
+// With spread (metres) the height is fixed by it alone, whatever the points: a cut uses one height for its whole length (cuts.js).
+export function overheadShot(points, { aspect = 1.6, spread = null } = {}) {
+  // Centred on the first point (the taxi); the others only widen the frame, so a tower beside the taxi leans away from it.
+  const [cx, cz] = points[0], t = Math.tan((OVERHEAD.fov * Math.PI) / 360);
+  const dx = spread ?? Math.max(...points.map((p) => Math.abs(p[0] - cx))), dz = spread ?? Math.max(...points.map((p) => Math.abs(p[1] - cz)));
+  const need = Math.max((dx + OVERHEAD.pad) / (t * aspect), (dz + OVERHEAD.pad) / t);
+  const h = Math.min(OVERHEAD.max, Math.max(OVERHEAD.min, need));
+  return { pos: [cx, h, cz + h * OVERHEAD.tilt], target: [cx, 0, cz], fov: OVERHEAD.fov };
+}
+
 // Which phase `ms` into a trip of `driveMs` falls in. swoop:false starts straight in the chase view and ends without a pullback.
 export function timeline(driveMs, ms, { swoop = true } = {}) {
   const intro = swoop ? SWOOP_MS : 0, outro = swoop ? PULLBACK_MS : 0;

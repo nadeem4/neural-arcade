@@ -12,8 +12,14 @@ describe('parseRecord', () => {
     expect(parseRecord('?card=speed')).toBeNull();
   });
   it('reads card and fps, defaulting fps to 30', () => {
-    expect(parseRecord('?record=1&card=walk')).toEqual({ card: 'walk', fps: 30 });
+    expect(parseRecord('?record=1&card=walk')).toEqual({ card: 'walk', fps: 30, cam: 'default' });
     expect(parseRecord('?record=1&card=walk&fps=60').fps).toBe(60);
+  });
+  it('reads cam: default, map or auto', () => {
+    expect(parseRecord('?record=1&card=walk').cam).toBe('default');
+    expect(parseRecord('?record=1&card=walk&cam=map').cam).toBe('map');
+    expect(parseRecord('?record=1&card=walk&cam=auto').cam).toBe('auto');
+    expect(() => parseRecord('?record=1&card=walk&cam=sky')).toThrow(/bad cam: sky/);
   });
   it('rejects bad input', () => {
     expect(() => parseRecord('?record=1&card=nope')).toThrow(/unknown card/);

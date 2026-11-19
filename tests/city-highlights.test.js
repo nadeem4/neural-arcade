@@ -1,6 +1,23 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { highlightsAt, HOLD_MS } from '../games/city/highlights.js';
+import { highlightsAt, highlightLook, OVERHEAD_BOOST, HOLD_MS } from '../games/city/highlights.js';
+
+describe('highlightLook from overhead', () => {
+  it('chase look is unchanged; overhead scales the arrow and ring up and makes the tile flash opaque', () => {
+    expect(OVERHEAD_BOOST).toBeGreaterThan(1.4);
+    expect(highlightLook('off', 0, false)).toEqual({ opacity: 0.3, boost: 1 });
+    expect(highlightLook('wrong', 1, false)).toEqual({ opacity: 1, boost: 1 });
+    expect(highlightLook('wrong', 0, true).boost).toBe(OVERHEAD_BOOST);
+    expect(highlightLook('red', 0, true).boost).toBe(OVERHEAD_BOOST);
+    expect(highlightLook('off', 0, true).boost).toBe(1);
+    expect(highlightLook('off', 0, true).opacity).toBeGreaterThanOrEqual(0.7);
+    expect(highlightLook('off', 1, true).opacity).toBeLessThanOrEqual(1);
+  });
+  it('the scene passes the overhead flag to the highlights', () => {
+    expect(readFileSync(new URL('../games/city/scene.js', import.meta.url), 'utf8')).toMatch(/highlights\.update\([^\n]*overhead/);
+    expect(readFileSync(new URL('../games/city/scene-highlights.js', import.meta.url), 'utf8')).toContain('highlightLook(');
+  });
+});
 
 const o = (ms, type = 'off', extra = {}) => ({ ms, type, x: 10, z: 20, heading: 1.5, fine: 0, ...extra });
 

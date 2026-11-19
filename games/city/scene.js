@@ -4,7 +4,8 @@ import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } f
 import { clampPitch, clampDistance, cameraFar, readColors, clipCamera, clipEased, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, CHASE, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
-import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from './director.js';
+import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
+import { cutAt } from './cuts.js';
 import { raceStateAt, TINTS } from './race.js';
 import { loadWorld } from './sim.js';
 import { headState } from './signals.js';
@@ -198,11 +199,13 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   const camera = new THREE.PerspectiveCamera(38, 1.6, radius * 0.05, cameraFar(radius));
   const view = { yaw: 0.6, pitch: 0.95, dist: radius * 1.25 };
   let queued = 0, dead = false;
+  let cuts = []; // footage cam=auto: the overhead cuts (cuts.js), on the seek clock
   let chase = false, taxi = null, trail = null, trailPts = null, play = null, mapView = false;
   let taxiB = null, trailB = null, trailPtsB = null; // the second car of a race
   let peopleLayer = null; // the pedestrians of the trip on screen (scene-people.js)
   const highlights = createHighlights(scene, city.cellM); // the flash, ring and arrow at each recent offence, made once
   let raceTags = []; // two name tags over the cars (DOM, in the label layer), alive for a race
+  const CUT_TAXI_SCALE = 2.5;
   const RACE_SCALE = 2.5; // both cars are drawn bigger in a race so they read from the high camera
   const clearRaceTags = () => { raceTags.forEach(s => s.remove()); raceTags = []; };
 
@@ -242,7 +245,11 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       ? shotAt(play.phase, play.t, mapShot, chaseAt(play.t, play.state), { reduced: !motionAllowed() })
       : mapShot;
     const phase = play ? play.phase : 'map';
-    if (play && phase !== 'map' && !mapView) { // keep the camera out of buildings and above the road
+    const cut = play && phase === 'chase' && !mapView ? cutAt(cuts, play.clock) : null;
+    if (cut) { // an overhead cut: centred on the taxi at the cut's one height, nothing to clip
+      shot = overheadShot([[play.state.x, play.state.z]], { aspect: camera.aspect, spread: cut.spread }); // one height for the whole cut
+    }
+    if (play && phase !== 'map' && !mapView && !cut) { // keep the camera out of buildings and above the road
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
       const at0 = play.race ? [(play.state.cars[0].state.x + play.state.cars[1].state.x) / 2, 0, (play.state.cars[0].state.z + play.state.cars[1].state.z) / 2] : [play.state.x, 0, play.state.z]; // clip from the taxi: in the swoop and pullback shot.target is a map point, which can sit inside a building
       const target = [at0[0], ROAD_Y, at0[2]];
@@ -252,7 +259,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (c.clipped || c.pos[1] !== shot.pos[1]) shot = { ...shot, pos: c.pos };
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;
-    const look = mapView ? 'map' : phase; // the Map view toggle looks like the map: its fog and heat, not the chase's
+    const look = mapView || cut ? 'map' : phase; // the Map view toggle looks like the map: its fog and heat, not the chase's
     Object.assign(scene.fog, fogFor(1 - heatOpacity(look, play ? play.t : 0), radius, phone)); // the same 0..1 curve as the heat fade
     mats.heat.opacity = play ? heatOpacity(look, play.t) : 1; // the heat is for the map; it fades out in the chase
     if (play && taxi) focusShadow(phase !== 'map', taxi.position.x, taxi.position.z);
@@ -267,6 +274,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     clearTrees(chaseCam, taxiXZ);
     const hiddenHeads = chaseCam && taxiXZ ? treesToHide(sigFlat, chaseCam, taxiXZ, 12, 4) : [];
   if (bodyGeo && hideHeads(sig, hiddenHeads)) { bodyGeo.index.needsUpdate = true; lampGeo.index.needsUpdate = true; hiddenLamps = new Set(hiddenHeads.flatMap((i) => { const [a, b] = sig.heads[i].lamps; return Array.from({ length: (b - a) / 6 }, (_, k) => a / 6 + k); })); paintGlow(); } // signal poles between the camera and the taxi
+    furniture.setOverhead(!!cut); // from straight above the L deck, its trains and the tree crowns would hide the taxi
+    if (play) play.overhead = cut ? { clear: 2.1 * TAXI_SCALE * CUT_TAXI_SCALE * (canvas.clientHeight / (2 * shot.pos[1] * Math.tan((shot.fov * Math.PI) / 360))) + 6 } : null; // the drawn taxi's half length in pixels: tags stay clear of it
+    if (taxi && !play?.race) taxi.scale.setScalar(TAXI_SCALE * (cut ? CUT_TAXI_SCALE : 1)); // the taxi is drawn bigger in an overhead cut so it reads from that height
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
     renderer.render(scene, camera);
@@ -436,10 +446,11 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     furniture.setTrains(ms); // trains on the L: a pure function of the trip's ms
     trafficLayer.update(ms / play.track.tickMs, play.onHonk); // a no-op unless a single trip started traffic
     play.phase = phase; play.t = t;
-    highlights.update(highlightsAt(play.offences, elapsed + (SWOOP_MS - intro), { reduced: !motionAllowed() })); // offence times are on the clock that starts with the swoop
+    play.clock = elapsed + (SWOOP_MS - intro); // offence and cut times are on the clock that starts with the swoop
+    highlights.update(highlightsAt(play.offences, play.clock, { reduced: !motionAllowed() }), phase === 'chase' && !mapView && !!cutAt(cuts, play.clock)); // bigger and brighter from overhead
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
-    play.onFrame?.(st, play.race ? null : taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
+    play.onFrame?.(st, play.race ? null : taxiScreen(), play.overhead); // the last frame (already 'map' when there is no pullback) still carries the fare tag
     if (phase === 'map') finish();
     return phase;
   };
@@ -548,6 +559,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     skipTrip() { if (play && !manualClock) play.t0 = performance.now() - (play.swoop ? SWOOP_MS : 0) - play.track.total; },
     // The Map view toggle: the high map camera while the taxi drives, instead of the chase.
     setMapView(on) { mapView = !!on; if (!play) draw(); },
+    setCuts(list) { cuts = list ?? []; }, // footage cam=auto: overheadCuts result
     setInset(px, topPx = 0) { inset = Math.max(0, px || 0); insetTop = inset > 0 ? Math.max(0, topPx || 0) : 0; applyInset(); draw(); },
     clearRoute() { stopRoute(); draw(); },
     setChase(on) { chase = !!on && motionAllowed(); }, // on: a trip starts in the chase view, with no swoop in or out

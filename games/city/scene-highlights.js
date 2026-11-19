@@ -4,10 +4,12 @@
 import * as THREE from './vendor/three.module.min.js';
 import { arrowPolys } from './street-model.js';
 import { ROAD_Y } from './scene-math.js';
+import { highlightLook } from './highlights.js';
 
 const Y = ROAD_Y + 0.35;  // just above the raised footpaths (ROAD_Y + 0.3), low enough that cars and people stand through it
 const PER_TYPE = 4;       // the most highlights of one kind on screen at once
 const ARROW_SCALE = 4;    // the road arrow is about 12 m long and 6 m wide
+const ARROW_OFFSET = -7;  // metres along the arrow's heading, overhead only: the arrow's head sits at its origin and its body runs behind
 const COLOURS = { off: 0xffa030, red: 0xff2a20, wrong: 0xff2a20 };
 
 // The arrow of street-model.js at the origin, pointing +z (the mesh's forward before it is turned by heading).
@@ -45,7 +47,7 @@ export function createHighlights(scene, cellM) {
   return {
     clear,
     // list: highlightsAt result. k (0 to 1) is the pulse; the ring also swells with it. Constant k = static.
-    update(list) {
+    update(list, overhead = false) {
       clear();
       const used = { off: 0, red: 0, wrong: 0 };
       for (let j = list.length - 1; j >= 0; j--) { // newest last in the list: walk from the end so the newest take the pool
@@ -53,10 +55,13 @@ export function createHighlights(scene, cellM) {
         const m = pool[h.type]?.[used[h.type]++];
         if (!m) continue;
         m.visible = true;
-        m.position.set(h.x, Y, h.z);
+        const off = overhead && h.type === 'wrong' ? ARROW_OFFSET : 0; // overhead the 2.5x taxi covers the arrow's tail: slide it clear of the taxi
+        m.position.set(h.x + Math.sin(h.heading) * off, Y, h.z + Math.cos(h.heading) * off);
         m.rotation.y = h.type === 'wrong' ? h.heading : 0;
-        m.material.opacity = (h.type === 'wrong' ? 0.6 : 0.3) + 0.4 * h.k;
-        if (h.type === 'red') m.scale.setScalar(1.6 - 0.4 * h.k);
+        const look = highlightLook(h.type, h.k, overhead);
+        m.material.opacity = look.opacity;
+        if (h.type === 'red') m.scale.setScalar((1.6 - 0.4 * h.k) * look.boost);
+        else if (h.type === 'wrong') m.scale.setScalar(ARROW_SCALE * look.boost);
       }
     },
     dispose() { for (const g of Object.values(geos)) g.dispose(); for (const mat of mats) mat.dispose(); for (const t of Object.keys(pool)) for (const m of pool[t]) scene.remove(m); },

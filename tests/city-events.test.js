@@ -172,4 +172,21 @@ describe('tagPlace', () => {
     }
     expect(tagPlace({ x: 195, y: 300 }, 1, { ...box, phone: true }).top - tagPlace({ x: 195, y: 300 }, 0, { ...box, phone: true }).top).toBe(TAG_SLOT_PX);
   });
+  it('with a screen height, a tag near the top edge goes below the taxi instead, and none leaves the screen', () => {
+    const o = { ...box, width: 1280, height: 720 };
+    for (let slot = 0; slot < MAX_TAG_SLOTS; slot++) {
+      const { top } = tagPlace({ x: 600, y: 20 }, slot, o);
+      expect(top - 1.5 * box.tagH).toBeGreaterThanOrEqual(0);
+      expect(top).toBeLessThanOrEqual(720);
+      const low = tagPlace({ x: 600, y: 715 }, slot, o).top;
+      expect(low).toBeLessThanOrEqual(720);
+    }
+    expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBe(400); // plenty of room: unchanged
+  });
+  it('with a clearance the tag sits clear of the taxi: above it with a gap, or below when there is no room above', () => {
+    const o = { ...box, width: 1280, height: 720, clear: 40 };
+    expect(tagPlace({ x: 600, y: 400 }, 0, o).top).toBeLessThanOrEqual(400 - 40); // the tag's lower edge is above the taxi's top
+    const lowTag = tagPlace({ x: 600, y: 30 }, 0, o).top - 1.5 * box.tagH; // too near the top: below, the tag's visible top under the taxi's bottom
+    expect(lowTag).toBeGreaterThanOrEqual(30 + 40);
+  });
 });

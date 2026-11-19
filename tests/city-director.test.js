@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shotAt, timeline, raceShot, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
+import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from '../games/city/director.js';
 
 describe('raceShot', () => {
   const car = (x, z, heading = 0) => ({ x, z, heading });
@@ -63,5 +63,37 @@ describe('timeline', () => {
   it('can skip the swoop and the pullback', () => {
     expect(timeline(5000, 0, { swoop: false })).toEqual({ phase: 'chase', t: 0 });
     expect(timeline(5000, 6000, { swoop: false }).phase).toBe('map');
+  });
+});
+
+describe('overheadShot', () => {
+  it('looks down at the middle of the points, a little from the south (+z) so north is up', () => {
+    const s = overheadShot([[0, 0], [40, 20]]);
+    expect(s.target[0]).toBeCloseTo(0); expect(s.target[2]).toBeCloseTo(0); // centred on the first point (the taxi), not between
+    expect(s.pos[1]).toBeGreaterThan(Math.abs(s.pos[2]) * 3); // steep
+    expect(s.pos[2]).toBeGreaterThan(0); // south of the target
+    expect(s.pos[0]).toBeCloseTo(0);
+  });
+  it('the other points only widen the frame: the same spread either side gives the same height', () => {
+    const a = overheadShot([[0, 0], [400, 0]]), b = overheadShot([[0, 0], [-400, 0]]);
+    expect(a.target).toEqual(b.target);
+    expect(a.pos[1]).toBeCloseTo(b.pos[1]);
+    expect(overheadShot([[0, 0], [400, 0]]).pos[1]).toBeGreaterThan(overheadShot([[0, 0], [200, 0]]).pos[1]);
+  });
+  it('rises as the points spread out, within limits', () => {
+    const near = overheadShot([[0, 0], [10, 0]]), mid = overheadShot([[0, 0], [400, 0]]), far = overheadShot([[0, 0], [50000, 0]]);
+    expect(mid.pos[1]).toBeGreaterThan(near.pos[1]);
+    expect(far.pos[1]).toBeLessThanOrEqual(800);
+    expect(near.pos[1]).toBeGreaterThanOrEqual(346); // above the tallest tower on the map, so no building hides the road
+  });
+  it('with a spread the height is fixed: the points no longer change it', () => {
+    const a = overheadShot([[0, 0], [500, 0]], { spread: 100 }), b = overheadShot([[0, 0], [10, 0]], { spread: 100 });
+    expect(a.pos[1]).toBeCloseTo(b.pos[1]);
+    expect(a.target).toEqual([0, 0, 0]);
+    expect(overheadShot([[0, 0]], { spread: 300 }).pos[1]).toBeGreaterThan(overheadShot([[0, 0]], { spread: 100 }).pos[1]);
+  });
+  it('a tall narrow screen needs more height for the same sideways spread', () => {
+    const wide = overheadShot([[0, 0], [150, 0]], { aspect: 1.78 }), tall = overheadShot([[0, 0], [150, 0]], { aspect: 0.46 });
+    expect(tall.pos[1]).toBeGreaterThan(wide.pos[1]);
   });
 });

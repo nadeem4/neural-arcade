@@ -101,7 +101,7 @@ export function buildFurniture({ scene, city, furnitureTier: tier, glow = false,
 
   // The L: every box of every rail entry (two-track lines paired into one) in one InstancedMesh, coloured per instance.
   const parts = pairRails(city.rail ?? []).flatMap((r) => railParts(r, city.roads ?? []));
-  let clearRail = () => {};
+  let clearRail = () => {}, railMesh = null;
   if (parts.length) {
     const steel = material(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.6, metalness: 0.3, envMapIntensity: envIntensity }));
     const rail = mesh(new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), steel, parts.length));
@@ -109,7 +109,7 @@ export function buildFurniture({ scene, city, furnitureTier: tier, glow = false,
     const c = new THREE.Color();
     const partAt = (i) => { const p = parts[i]; place(rail, i, p.x, p.y, p.z, p.yaw, p.sx, p.sy, p.sz); };
     parts.forEach((p, i) => { partAt(i); rail.setColorAt(i, c.set(RAIL_COLOURS[p.colour])); });
-    scene.add(rail);
+    scene.add(rail); railMesh = rail;
     // Only the raised parts can block the chase view; the ground track beds stay.
     const high = parts.map((p, i) => i).filter((i) => parts[i].y > 1);
     const flatHigh = new Float32Array(high.length * 3);
@@ -139,6 +139,8 @@ export function buildFurniture({ scene, city, furnitureTier: tier, glow = false,
 
   return {
     setTrains,
+    // The overhead shot looks straight down, so the L, its trains and the tree crowns would sit on top of the taxi: hide them while it is on.
+    setOverhead(on) { for (const m of [railMesh, trains, trunks, crowns]) if (m) m.visible = !on; },
     // In the chase (cam is the camera's [x, z], taxiAt the taxi's), hide what would block the view; null cam brings everything back.
     clearTrees(cam, taxiAt) { clearTrees(cam, taxiAt); clearLamps(cam, taxiAt); clearRail(cam, taxiAt); camState = cam && taxiAt ? [cam, taxiAt] : null; placeTrains(); },
     dispose() { glowOff?.dispose(); for (const x of mats) x.dispose(); for (const m of meshes) m.dispose(); },
