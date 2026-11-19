@@ -16,6 +16,8 @@ import { tierFor, furnitureTier } from './quality.js';
 import { buildFurniture } from './scene-furniture.js';
 import { applyFacade, buildingGeometry } from './facade.js';
 import { createTaxiMaker, TAXI_SCALE, TAXI_Y } from './scene-taxi.js';
+import { createTrafficLayer } from './scene-traffic.js';
+import { trafficTier } from './traffic.js';
 
 export const isPhone = () => !!(globalThis.matchMedia && matchMedia('(pointer: coarse)').matches);
 
@@ -128,6 +130,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
   // Traffic signals: a real head (pole, arm, housing, three lamps on both faces) at each mapped signal. A head's lamps show the sim's own light for the road it
   // stands beside (headState), so a car that runs a red runs a red you can see. All the lamps are one mesh whose vertex colours are repainted when the lights change.
   const world = loadWorld(city);
+  const trafficLayer = createTrafficLayer({ tier: trafficTier({ phone }) }); // other cars: scenery that reacts to the taxi, shown only while a trip plays
+  scene.add(trafficLayer.group);
   world.height = cellHeights(city); // real building heights, for the camera clip
   const sig = buildSignalHeads(city.signalHeads ?? [], city.roads ?? []);
   mats.post = new THREE.MeshStandardMaterial({ color: '#7D838C', roughness: 0.7, metalness: 0.2, envMapIntensity: ENV_INTENSITY });
@@ -384,6 +388,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     const ms = Math.max(0, elapsed - intro);
     const st = play.race ? raceStateAt(play.race, ms) : stateAt(play.track, ms);
     if (play.race) placeRace(st); else place(st);
+    trafficLayer.update(ms / play.track.tickMs, play.onHonk); // a no-op unless a single trip started traffic
     play.phase = phase; play.t = t;
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
@@ -400,6 +405,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     loopId = 0;
     finish();
     if (taxi) { scene.remove(taxi); taxi.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); taxi = null; }
+    trafficLayer.stop();
     if (trail) { scene.remove(trail); trail.geometry.dispose(); trail = null; }
     if (taxiB) { scene.remove(taxiB); taxiB.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); taxiB = null; }
     if (trailB) { scene.remove(trailB); trailB.geometry.dispose(); trailB = null; }
@@ -424,7 +430,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       if (wait <= 0) { if (heatTimer) clearTimeout(heatTimer); applyHeat(); } else if (!heatTimer) heatTimer = setTimeout(applyHeat, wait);
     },
     // track: drive.js driveTrack; events: events.js tripEvents (the page reads those; the stage only needs the track).
-    playTrip({ track, onFrame, onDone } = {}) {
+    playTrip({ track, events, onFrame, onDone, onHonk } = {}) {
       stopRoute();
       const frames = track.frames;
       taxi = taxiMaker.make();
@@ -435,7 +441,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       tg.setAttribute('position', new THREE.BufferAttribute(trailPts, 3));
       trail = new THREE.Line(tg, mats.trail); trail.frustumCulled = false;
       scene.add(taxi, trail);
-      play = { track, onFrame, onDone, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
+      play = { track, onFrame, onDone, onHonk, state: stateAt(track, 0), phase: 'map', t: 0, swoop: !chase };
       if (!motionAllowed()) { // no animation: the end state with the whole trail and the final numbers
         const end = stateAt(track, track.total);
         place({ ...end, stepIndex: frames.length - 2 }); // place() draws the trail to stepIndex + 1, the last point, and the taxi at its end position
@@ -445,6 +451,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
         finish();
         return;
       }
+      if (events) trafficLayer.startTrip(world, city.cellM, events);
       if (manualClock) { play.t0 = 0; return; } // renderAt(ms) drives the frames
       play.t0 = performance.now();
       loopId = requestAnimationFrame(tickLoop);
@@ -497,7 +504,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     setShot(name) { chase = name === 'chase' && motionAllowed(); },
     destroy() {
       dead = true; if (queued) cancelAnimationFrame(queued);
-      stopRoute(); taxiMaker.dispose(); taxiMakerB.dispose(); sky.dispose(); envTarget.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
+      stopRoute(); trafficLayer.dispose(); taxiMaker.dispose(); taxiMakerB.dispose(); sky.dispose(); envTarget.dispose(); clearInterval(clock); motionMq.removeEventListener('change', onMotion); if (heatTimer) clearTimeout(heatTimer);
       for (const { span } of labels) span.remove();
       ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', onScheme);
       window.removeEventListener('blur', disengage);
