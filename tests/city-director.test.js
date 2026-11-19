@@ -57,6 +57,31 @@ describe('shotAt', () => {
     const over = Math.hypot(s[0] - MAP.pos[0], s[2] - MAP.pos[2]) / Math.hypot(MAP.pos[0] - CHASE.pos[0], MAP.pos[2] - CHASE.pos[2]);
     expect(over).toBeGreaterThan(down); // over the taxi before it is down at the chase height
   });
+  it('turns the view a few degrees a frame at most and never past 80 degrees down, even as it passes over the taxi', () => {
+    const dir = (s) => { const v = s.target.map((x, k) => x - s.pos[k]), l = Math.hypot(...v); return v.map((x) => x / l); };
+    const chase = { pos: [0, 8, 0], target: [0, 1, 30], fov: 55 }, map = { pos: [0, 900, 1500], target: [0, 0, -400], fov: 38 }; // the map looks back at the taxi from ahead of it
+    for (const [phase, ms] of [['swoop', SWOOP_MS], ['pullback', PULLBACK_MS]]) {
+      let prev = null;
+      for (let t = 0; t <= ms + 1e-9; t += 1000 / 60) {
+        const v = dir(shotAt(phase, t, map, chase));
+        expect(Math.asin(-v[1]) * 180 / Math.PI).toBeLessThanOrEqual(80);
+        if (prev) expect(Math.acos(Math.min(1, v[0] * prev[0] + v[1] * prev[1] + v[2] * prev[2])) * 180 / Math.PI).toBeLessThan(10);
+        prev = v;
+      }
+    }
+  });
+  it('holds its ground position until it is high enough to pass over a roof, and still meets both shots', () => {
+    const roof = (x) => (x > 20 && x < 60 ? 150 : 0); // a 144 m block (plus its 6 m clearance) between the chase and the map
+    for (const [phase, ms] of [['swoop', SWOOP_MS], ['pullback', PULLBACK_MS]]) {
+      for (let t = 0; t <= ms; t += 1000 / 60) {
+        const p = shotAt(phase, t, MAP, CHASE, { roof }).pos;
+        expect(p[1]).toBeGreaterThanOrEqual(roof(p[0]));
+      }
+    }
+    expect(shotAt('pullback', 0, MAP, CHASE, { roof })).toEqual(CHASE);
+    expect(shotAt('pullback', PULLBACK_MS, MAP, CHASE, { roof })).toEqual(MAP);
+    expect(shotAt('swoop', SWOOP_MS, MAP, CHASE, { roof })).toEqual(CHASE);
+  });
   it('with reduced motion goes straight to the shot the phase ends on', () => {
     expect(shotAt('swoop', 0, MAP, CHASE, { reduced: true })).toEqual(CHASE);
     expect(shotAt('pullback', 0, MAP, CHASE, { reduced: true })).toEqual(MAP);

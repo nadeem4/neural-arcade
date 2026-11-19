@@ -1,7 +1,7 @@
 // The 3D city: browser glue between geometry.js and three.js. Renders on demand (after a drag, wheel or resize).
 import * as THREE from './vendor/three.module.min.js';
 import { buildBuildings, buildRoadStrips, buildFlats, cityBounds, cellCentre } from './geometry.js';
-import { clampPitch, clampDistance, cameraFar, readColors, clipEased, liftPath, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
+import { clampPitch, clampDistance, cameraFar, readColors, clipEased, roofAt, cellHeights, pinFade, insetOffset, fitDistance, heatQuad, treesToHide, chaseForAspect, ROAD_Y } from './scene-math.js';
 import { motionAllowed, chaseCamera, heatColour } from './playback.js';
 import { stateAt } from './drive.js';
 import { shotAt, timeline, raceShot, overheadShot, SWOOP_MS, PULLBACK_MS } from './director.js';
@@ -254,10 +254,9 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
       const clip = { margin: 2, minY: ROAD_Y + 2.7 };
       const line = (t) => { const s = chaseAt(t); return { pos: s.pos, target: [s.target[0], ROAD_Y, s.target[2]] }; }; // the chase camera and the taxi it looks at
       if (phase === 'chase') shot = { ...shot, pos: clipEased(line, play.t, world, city.cellM, clip).pos }; // the pull-in eased over +-0.5 s of the trip (a pure function of the trip time)
-      else { // the swoop and pullback: the director's crane between the clipped chase pose at the chase boundary and the map shot, lifted over any roof on the way (never pulled toward the taxi)
-        const bt = phase === 'swoop' ? 0 : play.driveMs, from = { ...chaseAt(bt), pos: clipEased(line, bt, world, city.cellM, clip).pos }, reduced = !motionAllowed();
-        const pathAt = (t) => shotAt(phase, t, mapShot, from, { reduced });
-        shot = { ...pathAt(play.t), pos: liftPath((t) => pathAt(t).pos, play.t, phase === 'swoop' ? SWOOP_MS : PULLBACK_MS, world, city.cellM) };
+      else { // the swoop and pullback: the director's crane between the clipped chase pose at the chase boundary and the map shot, held over the roofs (never pulled toward the taxi)
+        const bt = phase === 'swoop' ? 0 : play.driveMs, from = { ...chaseAt(bt), pos: clipEased(line, bt, world, city.cellM, clip).pos };
+        shot = shotAt(phase, play.t, mapShot, from, { reduced: !motionAllowed(), roof: (x, z) => roofAt(world, city.cellM, x, z) });
       }
     }
     const near = phase !== 'map' ? 2 : radius * 0.05;

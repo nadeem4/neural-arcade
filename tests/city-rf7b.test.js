@@ -24,9 +24,10 @@ describe('RF7b: phone tags keep off the taxi', () => {
     const scene = read('games/city/scene.js');
     expect(scene).toMatch(/return \{ x: [^\n]*y: sy\(tmp\), \.\.\.\(top < bottom \? \{ top, bottom \} : \{\}\) \}/);
   });
-  it('the swoop and pullback camera starts from the clipped chase pose and is lifted over the roofs, never pulled toward the taxi', () => {
+  it('the swoop and pullback camera starts from the clipped chase pose and is held over the roofs, never pulled toward the taxi', () => {
     const scene = read('games/city/scene.js');
-    expect(scene).toContain('liftPath(');
+    expect(scene).toMatch(/shotAt\(phase, play\.t, mapShot, from, \{[^}]*roof: \(x, z\) => roofAt\(/);
+    expect(scene).not.toContain('liftPath');
     expect(scene).not.toContain('openFrom');
     expect(scene).not.toContain('maxRoof');
     expect(scene).not.toMatch(/clipCamera\(/);
@@ -44,8 +45,11 @@ describe('RF7b: phone tags keep off the taxi', () => {
 
 describe('RF7b: Skip pulls the camera back (F9)', () => {
   it('skipTrip jumps to the start of the pullback even from the chase view, which has no pullback of its own', () => {
-    const scene = read('games/city/scene.js');
-    expect(scene).toContain('skipTrip() { if (play && !manualClock) { play.swoop = true; play.t0 = performance.now() - SWOOP_MS - play.track.total; } }');
+    const skip = read('games/city/scene.js').split('
+').find((l) => l.includes('skipTrip()')) ?? '';
+    expect(skip).toMatch(/play\.swoop = true/); // the clock runs as if the swoop played, so the next phase is the pullback
+    expect(skip).toMatch(/SWOOP_MS/);
+    expect(skip).toMatch(/play\.track\.total/); // the whole drive counted as done, however it was cut
   });
 });
 
