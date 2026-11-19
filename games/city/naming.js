@@ -3,7 +3,7 @@ import { FIELDS } from './reward.js';
 
 // Names for kept taxis, from what the trip did (its analysis), not from the rates. Pure.
 const STRIPES = {
-  'Never arrives': '#9AA7B8',
+  'No-show': '#9AA7B8',
   'Circler': '#FF9A6B',
   'Park cutter': '#FFB547',
   'Footpath rider': '#E6D24A',
@@ -14,7 +14,7 @@ const STRIPES = {
 
 // First match wins: never arrived (a circler if most seconds were moves), park, footpath, red, wrong way, else legal.
 export function nameFor(a) {
-  if (!a.arrived) return a.seconds > 0 && a.tiles >= a.seconds / 2 ? 'Circler' : 'Never arrives';
+  if (!a.arrived) return a.seconds > 0 && a.tiles >= a.seconds / 2 ? 'Circler' : 'No-show';
   if (a.parkTiles > 0) return 'Park cutter';
   if (a.offTiles > 0) return 'Footpath rider';
   if (a.redRuns > 0) return 'Red runner';
@@ -49,9 +49,9 @@ export function noteFor(a) {
   if (goalReached(a)) return 'Legal trip: goal met';
   if (isLegal(a)) return 'Legal, but over the goal';
   return [
-    a.offTiles && plural(a.offTiles, 'park tile'),
-    a.redRuns && plural(a.redRuns, 'red run'),
-    a.wrongWays && plural(a.wrongWays, 'wrong-way move'),
+    a.offTiles && plural(a.offTiles, 'footpath tile'),
+    a.redRuns && plural(a.redRuns, 'red light'),
+    a.wrongWays && plural(a.wrongWays, 'wrong-way tile'),
   ].filter(Boolean).join(', ');
 }
 

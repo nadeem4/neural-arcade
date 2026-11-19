@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { stepRate, rateRows } from '../games/city/rates.js';
 import { FIELDS, defaultRewards } from '../games/city/reward.js';
 import { RANGES } from '../games/city/presets.js';
@@ -44,5 +45,15 @@ describe('rateRows', () => {
     expect(by('time')).toMatchObject({ text: '−1', tone: 'fine' });
     expect(by('off')).toMatchObject({ text: '0', tone: 'zero' });
     expect(by('perTile')).toMatchObject({ text: '+2.5', tone: 'pay' });
+  });
+});
+
+describe('rate card words', () => {
+  it('uses the glossary names for rows, chips and the phone labels', () => {
+    expect(FIELDS.map(f => f.label)).toEqual(['Fare for arriving', 'Cost per second', 'Fine per footpath tile', 'Fine per red light', 'Fine per wrong-way tile', 'Pay per tile driven']);
+    expect(FIELDS.map(f => f.chip)).toEqual(['Fare', 'Clock', 'Footpath', 'Red light', 'Wrong way', 'Per tile']);
+    const html = readFileSync(new URL('../games/city/index.html', import.meta.url), 'utf8');
+    for (const short of ['Fare', 'Per second', 'Footpath tile', 'Red light', 'Wrong way', 'Per tile']) expect(html).toContain(`<span class="short" aria-hidden="true">${short}</span>`);
+    expect(html).not.toMatch(/park or footpath|red light run|wrong-way move/i);
   });
 });

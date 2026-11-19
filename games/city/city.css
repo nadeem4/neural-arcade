@@ -28,7 +28,7 @@
 .receipt .total { margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-weight: 700; }
 .share-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; }
 .share-line[hidden] { display: none; }
-.share-line output { flex: 1 1 14em; min-width: 0; font: 500 14px var(--mono); overflow-wrap: anywhere; }
+.share-line output { flex: 1 1 14em; min-width: 0; font: 500 14px var(--sans); overflow-wrap: anywhere; }
 
 /* Read by screen readers only: announces the verdict and goal whatever is on screen. */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -53,6 +53,7 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .meter-total { font-size: 34px; font-weight: 700; line-height: 1; color: var(--hud-taxi); }
 .meter-label { font-size: 12px; opacity: .75; }
 .meter-counts { font-size: 12px; color: var(--hud-route); }
+.meter-goal .meter-short { display: none; }
 .meter-name { font-size: 14px; line-height: 1.3; font-weight: 600; letter-spacing: .02em; }
 /* The city bar is 0 to 100; the Pay bar runs over the trip's own range (meter.js payRange). */
 .meter-bar { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .18); overflow: hidden; }
@@ -135,7 +136,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 
 .endcard { top: 50%; left: 40px; transform: translateY(-50%); width: 400px; max-height: calc(100% - 24px); padding: 24px; }
 .endcard[hidden] { display: none; }
-.end-head { display: flex; justify-content: space-between; align-items: baseline; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; color: #9AA7B8; }
+.end-head { display: flex; justify-content: space-between; align-items: baseline; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
 .end-flag { font: 600 14px var(--sans); letter-spacing: 0; color: var(--hud-fine); }
 .end-flag.ok { color: var(--hud-pay); }
 .end-stats { display: flex; gap: 28px; }
@@ -200,7 +201,10 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .meter-total { font-size: 26px; }
   .meter-goal { padding: 6px 12px; }
   .meter-goal .meter-total { font-size: 20px; }
-  .meter-goal .meter-counts { display: none; } /* keeps the second meter small so the map stays visible */
+  /* the city score keeps its scale on a phone: "60 /100" on one line, so the number is never bare */
+  .meter-goal { grid-template-columns: auto 1fr; column-gap: 4px; align-items: baseline; }
+  .meter-goal .meter-name, .meter-goal .meter-bar { grid-column: 1 / -1; }
+  .meter-goal .meter-full { display: none; } .meter-goal .meter-short { display: inline; }
   .ratecard, .endcard { top: auto; left: 8px; right: 8px; width: auto; transform: none; padding: 12px 14px; gap: 8px; }
   .ratecard { bottom: 80px; max-height: 40svh; }
   .endcard { bottom: 8px; max-height: 60svh; display: flex; flex-direction: column; } /* the bottom bar is hidden on the end card, so it sits at the bottom edge */

@@ -47,7 +47,7 @@
     </div>
 
     <aside class="ratecard" id="rateCard" aria-label="Rate card">
-      <h2><span id="rcTitle">Rate card</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the reward" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+      <h2><span id="rcTitle">Rate card</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rate card" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
       <p class="info-text" id="info-reward" data-info="reward" hidden></p>
       <section class="ladder" aria-labelledby="ladderTitle">
         <h3 id="ladderTitle">Five steps <button class="info" type="button" aria-expanded="false" aria-controls="info-ladder" aria-label="Explain the five steps" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h3>
@@ -56,14 +56,14 @@
         <p class="ladder-note" id="ladderNote" aria-live="polite"><b id="ladderHead"></b><span id="ladderText"></span></p>
       </section>
       <div class="rates">
-        <div class="rate" data-field="fare"><span class="rate-label" id="fareLabel"><span class="long">Fare for arriving</span><span class="short" aria-hidden="true">Fare for arriving</span></span><span class="stepper"><button class="rstep" type="button" id="fareDec" aria-label="Lower fare for arriving" aria-describedby="fareLabel">&minus;</button><output class="num" id="fareOut" aria-live="off"></output><button class="rstep" type="button" id="fareInc" aria-label="Raise fare for arriving" aria-describedby="fareLabel">+</button></span></div>
-        <div class="rate" data-field="time"><span class="rate-label" id="timeLabel"><span class="long">Cost per second</span><span class="short" aria-hidden="true">Cost per second</span></span><span class="stepper"><button class="rstep" type="button" id="timeDec" aria-label="Lower cost per second" aria-describedby="timeLabel">&minus;</button><output class="num" id="timeOut" aria-live="off"></output><button class="rstep" type="button" id="timeInc" aria-label="Raise cost per second" aria-describedby="timeLabel">+</button></span></div>
-        <div class="rate" data-field="off"><span class="rate-label" id="offLabel"><span class="long">Fine per park or footpath tile</span><span class="short" aria-hidden="true">Park/footpath tile</span></span><span class="stepper"><button class="rstep" type="button" id="offDec" aria-label="Lower fine per park or footpath tile" aria-describedby="offLabel">&minus;</button><output class="num" id="offOut" aria-live="off"></output><button class="rstep" type="button" id="offInc" aria-label="Raise fine per park or footpath tile" aria-describedby="offLabel">+</button></span></div>
-        <div class="rate" data-field="red"><span class="rate-label" id="redLabel"><span class="long">Fine per red light run</span><span class="short" aria-hidden="true">Red light run</span></span><span class="stepper"><button class="rstep" type="button" id="redDec" aria-label="Lower fine per red light run" aria-describedby="redLabel">&minus;</button><output class="num" id="redOut" aria-live="off"></output><button class="rstep" type="button" id="redInc" aria-label="Raise fine per red light run" aria-describedby="redLabel">+</button></span></div>
-        <div class="rate" data-field="wrong"><span class="rate-label" id="wrongLabel"><span class="long">Fine per wrong-way move</span><span class="short" aria-hidden="true">Wrong-way move</span></span><span class="stepper"><button class="rstep" type="button" id="wrongDec" aria-label="Lower fine per wrong-way move" aria-describedby="wrongLabel">&minus;</button><output class="num" id="wrongOut" aria-live="off"></output><button class="rstep" type="button" id="wrongInc" aria-label="Raise fine per wrong-way move" aria-describedby="wrongLabel">+</button></span></div>
-        <div class="rate" data-field="perTile"><span class="rate-label" id="perTileLabel"><span class="long">Pay per tile driven</span><span class="short" aria-hidden="true">Per tile driven</span></span><span class="stepper"><button class="rstep" type="button" id="perTileDec" aria-label="Lower pay per tile driven" aria-describedby="perTileLabel">&minus;</button><output class="num" id="perTileOut" aria-live="off"></output><button class="rstep" type="button" id="perTileInc" aria-label="Raise pay per tile driven" aria-describedby="perTileLabel">+</button></span></div>
+        <div class="rate" data-field="fare"><span class="rate-label" id="fareLabel"><span class="long">Fare for arriving</span><span class="short" aria-hidden="true">Fare</span></span><span class="stepper"><button class="rstep" type="button" id="fareDec" aria-label="Lower fare for arriving" aria-describedby="fareLabel">&minus;</button><output class="num" id="fareOut" aria-live="off"></output><button class="rstep" type="button" id="fareInc" aria-label="Raise fare for arriving" aria-describedby="fareLabel">+</button></span></div>
+        <div class="rate" data-field="time"><span class="rate-label" id="timeLabel"><span class="long">Cost per second</span><span class="short" aria-hidden="true">Per second</span></span><span class="stepper"><button class="rstep" type="button" id="timeDec" aria-label="Lower cost per second" aria-describedby="timeLabel">&minus;</button><output class="num" id="timeOut" aria-live="off"></output><button class="rstep" type="button" id="timeInc" aria-label="Raise cost per second" aria-describedby="timeLabel">+</button></span></div>
+        <div class="rate" data-field="off"><span class="rate-label" id="offLabel"><span class="long">Fine per footpath tile</span><span class="short" aria-hidden="true">Footpath tile</span></span><span class="stepper"><button class="rstep" type="button" id="offDec" aria-label="Lower fine per footpath tile" aria-describedby="offLabel">&minus;</button><output class="num" id="offOut" aria-live="off"></output><button class="rstep" type="button" id="offInc" aria-label="Raise fine per footpath tile" aria-describedby="offLabel">+</button></span></div>
+        <div class="rate" data-field="red"><span class="rate-label" id="redLabel"><span class="long">Fine per red light</span><span class="short" aria-hidden="true">Red light</span></span><span class="stepper"><button class="rstep" type="button" id="redDec" aria-label="Lower fine per red light" aria-describedby="redLabel">&minus;</button><output class="num" id="redOut" aria-live="off"></output><button class="rstep" type="button" id="redInc" aria-label="Raise fine per red light" aria-describedby="redLabel">+</button></span></div>
+        <div class="rate" data-field="wrong"><span class="rate-label" id="wrongLabel"><span class="long">Fine per wrong-way tile</span><span class="short" aria-hidden="true">Wrong way</span></span><span class="stepper"><button class="rstep" type="button" id="wrongDec" aria-label="Lower fine per wrong-way tile" aria-describedby="wrongLabel">&minus;</button><output class="num" id="wrongOut" aria-live="off"></output><button class="rstep" type="button" id="wrongInc" aria-label="Raise fine per wrong-way tile" aria-describedby="wrongLabel">+</button></span></div>
+        <div class="rate" data-field="perTile"><span class="rate-label" id="perTileLabel"><span class="long">Pay per tile driven</span><span class="short" aria-hidden="true">Per tile</span></span><span class="stepper"><button class="rstep" type="button" id="perTileDec" aria-label="Lower pay per tile driven" aria-describedby="perTileLabel">&minus;</button><output class="num" id="perTileOut" aria-live="off"></output><button class="rstep" type="button" id="perTileInc" aria-label="Raise pay per tile driven" aria-describedby="perTileLabel">+</button></span></div>
       </div>
-      <button class="link" type="button" id="reset">Reset to the default</button>
+      <button class="link" type="button" id="reset">Back to step 1</button>
     </aside>
 
     <div class="topright">
@@ -80,17 +80,18 @@
       <div class="meter" id="meter" aria-hidden="true" hidden>
         <span class="meter-name" id="meterName">Pay</span>
         <span class="meter-total" id="meterTotal">0</span>
-        <span class="meter-label" id="meterLabel">earned this trip</span>
+        <span class="meter-label" id="meterLabel">this trip</span>
         <span class="meter-counts" id="meterCounts"></span>
         <span class="meter-bar"><i id="meterBar"></i></span>
       </div>
       <div class="meter meter-goal" id="meterGoal" aria-hidden="true" hidden>
         <span class="meter-name">What the city wanted</span>
         <span class="meter-total" id="meterGoalTotal">0</span>
-        <span class="meter-counts">out of 100</span>
+        <span class="meter-counts"><span class="meter-full">out of 100</span><span class="meter-short" aria-hidden="true">/100</span></span>
         <span class="meter-bar"><i id="meterGoalBar"></i></span>
       </div>
       <div class="meter meter-b" id="meterB" aria-hidden="true" hidden>
+        <span class="meter-name">Pay</span>
         <span class="meter-total" id="meterBTotal">0</span>
         <span class="meter-label" id="meterBLabel"></span>
         <span class="meter-counts" id="meterBCounts"></span>
@@ -107,7 +108,7 @@
 
     <div class="gbar" id="bar">
       <progress id="progress" max="100" value="0" aria-label="Training progress" hidden></progress>
-      <button class="go" type="button" id="train">TRAIN &amp; DRIVE</button>
+      <button class="go" type="button" id="train">Train and drive</button>
       <div class="bar-drive" id="barDrive" hidden>
         <button class="btn ibtn" type="button" id="viewToggle" aria-pressed="false" aria-label="Map view" title="Map view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></svg></button>
         <progress id="driveProgress" max="100" value="0" aria-label="Trip progress"></progress>
@@ -116,10 +117,10 @@
     </div>
 
     <section class="endcard" id="endcard" aria-labelledby="endTitle" hidden>
-      <div class="end-head"><span id="endTitle">TRIP DONE</span><span class="end-flag" id="endFlag"></span></div>
+      <div class="end-head"><span id="endTitle">Trip done</span><span class="end-flag" id="endFlag"></span></div>
       <div class="end-stats">
         <div><b class="big" id="endTime"></b><small id="endGoal"></small> <button class="info" type="button" aria-expanded="false" aria-controls="info-goal" aria-label="Explain the goal" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></div>
-        <div><b class="big" id="endEarned"></b><small>what the taxi earned</small></div>
+        <div><b class="big" id="endEarned"></b><small>pay for this trip</small></div>
       </div>
       <p class="info-text" id="info-goal" data-info="goal" hidden></p>
       <div class="receipt" id="receipt" aria-live="off"></div>
@@ -143,11 +144,11 @@
       <ul class="bays" id="garageList"></ul>
       <div class="racebar" id="raceBar" hidden>
         <p id="raceLine"></p>
-        <button class="go small" type="button" id="startRace">START RACE</button>
+        <button class="go small" type="button" id="startRace">Start race</button>
       </div>
     </aside>
     <section class="endcard racebanner" id="raceBanner" tabindex="-1" aria-labelledby="raceTitle" hidden>
-      <div class="end-head"><span>RACE DONE</span></div>
+      <div class="end-head"><span>Race done</span></div>
       <p class="race-title" id="raceTitle"></p>
       <p class="race-detail" id="raceDetail"></p>
       <div class="end-actions">

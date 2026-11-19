@@ -71,7 +71,7 @@ export function result(race) {
 // The line in the garage's race bar for the names picked so far.
 export function raceBarLine(names) {
   if (names.length === 0) return '';
-  if (names.length < MAX_PICK) return `Pick one more taxi to race ${names[0]}`;
+  if (names.length < MAX_PICK) return `Pick one more taxi to race “${names[0]}”`;
   return `Race: ${names[0]} vs ${names[1]}, same pickup, same lights`;
 }
 

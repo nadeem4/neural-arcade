@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildReceipt, verdictOf, nextStepOf, hintOf } from '../games/city/receipt.js';
-import { LESSON, INFO, isLegal, goalReached, shareLine, goalLine } from '../games/city/words.js';
+import { buildReceipt, verdictOf, nextStepOf, hintOf, signed } from '../games/city/receipt.js';
+import { LESSON, INFO, isLegal, goalReached, shareLine, goalLine, SHARE_ADDRESS } from '../games/city/words.js';
 import { ARRIVE_POINTS, ON_TIME_POINTS, CLEAN_POINTS } from '../games/city/goal.js';
 import { readFileSync } from 'node:fs';
 import { loadWorld, analyzeRoute } from '../games/city/sim.js';
@@ -33,14 +33,16 @@ describe('buildReceipt', () => {
 
   it('omits a zero-rate line with a zero count', () => {
     const labels = buildReceipt({ ...R, red: 0, wrong: 0 }, A({})).lines.map((l) => l.label);
-    expect(labels).not.toContain('Red lights');
+    expect(labels).not.toContain('Red light');
     expect(labels).not.toContain('Wrong way');
     expect(labels).not.toContain('Per tile');
   });
 
   it('keeps a zero-rate line when the count is not zero', () => {
-    const l = buildReceipt({ ...R, off: 0 }, A({ offTiles: 5 })).lines.find((x) => x.label === 'Park and footpath');
+    const l = buildReceipt({ ...R, off: 0 }, A({ offTiles: 5 })).lines.find((x) => x.label === 'Footpath');
     expect(l.amount).toBe(0);
+    expect(l.free).toBe(true);
+    expect(buildReceipt(R, A({ offTiles: 5 })).lines.find((x) => x.label === 'Footpath').free).toBe(false);
   });
 });
 
@@ -74,6 +76,14 @@ describe('verdictOf', () => {
   });
 });
 
+describe('the share line', () => {
+  it('names the game and carries the page canonical address', () => {
+    const canonical = readFileSync(new URL('../games/city/index.html', import.meta.url), 'utf8').match(/rel="canonical" href="https:\/\/([^"]+)"/)[1];
+    expect(SHARE_ADDRESS).toBe(canonical);
+    expect(shareLine(5, A({ seconds: 77 }))).toBe('I fixed the taxi in Reward City: a legal trip in 77 s, after 5 tries. arcade.codewithnk.com/games/city/');
+  });
+});
+
 describe('goalLine', () => {
   it('states the goal plainly before training', () => {
     expect(goalLine()).toBe('Get the passenger from pickup to drop-off, on time, by the rules.');
@@ -101,17 +111,18 @@ describe('words', () => {
   });
 
   it('shareLine uses 1 try and N tries', () => {
-    expect(shareLine(1, A({ seconds: 74 }))).toBe('I fixed the taxi in 1 try: 74 s, no fines.');
-    expect(shareLine(3, A({ seconds: 74 }))).toBe('I fixed the taxi in 3 tries: 74 s, no fines.');
+    expect(shareLine(1, A({ seconds: 74 }))).toBe('I fixed the taxi in Reward City: a legal trip in 74 s, after 1 try. arcade.codewithnk.com/games/city/');
+    expect(shareLine(3, A({ seconds: 74 }))).toBe('I fixed the taxi in Reward City: a legal trip in 74 s, after 3 tries. arcade.codewithnk.com/games/city/');
   });
 });
 
 describe('player copy matches the reward', () => {
-  it('uses singular for one tile, one move', () => {
-    const l = buildReceipt(R, A({ offTiles: 1, wrongWays: 1 })).lines;
-    expect(l.find((x) => x.label === 'Park and footpath').detail).toBe('1 tile');
-    expect(l.find((x) => x.label === 'Wrong way').detail).toBe('1 move');
-    expect(buildReceipt(R, A({ offTiles: 2, wrongWays: 2 })).lines.find((x) => x.label === 'Wrong way').detail).toBe('2 moves');
+  it('uses singular for one tile, one time', () => {
+    const l = buildReceipt(R, A({ offTiles: 1, wrongWays: 1, redRuns: 1 })).lines;
+    expect(l.find((x) => x.label === 'Footpath').detail).toBe('1 tile');
+    expect(l.find((x) => x.label === 'Wrong way').detail).toBe('1 tile');
+    expect(l.find((x) => x.label === 'Red light').detail).toBe('1 time');
+    expect(buildReceipt(R, A({ offTiles: 2, wrongWays: 2 })).lines.find((x) => x.label === 'Wrong way').detail).toBe('2 tiles');
   });
 
   it('park line needs park tiles; footpath-only has its own line', () => {
@@ -151,33 +162,33 @@ describe('player copy matches the reward', () => {
 describe('nextStepOf: names the cheat and the slider to try next', () => {
   const free = { ...R, off: 0, red: 0, wrong: 0 };
   it('park, red light and wrong way', () => {
-    expect(nextStepOf(free, A({ offTiles: 3, parkTiles: 3 }))).toBe('It cut across the park. Nothing fines that. Try the park fine.');
-    expect(nextStepOf(free, A({ redRuns: 1 }))).toBe('It ran red lights. Nothing fines that. Try the red-light fine.');
-    expect(nextStepOf(free, A({ wrongWays: 1 }))).toBe('It went the wrong way down a one-way street. Nothing fines that. Try the wrong-way fine.');
+    expect(nextStepOf(free, A({ offTiles: 3, parkTiles: 3 }))).toBe('It cut across the park. Nothing fines that. Raise “Fine per footpath tile” on the rate card.');
+    expect(nextStepOf(free, A({ redRuns: 1 }))).toBe('It ran red lights. Nothing fines that. Raise “Fine per red light” on the rate card.');
+    expect(nextStepOf(free, A({ wrongWays: 1 }))).toBe('It went the wrong way down a one-way street. Nothing fines that. Raise “Fine per wrong-way tile” on the rate card.');
   });
   it('footpaths point at the same fine as the park', () => {
-    expect(nextStepOf(free, A({ offTiles: 2, parkTiles: 0 }))).toBe('It drove along the footpaths. Nothing fines that. Try the park fine.');
+    expect(nextStepOf(free, A({ offTiles: 2, parkTiles: 0 }))).toBe('It drove along the footpaths. Nothing fines that. Raise “Fine per footpath tile” on the rate card.');
   });
   it('a fine that exists but is too small says to raise it', () => {
-    expect(nextStepOf({ ...free, off: 5 }, A({ offTiles: 3, parkTiles: 3 }))).toBe('It cut across the park. The fine is too small. Try a bigger park fine.');
-    expect(nextStepOf({ ...free, red: 5 }, A({ redRuns: 1 }))).toMatch(/Try a bigger red-light fine\.$/);
-    expect(nextStepOf({ ...free, wrong: 5 }, A({ wrongWays: 1 }))).toMatch(/Try a bigger wrong-way fine\.$/);
+    expect(nextStepOf({ ...free, off: 5 }, A({ offTiles: 3, parkTiles: 3 }))).toBe('It cut across the park. The fine is too small. Raise “Fine per footpath tile” on the rate card.');
+    expect(nextStepOf({ ...free, red: 5 }, A({ redRuns: 1 }))).toMatch(/Raise “Fine per red light” on the rate card.$/);
+    expect(nextStepOf({ ...free, wrong: 5 }, A({ wrongWays: 1 }))).toMatch(/Raise “Fine per wrong-way tile” on the rate card.$/);
   });
   it('per-tile loops say it drove extra for per-tile pay and to lower it', () => {
     const v = nextStepOf({ ...free, perTile: 3 }, A({ arrived: false, seconds: 400, tiles: 400 }));
-    expect(v).toBe('It drove extra to earn pay per tile and never dropped the passenger off. Try lowering pay per tile.');
+    expect(v).toBe('It drove extra to earn pay per tile and never dropped the passenger off. Lower “Pay per tile driven” on the rate card.');
   });
   it('fines that outweigh the fare say so and what to change', () => {
     const v = nextStepOf({ ...free, fare: 100, off: 20 }, A({ arrived: false, seconds: 40, tiles: 5, offTiles: 10 }));
-    expect(v).toBe('It never arrived. The fines outweigh the fare. Try lowering a fine or raising the fare.');
+    expect(v).toBe('It never arrived. The fines outweigh the fare. Lower a fine or raise “Fare for arriving” on the rate card.');
   });
   it('never arrived without a loop says what to change', () => {
-    expect(nextStepOf({ ...free, fare: 0 }, A({ arrived: false, tiles: 5 }))).toMatch(/Try raising the fare\.$/);
+    expect(nextStepOf({ ...free, fare: 0 }, A({ arrived: false, tiles: 5 }))).toMatch(/Raise “Fare for arriving” on the rate card.$/);
     expect(nextStepOf(free, A({ arrived: false, tiles: 5 }))).toMatch(/^It never arrived\./);
   });
   it('a clean fast legal trip is the success line, a clean slow one asks for speed', () => {
     expect(nextStepOf(free, A({ seconds: GOAL_SECONDS - 1 }))).toBe('Clean, fast and legal. That is a fixed taxi.');
-    expect(nextStepOf(free, A({ seconds: GOAL_SECONDS + 10 }))).toBe('Legal, but not fast enough. Try a higher cost per second.');
+    expect(nextStepOf(free, A({ seconds: GOAL_SECONDS + 10 }))).toBe('Legal, but not fast enough. Raise “Cost per second” on the rate card.');
   });
   it('never says pay slip', () => {
     for (const a of [A({ parkTiles: 1, offTiles: 1 }), A({ redRuns: 1 }), A({ arrived: false, tiles: 400 }), A({})]) {
@@ -197,9 +208,12 @@ describe('player wording is accurate', () => {
   });
   it('takes the meter numbers from goal.js, not from typing', () => {
     expect(INFO.meters).toContain(`${ARRIVE_POINTS} for arriving`);
-    expect(INFO.meters).toContain(`${ON_TIME_POINTS} for a legal trip under the goal time`);
-    expect(INFO.meters).toContain(`${CLEAN_POINTS} for a clean trip that arrives`);
+    expect(INFO.meters).toContain(`${ON_TIME_POINTS} for a legal, on-time trip`);
+    expect(INFO.meters).toContain(`${CLEAN_POINTS} for no cheats`);
     expect(INFO.goal).toContain(`${GOAL_SECONDS} seconds`);
+    expect(INFO.meters.split(" ").length).toBeLessThan(65);
+    expect(INFO.meters).toContain('out of 100');
+    expect(INFO.meters).toContain('It only falls during the drive.');
   });
   it('says the one line the same everywhere it appears', () => {
     expect(read('games/city/index.html')).toContain('<p>The taxi does what you paid for, not what you meant.</p>');
@@ -212,6 +226,12 @@ describe('player wording is accurate', () => {
   });
 });
 
+describe('signed', () => {
+  it('uses a real minus and a plus, and nothing for zero', () => {
+    expect([signed(5), signed(-5), signed(0), signed(-2.5)]).toEqual(['+5', '−5', '0', '−2.5']);
+  });
+});
+
 describe('hintOf: all the loopholes, not only the first', () => {
   const free = { ...R, off: 0, red: 0, wrong: 0 };
   it('one cheat keeps the single-cheat advice', () => {
@@ -220,7 +240,7 @@ describe('hintOf: all the loopholes, not only the first', () => {
     expect(hintOf(free, A({ arrived: false, tiles: 5 }))).toBe(nextStepOf(free, A({ arrived: false, tiles: 5 })));
   });
   it('several cheats are all named', () => {
-    expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1 }))).toBe('It used 2 loopholes. Add or raise the park and footpath and red-light fines.');
-    expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1, wrongWays: 2 }))).toBe('It used 3 loopholes. Add or raise the park and footpath, red-light and wrong-way fines.');
+    expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1 }))).toBe('It used 2 loopholes. Add or raise the footpath and red light fines.');
+    expect(hintOf(free, A({ offTiles: 3, parkTiles: 3, redRuns: 1, wrongWays: 2 }))).toBe('It used 3 loopholes. Add or raise the footpath, red light and wrong way fines.');
   });
 });

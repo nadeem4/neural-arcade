@@ -64,7 +64,7 @@ describe('city page markup', () => {
     expect(html).not.toContain('type="range"');
   });
   it('has Train & Drive in a bottom bar, a Garage button with a count and a hidden drawer, and a hidden end card with its three buttons', () => {
-    expect(html).toContain('>TRAIN &amp; DRIVE</button>');
+    expect(html).toContain('>Train and drive</button>');
     expect(tag('garage')).not.toMatch(/\sdisabled[\s>]/);
     expect(tag('garage')).toContain('aria-controls="garageDrawer"');
     expect(tag('garage')).toContain('aria-expanded="false"');
@@ -76,7 +76,7 @@ describe('city page markup', () => {
     expect(html).toContain('>Change the rates</button>');
     expect(html).toContain('>Keep in the garage</button>');
     expect(html).toContain('>Watch again</button>');
-    expect(html).toContain('>Reset to the default</button>');
+    expect(html).toContain('>Back to step 1</button>');
     expect(tag('barDrive')).toMatch(/\shidden[\s>]/);
     expect(tag('skip')).toContain('aria-label="Skip to the end"');
     expect(tag('viewToggle')).toContain('aria-label="Map view"');
@@ -146,11 +146,11 @@ describe('city page race markup', () => {
     expect(tag('meterB')).toContain('aria-hidden="true"');
     expect(tag('raceBanner')).toContain('tabindex="-1"');
     expect(tag('startRace')).toMatch(/^<button /);
-    expect(html).toContain('>START RACE</button>');
+    expect(html).toContain('>Start race</button>');
     expect(html).toContain('>Rematch</button>');
     expect(html).toContain('>Back to garage</button>');
   });
-  it('rings the picked taxis in cyan and styles the START RACE button cyan', () => {
+  it('rings the picked taxis in cyan and styles the Start race button cyan', () => {
     expect(rules('.bay.picked')).toContain('var(--hud-route)');
     expect(rules('#startRace')).toContain('var(--hud-route)');
   });
