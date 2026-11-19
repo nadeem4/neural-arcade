@@ -1,14 +1,14 @@
 /* Reward City only: the rest of the page comes from studio.css and assets/game.css. */
 
 /* Slim top bar, then a stage that fills the rest of the screen. */
-:root { --bar: 52px; }
+:root { --bar: 52px; --fs-xs: 13px; --fs-sm: 14px; --fs-hd: 15px; --fs-md: 16px; --fs-lg: 22px; --fs-xl: 34px; } /* the six type sizes: every font size below is one of these (the offence tag is the one fluid clamp) */
 .citybar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; height: var(--bar); padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); background: var(--surface); border-bottom: 1px solid var(--line); }
-.citybar .logo { min-height: 44px; display: inline-flex; align-items: center; font-size: 15px; }
+.citybar .logo { min-height: 44px; display: inline-flex; align-items: center; font-size: var(--fs-hd); }
 .citybar .sep { color: var(--ink-2); }
-.citybar h1 { white-space: nowrap; margin: 0; font-size: 15px; font-weight: 700; letter-spacing: normal; line-height: 1; }
-.citybar .tag { flex: 1; min-width: 0; margin: 0 0 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--ink-2); }
+.citybar h1 { white-space: nowrap; margin: 0; font-size: var(--fs-hd); font-weight: 700; letter-spacing: normal; line-height: 1; }
+.citybar .tag { flex: 1; min-width: 0; margin: 0 0 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm); color: var(--ink-2); }
 .citybar nav { display: flex; align-items: center; gap: 14px; margin-left: auto; }
-.citybar nav a { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; color: var(--ink-2); }
+.citybar nav a { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: var(--fs-sm); font-weight: 600; text-decoration: none; white-space: nowrap; color: var(--ink-2); }
 .citybar nav a:hover { color: var(--ink); }
 .citybar .lamp { width: 44px; height: 44px; }
 
@@ -19,16 +19,16 @@
 #stage canvas:active { cursor: grabbing; }
 
 #labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-#labels span { position: absolute; left: 0; top: 0; padding: 2px 6px; border-radius: 6px; font-size: 12px; white-space: nowrap; background: rgba(13, 16, 21, .72); color: #fff; }
+#labels span { position: absolute; left: 0; top: 0; padding: 2px 6px; border-radius: 6px; font-size: var(--fs-xs); white-space: nowrap; background: rgba(13, 16, 21, .72); color: #fff; }
 
 /* Receipt and the goal. */
-.receipt { font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
+.receipt { font: 500 var(--fs-sm) var(--mono); font-variant-numeric: tabular-nums; }
 .receipt .row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
 .receipt .row span:first-child { color: var(--ink-2); }
 .receipt .total { margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-weight: 700; }
 .share-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; }
 .share-line[hidden] { display: none; }
-.share-line output { flex: 1 1 14em; min-width: 0; font: 500 14px var(--sans); overflow-wrap: anywhere; }
+.share-line output { flex: 1 1 14em; min-width: 0; font: 500 var(--fs-sm) var(--sans); overflow-wrap: anywhere; }
 
 /* Read by screen readers only: announces the verdict and goal whatever is on screen. */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -43,18 +43,18 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
   .citybar .sep, .citybar #howTab, .citybar .long { display: none; }
 }
 @media (max-width: 360px) {
-  .receipt, .receipt .row { font-size: 14px; } /* the same 14 px as every other phone width: the narrowest phones keep their text size */
+  .receipt, .receipt .row { font-size: var(--fs-sm); } /* the same 14 px as every other phone width: the narrowest phones keep their text size */
 }
 
 /* Drive HUD: dark navy panels over the map, in light and dark. Numbers use Space Grotesk where installed, else the page font. */
 :root { --hud: rgba(13, 19, 27, .9); --hud-ink: #F2F6FA; --hud-taxi: #F5B820; --hud-route: #5BC0EB; --hud-fine: #FF9A6B; --hud-pay: #8FE3A1; }
 .meter { display: grid; gap: 2px; min-width: 150px; padding: 10px 16px; border-radius: 14px; background: var(--hud); color: var(--hud-ink); font-family: "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .meter[hidden] { display: none; }
-.meter-total { font-size: 34px; font-weight: 700; line-height: 1; color: var(--hud-taxi); }
-.meter-label { font-size: 12px; opacity: .75; }
-.meter-counts { font-size: 12px; color: var(--hud-route); text-wrap: balance; }
+.meter-total { font-size: var(--fs-xl); font-weight: 700; line-height: 1; color: var(--hud-taxi); }
+.meter-label { font-size: var(--fs-xs); opacity: .75; }
+.meter-counts { font-size: var(--fs-xs); color: var(--hud-route); text-wrap: balance; }
 .meter-goal .meter-short { display: none; }
-.meter-name { font-size: 14px; line-height: 1.3; font-weight: 600; letter-spacing: .02em; }
+.meter-name { font-size: var(--fs-sm); line-height: 1.3; font-weight: 600; letter-spacing: .02em; }
 /* The city bar is 0 to 100; the Pay bar runs over the trip's own range (meter.js payRange). */
 .meter-bar { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .18); overflow: hidden; }
 .meter-bar i { display: block; height: 100%; width: 100%; transform-origin: left; transform: scaleX(0); background: var(--hud-taxi); }
@@ -83,7 +83,7 @@ body:not(.rc-record) .play:not([data-screen="map"]) #labels span:not(.tag):not(.
 :root { --navy: #0E1A2B; --navy-line: #2A3647; --navy-soft: #1A2330; --grey: #8896A8; }
 .hud { position: absolute; top: 12px; left: 12px; right: 12px; display: grid; justify-items: start; gap: 8px; pointer-events: none; }
 .notes { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; max-width: calc(100% - 24px); pointer-events: none; }
-.chip { margin: 0; padding: 6px 12px; border-radius: 999px; background: var(--hud); color: var(--hud-ink); font: 600 14px/1.3 var(--sans); text-align: center; }
+.chip { margin: 0; display: flex; align-items: center; justify-content: center; height: auto; min-height: 38px; padding: 6px 12px; border-radius: 999px; background: var(--hud); color: var(--hud-ink); font: 600 var(--fs-sm)/1.4 var(--sans); text-align: center; }
 .chip:empty, .chip[hidden] { display: none; }
 progress { display: block; height: 6px; margin: 0; border: 0; border-radius: 6px; background: #2A3647; accent-color: var(--hud-taxi); }
 progress[hidden] { display: none; }
@@ -97,7 +97,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .hud .info-text { max-width: 300px; margin: 0; background: var(--hud); color: var(--hud-ink); }
 .play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar { display: none; } /* neither race meter has a bar, so the two boxes are the same height */
 .play[data-screen="racing"] .meter .info, .play[data-screen="raced"] .meter .info, .play[data-screen="racing"] #info-meters, .play[data-screen="raced"] #info-meters { display: none; }
-.chase { height: 36px; padding: 0 14px; border: 1px solid var(--navy-line); background: var(--hud); color: var(--hud-ink); font-size: 13px; }
+.chase { height: 36px; padding: 0 14px; border: 1px solid var(--navy-line); background: var(--hud); color: var(--hud-ink); font-size: var(--fs-xs); }
 .chase[aria-pressed="true"] { background: var(--hud-taxi); color: #141C27; }
 .chase:disabled { opacity: .5; cursor: not-allowed; }
 /* Icon buttons (RF6): one 44 px square with an inline SVG, drawn in the same line style as the (i) icon. */
@@ -105,7 +105,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .chase.ibtn { height: 44px; padding: 0; }
 .ibtn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .citybar nav a.ibtn { color: var(--ink-2); }
-.badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--hud-taxi); color: #141C27; font: 700 13px/18px var(--sans); text-align: center; }
+.badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--hud-taxi); color: #141C27; font: 700 var(--fs-xs)/18px var(--sans); text-align: center; }
 .badge[hidden] { display: none; }
 #mute .off, #mute[aria-pressed="true"] .on { display: none; }
 #mute[aria-pressed="true"] .off { display: inline; }
@@ -114,20 +114,20 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .ratecard, .endcard { scrollbar-width: thin; scrollbar-color: #3A4A60 transparent; }
 .play[data-garage="true"] .chip-goal { display: none; }
 .ratecard { top: 12px; left: 12px; width: 330px; max-height: calc(100% - 100px); background: var(--navy); }
-.ratecard h2 { display: flex; align-items: center; justify-content: space-between; margin: 0; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
+.ratecard h2 { display: flex; align-items: center; justify-content: space-between; margin: 0; font: 700 var(--fs-hd) "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
 .ratecard .info, .endcard .info { margin: 0; color: #E8EDF4; }
-.ratecard .info-text, .endcard .info-text { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--navy-soft); color: #E8EDF4; font-size: 14px; }
+.ratecard .info-text, .endcard .info-text { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--navy-soft); color: #E8EDF4; font-size: var(--fs-sm); }
 .rates { display: grid; gap: 10px; }
 .rate .short { display: none; }
-.rate { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 14px; color: #C5CEDA; }
+.rate { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: var(--fs-sm); color: #C5CEDA; }
 .stepper { display: inline-flex; align-items: center; gap: 4px; }
-.rstep { width: 36px; height: 36px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 18px/1 "Space Grotesk", var(--sans); cursor: pointer; }
+.rstep { width: 36px; height: 36px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 var(--fs-md)/1 "Space Grotesk", var(--sans); cursor: pointer; }
 .rstep:disabled { opacity: .35; cursor: not-allowed; }
-.rate output { min-width: 52px; text-align: center; font: 700 20px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.rate output { min-width: 52px; text-align: center; font: 700 var(--fs-lg) "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .tone-fine { color: var(--hud-fine); }
 .tone-pay { color: var(--hud-pay); }
 .tone-zero { color: var(--grey); }
-.link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--hud-taxi); font: 600 14px var(--sans); text-decoration: underline; cursor: pointer; }
+.link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--hud-taxi); font: 600 var(--fs-sm) var(--sans); text-decoration: underline; cursor: pointer; }
 .ratecard button:focus-visible, .endcard button:focus-visible, .gbar button:focus-visible { outline: 2px solid var(--hud-taxi); outline-offset: 3px; }
 
 .gbar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 18px; background: var(--hud); }
@@ -135,29 +135,29 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .bar-drive[hidden] { display: none; }
 .bar-drive progress { width: 220px; }
 #progress { width: 140px; }
-.gbar .btn, .endcard .btn { height: 44px; padding: 0 16px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: 14px; }
+.gbar .btn, .endcard .btn { height: 44px; padding: 0 16px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: var(--fs-sm); }
 .gbar .btn[aria-pressed="true"] { background: var(--hud-taxi); color: #141C27; }
-.go { height: 52px; padding: 0 28px; border: 0; border-radius: 12px; background: var(--hud-taxi); color: #141C27; font: 700 18px "Space Grotesk", var(--sans); letter-spacing: .04em; cursor: pointer; }
-.go.small { height: 46px; padding: 0 18px; font-size: 15px; letter-spacing: 0; }
+.go { height: 52px; padding: 0 28px; border: 0; border-radius: 12px; background: var(--hud-taxi); color: #141C27; font: 700 var(--fs-md) "Space Grotesk", var(--sans); letter-spacing: .04em; cursor: pointer; }
+.go.small { height: 46px; padding: 0 18px; font-size: var(--fs-hd); letter-spacing: 0; }
 .go:hover { background: #FFD45C; }
 .go:disabled { opacity: .6; cursor: wait; }
 
 .endcard { top: 50%; left: 40px; transform: translateY(-50%); width: 400px; max-height: calc(100% - 24px); padding: 24px; }
 .endcard[hidden] { display: none; }
-.end-head { display: flex; justify-content: space-between; align-items: baseline; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
-.end-flag { font: 600 14px var(--sans); letter-spacing: 0; text-transform: none; color: var(--hud-fine); }
+.end-head { display: flex; justify-content: space-between; align-items: baseline; font: 700 var(--fs-hd) "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
+.end-flag { font: 600 var(--fs-sm) var(--sans); letter-spacing: 0; text-transform: none; color: var(--hud-fine); }
 .end-flag.ok { color: var(--hud-pay); }
 .end-stats { display: flex; gap: 28px; }
 .end-stats > div { display: grid; align-content: start; gap: 2px; }
-.end-stats small { font-size: 13px; color: #9AA7B8; }
-.big { font: 700 40px/1 "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.end-stats small { font-size: var(--fs-xs); color: #9AA7B8; }
+.big { font: 700 var(--fs-xl)/1 "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .big.pay { color: var(--hud-pay); }
 .big.fine { color: var(--hud-fine); }
-.endcard .receipt { padding-top: 12px; border-top: 1px solid var(--navy-line); color: #C5CEDA; font: 500 14px var(--sans); }
+.endcard .receipt { padding-top: 12px; border-top: 1px solid var(--navy-line); color: #C5CEDA; font: 500 var(--fs-sm) var(--sans); }
 .endcard .receipt .row span:first-child { color: #C5CEDA; }
 .endcard .receipt .total { border-top-color: var(--navy-line); color: #E8EDF4; }
-.end-verdict { margin: 0; padding: 14px 16px; border-radius: 12px; background: var(--navy-soft); font-size: 16px; line-height: 1.45; }
-.end-honest { color: #C5CEDA; font: 500 14px/1.45 var(--sans); }
+.end-verdict { margin: 0; padding: 14px 16px; border-radius: 12px; background: var(--navy-soft); font-size: var(--fs-md); line-height: 1.45; }
+.end-honest { color: #C5CEDA; font: 500 var(--fs-sm)/1.45 var(--sans); }
 .end-honest p { margin: 0 0 6px; }
 .end-honest #endHonestLine { color: #E8EDF4; font-weight: 700; }
 .end-honest ul { margin: 6px 0 0; padding-left: 18px; }
@@ -170,7 +170,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   body:not(.rc-record) #endCity { display: none; }
   body:not(.rc-record) .endcard { gap: 6px; padding: 16px 20px; }
   body:not(.rc-record) .end-stats { gap: 20px; }
-  body:not(.rc-record) .end-stats .big { font-size: 34px; }
+  body:not(.rc-record) .end-stats .big { font-size: var(--fs-xl); }
   body:not(.rc-record) .end-stats > div:first-child { grid-template-columns: auto auto; justify-content: start; align-items: center; }
   body:not(.rc-record) .end-stats > div:first-child .big { grid-column: 1 / -1; }
   body:not(.rc-record) .end-stats .info { margin: -12px -8px -12px 0; }
@@ -186,27 +186,27 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   body:not(.rc-record) .endcard .share-line { order: 5; }
   body:not(.rc-record) .endcard .end-actions { order: 6; }
 }
-.toast { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 4; margin: 0; padding: 10px 16px; border-radius: 12px; background: var(--navy); color: #E8EDF4; font: 600 14px var(--sans); }
+.toast { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 4; margin: 0; padding: 10px 16px; border-radius: 12px; background: var(--navy); color: #E8EDF4; font: 600 var(--fs-sm) var(--sans); }
 .toast[hidden] { display: none; }
 
 /* The ladder: five numbered steps and a note on the one loaded. One row, so it stays small in the phone sheet. */
 .ladder { display: grid; gap: 8px; }
-.ladder h3 { display: flex; align-items: center; justify-content: space-between; margin: 0; font: 700 13px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
+.ladder h3 { display: flex; align-items: center; justify-content: space-between; margin: 0; font: 700 var(--fs-xs) "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
 .ladder .info { margin: 0; color: #E8EDF4; }
 .steps { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .steps li { flex: 1; }
-.step { position: relative; width: 100%; height: 40px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 16px "Space Grotesk", var(--sans); cursor: pointer; }
+.step { position: relative; width: 100%; height: 40px; border: 1px solid var(--navy-line); border-radius: 10px; background: var(--navy-soft); color: #E8EDF4; font: 700 var(--fs-md) "Space Grotesk", var(--sans); cursor: pointer; }
 .step[aria-current="step"] { border-color: var(--hud-taxi); color: var(--hud-taxi); box-shadow: inset 0 0 0 1px var(--hud-taxi); }
-.step.ticked::after { content: "\2713"; position: absolute; top: 1px; right: 5px; font-size: 11px; line-height: 1; color: var(--hud-pay); }
+.step.ticked::after { content: "\2713"; position: absolute; top: 1px; right: 5px; font-size: var(--fs-xs); line-height: 1; color: var(--hud-pay); }
 .step:disabled { opacity: .35; cursor: not-allowed; }
 .step:focus-visible { outline: 2px solid var(--hud-taxi); outline-offset: 3px; }
-.ladder-note { margin: 0; font-size: 13.5px; line-height: 1.4; color: #C5CEDA; }
-.ladder-note b { display: block; margin-bottom: 2px; font: 700 16px/1.3 "Space Grotesk", var(--sans); color: #F2F6FA; }
+.ladder-note { margin: 0; font-size: var(--fs-xs); line-height: 1.4; color: #C5CEDA; }
+.ladder-note b { display: block; margin-bottom: 2px; font: 700 var(--fs-md)/1.3 "Space Grotesk", var(--sans); color: #F2F6FA; }
 
 /* What each screen shows. */
 .play[data-screen="driving"] .ratecard, .play[data-screen="done"] .ratecard, .play[data-screen="racing"] .ratecard, .play[data-screen="raced"] .ratecard,
 .play[data-screen="driving"] #train, .play[data-screen="done"] #train, .play[data-screen="racing"] #train, .play[data-screen="raced"] #train { display: none; }
-.play[data-screen="done"] .meter, .play[data-screen="done"] .minimap { display: none; }
+.play[data-screen="done"] .meter, .play[data-screen="done"] .minimap, .play[data-screen="done"] .notes { display: none; } /* the notes (the goal and the no-WebGL line) would show under or through the end card */
 /* Nothing is left in the bottom bar on the end card and the race result: hide it rather than show an empty bar. */
 .play[data-screen="done"] .gbar, .play[data-screen="raced"] .gbar { display: none; }
 /* The end card's buttons stay in view while the rest scrolls. */
@@ -217,14 +217,14 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 @media (max-width: 720px) {
   .topright { left: 8px; right: 8px; top: 8px; max-width: none; }
   .chase { min-height: 44px; height: 44px; }
-  .notes .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: 16px; line-height: 1.4; }
-  .citybar .logo, .citybar h1 { font-size: 16px; }
-  #labels span { font-size: 13px; }
-  .meter-label { font-size: 13px; }
-  .meter-counts { font-size: 13px; }
-  .receipt, .receipt .row { font-size: 14px; }
-  .ratecard .info-text, .endcard .info-text { font-size: 16px; line-height: 1.45; }
-  .hud .info-text { grid-column: 1 / -1; font-size: 16px; line-height: 1.45; }
+  .notes .chip { height: auto; min-height: 38px; padding: 6px 12px; border-radius: 16px; font-size: var(--fs-md); line-height: 1.4; }
+  .citybar .logo, .citybar h1 { font-size: var(--fs-md); }
+  #labels span { font-size: var(--fs-xs); }
+  .meter-label { font-size: var(--fs-xs); }
+  .meter-counts { font-size: var(--fs-xs); }
+  .receipt, .receipt .row { font-size: var(--fs-sm); }
+  .ratecard .info-text, .endcard .info-text { font-size: var(--fs-md); line-height: 1.45; }
+  .hud .info-text { grid-column: 1 / -1; font-size: var(--fs-md); line-height: 1.45; }
   .hud .info { min-width: 44px; min-height: 44px; margin: -10px -8px -10px 0; }
   .hud { top: 60px; left: 8px; right: 8px; grid-template-columns: 1fr auto; } /* just under the single row of 44 px top buttons */
   .hud .meter { grid-column: 1 / -1; }
@@ -235,9 +235,9 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud { grid-template-columns: 1fr 1fr; justify-items: stretch; }
   .play[data-screen="racing"] .hud .meter, .play[data-screen="raced"] .hud .meter { grid-column: auto; }
   .meter { min-width: 120px; padding: 8px 12px; }
-  .meter-total { font-size: 26px; }
+  .meter-total { font-size: var(--fs-lg); }
   .meter-goal { padding: 6px 12px; }
-  .meter-goal .meter-total { font-size: 20px; }
+  .meter-goal .meter-total { font-size: var(--fs-lg); }
   /* the city score keeps its scale on a phone: "60 /100" on one line, so the number is never bare */
   .meter-goal { grid-template-columns: auto 1fr; column-gap: 4px; align-items: baseline; }
   .meter-goal .meter-name, .meter-goal .meter-bar { grid-column: 1 / -1; }
@@ -247,32 +247,32 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .endcard { bottom: 8px; max-height: 60svh; display: flex; flex-direction: column; } /* the bottom bar is hidden on the end card, so it sits at the bottom edge */
   .rates { grid-template-columns: 1fr 1fr; gap: 4px 12px; }
   .ratecard { gap: 6px; padding: 10px 12px; }
-  .ratecard h2 { font-size: 14px; }
-  .ladder h3 { font-size: 14px; }
+  .ratecard h2 { font-size: var(--fs-sm); }
+  .ladder h3 { font-size: var(--fs-sm); }
   .link { padding: 0; }
-  .rate { grid-template-columns: 1fr; gap: 2px; font-size: 14px; }
+  .rate { grid-template-columns: 1fr; gap: 2px; font-size: var(--fs-sm); }
   .rate-label { line-height: 1.2; white-space: nowrap; }
   .rate .long { display: none; } .rate .short { display: inline; }
   .stepper { justify-content: space-between; }
-  .rate output { font-size: 20px; }
+  .rate output { font-size: var(--fs-lg); }
   .rstep { width: 44px; height: 44px; }
   .ladder { gap: 6px; }
   .step { height: 44px; }
-  .ladder-note { font-size: 14px; line-height: 1.4; }
-  .ladder-note b { font-size: 16px; }
+  .ladder-note { font-size: var(--fs-sm); line-height: 1.4; }
+  .ladder-note b { font-size: var(--fs-md); }
   .gbar { left: 8px; right: 8px; bottom: 8px; transform: none; justify-content: center; }
   .gbar .go { flex: 1; }
   .bar-drive { flex: 1; gap: 8px; }
   .bar-drive progress { flex: 1; width: auto; min-width: 40px; }
-  .gbar .btn { padding: 0 10px; font-size: 14px; }
+  .gbar .btn { padding: 0 10px; font-size: var(--fs-sm); }
   .notes { bottom: calc(40svh + 96px); width: calc(100% - 16px); }
-  .toast { bottom: 76px; font-size: 16px; }
-  .endcard .big { font-size: 32px; }
-  .end-head { font-size: 16px; }
+  .toast { bottom: 76px; font-size: var(--fs-md); }
+  .endcard .big { font-size: var(--fs-xl); }
+  .end-head { font-size: var(--fs-md); }
   .end-stats { gap: 18px; order: 2; }
-  .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: 16px; line-height: 1.45; } .end-honest { order: 3; font-size: 14px; } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
+  .end-head { order: 1; } .end-verdict { order: 3; padding: 8px 12px; font-size: var(--fs-md); line-height: 1.45; } .end-honest { order: 3; font-size: var(--fs-sm); } .end-actions { order: 4; } .endcard .share-line { order: 5; } .endcard .receipt { order: 6; } .endcard .info-text { order: 7; }
   .end-honest ul { max-height: 22svh; overflow-y: auto; }
-  .end-actions .btn, .end-actions .go { height: 44px; padding: 0 12px; font-size: 14px; }
+  .end-actions .btn, .end-actions .go { height: 44px; padding: 0 12px; font-size: var(--fs-sm); }
   #endcard .end-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } /* three on one row: Next (or Change the rates), Change/Keep, Keep/Watch */
   #endcard.has-next .end-actions #endAgain { display: none; } /* the fourth button is dropped on a phone while Next is showing: replaying is the least needed of the four */
   #endcard .end-actions .btn, #endcard .end-actions .go { padding: 0 6px; line-height: 1.2; white-space: normal; }
@@ -297,24 +297,24 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .drawer { position: absolute; top: 60px; right: 12px; bottom: 90px; z-index: 5; width: 340px; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; padding: 16px; border: 1px solid var(--navy-line); border-radius: 18px; background: var(--navy); color: #E8EDF4; font-family: var(--sans); box-shadow: 0 8px 30px rgba(0, 0, 0, .45); }
 .drawer[hidden] { display: none; }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; }
-.drawer-head h2 { margin: 0; font: 700 15px "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
-.drawer .btn { height: 36px; padding: 0 12px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: 13px; }
-.drawer-empty { margin: 0; color: #9AA7B8; font-size: 14px; }
+.drawer-head h2 { margin: 0; font: 700 var(--fs-hd) "Space Grotesk", var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9AA7B8; }
+.drawer .btn { height: 36px; padding: 0 12px; border: 1px solid var(--navy-line); background: var(--navy-soft); color: #E8EDF4; font-size: var(--fs-xs); }
+.drawer-empty { margin: 0; color: #9AA7B8; font-size: var(--fs-sm); }
 .drawer-empty[hidden] { display: none; }
 .bays { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; grid-auto-rows: max-content; gap: 10px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3A4A60 transparent; }
 .bay { display: grid; gap: 6px; padding: 16px 14px 12px; position: relative; overflow: hidden; border: 1px solid var(--navy-line); border-radius: 12px; background: var(--navy-soft); }
 .bay-stripe { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
 .bay-stats { white-space: nowrap; display: flex; align-items: baseline; gap: 12px; }
-.bay-earned { font: 700 16px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.bay-earned { font: 700 var(--fs-md) "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .bay-earned.pay { color: var(--hud-pay); }
 .bay-earned.fine { color: var(--hud-fine); }
 .bay.empty { border: 2px dashed var(--navy-line); background: none; color: #9AA7B8; text-align: center; padding: 12px; }
 .bay-head { display: flex; align-items: center; gap: 10px; }
-.bay-name { font: 700 17px "Space Grotesk", var(--sans); }
-.bay-try { margin-left: auto; white-space: nowrap; font-size: 12px; color: #9AA7B8; }
+.bay-name { font: 700 var(--fs-md) "Space Grotesk", var(--sans); }
+.bay-try { margin-left: auto; white-space: nowrap; font-size: var(--fs-xs); color: #9AA7B8; }
 .bay-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip-rate { padding: 3px 8px; border-radius: 6px; background: var(--navy); color: #C5CEDA; font: 600 12px var(--sans); }
-.bay-time { font: 700 22px "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
+.chip-rate { padding: 3px 8px; border-radius: 6px; background: var(--navy); color: #C5CEDA; font: 600 var(--fs-xs) var(--sans); }
+.bay-time { font: 700 var(--fs-lg) "Space Grotesk", var(--sans); font-variant-numeric: tabular-nums; }
 .bay-note { display: none; } /* the chips, time and pay say enough; the note stays out of the drawer so four bays fit */
 .drawer .go.small { height: 36px; }
 .bay-actions { display: flex; gap: 8px; }
@@ -332,7 +332,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .play[data-garage="true"] .gbar { display: none; }
 .racebar { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--navy-line); }
 .racebar[hidden] { display: none; }
-.racebar p { margin: 0; font-size: 13px; color: #C5CEDA; }
+.racebar p { margin: 0; font-size: var(--fs-xs); color: #C5CEDA; }
 #startRace { background: var(--hud-route); }
 #startRace:hover { background: #8AD3F2; }
 #startRace:disabled { opacity: .5; cursor: not-allowed; }
@@ -343,16 +343,16 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .racebanner:focus { outline: none; }
 .racebanner:focus-visible { outline: 2px solid var(--hud-route); outline-offset: 3px; }
 .racebanner .end-head { justify-content: center; order: -1; }
-.race-title { margin: 0; font: 700 24px "Space Grotesk", var(--sans); color: #F2F6FA; }
-.race-detail { margin: 0; font-size: 14px; line-height: 1.5; color: #C5CEDA; }
+.race-title { margin: 0; font: 700 var(--fs-lg) "Space Grotesk", var(--sans); color: #F2F6FA; }
+.race-detail { margin: 0; font-size: var(--fs-sm); line-height: 1.5; color: #C5CEDA; }
 .racebanner .end-actions { justify-content: center; }
 @media (max-width: 720px) {
   .hud { gap: 8px; }
   .meter { min-width: 0; padding: 6px 10px; }
-  .meter-total { font-size: 22px; }
+  .meter-total { font-size: var(--fs-lg); }
   .racebanner { bottom: 76px; padding: 10px 14px; }
-  .race-title { font-size: 20px; }
-  .race-detail { font-size: 14px; line-height: 1.4; }
+  .race-title { font-size: var(--fs-lg); }
+  .race-detail { font-size: var(--fs-sm); line-height: 1.4; }
 }
 @media (max-width: 720px) {
   .drawer { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: calc(100% - 68px - env(safe-area-inset-bottom)); padding: 10px; gap: 8px; }
@@ -360,14 +360,14 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .bay { padding: 8px 10px; gap: 4px; }
   .bay-head svg { width: 54px; height: 27px; } /* a smaller taxi icon, so four bays and the race bar fit a 660 px phone */
   .drawer .racebar { grid-template-columns: 1fr auto; align-items: center; padding-top: 8px; } /* the line and START RACE side by side */
-  .drawer .racebar p { font-size: 13px; line-height: 1.3; }
+  .drawer .racebar p { font-size: var(--fs-xs); line-height: 1.3; }
   .bay-chips { display: none; } /* the name and the time say enough on a phone; this keeps four bays on screen */
-  .bay-time { font-size: 20px; }
-  .drawer .btn, .drawer .go.small { height: 44px; font-size: 14px; } /* real tap targets */
+  .bay-time { font-size: var(--fs-lg); }
+  .drawer .btn, .drawer .go.small { height: 44px; font-size: var(--fs-sm); } /* real tap targets */
   .bay { grid-template-columns: 1fr auto; align-items: center; } .bay-head { grid-column: 1; grid-row: 1; } .bay-stats { grid-column: 2; grid-row: 1; } .bay-actions { grid-column: 1 / -1; grid-row: 2; gap: 8px; } .bay-try { display: none; } .bay-race-wrap { flex: 1 1 0; min-width: 0; display: flex; } .bay-actions .btn, .bay-actions .go { flex: 1 1 0; min-width: 0; padding: 0 6px; white-space: nowrap; } /* name and time on one row, three full-width buttons below */
   .bay.empty { display: none; }
 }
-#labels span.race-tag { padding: 3px 9px; border-radius: 999px; font: 700 13px "Space Grotesk", var(--sans); background: var(--hud); }
+#labels span.race-tag { padding: 3px 9px; border-radius: 999px; font: 700 var(--fs-xs) "Space Grotesk", var(--sans); background: var(--hud); }
 
 /* Record mode (?record=1): only the stage, meter, minimap and tags, frame-stepped by window.__rc.seek(ms). */
 body.rc-record .citybar, body.rc-record footer, body.rc-record main > :not(#play),
@@ -389,4 +389,17 @@ body.rc-record.rc-endcard .play[data-screen="done"] .meter, body.rc-record.rc-en
 /* Landscape phone: the stage is only as tall as the screen minus the header, so the bottom bar stays on screen. */
 @media (max-height: 500px) and (max-width: 950px) {
   .play { min-height: 0; }
+}
+/* Landscape tablet-width phone (721 to 950 px wide): the end card is three columns, so it fits 844x390 with no inner scroll. Phones up to 720 px keep the bottom sheet. */
+@media (max-height: 500px) and (min-width: 721px) and (max-width: 950px) {
+  /* The end card is three columns (head, stats and hint | the legal-route lines | the receipt) with the buttons in a row under them, so it fits 844x390 with no inner scroll. */
+  body:not(.rc-record) .endcard:not(.racebanner) { left: 12px; width: calc(100% - 24px); grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; row-gap: 6px; padding: 12px 16px; }
+  body:not(.rc-record) .endcard:not(.racebanner) > * { grid-column: 1; }
+  body:not(.rc-record) .endcard .end-honest { grid-column: 2; grid-row: 1 / span 3; font-size: var(--fs-xs); }
+  body:not(.rc-record) .endcard .receipt { grid-column: 3; grid-row: 1 / span 3; padding-top: 0; border-top: 0; font-size: var(--fs-xs); }
+  body:not(.rc-record) .endcard .end-actions { grid-column: 1 / -1; grid-row: 4; position: static; padding-top: 0; background: none; }
+  body:not(.rc-record) .endcard .info-text { grid-column: 1 / -1; grid-row: 5; }
+  body:not(.rc-record) .endcard .end-stats { gap: 12px; }
+  body:not(.rc-record) .endcard .end-stats small, body:not(.rc-record) .endcard .end-stats > div:first-child small { font-size: var(--fs-xs); line-height: 1.25; white-space: normal; }
+  body:not(.rc-record) .endcard .end-verdict { padding: 6px 10px; font-size: var(--fs-sm); }
 }
