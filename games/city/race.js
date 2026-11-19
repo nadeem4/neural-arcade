@@ -21,14 +21,14 @@ export function togglePick(picks, id) {
 
 // entries are two valid kept taxis. Their routes must start at the same pickup. One tick length for both,
 // the shorter of the two, so the same tick means the same moment for each car.
-export function raceTracks(world, cellM, entries) {
+export function raceTracks(world, cellM, entries, walls = null) {
   const [a, b] = entries;
   if (a.route.cells[0] !== b.route.cells[0]) throw new Error('A race needs the same pickup for both taxis');
   const frames = entries.map(e => routeFrames(world, cellM, e.route));
   const tickMs = Math.min(...frames.map(f => tickMsFor(f.length)));
   const cars = entries.map((entry, i) => {
     const events = tripEvents(world, entry.rewards, entry.route);
-    return { entry, events, track: driveTrack(frames[i], events, { tickMs }) };
+    return { entry, events, track: driveTrack(frames[i], events, { tickMs, walls }) };
   });
   const goal = cellCentre(world.goal % world.cols, Math.floor(world.goal / world.cols), { cellM, rows: world.rows });
   return { cars, tickMs, total: Math.max(...cars.map(c => c.track.total)), goal: { x: goal[0], z: goal[1] } };
