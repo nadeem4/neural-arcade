@@ -11,8 +11,8 @@ const smooth = (p) => p * p * (3 - 2 * p);
 // the shot is a pure function of p and starts exactly on the chase shot. The view is blended apart from the position: its compass angle the short
 // way round and its pitch (below), so it never spins as the camera passes over the taxi and is never steeper than the steeper of the two shots.
 // push(x, z, y) -> [dx, dz] | null (scene-math wallPush): below a roof beside a wall the camera also drifts away from it (DRIFT m a ms), so a pull-back that
-// starts hugging a tower leaves its face instead of rising up it; it never steps into a roof, and is gone between those two values of p, when the camera is far above every roof.
-const STEPS = 160, CATCH_UP = 2, CLIMB = 1, LOOK = 3, DRIFT = 0.4, DRIFT_END = [0.6, 1]; // CATCH_UP: ground progress per unit of p, a little over the plain path's own top speed (about 1.75)
+// starts hugging a tower leaves its face instead of rising up it; it never steps into a roof, never totals more than DRIFT_MAX m, and fades out over the part of p between those two values.
+const STEPS = 160, CATCH_UP = 2, CLIMB = 1, LOOK = 3, DRIFT = 0.4, DRIFT_MAX = 20, DRIFT_END = [0.6, 1]; // CATCH_UP: ground progress per unit of p, a little over the plain path's own top speed (about 1.75)
 const lookOf = (s) => { const v = s.target.map((x, k) => x - s.pos[k]), r = Math.hypot(...v); return { r, yaw: Math.atan2(v[0], v[2]), pitch: Math.asin(v[1] / r) }; };
 const crane = (chase, map, p, roof, push, len) => {
   if (p <= 0) return chase;
@@ -31,7 +31,7 @@ const crane = (chase, map, p, roof, push, len) => {
     const h = Math.min(1 / STEPS, p - s), q = smooth((s += h)), y = height(q) + lift;
     fade = fadeAt(s);
     const away = push(...ground(k), y); // below a roof beside a wall: drift away from it while rising, but never into a roof
-    if (away) { const dx = away[0] * DRIFT * h * len, dz = away[1] * DRIFT * h * len, [gx, gz] = ground(k); if (roof(gx + dx * fade, gz + dz * fade) <= y) { ox += dx; oz += dz; } }
+    if (away) { const ex = ox + away[0] * DRIFT * h * len, ez = oz + away[1] * DRIFT * h * len, c = Math.min(1, DRIFT_MAX / Math.hypot(ex, ez)), nx = ex * c, nz = ez * c, [gx, gz] = ground(k); if (roof(gx + (nx - ox) * fade, gz + (nz - oz) * fade) <= y) { ox = nx; oz = nz; } } // the total drift is capped at DRIFT_MAX
     const next = Math.min(q ** 1.5, k + CATCH_UP * h);
     if (next > k && !clear(k, next, height(q) + lift)) lift = Math.max(lift + CLIMB * h * len, roof(...ground(k)) - height(q)); // blocked: hold and climb (and stay over the roof the drifted camera is above)
     else { if (next > k) k = next; lift = Math.max(0, lift - CLIMB * h * len, roof(...ground(k)) - height(q)); } // open: move on, and settle back onto the path
