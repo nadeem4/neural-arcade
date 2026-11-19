@@ -141,6 +141,10 @@ describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
     expect(css).toMatch(/\.hud \.meter \{[^}]*grid-column: 1 \/ -1/);
     expect(css).toMatch(/\.hud \.meter-goal \{[^}]*grid-column: 1/);
   });
+  it('on a desktop the minimap stays at the top right, 60 px down and 12 px in, as before it moved into the HUD (the HUD spans the width so it can be placed against that edge)', () => {
+    expect(rules('.hud')).toContain('left: 12px; right: 12px');
+    expect(rules('.minimap')).toContain('top: 48px; right: 0'); // the HUD sits at top 12 px: 12 + 48 = 60
+  });
   it('the meter (i) text opens right under the Pay meter, before the city score and minimap row, and the HUD rows are 8 px apart', () => {
     expect(hudHtml.indexOf('id="info-meters"')).toBeGreaterThan(hudHtml.indexOf('id="meter"'));
     expect(hudHtml.indexOf('id="info-meters"')).toBeLessThan(hudHtml.indexOf('id="meterGoal"'));
@@ -152,8 +156,9 @@ describe('RF7b: meters, minimap and banner clear each other on a phone', () => {
     expect(rules('.play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap')).toContain('display: none');
     expect(rules('.play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts')).toContain('display: none');
   });
-  it('both race meters have the same content: no progress bar on either, so the two boxes are the same height', () => {
+  it('both race meters have the same content: no progress bar on either, on any width, so the two boxes are the same height', () => {
     expect(rules('.play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar')).toContain('display: none');
+    expect(css.indexOf('.play[data-screen="racing"] .meter-bar')).toBeLessThan(css.indexOf('@media (max-width: 720px)')); // before the phone block: it applies on desktop too
   });
   it('the two race meters sit side by side on a phone, so they cover less of the cars', () => {
     expect(rules('.play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud')).toContain('grid-template-columns: 1fr 1fr');

@@ -63,7 +63,7 @@ button:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .chip-goal, #info-meters { pointer-events: auto; }
 .play:not([data-screen="map"]) .chip-goal { display: none; }
 .play[data-screen="racing"] .meter-goal, .play[data-screen="raced"] .meter-goal { display: none; }
-.minimap { position: absolute; top: 60px; right: 12px; width: 120px; height: 120px; border-radius: 50%; background: var(--hud); border: 2px solid var(--hud-route); pointer-events: none; }
+.minimap { position: absolute; top: 48px; right: 0; width: 120px; height: 120px; border-radius: 50%; background: var(--hud); border: 2px solid var(--hud-route); pointer-events: none; }
 .minimap[hidden] { display: none; }
 #labels span.tag { padding: 4px 10px; border-radius: 999px; font: 700 clamp(17px, 5.6vw, 22px) "Space Grotesk", var(--sans); background: var(--hud); animation: tag-pop 1.7s ease-out forwards; }
 #labels span.tag.fine { color: var(--hud-fine); }
@@ -81,7 +81,7 @@ body:not(.rc-record) .play:not([data-screen="map"]) #labels span:not(.tag):not(.
 
 /* Game screens. data-screen on #play is map, training, driving or done; the dark navy panels look the same in light and dark. */
 :root { --navy: #0E1A2B; --navy-line: #2A3647; --navy-soft: #1A2330; --grey: #8896A8; }
-.hud { position: absolute; top: 12px; left: 12px; display: grid; justify-items: start; gap: 8px; pointer-events: none; }
+.hud { position: absolute; top: 12px; left: 12px; right: 12px; display: grid; justify-items: start; gap: 8px; pointer-events: none; }
 .notes { position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; max-width: calc(100% - 24px); pointer-events: none; }
 .chip { margin: 0; padding: 6px 12px; border-radius: 999px; background: var(--hud); color: var(--hud-ink); font: 600 14px/1.3 var(--sans); text-align: center; }
 .chip:empty, .chip[hidden] { display: none; }
@@ -95,6 +95,7 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
 .hud .info, .hud .info-text { pointer-events: auto; }
 .hud .info { margin: 0 0 0 4px; vertical-align: middle; color: var(--hud-ink); }
 .hud .info-text { max-width: 300px; margin: 0; background: var(--hud); color: var(--hud-ink); }
+.play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar { display: none; } /* neither race meter has a bar, so the two boxes are the same height */
 .play[data-screen="racing"] .meter .info, .play[data-screen="raced"] .meter .info, .play[data-screen="racing"] #info-meters, .play[data-screen="raced"] #info-meters { display: none; }
 .chase { height: 36px; padding: 0 14px; border: 1px solid var(--navy-line); background: var(--hud); color: var(--hud-ink); font-size: 13px; }
 .chase[aria-pressed="true"] { background: var(--hud-taxi); color: #141C27; }
@@ -230,7 +231,6 @@ progress::-moz-progress-bar { background: var(--hud-taxi); border-radius: 6px; }
   .hud .meter-goal { grid-column: 1; align-self: start; }
   .minimap { position: static; grid-column: 2; width: 84px; height: 84px; } /* beside the city score, so no meter runs under it */
   .play[data-screen="racing"] .minimap, .play[data-screen="raced"] .minimap { display: none; }
-  .play[data-screen="racing"] .meter-bar, .play[data-screen="raced"] .meter-bar { display: none; } /* neither race meter has a bar, so the two boxes are the same height */
   .play[data-screen="racing"] .meter-counts, .play[data-screen="raced"] .meter-counts { display: none; } /* the result banner says the same; two short meters side by side keep 8 px clear of the banner and cover less of the cars */
   .play[data-screen="racing"] .hud, .play[data-screen="raced"] .hud { grid-template-columns: 1fr 1fr; justify-items: stretch; }
   .play[data-screen="racing"] .hud .meter, .play[data-screen="raced"] .hud .meter { grid-column: auto; }
