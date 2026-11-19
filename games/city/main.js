@@ -55,8 +55,8 @@ const setBar = (el, x) => { if (el._x !== x) { el._x = x; el.style.transform = `
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
 function popTag(tag, at, i) {
   const prev = hud.lastTag?.[tag.text];
-  const run = foldTag(prev, tag, i);
-  let span = run.count > 1 && prev.span.isConnected ? prev.span : null;
+  const run = foldTag(prev, tag, i, !!prev?.span.isConnected);
+  let span = run.count > 1 ? prev.span : null;
   let slot = span ? prev.slot : undefined;
   if (!span) { // a new bubble takes the lowest free slot above the taxi, so live tags never overlap
     span = document.createElement('span'); $('labels').append(span);

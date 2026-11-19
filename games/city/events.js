@@ -40,10 +40,10 @@ export function tagsFor(step, rewards, scared = 0) {
   return tags;
 }
 
-// Folds a tag into the run before it: the same text on the very next step adds to a count instead of stacking a second tag.
-// prev is the last result (or null); i is the step index. Returns { text, kind, count, i, label }.
-export function foldTag(prev, tag, i) {
-  const count = prev && prev.text === tag.text && i - prev.i <= 1 ? prev.count + 1 : 1;
+// Folds a tag into the bubble of the same words that is still on screen (live): it adds to a count instead of stacking a second tag.
+// prev is the last result for this text (or null); live says its bubble is still up; i is the step index. Returns { text, kind, count, i, label }.
+export function foldTag(prev, tag, i, live = false) {
+  const count = prev && live && prev.text === tag.text ? prev.count + 1 : 1;
   return { text: tag.text, kind: tag.kind, count, i, label: count > 1 ? `${tag.text} ×${count}` : tag.text };
 }
 
