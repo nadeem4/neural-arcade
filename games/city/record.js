@@ -1,7 +1,7 @@
 // Pure helpers for ?record=1 frame-stepped capture.
 import { PRESETS } from './presets.js';
-import { motionAllowed } from './playback.js';
 import { SWOOP_MS, PULLBACK_MS } from './director.js';
+import { endCardModel } from './endcard.js';
 
 // Parse the query string. Returns null when not recording, else { card, fps }.
 export function parseRecord(search) {
@@ -28,14 +28,23 @@ export const frameMs = (i, fps) => (i * 1000) / fps;
 // Keep tags younger than lifeMs (the game's tag lifetime in main.js popTag).
 export const pruneTags = (tags, nowMs, lifeMs = 1400) => tags.filter(t => nowMs - t.born < lifeMs);
 
+// What the run was, for window.__rc.summary: the end card's figures plus the offence timeline (seek clock). Full-trip numbers.
+export function runSummary({ card, rewards, analysis, scared, offences, goalSeconds }) {
+  const m = endCardModel(rewards, analysis, goalSeconds, null, scared);
+  return {
+    card, seconds: analysis.seconds, pay: m.earned, cityScore: m.city, legal: m.legal, onTime: m.timeOk,
+    offences: { offTiles: analysis.offTiles, red: analysis.redRuns, wrong: analysis.wrongWays, scared },
+    events: offences.map(({ ms, type, label }) => ({ ms, type, label })),
+  };
+}
+
 // The window.__rc object the capture script drives. totalMs is set once the trip is built.
 export function recordApi({ stage, totalMs = 0, fps = 30 }) {
   return {
-    totalMs, fps, failure: null,
+    totalMs, fps, failure: null, summary: null,
     get error() {
       if (this.failure) return this.failure;
       if (!stage.ready) return 'record mode needs WebGL';
-      if (!motionAllowed()) return 'record mode does not work under reduced motion';
       return null;
     },
     get ready() { return this.error === null && this.totalMs > 0; },
