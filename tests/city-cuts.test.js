@@ -79,11 +79,25 @@ describe('cam wiring', () => {
   it('the fallback stage has setCuts', () => {
     expect(src('stage.js')).toContain('setCuts() {}');
   });
-  it('main applies cam after training: map view for map, cuts for auto, and keeps tags on screen', () => {
+  it('main applies cam after training: map is one cut over the whole drive (no map view), auto is the offence cuts, and keeps tags on screen', () => {
     const m = src('main.js');
-    expect(m).toMatch(/cfg\.cam === 'map'[^\n]*stage\.setMapView\(true\)/);
+    expect(m).toMatch(/cfg\.cam === 'map'[^\n]*stage\.setCuts\(\[\{ from: SWOOP_MS, to: SWOOP_MS \+ trip\.track\.total \}\]\)/);
+    expect(m).not.toMatch(/cfg\.cam === 'map'[^\n]*setMapView/);
     expect(m).toMatch(/cfg\.cam === 'auto'[^\n]*stage\.setCuts\(overheadCuts\(/);
     expect(m.indexOf('await train(')).toBeLessThan(m.indexOf("cfg.cam === 'map'"));
     expect(m).toMatch(/tagPlace\([^\n]*height: lab\.height/);
+  });
+  it('in an overhead cut the L, its trains and the trees are hidden, and restored after', () => {
+    const f = src('scene-furniture.js'), s = src('scene.js');
+    expect(f).toContain('setOverhead(');
+    expect(f).toMatch(/\.visible = !on/);
+    expect(s).toContain('furniture.setOverhead(!!cut)');
+  });
+  it('live tags follow the taxi each frame in a cut (the stage tells onFrame it is overhead; chase keeps the pop spot)', () => {
+    expect(src('scene.js')).toMatch(/onFrame\?\.\(st, play\.race \? null : taxiScreen\(\), play\.overhead\)/);
+    const m = src('main.js');
+    expect(m).toMatch(/function hudFrame\(state, at, overhead\)/);
+    expect(m).toMatch(/if \(overhead && at\)[^\n]*placeTag\(/);
+    expect(m).toMatch(/hudFrame\(st, at, overhead\)/);
   });
 });

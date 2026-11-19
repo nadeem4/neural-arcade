@@ -54,6 +54,12 @@ function showMeter(on) { showRaceMeters(false); $('meter').hidden = !on; $('mete
 const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; } // only touch the DOM when the text changes
 $('mapGoal').textContent = goalLine();
 const setBar = (el, x) => { if (el._x !== x) { el._x = x; el.style.transform = `scaleX(${x})`; } } // only write the style when the fraction changes
+// Put a tag by the taxi at `at`: kept on screen, clamped sideways, and below the meters on a phone.
+function placeTag(span, at, slot) {
+  const lab = $('labels').getBoundingClientRect();
+  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top, height: lab.height });
+  span.style.left = pos.left + 'px'; span.style.top = pos.top + 'px';
+}
 // A tag that repeats on the next step grows a count (x2, x3) on the same bubble instead of stacking another.
 function popTag(tag, at, i) {
   const prev = hud.lastTag?.[tag.text];
@@ -69,17 +75,16 @@ function popTag(tag, at, i) {
   const others = { ...hud.lastTag }; delete others[tag.text]; // re-added last, so "oldest" means least recently refreshed
   hud.lastTag = { ...others, [tag.text]: { ...run, span, slot } };
   span.className = `tag ${tag.kind}`; span.textContent = run.label;
-  const lab = $('labels').getBoundingClientRect(); // tags stay on screen: clamped sideways, and below the meters on a phone
-  const pos = tagPlace(at, slot, { width: lab.width, tagW: span.offsetWidth, tagH: span.offsetHeight, phone: matchMedia('(max-width: 720px)').matches, meterBottom: $('meterGoal').getBoundingClientRect().bottom - lab.top, height: lab.height });
-  span.style.left = pos.left + 'px'; span.style.top = pos.top + 'px';
+  span._slot = slot; placeTag(span, at, slot);
   span.style.animation = 'none'; void span.offsetWidth; span.style.animation = ''; // replay the pop
   if (run.count > 1) span.style.animationDelay = `-${TAG_LIFE_MS * 0.05}ms`; // a folded tag restarts already opaque (past the 5% fade-in), so a run of offences does not blink
   if (rec) { rec.tags = rec.tags.filter(t => t.span !== span); rec.tags.push({ span, born: rec.now }); return; } // expiry follows seek time, not the wall clock
   clearTimeout(span._t); span._t = setTimeout(() => span.remove(), TAG_LIFE_MS);
 }
 // One frame of the drive: the meter and minimap follow the taxi; each tile it finishes can fire tags and a blip.
-function hudFrame(state, at) {
+function hudFrame(state, at, overhead) {
   if (!hud) return;
+  if (overhead && at) for (const span of $('labels').querySelectorAll('.tag')) if (span._slot !== undefined) placeTag(span, at, span._slot); // every live tag, folded or not; the overhead shot moves with the taxi, so live tags stay beside it
   const m = meterAt(hud.events, state.progress);
   setText($('meterTotal'), meterText(m.total));
   setText($('meterCounts'), `${m.seconds} s · ${m.counts.tiles} tiles · off ${m.counts.off} · red ${m.counts.red} · wrong ${m.counts.wrong}`);
@@ -266,7 +271,7 @@ function drive(t) {
   $('driveProgress').value = 0;
   startHud(t.events, t.route, t.rewards, t.people);
   t.ended = false;
-  stage.playTrip({ track: t.track, events: t.events, people: t.people, offences: t.offences, onFrame: (st, at) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
+  stage.playTrip({ track: t.track, events: t.events, people: t.people, offences: t.offences, onFrame: (st, at, overhead) => { $('driveProgress').value = Math.round(100 * st.progress / Math.max(1, t.events.steps.length)); hudFrame(st, at, overhead); }, onHonk() { if (!rec && !hud?.skipped) sound.play('horn'); }, onDone() { finish(t, 'arrived'); } });
 }
 async function train(req) {
   const progress = $('progress');
@@ -472,7 +477,7 @@ async function startRecord(cfg) {
   await train({ ...rewards });
   if (!trip) { rc.failure = 'training failed'; return; }
   rc.summary = runSummary({ card: cfg.card, rewards: trip.rewards, analysis: trip.analysis, scared: trip.people.scares.length, offences: trip.offences, goalSeconds: GOAL_SECONDS });
-  if (cfg.cam === 'map') stage.setMapView(true); // after train(): drive() resets the map view
+  if (cfg.cam === 'map') stage.setCuts([{ from: SWOOP_MS, to: SWOOP_MS + trip.track.total }]); // one overhead cut for the whole drive, after train()
   if (cfg.cam === 'auto') stage.setCuts(overheadCuts(trip.offences, { introMs: SWOOP_MS, driveMs: trip.track.total }));
   rc.totalMs = tripMs(trip.track.total);
 }

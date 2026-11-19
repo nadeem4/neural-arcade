@@ -275,6 +275,8 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     clearTrees(chaseCam, taxiXZ);
     const hiddenHeads = chaseCam && taxiXZ ? treesToHide(sigFlat, chaseCam, taxiXZ, 12, 4) : [];
   if (bodyGeo && hideHeads(sig, hiddenHeads)) { bodyGeo.index.needsUpdate = true; lampGeo.index.needsUpdate = true; hiddenLamps = new Set(hiddenHeads.flatMap((i) => { const [a, b] = sig.heads[i].lamps; return Array.from({ length: (b - a) / 6 }, (_, k) => a / 6 + k); })); paintGlow(); } // signal poles between the camera and the taxi
+    furniture.setOverhead(!!cut); // from straight above the L deck, its trains and the tree crowns would hide the taxi
+    if (play) play.overhead = !!cut;
     if (taxi && !play?.race) taxi.scale.setScalar(TAXI_SCALE * (cut ? CUT_TAXI_SCALE : 1)); // the taxi is drawn bigger in an overhead cut so it reads from that height
     camera.position.set(...shot.pos);
     camera.lookAt(...shot.target);
@@ -449,7 +451,7 @@ function build(el, city, renderer, phone, labelEl, onChaseOff, manualClock) {
     highlights.update(highlightsAt(play.offences, play.clock, { reduced: !motionAllowed() }));
     if (motionAllowed()) heads.forEach((h, i) => { h.position.y = 32.6 + Math.sin(now / 300 + i) * 2; });
     renderNow();
-    play.onFrame?.(st, play.race ? null : taxiScreen()); // the last frame (already 'map' when there is no pullback) still carries the fare tag
+    play.onFrame?.(st, play.race ? null : taxiScreen(), play.overhead); // the last frame (already 'map' when there is no pullback) still carries the fare tag
     if (phase === 'map') finish();
     return phase;
   };
