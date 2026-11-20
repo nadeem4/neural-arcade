@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { REWARDS, discounted, returnOf, setReward } from '../concepts/return/sim.js';
 import { presets } from '../concepts/return/play.js';
 import { figureHtml } from '../concepts/return/figures.js';
-import { conceptById } from '../assets/games.js';
+import { lessonById } from '../assets/tracks/model.js';
 
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
 
@@ -87,7 +87,7 @@ describe('return page file', () => {
     expect(readFileSync(new URL('../concepts/return/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
     expect(readFileSync(new URL('../concepts/return/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
   });
-  it('leads with the definition from the config', () => {
-    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('return').definition);
+  it('leads with the lesson line from the track config', () => {
+    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('return').says);
   });
 });

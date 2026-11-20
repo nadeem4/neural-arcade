@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { TRACKS, trackById } from '../assets/tracks/index.js';
 import {
   flatLessons, lessonById, lessonLabel, lessonHref, trackHref, neighbours, trackCounts,
-  chipsForGame, tracksOfGame, lessonOfLevel, lessonVideo, validateTracks,
+  chipsForGame, tracksOfGame, moreGames, lessonOfLevel, lessonVideo, validateTracks,
 } from '../assets/tracks/model.js';
-import { GAMES } from '../assets/games.js';
+import { GAMES, gameById } from '../assets/games.js';
 import { LEVELS } from '../games/treasure-room/levels.js';
 
 const counts = { 'treasure-room': LEVELS.length };
@@ -104,15 +104,21 @@ describe('validateTracks', () => {
   });
 });
 
-// Deleted in TK7, when games.js loses `uses` and `where`.
-describe('bridge to games.js', () => {
-  for (const g of GAMES.filter(g => g.uses)) {
-    it(`${g.id}: no chip and no where line is lost`, () => {
-      const chips = chipsForGame(g.id);
-      expect(new Set(chips.map(c => c.id))).toEqual(new Set(g.uses));
-      for (const [id, says] of Object.entries(g.where ?? {})) {
-        expect(chips.find(c => c.id === id).says).toBe(says);
-      }
-    });
-  }
+describe('moreGames', () => {
+  const ids = (g, max) => moreGames(gameById(g), GAMES, TRACKS, max).map(x => x.id);
+  it('lists other games that share a track, newest first, at most 3', () => {
+    expect(ids('city')).toEqual(['treasure-room', 'maze', 'runner']);
+    expect(ids('city')).not.toContain('city');
+    expect(ids('city', 2)).toHaveLength(2);
+  });
+  it('tops up with the newest other games, no duplicates, never itself', () => {
+    const r = ids('racer');
+    expect(r).toHaveLength(3);
+    expect(r[0]).toBe('teach');
+    expect(r).not.toContain('racer');
+    expect(new Set(r).size).toBe(3);
+  });
+  it('falls back to the newest other games when none share a track', () => {
+    expect(ids('balance')).toEqual(['treasure-room', 'city', 'maze']);
+  });
 });

@@ -5,7 +5,7 @@ import { presets } from '../concepts/agent/play.js';
 import { figureHtml } from '../concepts/agent/figures.js';
 import { GRID, ACTIONS, REWARD, move } from '../assets/grid.js';
 import { mulberry32 } from '../engine/rng.js';
-import { conceptById } from '../assets/games.js';
+import { lessonById } from '../assets/tracks/model.js';
 
 const RIGHT = 3, DOWN = 1;
 
@@ -105,7 +105,7 @@ describe('agent page file', () => {
     expect(readFileSync(new URL('../concepts/agent/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
     expect(readFileSync(new URL('../concepts/agent/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
   });
-  it('leads with the definition from the config', () => {
-    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('agent').definition);
+  it('leads with the lesson line from the track config', () => {
+    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('agent').says);
   });
 });

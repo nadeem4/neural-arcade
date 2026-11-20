@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CONCEPTS } from '../assets/games.js';
+import { lessonById } from '../assets/tracks/model.js';
 import { LEVELS, levelFromUrl, levelByN, navModel } from '../games/treasure-room/levels.js';
 
 const LESSONS = [
@@ -15,7 +15,7 @@ describe('treasure room levels', () => {
   it('has six levels in order, mapped to concept pages', () => {
     expect(LEVELS.map(l => l.n)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(LEVELS.map(l => l.concept)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']);
-    for (const l of LEVELS) expect(CONCEPTS.some(c => c.id === l.concept), l.concept).toBe(true);
+    for (const l of LEVELS) expect(lessonById(l.concept), l.concept).toBeTruthy();
   });
   it('slugs are unique and every level is filled in', () => {
     expect(LEVELS.map(l => l.slug)).toEqual(['agent', 'triples', 'return', 'policy', 'value', 'mdp']);

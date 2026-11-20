@@ -3,9 +3,9 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { headerHtml, footerHtml } from '../assets/site.js';
-import { GAMES } from '../assets/games.js';
+import { GAMES, gameById } from '../assets/games.js';
 import { TRACKS } from '../assets/tracks/index.js';
-import { videoHtml, crumbHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
+import { videoHtml, crumbHtml, lessonChipsHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
 import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
 import { heroActionsHtml, stageHeadHtml } from '../assets/home-view.js';
 
@@ -96,6 +96,13 @@ describe('home page', () => {
     expect(about).toContain('<footer data-site>');
     expect(about).toContain('studio.css');
   });
+  it('about page names the three tracks and what a lesson is', () => {
+    const about = read('about/index.html');
+    expect(about).toMatch(/Neural networks[\s\S]*Reinforcement learning[\s\S]*Physical AI/);
+    expect(about).toMatch(/lesson[\s\S]*write-up[\s\S]*video/i);
+    expect(about).not.toContain('each game teaches exactly one');
+    expect(about).toContain('a lesson mixes something to play and an illustrated write-up, with a video where there is one.');
+  });
 });
 
 describe('home rendering', () => {
@@ -150,10 +157,12 @@ describe('signal-text contrast', () => {
     expect(ratio(val('--signal-text'), val('--bg'))).toBeGreaterThanOrEqual(4.5);
     expect(ratio(val('--signal-text'), val('--surface'))).toBeGreaterThanOrEqual(4.5);
   });
-  it('filled orange buttons and badges reach 4.5:1 with white text', () => {
+  it('filled orange buttons reach 4.5:1 with white text', () => {
     expect(ratio(val('--signal-fill'), val('--signal-ink'))).toBeGreaterThanOrEqual(4.5);
     expect(css).toMatch(/\.btn\.primary\s*\{[^}]*background:\s*var\(--signal-fill\)/);
-    expect(css).toMatch(/\.tile \.badge\s*\{[^}]*background:\s*var\(--signal-fill\)/);
+  });
+  it('has no rules left for the old category page or the tile badge', () => {
+    for (const sel of ['.tile .badge', '.s-head', '.others', '.path ']) expect(css, sel).not.toContain(sel);
   });
   it('is used for the small orange text', () => {
     expect(css).toMatch(/\.facts dd\.warn\s*\{[^}]*var\(--signal-text\)/);
@@ -321,11 +330,17 @@ describe('game page rendering', () => {
     expect(v).toContain('Watch: how it learns');
     expect(v).toContain('class="video-play"');
   });
-  it('links the write-up and the category crumb from the site root', () => {
+  it('links the write-up and the track crumb from the site root', () => {
     expect(writeupHref(g, '../../')).toBe('../../games/g/how-it-works/');
-    const c = crumbHtml({ title: 'Gee', category: 'c' }, [{ id: 'c', title: 'Cee' }], '../../');
-    expect(c).toContain('<a href="../../category/?c=c">Cee</a>');
-    expect(c).toContain('Gee');
+    expect(crumbHtml(gameById('city'), TRACKS, '../../')).toBe('<a href="../../reinforcement-learning/">Reinforcement learning</a> / Reward City');
+    expect(crumbHtml(gameById('balance'), TRACKS, '../../')).toContain('physical-ai/');
+    expect(crumbHtml({ id: 'x', title: 'Ex' }, TRACKS, '../../')).toBe('Ex');
+  });
+  it('renders one lesson chip per live lesson, with its number', () => {
+    expect(lessonChipsHtml(gameById('maze'), '../../')).toContain('<a class="chip" href="../../concepts/return/">Lesson 3: Return</a>');
+    expect(lessonChipsHtml(gameById('racer'), '../../')).toContain('Lesson 2: Learning by selection');
+    expect(lessonChipsHtml(gameById('city'), '../../')).toContain('Lesson 19: Reward design');
+    expect(lessonChipsHtml({ id: 'x' }, '../../')).toBe('');
   });
   it('renders More from tiles, and nothing when alone', () => {
     const t = moreFromHtml([{ title: 'Aitch', path: 'games/h/', shot: 'games/h/shot.jpg', learnsBy: 'Things' }], '../../');
@@ -414,5 +429,13 @@ describe('old styles and fonts are gone', () => {
       const isTrackPage = TRACKS.some(t => f.replace(/\\/g, '/').endsWith(`/${t.id}/index.html`));
       if (f.endsWith('.html')) expect(text, f).not.toMatch(isTrackPage ? /Playable/ : /Coming soon|Playable/);
     }
+  });
+});
+
+describe('phone header lamp', () => {
+  it('positions the lamp absolutely only under .top, never bare', () => {
+    const phone = css.match(/@media \(max-width: 760px\) \{([\s\S]*?)\n\}/)[1];
+    expect(phone).toMatch(/\.top \.btn\.lamp\s*\{[^}]*position:\s*absolute/);
+    expect(phone).not.toMatch(/(^|\n)\s*\.btn\.lamp\s*\{[^}]*position:\s*absolute/);
   });
 });

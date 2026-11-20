@@ -5,7 +5,7 @@ import { presets } from '../concepts/state-action-reward/play.js';
 import { figureHtml } from '../concepts/state-action-reward/figures.js';
 import { figureHtml as agentFigure } from '../concepts/agent/figures.js';
 import { GRID, REWARD, stateId } from '../assets/grid.js';
-import { conceptById } from '../assets/games.js';
+import { lessonById } from '../assets/tracks/model.js';
 
 const UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3;
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
@@ -85,7 +85,7 @@ describe('state-action-reward page file', () => {
     expect(readFileSync(new URL('../concepts/state-action-reward/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
     expect(readFileSync(new URL('../concepts/state-action-reward/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
   });
-  it('leads with the definition from the config', () => {
-    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('state-action-reward').definition);
+  it('leads with the lesson line from the track config', () => {
+    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('state-action-reward').says);
   });
 });

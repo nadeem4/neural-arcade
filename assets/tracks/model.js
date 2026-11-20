@@ -58,6 +58,15 @@ export function tracksOfGame(gameId, tracks = TRACKS) {
   return tracks.filter(t => ids.has(t.id));
 }
 
+// A game page's "More games": the other games that share a track with it, newest first, topped up with the newest other games.
+export function moreGames(game, games, tracks = TRACKS, max = 3) {
+  const byNewest = (a, b) => b.added.localeCompare(a.added) || a.title.localeCompare(b.title);
+  const mine = tracksOfGame(game.id, tracks);
+  const others = games.filter(g => g.id !== game.id).sort(byNewest);
+  const sharing = others.filter(g => tracksOfGame(g.id, tracks).some(t => mine.includes(t)));
+  return [...sharing, ...others.filter(g => !sharing.includes(g))].slice(0, max);
+}
+
 export const lessonOfLevel = (gameId, n, tracks = TRACKS) =>
   flatLessons(tracks).find(l => l.game === gameId && l.level === n);
 

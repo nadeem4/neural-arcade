@@ -4,7 +4,7 @@ import { valuesFor, shadeOf, moveTreasure } from '../concepts/value/sim.js';
 import { presets } from '../concepts/value/play.js';
 import { figureHtml } from '../concepts/value/figures.js';
 import { GRID, stateId } from '../assets/grid.js';
-import { conceptById } from '../assets/games.js';
+import { lessonById } from '../assets/tracks/model.js';
 
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
 const at = (grid, x, y) => stateId(grid, { x, y });
@@ -108,7 +108,7 @@ describe('value page file', () => {
     expect(readFileSync(new URL('../concepts/value/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
     expect(readFileSync(new URL('../concepts/value/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
   });
-  it('leads with the definition from the config', () => {
-    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('value').definition);
+  it('leads with the lesson line from the track config', () => {
+    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('value').says);
   });
 });

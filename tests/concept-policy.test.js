@@ -4,7 +4,7 @@ import { createPolicy, setAction, runPolicy } from '../concepts/policy/sim.js';
 import { presets } from '../concepts/policy/play.js';
 import { figureHtml } from '../concepts/policy/figures.js';
 import { GRID } from '../assets/grid.js';
-import { conceptById } from '../assets/games.js';
+import { lessonById } from '../assets/tracks/model.js';
 
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
 const CELLS = GRID.w * GRID.h;
@@ -92,7 +92,7 @@ describe('policy page file', () => {
     expect(readFileSync(new URL('../concepts/policy/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
     expect(readFileSync(new URL('../concepts/policy/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
   });
-  it('leads with the definition from the config', () => {
-    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('policy').definition);
+  it('leads with the lesson line from the track config', () => {
+    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('policy').says);
   });
 });
