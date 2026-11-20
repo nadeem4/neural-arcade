@@ -233,7 +233,7 @@ Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. 
 - **Tile (More games on game pages):** 16:10 dark thumb with the game shot, title in 700 16px, "learns by" line in `ink-2`; the thumb lifts 3px on hover (0.25s, cubic-bezier(.2, .8, .2, 1)).
 
 ### Stage
-The dark plane every game plays on. A head row (live orange dot, bold stage-ink label, dim details), the canvas, then on game pages a narration line (`say`, polite live region) and a row of three or two readouts: dim label with an (i) button over a mono numeral. Captions float bottom-left on the canvas in a small stage-coloured box.
+The dark plane every game plays on. A head row (live orange dot, bold stage-ink label, dim details), the canvas, then on game pages a narration line (`say`, polite live region) and a row of three or two readouts: dim label with an (i) button over a mono numeral. Captions float bottom-left on the canvas in a small stage-coloured box. The Treasure Room's 3D room keeps the same dark stage colour; its heat tint uses only the signal orange (clear when cool, orange when warm), and its number labels are JetBrains Mono and never smaller than 12px on screen. A button that cannot act yet is disabled and the reason shows beside it in a small `ink-2` line.
 
 ### Controls panel and cards
 White, hairline, 18px. The panel stacks sections split by hairlines; each has a 15px 700 heading with an (i) button, a segmented control (track trough, white raised selection), hints in 13px `ink-2`, range dials (name, mono value, orange accent) and default buttons. Cards hold one canvas each (the brain, a chart) under a heading and a one-line question, with a legend of small rounded swatches.

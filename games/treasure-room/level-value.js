@@ -47,6 +47,12 @@ export function sweepsToSettle(room, gamma) {
   return 1000;
 }
 
+// A button that cannot act yet is disabled and says why. Busy (a sweep or walk is running) disables without a reason.
+export const walkUpState = ({ sweeps, busy }) => (busy ? { disabled: true, why: '' }
+  : sweeps === 0 ? { disabled: true, why: 'Sweep first, so there is value to climb.' } : { disabled: false, why: '' });
+export const resetState = ({ sweeps, busy = false }) => (busy ? { disabled: true, why: '' }
+  : sweeps === 0 ? { disabled: true, why: 'Nothing to reset yet.' } : { disabled: false, why: '' });
+
 const changed = (room, a, b) => b.flatMap((v, i) => (v !== a[i] ? [{ x: i % room.w, y: Math.floor(i / room.w) }] : []));
 
 export function mount(ui) {
@@ -68,7 +74,12 @@ export function mount(ui) {
     $('#valueGammaOut').textContent = gamma.toFixed(2);
     $('#valueGammaHint').textContent = gammaHint(gamma);
     $('#sweepInfo').textContent = sweeps > 0 && settleAt <= sweeps ? `Settled after ${settleAt} sweeps` : `Sweep ${sweeps}`;
-    for (const id of ['#sweep', '#sweep10', '#walkUp', '#resetSweeps']) $(id).disabled = busy();
+    for (const id of ['#sweep', '#sweep10']) $(id).disabled = busy();
+    const up = walkUpState({ sweeps, busy: busy() }), rs = resetState({ sweeps, busy: busy() });
+    $('#walkUp').disabled = up.disabled;
+    $('#walkUpWhy').textContent = up.why;
+    $('#resetSweeps').disabled = rs.disabled;
+    $('#resetSweeps').title = rs.why;
   }
   function sweep() {
     const next = sweepOnce(room, values, { gamma });

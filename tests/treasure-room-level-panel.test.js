@@ -24,6 +24,9 @@ describe('levelPanelHtml', () => {
     expect(panel).not.toMatch(/getContext\('2d'\)/);
     expect(panel).toMatch(/host\.destroy\(\)/);
   });
+  it('has a line for why Walk uphill is disabled', () => {
+    expect(html).toContain('id="walkUpWhy"');
+  });
   it('has the stage canvas with a label, and a live line that is not announced', () => {
     expect(html).toMatch(/<canvas id="stage"[^>]*aria-label="[^"]+"/);
     expect(html).toMatch(/id="say"[^>]*aria-live="off"|aria-live="off"[^>]*id="say"/);

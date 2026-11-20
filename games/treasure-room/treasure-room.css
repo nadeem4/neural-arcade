@@ -76,6 +76,8 @@
 
 /* Level 5: sweep counter and the colour key for the heat. */
 .sweep-info { display: block; font: 600 14px/1.5 var(--mono); }
+.why { margin: 0; font: 500 13px/1.5 var(--sans); color: var(--ink-2); }
+.why:empty { display: none; }
 .heat-legend { display: flex; align-items: center; gap: 8px; margin: 0; font: 500 13px/1.5 var(--sans); color: var(--ink-2); }
 .heat-bar { flex: none; width: 56px; height: 12px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(90deg, var(--surface), var(--signal)); }
 

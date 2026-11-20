@@ -87,6 +87,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
           <button class="btn" type="button" id="walkUp">Walk uphill</button>
           <button class="btn" type="button" id="resetSweeps">Reset</button>
         </div>
+        <p class="why" id="walkUpWhy"></p>
         <output class="sweep-info" id="sweepInfo">Sweep 0</output>
         <label class="gamma-row" for="valueGamma">Discount <output id="valueGammaOut">0.90</output>
           <button class="info" type="button" aria-expanded="false" aria-controls="info-vgamma" aria-label="Explain the discount" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></label>
