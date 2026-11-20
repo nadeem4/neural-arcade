@@ -35,8 +35,10 @@ export function neighboursHtml(lesson, base) {
   return `<nav class="neighbours" aria-label="Lessons">${prev ? link(prev, 'prev', 'Previous') : ''}${next ? link(next, 'next', 'Next') : ''}</nav>`;
 }
 
+export const markDoneLabel = done => (done ? 'Done<span class="sr"> (undo)</span>' : 'Mark as done');
+
 export const markDoneHtml = done =>
-  `<button class="btn" id="markDone" type="button" aria-pressed="${done}">${done ? 'Done<span class="sr"> (undo)</span>' : 'Mark as done'}</button>`;
+  `<button class="btn" id="markDone" type="button" aria-pressed="${done}">${markDoneLabel(done)}</button>`;
 
 // The inside of <main> for one lesson: everything from config baked in, the level mounted by lesson-page.js.
 export function lessonBodyHtml(lesson, { games = GAMES, base, writeupHtml }) {

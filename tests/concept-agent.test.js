@@ -99,9 +99,11 @@ describe('agent page file', () => {
   it('has the shared header, footer and styles', () => {
     for (const s of ['<header data-site', '<footer data-site', '../../assets/studio.css', '../../assets/concept.css']) expect(html).toContain(s);
   });
-  it('has the section ids and mounts the page', () => {
-    for (const id of ['playground', 'tries', 'writeup', 'video', 'games', 'related']) expect(html).toContain(`id="${id}"`);
-    expect(html).toContain("mountConceptPage('agent', '../../')");
+  it('is generated: the lesson sections and runtime, with the write-up and page script beside it', () => {
+    for (const id of ['playground', 'tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
+    expect(html).toContain('assets/lesson-page.js');
+    expect(readFileSync(new URL('../concepts/agent/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
+    expect(readFileSync(new URL('../concepts/agent/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
   });
   it('leads with the definition from the config', () => {
     expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('agent').definition);
