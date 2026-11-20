@@ -5,6 +5,7 @@ import { ROOM } from '../games/treasure-room/sim.js';
 import {
   DIMS, PARTS, VIEW, cellToWorld, worldToCell, layoutRoom, nearSides, cameraPose, fitDistance,
   roomRadius, rayToCell, isTap, labelScale, tierFor, formatStats,
+  MOVE_MS, moveStyle, tweenAt, facing, atTreasure
 } from '../games/treasure-room/room-math.js';
 
 const big = makeGrid(['S......', '.......', '...X...', '.#...#.', '......T', '.......', '.......', '.......', '.......']); // 7 x 9
@@ -20,6 +21,37 @@ describe('cells and world', () => {
       expect(worldToCell(r, p.x + 0.4, p.z - 0.4)).toEqual({ x, y });
     }
     expect(worldToCell(ROOM, 2.6, 0)).toBeNull();
+  });
+});
+
+describe('the move tween', () => {
+  const A = { x: 1, y: 1 }, B = { x: 2, y: 1 };
+  it('picks a style', () => {
+    expect(MOVE_MS).toBe(350);
+    expect(moveStyle({ from: A, to: B, ice: false, reduce: false })).toBe('hop');
+    expect(moveStyle({ from: A, to: B, ice: true, reduce: false })).toBe('slide');
+    expect(moveStyle({ from: A, to: B, ice: false, reduce: true })).toBe('snap');
+    expect(moveStyle({ from: null, to: B })).toBe('snap');
+    expect(moveStyle({ from: A, to: A })).toBe('snap');
+  });
+  it('hops up and lands, slides flat', () => {
+    expect(tweenAt('hop', 0).lift).toBe(0);
+    expect(tweenAt('hop', 1).lift).toBeCloseTo(0);
+    expect(tweenAt('hop', 0.5).lift).toBeCloseTo(0.18);
+    expect(tweenAt('slide', 0.5).lift).toBe(0);
+    expect(tweenAt('hop', 1).k).toBe(1);
+    expect(tweenAt('hop', 0).k).toBe(0);
+  });
+  it('faces the way it goes', () => {
+    expect(facing({ x: 1, y: 1 }, { x: 2, y: 1 })).toBeCloseTo(Math.PI / 2);
+    expect(facing({ x: 1, y: 1 }, { x: 1, y: 2 })).toBeCloseTo(0);
+    expect(facing({ x: 1, y: 1 }, { x: 0, y: 1 })).toBeCloseTo(-Math.PI / 2);
+    expect(facing({ x: 1, y: 1 }, { x: 1, y: 0 })).toBeCloseTo(Math.PI);
+  });
+  it('knows the treasure', () => {
+    expect(atTreasure(ROOM, { x: 4, y: 3 })).toBe(true);
+    expect(atTreasure(ROOM, { x: 0, y: 0 })).toBe(false);
+    expect(atTreasure(ROOM, null)).toBe(false);
   });
 });
 

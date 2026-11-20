@@ -28,6 +28,15 @@ describe('room-scene.js source guards', () => {
   it('has no sprite labels (they are one merged mesh, later)', () => {
     expect(src).not.toMatch(/\bnew\s+THREE\.Sprite\b/);
   });
+  it('moves the rogue by the pure tween rules, and never advances the mixer with reduced motion', () => {
+    expect(src).toMatch(/moveStyle\(/);
+    expect(src).toMatch(/atTreasure\(/);
+    expect(src).toMatch(/!reduceMotion\) character\.update\(|!reduceMotion\) ch\.update\(/);
+    expect(src).toMatch(/character\?\.destroy\(\)|ch\?\.destroy\(\)|ch\.destroy\(\)/);
+  });
+  it('the host loads the rogue with the scene', () => {
+    expect(read('games/treasure-room/room-host.js')).toMatch(/loadCharacter\(\)/);
+  });
   it('leaves no console output behind', () => {
     expect(src).not.toMatch(/console\.log/);
   });

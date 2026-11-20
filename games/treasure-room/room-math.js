@@ -138,3 +138,22 @@ export const tierFor = viewW => (viewW <= 600
 
 export const formatStats = ({ fps, calls, triangles, geometries, textures, kb, firstMs }) =>
   `${Math.round(fps)} fps | ${calls} calls | ${(triangles / 1000).toFixed(1)}k tris | ${geometries} geo | ${textures} tex | ${Math.round(kb)} KB | first ${Math.round(firstMs)} ms`;
+
+// The character's moves. A hop between tiles; a slide on ice; a snap when motion is reduced, there is no earlier cell, or nothing moved.
+export const MOVE_MS = 350;
+
+export function moveStyle({ from, to, ice = false, reduce = false }) {
+  if (reduce || !from || !to || (from.x === to.x && from.y === to.y)) return 'snap';
+  return ice ? 'slide' : 'hop';
+}
+
+// k runs 0..1 over MOVE_MS; the eased k places the character along the step, lift is how high a hop is off the floor.
+export const tweenAt = (style, k) => {
+  const c = Math.min(1, Math.max(0, k));
+  return { k: c * c * (3 - 2 * c), lift: style === 'hop' ? Math.sin(Math.PI * c) * 0.18 : 0 };
+};
+
+// Rotation about y that points the character along a step (south, +y on the grid, is 0).
+export const facing = (from, to) => Math.atan2(to.x - from.x, to.y - from.y);
+
+export const atTreasure = (room, pos) => !!pos && room.cells[pos.y]?.[pos.x] === 'T';
