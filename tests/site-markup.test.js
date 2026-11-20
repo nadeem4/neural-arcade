@@ -47,27 +47,32 @@ describe('studio.css tokens', () => {
 });
 
 describe('shared header and footer', () => {
-  it('header links Games and About, not Videos', () => {
-    const h = headerHtml('', 'games');
-    expect(h).toContain('>Games</a>');
-    expect(h).toContain('>About</a>');
+  it('header lists the tracks in order, then About, and no Games link', () => {
+    const h = headerHtml('', 'reinforcement-learning');
+    expect([...h.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map(m => m[2]))
+      .toEqual(['Neural networks', 'Reinforcement learning', 'Physical AI', 'About']);
+    expect(h).toMatch(/aria-current="page"[^>]*>Reinforcement learning</);
+    expect(h).not.toContain('>Games<');
     expect(h).not.toContain('Videos');
   });
-  it('marks the current page', () => {
+  it('marks the current page, and nothing on a game page', () => {
     expect(headerHtml('', 'about')).toMatch(/aria-current="page"[^>]*>About</);
     expect(headerHtml('', '')).not.toContain('aria-current');
+    expect(headerHtml('../../', 'games')).not.toContain('aria-current');
   });
   it('base prefixes every href', () => {
-    const hrefs = [...headerHtml('../../', 'games').matchAll(/href="([^"]+)"/g)].map(m => m[1]);
+    const hrefs = [...headerHtml('../../', '').matchAll(/href="([^"]+)"/g)].map(m => m[1]);
     expect(hrefs.length).toBeGreaterThan(0);
     for (const h of hrefs) expect(h.startsWith('../../')).toBe(true);
   });
   it('logo links to ./ when base is empty', () => expect(headerHtml('', '')).toContain('class="logo" href="./"'));
   it('has the lamp button', () => expect(headerHtml('', '')).toContain('id="lamp"'));
-  it('footer keeps the credit and the codewithnk link', () => {
+  it('footer keeps the credit and the codewithnk link, and links All games', () => {
     const f = footerHtml();
     expect(f).toContain('Built by Nadeem.');
     expect(f).toContain('<a href="https://www.codewithnk.com">codewithnk.com</a>');
+    expect(footerHtml('../')).toContain('<a href="../games/">All games</a>');
+    expect(f).not.toContain('Concepts');
   });
 });
 
@@ -430,11 +435,5 @@ describe('old styles and fonts are gone', () => {
       const isTrackPage = TRACKS.some(t => f.replace(/\\/g, '/').endsWith(`/${t.id}/index.html`));
       if (f.endsWith('.html')) expect(text, f).not.toMatch(isTrackPage ? /Playable/ : /Coming soon|Playable/);
     }
-  });
-});
-describe("concepts links", () => {
-  it("footer links Concepts, prefixed by base", () => {
-    expect(footerHtml()).toContain('<a href="concepts/">Concepts</a>');
-    expect(footerHtml("../../")).toContain('<a href="../../concepts/">Concepts</a>');
   });
 });
