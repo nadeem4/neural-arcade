@@ -73,6 +73,7 @@ describe('buttons that cannot act say why', () => {
     expect(ui.panel.querySelector('#walkUp').disabled).toBe(true);
     expect(ui.panel.querySelector('#walkUpWhy').textContent).toMatch(/Sweep first/);
     expect(ui.panel.querySelector('#resetSweeps').disabled).toBe(true);
+    expect(ui.panel.querySelector('#walkUpWhy').textContent).toMatch(/Nothing to reset yet/);
     ui.click('#sweep');
     expect(ui.panel.querySelector('#walkUp').disabled).toBe(false);
     expect(ui.panel.querySelector('#walkUpWhy').textContent).toBe('');

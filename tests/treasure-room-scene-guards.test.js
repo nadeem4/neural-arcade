@@ -22,6 +22,9 @@ describe('room-scene.js source guards', () => {
   it('removes its canvas if the renderer cannot be created', () => {
     expect(src).toMatch(/catch \(err\) \{ canvas\.remove\(\); throw err; \}/);
   });
+  it('lets go of the renderer and canvas if the character cannot be built', () => {
+    expect(src).toMatch(/try \{ ch = character\?\.spawn\(room, null\) \?\? null; \}\s*catch \(err\) \{[\s\S]*?forceContextLoss[\s\S]*?renderer\.dispose\(\)[\s\S]*?canvas\.remove\(\)[\s\S]*?throw err/);
+  });
   it('keeps the camera turn-only', () => {
     expect(src).toMatch(/enablePan\s*:\s*false/);
   });

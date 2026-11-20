@@ -130,7 +130,7 @@ export const isTap = (down, up, { maxMove = 8, maxMs = 500 } = {}) =>
   Math.hypot(up.x - down.x, up.y - down.y) <= maxMove && up.t - down.t <= maxMs;
 
 // World height of a label quad: bigger on a narrow view so numbers stay readable.
-export const labelScale = viewW => 0.24 * Math.min(1.5, Math.max(1, 640 / viewW));
+export const labelScale = viewW => 0.24 * Math.min(1.9, Math.max(1, 700 / viewW));
 
 export const tierFor = viewW => (viewW <= 600
   ? { pixelRatioMax: 1.5, shadowMap: 512, torchLights: false }
@@ -146,11 +146,11 @@ export function heatColor(h, palette = { cool: [...SIGNAL, 0], warm: [...SIGNAL,
   return palette.cool.map((c, i) => c + (palette.warm[i] - c) * k);
 }
 
-// The character's moves. A hop between tiles; a slide on ice; a snap when motion is reduced, there is no earlier cell, or nothing moved.
+// The character's moves. A hop between tiles; a slide on ice; a snap when motion is reduced, there is no earlier cell, or the move is not one step (a reset jump).
 export const MOVE_MS = 350;
 
 export function moveStyle({ from, to, ice = false, reduce = false }) {
-  if (reduce || !from || !to || (from.x === to.x && from.y === to.y)) return 'snap';
+  if (reduce || !from || !to || Math.abs(to.x - from.x) + Math.abs(to.y - from.y) !== 1) return 'snap';
   return ice ? 'slide' : 'hop';
 }
 

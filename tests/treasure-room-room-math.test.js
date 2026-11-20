@@ -34,6 +34,12 @@ describe('the move tween', () => {
     expect(moveStyle({ from: null, to: B })).toBe('snap');
     expect(moveStyle({ from: A, to: A })).toBe('snap');
   });
+  it('snaps a move of more than one step instead of arcing across the room', () => {
+    expect(moveStyle({ from: { x: 1, y: 1 }, to: { x: 4, y: 3 } })).toBe('snap');
+    expect(moveStyle({ from: { x: 1, y: 1 }, to: { x: 2, y: 2 } })).toBe('snap');
+    expect(moveStyle({ from: { x: 1, y: 1 }, to: { x: 3, y: 1 }, ice: true })).toBe('snap');
+    expect(moveStyle({ from: A, to: { x: 1, y: 2 } })).toBe('hop');
+  });
   it('hops up and lands, slides flat', () => {
     expect(tweenAt('hop', 0).lift).toBe(0);
     expect(tweenAt('hop', 1).lift).toBeCloseTo(0);
@@ -140,6 +146,11 @@ describe('taps, labels, tiers and stats', () => {
   });
   it('labels are bigger on a narrow view', () => {
     expect(labelScale(360)).toBeGreaterThan(labelScale(1280));
+    expect(labelScale(360)).toBeCloseTo(0.24 * 1.9, 5);
+    expect(labelScale(1280)).toBeCloseTo(0.24, 5);
+  });
+  it('the widest label at 360 wide is no wider than a tile', () => {
+    expect(2 * labelScale(360)).toBeLessThanOrEqual(1); // the quad is 2 * scale wide, and holds "-10.0"
   });
   it('tiers', () => {
     expect(tierFor(360)).toMatchObject({ pixelRatioMax: 1.5, shadowMap: 512, torchLights: false });

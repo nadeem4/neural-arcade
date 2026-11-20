@@ -77,9 +77,8 @@ export function mount(ui) {
     for (const id of ['#sweep', '#sweep10']) $(id).disabled = busy();
     const up = walkUpState({ sweeps, busy: busy() }), rs = resetState({ sweeps, busy: busy() });
     $('#walkUp').disabled = up.disabled;
-    $('#walkUpWhy').textContent = up.why;
+    $('#walkUpWhy').textContent = [up.why, rs.why].filter(Boolean).join(' ');
     $('#resetSweeps').disabled = rs.disabled;
-    $('#resetSweeps').title = rs.why;
   }
   function sweep() {
     const next = sweepOnce(room, values, { gamma });

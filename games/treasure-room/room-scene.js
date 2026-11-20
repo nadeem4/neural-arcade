@@ -110,7 +110,12 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   };
 
   // The rogue: hidden until a draw gives it an agent cell.
-  const ch = character?.spawn(room, null) ?? null;
+  let ch;
+  try { ch = character?.spawn(room, null) ?? null; }
+  catch (err) {
+    try { renderer.forceContextLoss(); } catch { /* the context may already be lost */ }
+    renderer.dispose(); canvas.remove(); throw err;
+  }
   let lastAgent = null;
   if (ch) { ch.object.visible = false; world.add(ch.object); }
   const drawAgent = opts => {
