@@ -40,8 +40,8 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
 
   // Light: a hemisphere, one shadowed sun, and a warm point light at each torch when the tier allows.
   const radius = roomRadius(room, L.wallD);
-  scene.add(new THREE.HemisphereLight(0x9fb4d8, 0x20242c, 0.9));
-  const sun = new THREE.DirectionalLight(0xbcd0ff, 1.1);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x4a4a55, 2.2));
+  const sun = new THREE.DirectionalLight(0xfff1dc, 2.4);
   sun.position.set(3, 7, 4);
   sun.castShadow = true;
   sun.shadow.mapSize.set(tier.shadowMap, tier.shadowMap);
