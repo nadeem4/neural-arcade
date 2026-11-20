@@ -1,5 +1,6 @@
 /* Treasure Room only: the rest of the page comes from studio.css and assets/game.css. */
 
+#levelRoot { display: contents; } /* the mounted stage and panel stay the two columns of .play */
 .stage-body { display: block; padding: 14px; } /* studio.css makes it a two-column grid; here the room fills it */
 #stage { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; }
 .room { position: relative; width: min(100%, 56vh, 480px); margin: 0 auto; }

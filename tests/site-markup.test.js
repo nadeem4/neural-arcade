@@ -6,6 +6,7 @@ import { headerHtml, footerHtml } from '../assets/site.js';
 import { GAMES } from '../assets/games.js';
 import { TRACKS } from '../assets/tracks/index.js';
 import { videoHtml, crumbHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
+import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
 import { heroActionsHtml, stageHeadHtml, categoryHtml, chipsHtml } from '../assets/home-view.js';
 
 const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
@@ -178,11 +179,13 @@ describe('signal-text contrast', () => {
 
 const PAGES = ['runner', 'racer', 'teach', 'balance', 'treasure-room'];
 describe.each(PAGES)('game page contract (%s)', id => {
-  const html = read(`games/${id}/index.html`);
+  // Treasure Room's play section is mounted by level-panel.js, so the contract reads the page with the panel filled in.
+  const tr = id === 'treasure-room';
+  const html = tr ? read(`games/${id}/index.html`).replace('<div id="levelRoot"></div>', `<div id="levelRoot">${levelPanelHtml()}</div>`) : read(`games/${id}/index.html`);
   const entry = GAMES.find(g => g.id === id);
   const everywhere = html + headerHtml('../../', 'games') + footerHtml() + videoHtml(entry);
   it('has every id that main.js looks up', () => {
-    const js = read(`games/${id}/main.js`);
+    const js = read(`games/${id}/main.js`) + (tr ? read('games/treasure-room/level-panel.js') : '');
     const ids = [...js.matchAll(/(?:\$|getElementById)\('([\w-]+)'\)/g)].map(m => m[1]);
     expect(ids.length).toBeGreaterThan(10);
     for (const i of ids) expect(everywhere, i).toContain(`id="${i}"`);
