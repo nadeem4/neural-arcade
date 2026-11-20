@@ -3,8 +3,10 @@
 import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { OrbitControls } from '../../assets/vendor/three/controls/OrbitControls.js';
 import {
-  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, formatStats, moveStyle, atTreasure,
+  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, formatStats, moveStyle, atTreasure, labelScale,
 } from './room-math.js';
+import { OVERLAYS, overlayNames, marksList } from './room-overlays.js';
+import { MESH_LAYERS, createMarks } from './room-overlay-meshes.js';
 
 const NEAR_WALL_SCALE = 0.3; // a wall on the camera's side drops to this height so it never hides a tile
 const TARGET = [0, 0.2, 0];
@@ -122,6 +124,16 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     lastAgent = { x: a.x, y: a.y };
   };
 
+  // Overlays: the layers for the names the level asked for, and the outlined tiles (marks), which belong to the base room.
+  const marks = createMarks(THREE, { room, parent: world });
+  let layers = [], lastOpts = null;
+  const layerCtx = { THREE, room, parent: world, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
+  const drawOverlays = opts => {
+    lastOpts = opts;
+    marks.set(marksList(opts?.marks));
+    if (opts) for (const l of layers) l.layer.update(OVERLAYS[l.name].list(room, opts));
+  };
+
   // Camera: three-quarter view, distance fitted to the box; OrbitControls turn it within limits.
   const controls = new OrbitControls(camera, canvas);
   Object.assign(controls, {
@@ -150,6 +162,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
       camera.position.sub(controls.target).setLength(d).add(controls.target);
     }
     controls.update();
+    drawOverlays(lastOpts); // labels re-size with the view
   };
   const onChange = () => applyNear(controls.getAzimuthalAngle());
   controls.addEventListener('change', onChange);
@@ -213,11 +226,16 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   canvas.addEventListener('webglcontextlost', onLost);
 
   return {
-    draw(opts) { setBackground(); drawAgent(opts); }, // a redraw (theme change) also re-reads the background
+    draw(opts) { setBackground(); drawAgent(opts); drawOverlays(opts); }, // a redraw (theme change) also re-reads the background
     cellAt,
     resize,
     setFocus() {},
-    setOverlays() {},
+    setOverlays(names) {
+      const wanted = overlayNames(names);
+      for (const l of layers) l.layer.dispose();
+      layers = wanted.map(name => ({ name, layer: MESH_LAYERS[name](layerCtx) }));
+      drawOverlays(lastOpts);
+    },
     destroy() {
       if (dead) return;
       dead = true;
@@ -227,6 +245,9 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
       canvas.removeEventListener('webglcontextlost', onLost);
       controls.removeEventListener('change', onChange);
       controls.dispose();
+      for (const l of layers) l.layer.dispose();
+      layers = [];
+      marks.dispose();
       ch?.destroy();
       for (const m of owned) m.dispose();
       boxGeo.dispose();

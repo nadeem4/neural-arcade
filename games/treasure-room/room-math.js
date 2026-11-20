@@ -139,6 +139,13 @@ export const tierFor = viewW => (viewW <= 600
 export const formatStats = ({ fps, calls, triangles, geometries, textures, kb, firstMs }) =>
   `${Math.round(fps)} fps | ${calls} calls | ${(triangles / 1000).toFixed(1)}k tris | ${geometries} geo | ${textures} tex | ${Math.round(kb)} KB | first ${Math.round(firstMs)} ms`;
 
+// Heat tint as [r, g, b, a] (0..1 each): clear when cool, the signal orange at 55% when warm. h is clamped to 0..1, NaN is 0.
+const SIGNAL = [1, 0.353, 0.122];
+export function heatColor(h, palette = { cool: [...SIGNAL, 0], warm: [...SIGNAL, 0.55] }) {
+  const k = h > 0 ? Math.min(1, h) : 0;
+  return palette.cool.map((c, i) => c + (palette.warm[i] - c) * k);
+}
+
 // The character's moves. A hop between tiles; a slide on ice; a snap when motion is reduced, there is no earlier cell, or nothing moved.
 export const MOVE_MS = 350;
 

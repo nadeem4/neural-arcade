@@ -1,6 +1,7 @@
 // One Treasure Room level (room, readouts, panel, (i) buttons) mounted into any element: the game page mounts it.
 // The (i) icon is an SVG <symbol id="i"> that the host page must define once.
 import { createRoomHost } from './room-host.js';
+import { OVERLAYS_FOR_LEVEL } from './room-overlays.js';
 import { ROOM } from './sim.js';
 import { levelByN } from './levels.js';
 import { INFO } from './words.js';
@@ -152,6 +153,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
 
   n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
   const host = createRoomHost({ box, canvas: $('stage'), room: ROOM, n, reduceMotion: reduceMotion.matches });
+  host.setOverlays(OVERLAYS_FOR_LEVEL[n]);
 
   // ui.canvas is the room box, so a click on either the 2D or the 3D canvas reaches the level.
   const ui = {
