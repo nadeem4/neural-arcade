@@ -1,27 +1,25 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { GAMES } from '../assets/games.js';
+import { buildPages } from '../assets/tracks/build.js';
+import { flatLessons } from '../assets/tracks/model.js';
 
 const SITE = 'https://arcade.codewithnk.com/';
 const root = new URL('../', import.meta.url);
-// concept pages with their own page, extended each slice
-const CONCEPT_PAGES = [
-  ['concepts/pid/index.html', ['concepts/pid/share.png']],
-  ['concepts/agent/index.html', ['assets/share.png']],
-  ['concepts/state-action-reward/index.html', ['assets/share.png']],
-  ['concepts/return/index.html', ['assets/share.png']],
-  ['concepts/policy/index.html', ['assets/share.png']],
-  ['concepts/value/index.html', ['assets/share.png']],
-  ['concepts/mdp/index.html', ['assets/share.png']],
-  ['concepts/reward-design/index.html', ['concepts/reward-design/share.png']],
-];
+// the generated pages: every live lesson and the three track pages
+const generated = Object.keys(buildPages({ files: { read: f => (existsSync(new URL(f, root)) ? readFileSync(new URL(f, root), 'utf8') : null), exists: f => existsSync(new URL(f, root)) } }));
+const lessonImages = f => {
+  const l = flatLessons().find(x => f === `concepts/${x.id}/index.html`);
+  return l ? [`concepts/${l.id}/share.png`, `games/${l.game}/share.png`, 'assets/share.png'] : ['assets/share.png'];
+};
+const GENERATED_PAGES = generated.map(f => [f, lessonImages(f)]);
 
 const pages = [
   ['index.html', ['assets/share.png']],
   ['about/index.html', ['assets/share.png']],
 
   ['concepts/index.html', ['assets/share.png']],
-  ...CONCEPT_PAGES,
+  ...GENERATED_PAGES,
   ['games/index.html', ['assets/share.png']],
   ['category/index.html', ['assets/share.png']],
   ...GAMES.flatMap(g => {
@@ -37,7 +35,9 @@ const meta = (html, key, name) => attr(html, 'meta', key, name)?.match(/content=
 
 describe('share and SEO tags', () => {
   it('covers every page, including each game and its write-up', () => {
-    expect(pages.length).toBe(5 + GAMES.length * 2 + CONCEPT_PAGES.length);
+    expect(GENERATED_PAGES.filter(([f]) => f.startsWith('concepts/'))).toHaveLength(10);
+    expect(GENERATED_PAGES.filter(([f]) => !f.startsWith('concepts/'))).toHaveLength(3);
+    expect(pages.length).toBe(5 + GAMES.length * 2 + GENERATED_PAGES.length);
   });
 
   for (const [file, allowed] of pages) {

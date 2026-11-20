@@ -1,4 +1,4 @@
-/* Concept pages: playground stage, tries, write-up parts, games, related chips. Tokens come from studio.css. */
+/* Concept pages: playground stage, tries, write-up parts. Tokens come from studio.css. */
 .concept-page { display: grid; gap: 64px; padding-block: 24px 80px; }
 .concept-page > section { display: grid; gap: 20px; min-width: 0; }
 .concept-page h1 { margin: 0; font-weight: 800; font-size: clamp(2.6rem, 6vw, 4.4rem); line-height: 1; letter-spacing: -.04em; }
@@ -47,26 +47,13 @@
 .fig img, .fig svg { display: block; width: 100%; height: auto; }
 .fig figcaption { font-size: 12px; color: var(--stage-dim); padding: 8px 12px; border-top: 1px solid var(--stage-2); }
 
-/* games */
-.play-level { margin: 0 0 16px; }
-.concept-page .games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0; }
-.game { display: grid; gap: 4px; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; color: var(--ink); text-decoration: none; }
-.game h3 { font-size: 18px; }
-.game p { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
-.game .where { font-size: 13px; margin-top: 8px; color: var(--ink); }
-.game .where b { color: var(--signal-text); }
-
-/* related */
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px var(--sans); text-decoration: none; }
-
 @media (max-width: 760px) {
   .concept-page { gap: 48px; }
   .views { grid-template-columns: 1fr; }
   .views canvas { height: 220px; }
   .views canvas + canvas { border-left: 0; border-top: 1px solid var(--stage-2); }
   .readout { border-left: 0; border-top: 1px solid var(--stage-2); }
-  .dials, .tries, .concept-page .games { grid-template-columns: 1fr; }
+  .dials, .tries { grid-template-columns: 1fr; }
   .part { grid-template-columns: 40px minmax(0, 1fr); }
   .part .fig { grid-column: 1 / -1; }
   .letter { font-size: 34px; }
