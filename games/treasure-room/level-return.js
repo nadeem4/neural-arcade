@@ -39,6 +39,10 @@ export function routeFromTaps(room, cells) {
   return actions;
 }
 
+// Walk it needs a route; with none it says why. Busy (a walk is running) disables without a reason.
+export const walkItState = ({ route, busy }) => (busy ? { disabled: true, why: '' }
+  : route.length ? { disabled: false, why: '' } : { disabled: true, why: 'Pick a route, or tap tiles from the robot.' });
+
 export const treasureScale = (steps, gamma) => Math.max(0.15, treasureWorth(steps, gamma) / REWARD.treasure);
 
 // One frame per step of the walk: where the robot is, the tag that floats there, and the discounted total so far.
@@ -72,16 +76,18 @@ export function mount(ui) {
     const s = scoreRoute(ui.room, route, gamma), shown = walk ? at : s.steps;
     const f = walk ? walk[at] : null;
     ui.draw({
-      agent: f ? f.pos : START, ghost: s.cells, tags: [...(f?.tag ? [f.tag] : []), ...worthTags(ui.room, distance(s), gamma)], treasureScale: treasureScale(distance(s), gamma),
+      agent: f ? f.pos : START, ghost: s.cells, gamma, tags: [...(f?.tag ? [f.tag] : []), ...worthTags(ui.room, distance(s), gamma)], treasureScale: treasureScale(distance(s), gamma),
     });
     $('#compare').textContent = compare(ui.room, gamma);
     $('#gammaOut').textContent = gamma.toFixed(2);
     $('#gammaHint').textContent = gammaHint(gamma);
     $('#sum').textContent = s.steps
       ? `Rewards: ${s.rewards.slice(0, shown).map(signed).join(' ')}\nDiscounted: ${s.terms.slice(0, shown).map(fmt).join(' ')}\nReturn: ${fmt(s.terms.slice(0, shown).reduce((a, b) => a + b, 0))}`
-      : 'Pick a route, or tap tiles outward from the robot.';
+      : '';
     ui.readout(shown, fmt(s.terms.slice(0, shown).reduce((a, b) => a + b, 0)));
-    walkBtn.disabled = !s.steps || !!timer;
+    const w = walkItState({ route: s.cells.slice(1), busy: !!timer });
+    walkBtn.disabled = w.disabled;
+    $('#walkItWhy').textContent = w.why;
   }
 
   function setRoute(r) { stop(); walk = null; route = r; ui.say(''); paint(); }

@@ -1,5 +1,6 @@
 // Treasure Room 3D overlays: which ones a level draws, and what each one puts on the floor. Pure: no three.js and no DOM.
 // Each overlay is { list(room, opts) -> draw list }; room-overlay-meshes.js turns a list into meshes.
+import { ACTIONS } from '../../assets/grid.js';
 
 const isFloor = (room, x, y) => !'TX#'.includes(room.cells[y][x]);
 const clamp01 = h => (h > 0 ? Math.min(1, h) : 0); // NaN and negatives are 0
@@ -17,15 +18,40 @@ export function valuesList(room, values, heat) {
   return { labels, tiles };
 }
 
+// One arrow per floor tile that has a policy action. rotY turns a model that points north.
+const COMPASS = { up: ['N', 0], right: ['E', -Math.PI / 2], down: ['S', Math.PI], left: ['W', Math.PI / 2] };
+export function arrowsList(room, policy, actions) {
+  const out = [];
+  if (!policy) return out;
+  for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
+    if (!isFloor(room, x, y)) continue;
+    const name = actions[policy[y * room.w + x]]?.name, c = COMPASS[name];
+    if (c) out.push({ x, y, dir: c[0], rotY: c[1] });
+  }
+  return out;
+}
+
+// The route the robot takes, one marker per cell, shrinking by gamma per step. ghost is one route or two (the second is faint).
+export function trailList(room, ghost, gamma = 1) {
+  const list = Array.isArray(ghost) ? (Array.isArray(ghost[0]) ? ghost : [ghost]) : [];
+  const kept = list.filter(r => r.length >= 2);
+  return {
+    routes: kept.map(r => r.map(({ x, y }, i) => ({ x, y, scale: Math.max(0.25, gamma ** i) }))),
+    faint: kept.map((_, i) => i === 1),
+  };
+}
+
 // The outlined tiles. Part of the base room, not an overlay.
 export const marksList = marks => (marks ?? []).map(({ x, y }) => ({ x, y }));
 
 export const OVERLAYS = {
   values: { list: (room, opts) => valuesList(room, opts.values, opts.heat) },
+  arrows: { list: (room, opts) => arrowsList(room, opts.policy, ACTIONS) },
+  trail: { list: (room, opts) => trailList(room, opts.ghost, opts.gamma) },
 };
 
 // Later slices fill in the rest of the rows.
-export const OVERLAYS_FOR_LEVEL = { 1: [], 2: [], 3: [], 4: [], 5: ['values'], 6: [] };
+export const OVERLAYS_FOR_LEVEL = { 1: [], 2: [], 3: ['trail'], 4: ['arrows'], 5: ['values'], 6: [] };
 
 export function overlayNames(names) {
   const list = names ?? [];

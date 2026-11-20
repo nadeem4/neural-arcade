@@ -66,6 +66,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <p class="info-text" id="info-gamma" data-info="gamma" hidden></p>
         <input class="gamma" type="range" id="gamma" min="0.1" max="1" step="0.05" value="0.9">
         <p id="gammaHint"></p>
+        <p class="why" id="walkItWhy"></p>
         <output class="sum" id="sum"></output>
         <output class="compare" id="compare"></output>
       </section>
@@ -134,16 +135,27 @@ export function levelPanelHtml({ showTitle = true } = {}) {
 `;
 }
 
-// Mounts level n into root and returns { n, redraw(), destroy(), host }. An unbuilt n falls back to level 1.
-// The room is drawn by a room host: 2D first, 3D when it is ready (see room-host.js).
-// The caller redraws on a theme change (handle.redraw).
+export const tileSelector = (x, y) => `[data-x="${x}"][data-y="${y}"]`;
+
 // A tile's own click (or Enter on it) bubbles up to the room box; it must not be forwarded again.
 export function forwardTap({ e, box, tiles, host }) {
   if (box.dataset.room !== '3d' || tiles.hidden || tiles.contains(e.target)) return;
   const c = host.cellAt(e);
-  if (c) tiles.querySelector(`[data-x="${c.x}"][data-y="${c.y}"]`)?.click();
+  if (c) tiles.querySelector(tileSelector(c.x, c.y))?.click();
 }
 
+// Keyboard focus on a tile shows the ring on that cell in the room; leaving the grid clears it.
+export function wireTileFocus({ tiles, host }) {
+  tiles.addEventListener('focusin', e => {
+    const { x, y } = e.target.dataset ?? {};
+    if (x !== undefined) host.setFocus({ x: Number(x), y: Number(y) });
+  });
+  tiles.addEventListener('focusout', () => host.setFocus(null));
+}
+
+// Mounts level n into root and returns { n, redraw(), destroy(), host }. An unbuilt n falls back to level 1.
+// The room is drawn by a room host: 2D first, 3D when it is ready (see room-host.js).
+// The caller redraws on a theme change (handle.redraw).
 export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   root.innerHTML = levelPanelHtml({ showTitle });
   const $ = id => root.querySelector(`#${id}`);
@@ -192,11 +204,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
 
   // In 3D the tile buttons sit under the picture and take no pointer, so a tap on the room clicks the tile it lands on.
   box.addEventListener('click', e => forwardTap({ e, box, tiles, host }));
-  tiles.addEventListener('focusin', e => {
-    const { x, y } = e.target.dataset ?? {};
-    if (x !== undefined) host.setFocus({ x: Number(x), y: Number(y) });
-  });
-  tiles.addEventListener('focusout', () => host.setFocus(null));
+  wireTileFocus({ tiles, host });
 
   host.resize();
   view = views[n].mount(ui);

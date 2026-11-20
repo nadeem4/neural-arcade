@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ROOM } from '../games/treasure-room/sim.js';
-import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList } from '../games/treasure-room/room-overlays.js';
+import { ACTIONS } from '../assets/grid.js';
+import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList } from '../games/treasure-room/room-overlays.js';
 import { heatColor } from '../games/treasure-room/room-math.js';
+import { createMarks, MESH_LAYERS, TRAIL_COIN } from '../games/treasure-room/room-overlay-meshes.js';
 
 const read = f => readFileSync(new URL('../games/treasure-room/' + f, import.meta.url), 'utf8');
 const v = new Array(25).fill(0);
@@ -71,5 +73,104 @@ describe('source guards', () => {
     const s = read('room-scene.js');
     expect(s).toMatch(/MESH_LAYERS/);
     expect(s).toMatch(/marksList\(/);
+  });
+});
+
+describe('arrowsList', () => {
+  const pol = new Array(25).fill(3); // every tile says right (ACTIONS index 3)
+  pol[5] = 0; // the tile at x = 0, y = 1 says up
+  const A = arrowsList(ROOM, pol, ACTIONS);
+  it('draws floor tiles only', () => {
+    expect(A.every(a => !'TX#'.includes(ROOM.cells[a.y][a.x]))).toBe(true);
+  });
+  it('maps the policy action to a compass direction', () => {
+    expect(A.find(a => a.x === 0 && a.y === 0).dir).toBe('E');
+    expect(A.find(a => a.x === 0 && a.y === 1).dir).toBe('N');
+  });
+  it('uses one angle per direction', () => {
+    expect(new Set(A.map(a => a.rotY)).size).toBe(new Set(A.map(a => a.dir)).size);
+  });
+  it('is empty with no policy, and skips tiles with no action', () => {
+    expect(arrowsList(ROOM, undefined, ACTIONS)).toEqual([]);
+    const p = pol.slice(); p[0] = -1;
+    expect(arrowsList(ROOM, p, ACTIONS).some(a => a.x === 0 && a.y === 0)).toBe(false);
+  });
+});
+
+describe('trailList', () => {
+  const a = { x: 0, y: 0 }, b = { x: 1, y: 0 }, c = { x: 2, y: 0 }, d = { x: 3, y: 0 };
+  it('shrinks with the discount down to a floor', () => {
+    expect(trailList(ROOM, [[a, b, c]], 0.5).routes[0].map(t => t.scale)).toEqual([1, 0.5, 0.25]);
+  });
+  it('marks the second route faint', () => {
+    expect(trailList(ROOM, [[a, b], [c, d]], 1).faint).toEqual([false, true]);
+  });
+  it('treats one cell as no route, and accepts a bare route', () => {
+    expect(trailList(ROOM, [a], 1).routes).toEqual([]);
+    expect(trailList(ROOM, [a, b], 1).routes).toHaveLength(1);
+    expect(trailList(ROOM, undefined, 1).routes).toEqual([]);
+  });
+});
+
+describe('arrows and trail registry', () => {
+  it('level 4 draws arrows and the level passes gamma with its ghost', () => {
+    expect(overlayNames(OVERLAYS_FOR_LEVEL[4])).toEqual(['arrows']);
+    expect(Object.keys(OVERLAYS)).toEqual(expect.arrayContaining(['arrows', 'trail']));
+    expect(read('level-return.js')).toMatch(/gamma/);
+  });
+});
+
+describe('level 3 trail', () => {
+  it('level 3 draws the trail', () => {
+    expect(overlayNames(OVERLAYS_FOR_LEVEL[3])).toContain('trail');
+  });
+  it('the scene shows a focus ring on setFocus', () => {
+    expect(read('room-scene.js')).toMatch(/setFocus\(.*focusRing/);
+  });
+});
+
+const fakeThree = () => {
+  const made = { meshes: [], scalars: [] };
+  class Geo { rotateX() { return this; } dispose() {} }
+  class Mesh { constructor() { this.count = 0; this.instanceMatrix = {}; made.meshes.push(this); } setMatrixAt() {} setColorAt() {} dispose() {} removeFromParent() {} }
+  class Mat { constructor() { this.color = { set() {} }; } dispose() {} }
+  class M4 { makeTranslation() { return this; } makeRotationY() { return this; } compose() { return this; } multiply() { return this; } }
+  class V3 { set() { return this; } setScalar(x) { made.scalars.push(x); return this; } }
+  class Q { identity() { return this; } }
+  class Col { constructor() {} }
+  class Shape { moveTo() {} lineTo() {} closePath() {} }
+  return { made, THREE: { RingGeometry: Geo, ExtrudeGeometry: Geo, Shape, MeshBasicMaterial: Mat, InstancedMesh: Mesh, Matrix4: M4, Vector3: V3, Quaternion: Q, Color: Col } };
+};
+
+describe('focus ring (a one-cell createMarks, as room-scene setFocus uses it)', () => {
+  it('shows one ring for a cell and none for null', () => {
+    const { made, THREE } = fakeThree();
+    const ring = createMarks(THREE, { room: ROOM, parent: { add() {} } });
+    ring.set([{ x: 1, y: 2 }]);
+    expect(made.meshes[0].count).toBe(1);
+    ring.set([]);
+    expect(made.meshes[0].count).toBe(0);
+  });
+});
+
+describe('trail coin size', () => {
+  it('is the trail base size times each entry scale, and never the chest treasureScale', () => {
+    const { made, THREE } = fakeThree();
+    const kit = { instancesOf: () => [{ geometry: new THREE.RingGeometry(), material: {}, local: new THREE.Matrix4() }] };
+    const layer = MESH_LAYERS.trail({ THREE, room: ROOM, parent: { add() {} }, kit });
+    layer.update(trailList(ROOM, [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }], 0.1));
+    expect(made.scalars.slice(0, 3)).toEqual([TRAIL_COIN, TRAIL_COIN * 0.25, TRAIL_COIN * 0.25]);
+  });
+});
+
+describe('arrows mesh', () => {
+  it('draws one instance per arrow in the list', () => {
+    const { made, THREE } = fakeThree();
+    const layer = MESH_LAYERS.arrows({ THREE, room: ROOM, parent: { add() {} } });
+    const list = arrowsList(ROOM, new Array(25).fill(3), ACTIONS);
+    layer.update(list);
+    expect(made.meshes[0].count).toBe(list.length);
+    layer.update(list.slice(0, 2));
+    expect(made.meshes[0].count).toBe(2);
   });
 });

@@ -85,7 +85,23 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   const world = new THREE.Group();
   scene.add(world);
   addParts(world, L.tiles);
-  addParts(world, [L.chest, L.coin, ...L.torches].filter(Boolean));
+  addParts(world, [L.chest, ...L.torches].filter(Boolean));
+
+  // The chest's coin stack is drawn on its own so treasureScale (level 3: 0 hides it, 1 is full size) can resize it.
+  const coinMeshes = L.coin ? kit.instancesOf(L.coin.part).map(({ geometry, material, local }) => {
+    const mesh = new THREE.InstancedMesh(geometry, material, 1);
+    addMesh(world, mesh);
+    return { mesh, local };
+  }) : [];
+  const drawCoin = factor => {
+    if (!L.coin) return;
+    const s = Math.max(0, Math.min(1, factor ?? 1));
+    for (const { mesh, local } of coinMeshes) {
+      mesh.setMatrixAt(0, m4.compose(pos.set(L.coin.x, L.coin.y, L.coin.z), q.identity(), scl.setScalar(L.coin.scale * s)).multiply(local));
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+  };
+  drawCoin(1);
 
   // Blocks (the '#' cells): one box, instanced.
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
@@ -131,11 +147,13 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
 
   // Overlays: the layers for the names the level asked for, and the outlined tiles (marks), which belong to the base room.
   const marks = createMarks(THREE, { room, parent: world });
+  const focusRing = createMarks(THREE, { room, parent: world }); // the keyboard focus on the hidden tile grid
   let layers = [], lastOpts = null;
-  const layerCtx = { THREE, room, parent: world, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
+  const layerCtx = { THREE, room, parent: world, kit, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
   const drawOverlays = opts => {
     lastOpts = opts;
     marks.set(marksList(opts?.marks));
+    drawCoin(opts?.treasureScale);
     if (opts) for (const l of layers) l.layer.update(OVERLAYS[l.name].list(room, opts));
   };
 
@@ -234,7 +252,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     draw(opts) { setBackground(); drawAgent(opts); drawOverlays(opts); }, // a redraw (theme change) also re-reads the background
     cellAt,
     resize,
-    setFocus() {},
+    setFocus(cell) { focusRing.set(cell ? [cell] : []); },
     setOverlays(names) {
       const wanted = overlayNames(names);
       for (const l of layers) l.layer.dispose();
@@ -253,6 +271,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
       for (const l of layers) l.layer.dispose();
       layers = [];
       marks.dispose();
+      focusRing.dispose();
       ch?.destroy();
       for (const m of owned) m.dispose();
       boxGeo.dispose();
