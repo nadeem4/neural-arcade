@@ -5,6 +5,7 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "pages": "node scripts/build-pages.mjs",
     "dev": "npx --yes serve@14.2.4 -l 4173 ."
   },
   "devDependencies": {
