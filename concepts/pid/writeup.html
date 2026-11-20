@@ -1,0 +1,26 @@
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>Three looks at one number</h2>
+    <p>Every PID controller watches a single number, the error: how far you are from where you want to be. It then asks three questions about it and adds up the answers.</p>
+    <div class="parts">
+      <div class="part">
+        <div class="letter">P</div>
+        <div><h3>How big is it now?</h3><p>Push in proportion to the error. Far away, push hard; close, push gently. On its own it overshoots and swings, and against a steady pull like gravity it settles a little short.</p></div>
+        <figure class="fig"><img src="fig-hill.webp" width="960" height="540" loading="lazy" alt="Speed chart: with P alone the car climbs a hill and settles at 94, short of the target of 100."><figcaption>A frame from the video: P alone settles at 94, short of 100</figcaption></figure>
+      </div>
+      <div class="part">
+        <div class="letter">I</div>
+        <div><h3>How long has it lasted?</h3><p>Keep a running total of the error. A small error that never goes away grows into a big push, which is what finally closes the last gap. Too much memory, though, and it keeps pushing after it arrives.</p></div>
+        <figure class="fig"><img src="fig-overshoot.webp" width="960" height="540" loading="lazy" alt="Speed chart: with I added the car closes the gap but shoots past the target to 114 before swinging back."><figcaption>A frame from the video: I closes the gap, but overshoots to 114</figcaption></figure>
+      </div>
+      <div class="part">
+        <div class="letter">D</div>
+        <div><h3>How fast is it changing?</h3><p>Look at how quickly the error shrinks. Rushing towards the target? Ease off early, so you arrive without overshooting.</p></div>
+        <figure class="fig"><img src="fig-settle.webp" width="960" height="540" loading="lazy" alt="Speed chart: with D added the overshoot drops from 114 to 106 and the speed settles on the target."><figcaption>A frame from the video: with D the overshoot drops from 14 to 6</figcaption></figure>
+      </div>
+    </div>
+  </section>

@@ -27,24 +27,31 @@ export function trackPageHtml(track, games) {
   });
 }
 
-// A live lesson with a level: its page is the shell plus concepts/<id>/writeup.html, with page.js beside it.
+// A live lesson: the shell plus concepts/<id>/writeup.html, with page.js beside it when there is one.
+// A level lesson needs its write-up and mounts the Treasure Room level; a whole-game lesson shows the game's banner
+// instead, loads no game CSS, and may have no write-up (its Read link goes to the game's How it works).
 export function lessonPageHtml(lesson, games, files) {
-  const writeupHtml = files.read(`concepts/${lesson.id}/writeup.html`);
-  if (writeupHtml == null) throw new Error(`concepts/${lesson.id}/writeup.html is missing`);
-  const ownImage = files.exists(`concepts/${lesson.id}/share.png`);
+  const whole = lesson.whole;
+  const writeup = files.read(`concepts/${lesson.id}/writeup.html`);
+  if (writeup == null && !whole) throw new Error(`concepts/${lesson.id}/writeup.html is missing`);
+  const writeupHtml = (writeup ?? '').replace(/\s+$/, '');
+  const own = files.exists(`concepts/${lesson.id}/share.png`);
+  const image = own ? `concepts/${lesson.id}/share.png` : whole ? `games/${lesson.game}/share.png` : 'assets/share.png';
+  const body = lessonBodyHtml(lesson, { games, base: '../../', writeupHtml });
   return pageHtml({
     title: `${lessonLabel(lesson)} · Neural Arcade`,
     description: lesson.says,
     path: `concepts/${lesson.id}/`,
     depth: 2,
-    styles: ['assets/game.css', 'games/treasure-room/treasure-room.css', 'assets/concept.css', 'assets/lesson.css'],
+    styles: whole ? ['assets/concept.css', 'assets/lesson.css']
+      : ['assets/game.css', 'games/treasure-room/treasure-room.css', 'assets/concept.css', 'assets/lesson.css'],
     siteKey: lesson.trackId,
     bodyAttrs: `data-lesson="${lesson.id}"`,
     mainAttrs: 'class="wrap concept-page lesson-page"',
-    mainHtml: INFO_ICON + '\n' + lessonBodyHtml(lesson, { games, base: '../../', writeupHtml: writeupHtml.replace(/\s+$/, '') }),
-    scripts: ['assets/lesson-page.js', './page.js'],
-    image: ownImage ? `concepts/${lesson.id}/share.png` : 'assets/share.png',
-    imageAlt: ownImage ? `${lessonLabel(lesson)}, a Neural Arcade lesson` : SITE_ALT,
+    mainHtml: whole ? body : INFO_ICON + '\n' + body,
+    scripts: ['assets/lesson-page.js', ...(files.exists(`concepts/${lesson.id}/page.js`) ? ['./page.js'] : [])],
+    image,
+    imageAlt: own || whole ? `${lessonLabel(lesson)}, a Neural Arcade lesson` : SITE_ALT,
   });
 }
 
@@ -53,7 +60,7 @@ export function buildPages({ tracks = TRACKS, games = GAMES, files = { read: () 
   const out = {};
   for (const track of tracks) out[`${track.id}/index.html`] = trackPageHtml(track, games);
   for (const lesson of flatLessons(tracks)) {
-    if (lesson.status === 'live' && lesson.level != null) out[`concepts/${lesson.id}/index.html`] = lessonPageHtml(lesson, games, files);
+    if (lesson.status === 'live') out[`concepts/${lesson.id}/index.html`] = lessonPageHtml(lesson, games, files);
   }
   return out;
 }
