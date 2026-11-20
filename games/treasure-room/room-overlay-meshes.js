@@ -6,8 +6,15 @@ import { createLabelBoard } from './room-labels.js';
 const LABEL_Y = 0.2;  // label centres float above the floor, clear of the rock tiles
 const TINT_Y = 0.03;  // the heat tint lies just above the tile tops
 const TINT_HALF = 0.46;
+const ROCK_TOP = 0.17; // flat arrows and coins sit above the rock tiles' tops
+const TRAIL_CAPACITY = 12;
 
-// ctx: { THREE, room, parent, labelScale(): world height of a label, tilt }. Each builder returns { update(list), dispose() }.
+const token = (name, fallback) => {
+  try { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback; }
+  catch { return fallback; }
+};
+
+// ctx: { THREE, room, parent, kit, coinScale, labelScale(): world height of a label, tilt }. Each builder returns { update(list), dispose() }.
 export const MESH_LAYERS = {
   values(ctx) {
     const { THREE, room, parent } = ctx;
@@ -50,6 +57,69 @@ export const MESH_LAYERS = {
         material.dispose();
         tint.removeFromParent();
       },
+    };
+  },
+
+  // One InstancedMesh of a flat arrow, one instance per tile with a policy action, in the --signal colour.
+  arrows(ctx) {
+    const { THREE, room, parent } = ctx;
+    const capacity = room.w * room.h;
+    const shape = new THREE.Shape();
+    shape.moveTo(0, 0.34); shape.lineTo(0.24, 0.02); shape.lineTo(0.09, 0.02); shape.lineTo(0.09, -0.3);
+    shape.lineTo(-0.09, -0.3); shape.lineTo(-0.09, 0.02); shape.lineTo(-0.24, 0.02); shape.closePath();
+    // Extruded along z, then laid flat: the tip points north (-z), the 0.02 depth ends up as height.
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: false }).rotateX(-Math.PI / 2);
+    const material = new THREE.MeshBasicMaterial({ color: token('--signal', '#ff5a1f'), toneMapped: false });
+    const mesh = new THREE.InstancedMesh(geometry, material, capacity);
+    mesh.count = 0;
+    mesh.frustumCulled = false;
+    parent.add(mesh);
+    const m4 = new THREE.Matrix4(), rot = new THREE.Matrix4();
+    return {
+      update(list) {
+        list.forEach((a, i) => {
+          const w = cellToWorld(room, a.x, a.y);
+          mesh.setMatrixAt(i, m4.makeTranslation(w.x, ROCK_TOP + 0.02, w.z).multiply(rot.makeRotationY(a.rotY)));
+        });
+        mesh.count = list.length;
+        mesh.instanceMatrix.needsUpdate = true;
+        material.color.set(token('--signal', '#ff5a1f')); // a theme change redraws
+      },
+      dispose() { geometry.dispose(); material.dispose(); mesh.dispose(); mesh.removeFromParent(); },
+    };
+  },
+
+  // The route as coin stacks: one InstancedMesh per kit mesh per route (the second route is dimmed), capacity 12 per route.
+  trail(ctx) {
+    const { THREE, room, parent, kit } = ctx;
+    const parts = kit.instancesOf('coin_stack_medium');
+    const meshes = [];
+    for (let r = 0; r < 2; r++) {
+      for (const { geometry, material, local } of parts) {
+        const mesh = new THREE.InstancedMesh(geometry, material, TRAIL_CAPACITY);
+        mesh.count = 0;
+        mesh.frustumCulled = false;
+        mesh.castShadow = false;
+        parent.add(mesh);
+        meshes.push({ mesh, route: r, local });
+      }
+    }
+    const m4 = new THREE.Matrix4(), pos = new THREE.Vector3(), q = new THREE.Quaternion(), scl = new THREE.Vector3(), dim = new THREE.Color(0.35, 0.35, 0.35), full = new THREE.Color(1, 1, 1);
+    return {
+      update(list) {
+        for (const { mesh, route, local } of meshes) {
+          const cells = list.routes[route] ?? [];
+          cells.slice(0, TRAIL_CAPACITY).forEach((c, i) => {
+            const w = cellToWorld(room, c.x, c.y);
+            mesh.setMatrixAt(i, m4.compose(pos.set(w.x, ROCK_TOP, w.z), q.identity(), scl.setScalar(ctx.coinScale * c.scale)).multiply(local));
+            mesh.setColorAt(i, list.faint[route] ? dim : full);
+          });
+          mesh.count = Math.min(cells.length, TRAIL_CAPACITY);
+          mesh.instanceMatrix.needsUpdate = true;
+          if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        }
+      },
+      dispose() { for (const { mesh } of meshes) { mesh.dispose(); mesh.removeFromParent(); } }, // the kit's geometry and materials are shared
     };
   },
 };

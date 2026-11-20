@@ -43,6 +43,17 @@ describe('room-scene.js source guards', () => {
   it('leaves no console output behind', () => {
     expect(src).not.toMatch(/console\.log/);
   });
+  it('has arrow and trail mesh layers, instanced, with no per-item clones', () => {
+    const m = read('games/treasure-room/room-overlay-meshes.js');
+    expect(m).toMatch(/arrows\(ctx\)/);
+    expect(m).toMatch(/trail\(ctx\)/);
+    expect(m).toMatch(/InstancedMesh/);
+    expect(m).toMatch(/--signal/);
+    expect(m).not.toMatch(/new\s+THREE\.Sprite|\.clone\(/);
+  });
+  it('scales the chest coin stack by treasureScale', () => {
+    expect(src).toMatch(/treasureScale/);
+  });
   it('styles the debug readout', () => {
     expect(read('games/treasure-room/treasure-room.css')).toMatch(/room-debug/);
   });
