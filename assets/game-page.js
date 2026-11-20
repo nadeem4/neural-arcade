@@ -1,6 +1,8 @@
-// Shared by every game page: reads <body data-game="id"> and fills the header, footer, crumb, video, write-up link and "More from".
+// Shared by every game page: reads <body data-game="id"> and fills the header, footer, track crumb, lesson chips, video, write-up link and "More games".
 // Adding a youtube id to the game in games.js is all it takes for the video (and the Watch tab) to appear.
-import { CATEGORIES, GAMES, gameById, videoOf, moreFrom, usesHtml } from './games.js';
+import { GAMES, gameById, videoOf } from './games.js';
+import { TRACKS } from './tracks/index.js';
+import { chipsForGame, tracksOfGame, trackHref, moreGames } from './tracks/model.js';
 import { headerHtml, footerHtml } from './site.js';
 import { initVideos } from './video.js';
 
@@ -16,10 +18,15 @@ export function videoHtml(game) {
 
 export const writeupHref = (game, base) => base + game.writeup;
 
-export function crumbHtml(game, categories, base) {
-  const c = categories.find(c => c.id === game.category);
-  return (c ? `<a href="${base}category/?c=${c.id}">${c.title}</a> / ` : '') + game.title;
+// "Reinforcement learning / Reward City": the first track that names the game, then the game; just the title when none does.
+export function crumbHtml(game, tracks, base) {
+  const t = tracksOfGame(game.id, tracks)[0];
+  return (t ? `<a href="${trackHref(t.id, base)}">${t.title}</a> / ` : '') + game.title;
 }
+
+// One chip per live lesson the game appears in, as "Lesson 3: Return".
+export const lessonChipsHtml = (game, base, tracks = TRACKS) =>
+  chipsForGame(game.id, tracks).map(c => `<a class="chip" href="${base}${c.href}">${c.label}</a>`).join('');
 
 export function moreFromHtml(games, base) {
   return games.map(g => `<a class="tile" href="${base}${g.path}"><div class="thumb"><img src="${base}${g.shot}" alt="" loading="lazy"></div><b>${g.title}</b><span>${g.learnsBy}</span></a>`).join('');
@@ -33,10 +40,11 @@ export function mountGamePage(base = '../../') {
   if (header) header.innerHTML = headerHtml(base, header.dataset.site);
   if (footer) footer.innerHTML = footerHtml(base);
   const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-  set('crumb', crumbHtml(game, CATEGORIES, base));
-  const uses = usesHtml(game, base);
+  set('crumb', crumbHtml(game, TRACKS, base));
+  const uses = lessonChipsHtml(game, base);
   if (uses) {
     set('usesChips', uses);
+    set('usesTitle', 'Lessons this game appears in');
     const section = document.getElementById('uses');
     if (section) section.hidden = false;
   }
@@ -51,10 +59,9 @@ export function mountGamePage(base = '../../') {
   const writeup = document.getElementById('writeup');
   if (writeup) writeup.href = writeupHref(game, base);
 
-  const others = moreFrom(game, GAMES);
+  const others = moreGames(game, GAMES);
   if (others.length) {
-    const category = CATEGORIES.find(c => c.id === game.category);
-    set('moreTitle', `More from ${category ? category.title : 'the arcade'}`);
+    set('moreTitle', 'More games');
     set('moreTiles', moreFromHtml(others, base));
     document.getElementById('moreFrom').hidden = false;
   }

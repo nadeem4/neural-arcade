@@ -3,9 +3,9 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { headerHtml, footerHtml } from '../assets/site.js';
-import { GAMES } from '../assets/games.js';
+import { GAMES, gameById } from '../assets/games.js';
 import { TRACKS } from '../assets/tracks/index.js';
-import { videoHtml, crumbHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
+import { videoHtml, crumbHtml, lessonChipsHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
 import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
 import { heroActionsHtml, stageHeadHtml } from '../assets/home-view.js';
 
@@ -321,11 +321,17 @@ describe('game page rendering', () => {
     expect(v).toContain('Watch: how it learns');
     expect(v).toContain('class="video-play"');
   });
-  it('links the write-up and the category crumb from the site root', () => {
+  it('links the write-up and the track crumb from the site root', () => {
     expect(writeupHref(g, '../../')).toBe('../../games/g/how-it-works/');
-    const c = crumbHtml({ title: 'Gee', category: 'c' }, [{ id: 'c', title: 'Cee' }], '../../');
-    expect(c).toContain('<a href="../../category/?c=c">Cee</a>');
-    expect(c).toContain('Gee');
+    expect(crumbHtml(gameById('city'), TRACKS, '../../')).toBe('<a href="../../reinforcement-learning/">Reinforcement learning</a> / Reward City');
+    expect(crumbHtml(gameById('balance'), TRACKS, '../../')).toContain('physical-ai/');
+    expect(crumbHtml({ id: 'x', title: 'Ex' }, TRACKS, '../../')).toBe('Ex');
+  });
+  it('renders one lesson chip per live lesson, with its number', () => {
+    expect(lessonChipsHtml(gameById('maze'), '../../')).toContain('<a class="chip" href="../../concepts/return/">Lesson 3: Return</a>');
+    expect(lessonChipsHtml(gameById('racer'), '../../')).toContain('Lesson 2: Learning by selection');
+    expect(lessonChipsHtml(gameById('city'), '../../')).toContain('Lesson 19: Reward design');
+    expect(lessonChipsHtml({ id: 'x' }, '../../')).toBe('');
   });
   it('renders More from tiles, and nothing when alone', () => {
     const t = moreFromHtml([{ title: 'Aitch', path: 'games/h/', shot: 'games/h/shot.jpg', learnsBy: 'Things' }], '../../');
