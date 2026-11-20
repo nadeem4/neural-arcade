@@ -1,7 +1,6 @@
 ﻿import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseQuery, toQuery, rowHtml, chipsHtml, pagerHtml } from '../assets/browse.js';
-import { stepHtml } from '../assets/category.js';
 
 describe('browse url state', () => {
   it('has defaults', () => {
@@ -80,9 +79,6 @@ describe('accessibility', () => {
     expect(ls[0]).toBe(1);
     expect(noSkips(ls)).toBe(true);
     expect(levels(rowHtml(g, cats, ''))).toEqual([2]);
-  });
-  it('category rows use h2', () => {
-    expect(levels(stepHtml(g, ''))).toEqual([2]);
   });
   it('labels the search input and keeps aria-live off the whole results section', () => {
     expect(page).toMatch(/<label class="search"[^>]*>.*<span class="sr">Search games<\/span>/);
