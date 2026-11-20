@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Markov decision process · Neural Arcade</title>
+<title>Lesson 6: MDP · Neural Arcade</title>
 <meta name="description" content="An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.">
 <link rel="canonical" href="https://arcade.codewithnk.com/concepts/mdp/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
-<meta property="og:title" content="Markov decision process · Neural Arcade">
+<meta property="og:title" content="Lesson 6: MDP · Neural Arcade">
 <meta property="og:description" content="An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.">
 <meta property="og:url" content="https://arcade.codewithnk.com/concepts/mdp/">
 <meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
@@ -16,24 +16,41 @@
 <meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Markov decision process · Neural Arcade">
+<meta name="twitter:title" content="Lesson 6: MDP · Neural Arcade">
 <meta name="twitter:description" content="An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../assets/studio.css">
+<link rel="stylesheet" href="../../assets/game.css">
+<link rel="stylesheet" href="../../games/treasure-room/treasure-room.css">
 <link rel="stylesheet" href="../../assets/concept.css">
+<link rel="stylesheet" href="../../assets/lesson.css">
 <script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
-<body>
-<header data-site="concepts"></header>
+<body data-lesson="mdp">
+<header data-site="reinforcement-learning"></header>
 
-<main class="wrap concept-page">
-  <section>
-    <div class="crumb"><a href="../">Concepts</a> / Markov decision process</div>
-    <h1>Markov decision process</h1>
-    <p class="lead">An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.</p>
-  </section>
+<main class="wrap concept-page lesson-page">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i" viewBox="0 0 256 256"><path fill="currentColor" d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol></svg>
+<section class="lhead">
+  <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 6 of 19</div>
+  <h1>Lesson 6: MDP</h1>
+  <p class="lead">An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.</p>
+</section>
 
+<section class="play" id="play" aria-label="Play this lesson">
+  <div id="levelRoot" data-level="6"></div>
+  <noscript><p>Turn on JavaScript to play this level.</p></noscript>
+</section>
+<p class="own">In this game: Turn the floor icy so moves slip, and the best plan changes.</p>
+<p class="done-row"><button class="btn" id="markDone" type="button" aria-pressed="false">Mark as done</button></p>
+
+<div class="side">
+  <section id="watch" aria-label="Watch"><p class="video-soon">Video coming soon</p></section>
+  
+</div>
+
+<div id="read">
   <section>
     <div class="stage" id="playground"></div>
     <ol class="tries" id="tries"></ol>
@@ -49,25 +66,13 @@
     <figure class="fig" id="figure"></figure>
     <p><b>The lesson:</b> an MDP writes the game down as states, moves, rewards and odds, and the next state depends only on the present one, not on how you got there.</p>
   </section>
-
-  <section id="video" hidden></section>
-  <section id="games" hidden></section>
-  <section id="related" hidden></section>
+</div>
+<nav class="neighbours" aria-label="Lessons"><a class="prev" href="../../concepts/value/"><small>Previous</small>Lesson 5: Value</a><a class="next" href="../../concepts/reward-design/"><small>Next</small>Lesson 19: Reward design</a></nav>
 </main>
 
 <footer data-site></footer>
 
-<script type="module">
-  import { mountSite } from '../../assets/site.js';
-  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
-  import { presets, mountPlayground } from './play.js';
-  import { figureHtml } from './figures.js';
-  mountSite('../../');
-  mountConceptPage('mdp', '../../');
-  document.getElementById('figure').innerHTML = figureHtml() + '<figcaption>One seeded run of twenty days, and the odds that drive it</figcaption>';
-  document.getElementById('tries').innerHTML = triesHtml(presets);
-  const { apply } = mountPlayground(document.getElementById('playground'));
-  wireTries(document.getElementById('tries'), presets, apply);
-</script>
+<script type="module" src="../../assets/lesson-page.js"></script>
+<script type="module" src="./page.js"></script>
 </body>
 </html>

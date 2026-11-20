@@ -1,0 +1,15 @@
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>An MDP is the game written down, where only now matters</h2>
+    <p>Take any game the agent plays and write it out plainly: the states it can be in, the actions it can take, the reward it gets, and the odds of landing in each next state. That table is a Markov decision process, or MDP. Reinforcement learning is the search for a good way to play it.</p>
+    <h3>States, moves and odds</h3>
+    <p>This page uses weather with no actions, so only the states and the odds show. Every state lists where it can go next, each with a chance, and the chances out of a state add up to 100%.</p>
+    <h3>Only the present state matters</h3>
+    <p>The odds for tomorrow come from today's state alone. It does not matter whether it was sunny or rainy last week: once you know it is cloudy now, the odds are the same. That is the Markov property, and it is what makes the table small enough to write down.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> an MDP writes the game down as states, moves, rewards and odds, and the next state depends only on the present one, not on how you got there.</p>
+  </section>

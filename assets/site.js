@@ -19,11 +19,12 @@ export function footerHtml(base = '') {
   return `<div class="wrap"><span>Built by Nadeem.</span><span class="foot-links"><a href="${base}concepts/">Concepts</a><a href="https://www.codewithnk.com">codewithnk.com</a></span></div>`;
 }
 
-export function mountSite(base) {
+// `onTheme` runs after the lamp switches the theme, so a page can redraw its canvas.
+export function mountSite(base, onTheme = () => {}) {
   const header = document.querySelector('header[data-site]');
   const footer = document.querySelector('footer[data-site]');
   if (header) header.innerHTML = headerHtml(base, header.dataset.site);
   if (footer) footer.innerHTML = footerHtml(base);
   const lamp = document.getElementById('lamp');
-  if (lamp) wireLamp(lamp, () => {});
+  if (lamp) wireLamp(lamp, onTheme);
 }

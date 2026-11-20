@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
 import { conceptById, CONCEPTS, GAMES } from '../assets/games.js';
+import { lessonById } from '../assets/tracks/model.js';
 import { LEVELS } from '../games/treasure-room/levels.js';
 import { videoHtml, gamesHtml, playLevelHtml, relatedHtml, triesHtml, mountConceptPage, wireTries } from '../assets/concept-page.js';
 
@@ -182,8 +183,20 @@ describe('pid page file', () => {
 
 describe('every concept page', () => {
   const read = (id, f) => readFileSync(new URL(`../concepts/${id}/${f}`, import.meta.url), 'utf8');
-  it('every concept has a page file with the shared sections', () => {
-    for (const c of CONCEPTS) {
+  const LESSONS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'];
+  it('the six lesson pages are generated shells with the shared sections and the lesson says as lead', () => {
+    for (const id of LESSONS) {
+      const html = read(id, 'index.html');
+      for (const s of ['playground', 'tries', 'writeup', 'play', 'watch', 'read']) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
+      for (const a of ['assets/studio.css', 'assets/concept.css', 'assets/lesson.css', 'assets/lesson-page.js']) expect(html, `${id} ${a}`).toContain(a);
+      const lead = html.match(/<p class="lead">(.*?)<\/p>/s)[1].replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+      expect(lead, id).toBe(lessonById(id).says);
+      expect(read(id, 'writeup.html'), id).toContain('id="writeup"');
+      expect(read(id, 'page.js'), id).toContain('wireTries');
+    }
+  });
+  it('every other concept has a page file with the shared sections', () => {
+    for (const c of CONCEPTS.filter(c => !LESSONS.includes(c.id))) {
       const html = read(c.id, 'index.html');
       for (const id of ['playground', 'tries', 'writeup', 'video', 'games', 'related']) expect(html, `${c.id} #${id}`).toContain(`id="${id}"`);
       for (const a of ['assets/studio.css', 'assets/concept.css', 'assets/site.js', 'assets/concept-page.js']) expect(html, `${c.id} ${a}`).toContain(a);
