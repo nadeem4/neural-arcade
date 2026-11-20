@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { stateId } from '../assets/grid.js';
 import { ROOM, START, sweepOnce, valueIteration } from '../games/treasure-room/sim.js';
-import { heatOf, uphillWalk, sweepsToSettle, mount } from '../games/treasure-room/level-value.js';
+import { heatOf, uphillWalk, sweepsToSettle, walkUpState, resetState, mount } from '../games/treasure-room/level-value.js';
 import { fakeUi } from './treasure-room-fake-ui.js';
 
 const zeros = () => new Array(ROOM.w * ROOM.h).fill(0);
@@ -52,6 +52,38 @@ describe('sweepsToSettle', () => {
   it('a low discount settles sooner, and a high one never sooner (a dry room settles once the farthest tile is reached, so 0.9 and 0.99 tie)', () => {
     expect(sweepsToSettle(ROOM, 0.3)).toBeLessThan(sweepsToSettle(ROOM, 0.9));
     expect(sweepsToSettle(ROOM, 0.99)).toBeGreaterThanOrEqual(sweepsToSettle(ROOM, 0.9));
+  });
+});
+
+describe('buttons that cannot act say why', () => {
+  it('Walk uphill waits for a sweep', () => {
+    expect(walkUpState({ sweeps: 0, busy: false })).toEqual({ disabled: true, why: 'Sweep first, so there is value to climb.' });
+    expect(walkUpState({ sweeps: 3, busy: false })).toEqual({ disabled: false, why: '' });
+    expect(walkUpState({ sweeps: 3, busy: true })).toEqual({ disabled: true, why: '' });
+  });
+  it('Reset waits for a sweep', () => {
+    expect(resetState({ sweeps: 0 })).toEqual({ disabled: true, why: 'Nothing to reset yet.' });
+    expect(resetState({ sweeps: 2 })).toEqual({ disabled: false, why: '' });
+    expect(resetState({ sweeps: 2, busy: true })).toEqual({ disabled: true, why: '' });
+  });
+  it('a mounted level shows the reason before the first sweep and clears it after', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    expect(ui.panel.querySelector('#walkUp').disabled).toBe(true);
+    expect(ui.panel.querySelector('#walkUpWhy').textContent).toMatch(/Sweep first/);
+    expect(ui.panel.querySelector('#resetSweeps').disabled).toBe(true);
+    expect(ui.panel.querySelector('#walkUpWhy').textContent).toMatch(/Nothing to reset yet/);
+    ui.click('#sweep');
+    expect(ui.panel.querySelector('#walkUp').disabled).toBe(false);
+    expect(ui.panel.querySelector('#walkUpWhy').textContent).toBe('');
+    expect(ui.panel.querySelector('#resetSweeps').disabled).toBe(false);
+    view.destroy();
+    vi.unstubAllGlobals();
+  });
+  it('the why line is styled and only shows when it has text', () => {
+    expect(css).toMatch(/\.why\s*\{/);
+    expect(css).toMatch(/\.why:empty\s*\{\s*display:\s*none/);
   });
 });
 

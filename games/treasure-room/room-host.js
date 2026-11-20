@@ -3,7 +3,7 @@
 import { createView2d } from './room-view.js';
 
 // Levels that use 3D by default. ?room=3d turns it on for any level, ?room=2d or ?nowebgl=1 forces 2D.
-export const LEVELS_IN_3D = [];
+export const LEVELS_IN_3D = [5];
 
 export const roomMode = (search = '') => {
   const v = new URLSearchParams(search).get('room');
@@ -25,10 +25,14 @@ export function wants3d({ n, search = '', webgl }) {
   return roomMode(search) === '3d' || LEVELS_IN_3D.includes(n);
 }
 
-// Both files load together and in parallel; the scene is built only once the models are in.
+// The files load together and in parallel; the scene is built only once the models (and this mount's own rogue) are in.
 const loadScene = async () => {
-  const [scene, kit] = await Promise.all([import('./room-scene.js'), import('./room-kit.js').then(m => m.loadKit())]);
-  return { createScene3d: opts => scene.createScene3d({ ...opts, kit }) };
+  const [scene, kit, character] = await Promise.all([
+    import('./room-scene.js'),
+    import('./room-kit.js').then(m => m.loadKit()),
+    import('./room-character.js').then(m => m.loadCharacter()),
+  ]);
+  return { createScene3d: opts => scene.createScene3d({ ...opts, kit, character }) };
 };
 
 // box: the .room element (it carries data-room); canvas: the 2D canvas inside it.

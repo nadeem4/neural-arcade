@@ -19,6 +19,17 @@ describe('the model kit', () => {
   it('ships its CC0 licence beside the models', () => {
     expect(read('games/treasure-room/models/LICENSE-kaykit.txt')).toMatch(/CC0|Creative Commons/i);
   });
+  it('ships the rogue and its licence', () => {
+    const p = new URL('../games/treasure-room/models/rogue.glb', import.meta.url);
+    expect(readFileSync(p).subarray(0, 4).toString()).toBe('glTF');
+    expect(statSync(p).size).toBeLessThan(450 * 1024);
+    expect(read('games/treasure-room/models/LICENSE-kaykit-adventurers.txt')).toMatch(/CC0|Creative Commons/i);
+  });
+  it('the character uses the idle, walk and cheer clips', () => {
+    const src = read('games/treasure-room/room-character.js');
+    for (const clip of ['Unarmed_Idle', 'Walking_A', 'Cheer']) expect(src).toContain(clip);
+    expect(src).toMatch(/new URL\('\.\/models\/rogue\.glb', import\.meta\.url\)|rogue\.glb/);
+  });
   it('loads relative to the module, from the local files only', () => {
     expect(kitSource).toMatch(/new URL\('\.\/models\/', import\.meta\.url\)/);
     expect(kitSource).not.toMatch(/https?:/);

@@ -130,7 +130,7 @@ export const isTap = (down, up, { maxMove = 8, maxMs = 500 } = {}) =>
   Math.hypot(up.x - down.x, up.y - down.y) <= maxMove && up.t - down.t <= maxMs;
 
 // World height of a label quad: bigger on a narrow view so numbers stay readable.
-export const labelScale = viewW => 0.24 * Math.min(1.5, Math.max(1, 640 / viewW));
+export const labelScale = viewW => 0.24 * Math.min(1.9, Math.max(1, 700 / viewW));
 
 export const tierFor = viewW => (viewW <= 600
   ? { pixelRatioMax: 1.5, shadowMap: 512, torchLights: false }
@@ -138,3 +138,29 @@ export const tierFor = viewW => (viewW <= 600
 
 export const formatStats = ({ fps, calls, triangles, geometries, textures, kb, firstMs }) =>
   `${Math.round(fps)} fps | ${calls} calls | ${(triangles / 1000).toFixed(1)}k tris | ${geometries} geo | ${textures} tex | ${Math.round(kb)} KB | first ${Math.round(firstMs)} ms`;
+
+// Heat tint as [r, g, b, a] (0..1 each): clear when cool, the signal orange at 55% when warm. h is clamped to 0..1, NaN is 0.
+const SIGNAL = [1, 0.353, 0.122];
+export function heatColor(h, palette = { cool: [...SIGNAL, 0], warm: [...SIGNAL, 0.55] }) {
+  const k = h > 0 ? Math.min(1, h) : 0;
+  return palette.cool.map((c, i) => c + (palette.warm[i] - c) * k);
+}
+
+// The character's moves. A hop between tiles; a slide on ice; a snap when motion is reduced, there is no earlier cell, or the move is not one step (a reset jump).
+export const MOVE_MS = 350;
+
+export function moveStyle({ from, to, ice = false, reduce = false }) {
+  if (reduce || !from || !to || Math.abs(to.x - from.x) + Math.abs(to.y - from.y) !== 1) return 'snap';
+  return ice ? 'slide' : 'hop';
+}
+
+// k runs 0..1 over MOVE_MS; the eased k places the character along the step, lift is how high a hop is off the floor.
+export const tweenAt = (style, k) => {
+  const c = Math.min(1, Math.max(0, k));
+  return { k: c * c * (3 - 2 * c), lift: style === 'hop' ? Math.sin(Math.PI * c) * 0.18 : 0 };
+};
+
+// Rotation about y that points the character along a step (south, +y on the grid, is 0).
+export const facing = (from, to) => Math.atan2(to.x - from.x, to.y - from.y);
+
+export const atTreasure = (room, pos) => !!pos && room.cells[pos.y]?.[pos.x] === 'T';

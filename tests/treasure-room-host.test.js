@@ -13,7 +13,7 @@ function setup(over = {}) {
   const ctx = { lost: null };
   const createScene3d = vi.fn(opts => { ctx.lost = opts.onContextLost; ctx.opts = opts; return scene; });
   const base = {
-    box, canvas: {}, room: ROOM, n: 5, search: '?room=3d', reduceMotion: false, webgl: () => true,
+    box, canvas: {}, room: ROOM, n: 1, search: '?room=3d', reduceMotion: false, webgl: () => true,
     createView: () => view2d, loader: () => Promise.resolve({ createScene3d }), ...over,
   };
   return { box, view2d, scene, ctx, createScene3d, base, host: createRoomHost(base) };
@@ -52,8 +52,10 @@ describe('probe context', () => {
 
 describe('wants3d', () => {
   it('needs WebGL, and a level in LEVELS_IN_3D or ?room=3d', () => {
-    expect(LEVELS_IN_3D).toEqual([]);
-    expect(wants3d({ n: 5, search: '', webgl: true })).toBe(false);
+    expect(LEVELS_IN_3D).toEqual([5]);
+    expect(wants3d({ n: 5, search: '', webgl: true })).toBe(true);
+    expect(wants3d({ n: 3, search: '', webgl: true })).toBe(false);
+    expect(wants3d({ n: 5, search: '?room=2d', webgl: true })).toBe(false);
     expect(wants3d({ n: 5, search: '?room=3d', webgl: true })).toBe(true);
     expect(wants3d({ n: 5, search: '?room=3d', webgl: false })).toBe(false);
     expect(wants3d({ n: 1, search: '?room=3d&nowebgl=1', webgl: true })).toBe(false);
@@ -87,6 +89,11 @@ describe('createRoomHost', () => {
     expect(scene.setFocus).toHaveBeenCalledWith({ x: 1, y: 1 });
     host.resize();
     expect(scene.resize).toHaveBeenCalled();
+  });
+  it('level 5 goes 3D with no flag', async () => {
+    const { host, box } = setup({ n: 5, search: '' });
+    expect(await host.ready).toBe('3d');
+    expect(box.dataset.room).toBe('3d');
   });
   it('stays 2D when 3D is not wanted, and never loads', async () => {
     for (const over of [{ search: '' }, { search: '?room=2d' }, { search: '?room=3d&nowebgl=1' }, { webgl: () => false }]) {

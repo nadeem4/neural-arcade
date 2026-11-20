@@ -3,8 +3,10 @@
 import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { OrbitControls } from '../../assets/vendor/three/controls/OrbitControls.js';
 import {
-  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, formatStats,
+  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, formatStats, moveStyle, atTreasure, labelScale,
 } from './room-math.js';
+import { OVERLAYS, overlayNames, marksList } from './room-overlays.js';
+import { MESH_LAYERS, createMarks } from './room-overlay-meshes.js';
 
 const NEAR_WALL_SCALE = 0.3; // a wall on the camera's side drops to this height so it never hides a tile
 const TARGET = [0, 0.2, 0];
@@ -16,7 +18,7 @@ const stageColor = () => {
 };
 
 // box: the .room element the canvas goes into. kit: the loaded models (room-kit.js). Returns the scene's controls.
-export function createScene3d({ box, room, kit, reduceMotion = false, debug = false, onContextLost = () => {} }) {
+export function createScene3d({ box, room, kit, character = null, reduceMotion = false, debug = false, onContextLost = () => {} }) {
   const t0 = performance.now();
   const L = layoutRoom(room, kit.dims);
   const tier = tierFor(box.clientWidth || 1280);
@@ -107,6 +109,36 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
     for (const k in cornerGroups) cornerGroups[k].scale.y = [...k].some(ch => near.has(ch)) ? NEAR_WALL_SCALE : 1;
   };
 
+  // The rogue: hidden until a draw gives it an agent cell.
+  let ch;
+  try { ch = character?.spawn(room, null) ?? null; }
+  catch (err) {
+    try { renderer.forceContextLoss(); } catch { /* the context may already be lost */ }
+    renderer.dispose(); canvas.remove(); throw err;
+  }
+  let lastAgent = null;
+  if (ch) { ch.object.visible = false; world.add(ch.object); }
+  const drawAgent = opts => {
+    if (!ch) return;
+    const a = opts?.agent ?? null;
+    if (!a) { ch.object.visible = false; lastAgent = null; return; }
+    if (lastAgent && lastAgent.x === a.x && lastAgent.y === a.y) return;
+    ch.object.visible = true;
+    ch.moveTo(a, moveStyle({ from: lastAgent, to: a, ice: !!opts.ice, reduce: reduceMotion }));
+    if (!reduceMotion && lastAgent && atTreasure(room, a)) ch.cheer();
+    lastAgent = { x: a.x, y: a.y };
+  };
+
+  // Overlays: the layers for the names the level asked for, and the outlined tiles (marks), which belong to the base room.
+  const marks = createMarks(THREE, { room, parent: world });
+  let layers = [], lastOpts = null;
+  const layerCtx = { THREE, room, parent: world, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
+  const drawOverlays = opts => {
+    lastOpts = opts;
+    marks.set(marksList(opts?.marks));
+    if (opts) for (const l of layers) l.layer.update(OVERLAYS[l.name].list(room, opts));
+  };
+
   // Camera: three-quarter view, distance fitted to the box; OrbitControls turn it within limits.
   const controls = new OrbitControls(camera, canvas);
   Object.assign(controls, {
@@ -135,6 +167,7 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
       camera.position.sub(controls.target).setLength(d).add(controls.target);
     }
     controls.update();
+    drawOverlays(lastOpts); // labels re-size with the view
   };
   const onChange = () => applyNear(controls.getAzimuthalAngle());
   controls.addEventListener('change', onChange);
@@ -167,8 +200,11 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
 
   // The loop; it stops while the page is hidden.
   let raf = 0, dead = false;
+  let prev = performance.now();
   const tick = now => {
     raf = requestAnimationFrame(tick);
+    if (ch && !reduceMotion) ch.update(Math.min(0.1, (now - prev) / 1000));
+    prev = now;
     controls.update();
     renderer.render(scene, camera);
     if (!debug) return;
@@ -186,7 +222,7 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
   };
   const onVisibility = () => {
     if (dead) return;
-    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else if (!raf) raf = requestAnimationFrame(tick);
+    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else if (!raf) { prev = performance.now(); raf = requestAnimationFrame(tick); }
   };
   document.addEventListener('visibilitychange', onVisibility);
   if (!document.hidden) raf = requestAnimationFrame(tick);
@@ -195,11 +231,16 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
   canvas.addEventListener('webglcontextlost', onLost);
 
   return {
-    draw() { setBackground(); }, // the room has no agent or overlay yet; a redraw (theme change) re-reads the background
+    draw(opts) { setBackground(); drawAgent(opts); drawOverlays(opts); }, // a redraw (theme change) also re-reads the background
     cellAt,
     resize,
     setFocus() {},
-    setOverlays() {},
+    setOverlays(names) {
+      const wanted = overlayNames(names);
+      for (const l of layers) l.layer.dispose();
+      layers = wanted.map(name => ({ name, layer: MESH_LAYERS[name](layerCtx) }));
+      drawOverlays(lastOpts);
+    },
     destroy() {
       if (dead) return;
       dead = true;
@@ -209,6 +250,10 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
       canvas.removeEventListener('webglcontextlost', onLost);
       controls.removeEventListener('change', onChange);
       controls.dispose();
+      for (const l of layers) l.layer.dispose();
+      layers = [];
+      marks.dispose();
+      ch?.destroy();
       for (const m of owned) m.dispose();
       boxGeo.dispose();
       boxMat.dispose();

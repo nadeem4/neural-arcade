@@ -22,11 +22,23 @@ describe('room-scene.js source guards', () => {
   it('removes its canvas if the renderer cannot be created', () => {
     expect(src).toMatch(/catch \(err\) \{ canvas\.remove\(\); throw err; \}/);
   });
+  it('lets go of the renderer and canvas if the character cannot be built', () => {
+    expect(src).toMatch(/try \{ ch = character\?\.spawn\(room, null\) \?\? null; \}\s*catch \(err\) \{[\s\S]*?forceContextLoss[\s\S]*?renderer\.dispose\(\)[\s\S]*?canvas\.remove\(\)[\s\S]*?throw err/);
+  });
   it('keeps the camera turn-only', () => {
     expect(src).toMatch(/enablePan\s*:\s*false/);
   });
   it('has no sprite labels (they are one merged mesh, later)', () => {
     expect(src).not.toMatch(/\bnew\s+THREE\.Sprite\b/);
+  });
+  it('moves the rogue by the pure tween rules, and never advances the mixer with reduced motion', () => {
+    expect(src).toMatch(/moveStyle\(/);
+    expect(src).toMatch(/atTreasure\(/);
+    expect(src).toMatch(/!reduceMotion\) character\.update\(|!reduceMotion\) ch\.update\(/);
+    expect(src).toMatch(/character\?\.destroy\(\)|ch\?\.destroy\(\)|ch\.destroy\(\)/);
+  });
+  it('the host loads the rogue with the scene', () => {
+    expect(read('games/treasure-room/room-host.js')).toMatch(/loadCharacter\(\)/);
   });
   it('leaves no console output behind', () => {
     expect(src).not.toMatch(/console\.log/);
