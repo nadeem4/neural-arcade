@@ -23,7 +23,12 @@ describe('continue panel', () => {
   it('prefixes links with base', () => {
     expect(continueHtml(continueTarget([]), '../')).toContain('href="../concepts/learning-from-examples/"');
   });
-  it('says so when every lesson is done', () => expect(continueHtml(null)).toContain('finished every lesson'));
+  it('says so when every lesson is done, with a plain link to All games', () => {
+    const h = continueHtml(null, '../');
+    expect(h).toContain('finished every lesson');
+    expect(h).toContain('<a class="textlink" href="../games/">All games</a>');
+    expect(h).not.toContain('primary');
+  });
 });
 
 describe('track rows', () => {

@@ -9,6 +9,8 @@ describe('old page redirects', () => {
     expect(categoryTarget('?c=reinforcement-learning')).toBe('reinforcement-learning/');
     expect(categoryTarget('?c=nope')).toBe('games/');
     expect(categoryTarget('')).toBe('games/');
+    expect(categoryTarget('?c=constructor')).toBe('games/');
+    expect(categoryTarget('?c=__proto__')).toBe('games/');
   });
   it('concepts targets a live lesson page, else home', () => {
     expect(conceptsTarget('#pid')).toBe('concepts/pid/');

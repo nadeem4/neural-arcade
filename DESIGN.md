@@ -25,12 +25,6 @@ colors:
   dark-stage: "#161B23"
   dark-stage-2: "#1F2630"
 typography:
-  display:
-    fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
-    fontSize: "clamp(2.6rem, 6.2vw, 5.4rem)"
-    fontWeight: 800
-    lineHeight: 0.98
-    letterSpacing: "-0.04em"
   headline:
     fontFamily: "Schibsted Grotesk, Segoe UI, system-ui, sans-serif"
     fontSize: "clamp(2.4rem, 5vw, 4.2rem)"
@@ -157,7 +151,7 @@ The site follows the system colour scheme by default and has a sun/moon toggle i
 A neutral cool-grey palette with one orange signal and a separate dark stage palette.
 
 ### Primary
-- **Signal Orange** (`signal`): the selected move's bar and value, the live dot, the logo's output node, range-slider accents and focus outlines. On light ground, orange text uses **Burnt Signal** (`signal-text`) instead, which passes contrast; in dark mode `--signal-text` resolves to `signal` itself. Orange fills that carry white text (the primary button, the New badge, the current Teach phase, text selection) use **Signal Fill** (`signal-fill`, #C2410C) so white (`signal-ink`) reaches 4.5:1.
+- **Signal Orange** (`signal`): the selected move's bar and value, the live dot, the logo's output node, range-slider accents and focus outlines. On light ground, orange text uses **Burnt Signal** (`signal-text`) instead, which passes contrast; in dark mode `--signal-text` resolves to `signal` itself. Orange fills that carry white text (the primary button, the current Teach phase, text selection) use **Signal Fill** (`signal-fill`, #C2410C) so white (`signal-ink`) reaches 4.5:1.
 
 ### Neutral
 - **Cool Ground** (`ground`, CSS `--bg`): page background; the sticky browse toolbar uses it too.
@@ -183,8 +177,7 @@ Canvas code reads colours through `assets/theme.js`, which also reports `dark` (
 **Character:** One tight, heavy grotesk does both the shouting and the reading; the mono appears only where the network produces a number.
 
 ### Hierarchy
-- **Display** (800, clamp(2.6rem, 6.2vw, 5.4rem), 0.98): the home hero headline only, max 14ch.
-- **Headline** (800, clamp(2.4rem, 5vw, 4.2rem), 1): page h1s; game pages cap it at 3.8rem, how it works intros at 64px. Balanced wrapping.
+- **Headline** (800, clamp(2.4rem, 5vw, 4.2rem), 1): page h1s, the home hero included (max 14ch); game pages cap it at 3.8rem, how it works intros at 64px. Balanced wrapping.
 - **Section** (800, clamp(2rem, 4vw, 3.2rem), 1): home section headings. The game lesson line uses the same voice at clamp(1.6rem, 3.4vw, 2.6rem), max 22ch.
 - **Title** (700, 20px): row and step titles; card and panel headings drop to 15px 700.
 - **Reward City** (`games/city/city.css`) sets every font size from six `--fs-*` tokens: `--fs-xs` 13, `--fs-sm` 14, `--fs-hd` 15 (card and panel headings), `--fs-md` 16, `--fs-lg` 22 (HUD numerals) and `--fs-xl` 34 (big numerals).
@@ -199,14 +192,13 @@ Canvas code reads colours through `assets/theme.js`, which also reports `dark` (
 
 Content sits in a 1200px wrap with 16px side gutters that respect safe-area insets. Sections breathe in tens of pixels: 40px between hero blocks, 56px around game-page bands, 96px at the end of a page.
 
-- **Home:** hero (headline, lead plus actions, then the demo stage with a 300px brain column), then "Pick what you want to understand", one block per category (260px info column beside a four-column tile grid, the newest game as a two-column feature tile), then a row of category chips.
+- **Home:** hero row (headline and lead beside a Continue panel: the next lesson with the page's one primary button, or a link to All games once every lesson is done), the demo stage with a 300px brain column and its Play and Watch buttons, then the three tracks as ruled rows (number, title and blurb, lesson count with a progress bar, Start or Continue), then a Play / Read / Watch line in three top-aligned columns.
 - **Browse (`games/`):** headline and lead, a sticky toolbar (search pill, category chips, sort select), then a list of rows (150px thumb, title and lesson, category and video note, Play button) and a pager of chips.
-- **Category (`category/?c=`):** crumb, headline, lead, a "Start with" primary button (oldest game), then large two-column steps that alternate image side, each with a Learns by / Goes wrong when list and Play, Watch explainer (only with a video) and How it works actions; then chips for other categories.
 - **About:** headline and three paragraphs in a 680px column.
 - **Game page** (`assets/game.css`; `games/runner` is the reference): crumb and h1 with the lesson as lead, with a Play / Watch / How it works switch on the right; the brief (setup, rule, watch for) in three columns between hairlines; the play row (dark stage beside a 360px controls panel); two cards (brain, chart); the lesson band with a "Why it happens" button; (Coin Runner) a Play it yourself button with an (i) in the stage head, a start card (key caps in a two-column grid, none on touch screens), an icon-only full screen button at the level's top right while you play (hidden where the browser has no element fullscreen), 3-2-1 countdown, score/coins/time readout and end card as HTML overlays inside the level (dialog, token colours on the stage), and a left, right and jump touch pad over the level on touch screens while you play; a watch-and-read pair; "More from <category>" as up to three tiles; the art credit.
 - **How it works:** one 680px reading column of numbered steps; figures sit in plates, some up to 1040px wide.
 
-Breakpoints: 1000px stacks the game page's play row, cards and watch/read pair; 900px stacks the home stage and categories and folds browse rows; 640px stacks the brief and lesson and makes the switch full width; 560px makes tiles one column.
+Breakpoints: 1000px stacks the game page's play row, cards and watch/read pair; 900px stacks the home hero row and stage and folds browse rows; 760px puts the header nav on its own row under the logo and lamp; 640px stacks the brief and lesson, makes the switch full width and stacks the home track rows and Play / Read / Watch line.
 
 ## Elevation & Depth
 
@@ -224,10 +216,10 @@ Every control is a pill (999px): buttons, chips, the switch, search, sort select
 ## Components
 
 ### Header and footer
-Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. The header is the logo mark (ink rounded square, two ground-coloured input dots, one orange output dot) with "Neural Arcade" at 800, then Games and About links (`ink-2`; current page `ink` 700) and a 40px round sun/moon lamp button. The footer is a hairline-topped row: "Built by Nadeem." on the left, and on the right a Concepts link beside the codewithnk.com link.
+Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. The header is the logo mark (ink rounded square, two ground-coloured input dots, one orange output dot) with "Neural Arcade" at 800, then the three track names and About (`ink-2`; current page `ink` 700, in the track order of `assets/tracks`) and a 44px round sun/moon lamp button; on phones the lamp sits top right opposite the logo and the links wrap below, each keeping a 44px tap height. The footer is a hairline-topped row: "Built by Nadeem." on the left, and on the right an All games link beside the codewithnk.com link.
 
 ### Buttons
-- **Shape:** pill, 46px tall, 0 20px, 600 15px; 52px tall on the home hero.
+- **Shape:** pill, 46px tall, 0 20px, 600 15px.
 - **Default:** white surface, ink text, 1.5px hairline.
 - **Primary:** orange fill and border, white text. One per action group; Play and Read How it works use it.
 - **Text link:** 46px tall underlined 600 text, for How it works beside buttons.
@@ -238,7 +230,7 @@ Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. 
 
 ### Rows and tiles
 - **Row (browse):** a grid between hairlines; 4:3 dark thumb, title and lesson, category name plus "Video explainer" in `signal-text` when a video exists, Play on the right.
-- **Tile (home, More from):** 16:10 dark thumb with the game shot, title in 700 16px, "learns by" line in `ink-2`; the thumb lifts 3px on hover (0.25s, cubic-bezier(.2, .8, .2, 1)). The newest game's feature tile carries an orange "New" pill.
+- **Tile (More from on game pages):** 16:10 dark thumb with the game shot, title in 700 16px, "learns by" line in `ink-2`; the thumb lifts 3px on hover (0.25s, cubic-bezier(.2, .8, .2, 1)).
 
 ### Stage
 The dark plane every game plays on. A head row (live orange dot, bold stage-ink label, dim details), the canvas, then on game pages a narration line (`say`, polite live region) and a row of three or two readouts: dim label with an (i) button over a mono numeral. Captions float bottom-left on the canvas in a small stage-coloured box.
@@ -258,7 +250,7 @@ A 28px round, transparent icon button beside a heading or readout label; it togg
 A two-column pair: "Watch it learn" with the video, and "How it works" with a primary button. Without a video only the read column shows, full width. The facade (`assets/video.js`) is a 16:9 rounded box with the YouTube thumbnail, a 76px orange play disc and a dark pill label "Watch: how it learns"; a click swaps in the iframe.
 
 ### Crumb and pager
-Crumb: 14px `ink-2` text, links underlined at 4px offset, "Category / Game" on game pages and "Every game / Category" on category pages. Pager: chips, hidden when there is one page.
+Crumb: 14px `ink-2` text, links underlined at 4px offset, "Category / Game" on game pages. Pager: chips, hidden when there is one page.
 
 ### How it works page
 Intro (headline, 20px lede, read time and a "Try it live" arrow link), a wide opening figure, then numbered steps: a bold `signal-text` step number, a 30px 800 heading, reading prose with bold (not italic) terms. Figures are white hairline plates with "Fig. N" captions under a rule; bar figures use track troughs with orange fills. A "deep" details box with a heavy top rule holds the practitioner notes. The shared styles live in `assets/story.css`; the Coin Runner and Teach write-ups add their own figure CSS. The finale button is `btn primary`.

@@ -30,13 +30,18 @@ export function wildRowHtml(entry, base = '../', games = GAMES) {
 
 const plural = (n, one, many) => (n === 1 ? one : many);
 
+// The progress bar both the track page and the home rows use; `prog` is trackProgress().
+export function barHtml(prog, label) {
+  const pct = prog.live ? Math.round((prog.done / prog.live) * 100) : 0;
+  return `<div class="bar" role="img" aria-label="${label}"><i style="width:${pct}%"></i></div>`;
+}
+
 // The inside of <main> for one track, with the saved progress applied.
 export function trackBodyHtml(track, { done = [], base = '../', games = GAMES } = {}) {
   const lessons = flatLessons([track]);
   const prog = trackProgress(done, track);
   const next = nextLesson(done, track);
   const label = `${prog.done} of ${prog.live} ${plural(prog.live, 'lesson', 'lessons')} done`;
-  const pct = prog.live ? Math.round((prog.done / prog.live) * 100) : 0;
   const game = track.game ? games.find(g => g.id === track.game) : null;
 
   const needs = (track.needs ?? []).map(n => {
@@ -70,7 +75,7 @@ ${rows}
   <h1>${esc(track.title)}</h1>
   <p class="lead">${esc(track.blurb)}</p>
   <div class="facts">
-    <div class="prog"><span class="count">${label}</span><div class="bar" role="img" aria-label="${label}"><i style="width:${pct}%"></i></div></div>
+    <div class="prog"><span class="count">${label}</span>${barHtml(prog, label)}</div>
     ${game ? `<p>Played in ${esc(game.title)}</p>` : ''}
     ${needs}
     ${button}

@@ -2,6 +2,7 @@
 import { TRACKS } from './tracks/index.js';
 import { lessonById, lessonLabel, lessonHref, trackHref, trackCounts } from './tracks/model.js';
 import { trackProgress } from './tracks/progress.js';
+import { barHtml } from './tracks/track-view.js';
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const PLAY = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>';
@@ -17,7 +18,7 @@ export const stageHeadHtml = g =>
 
 // `target` is continueTarget(done), or null when every live lesson is done.
 export function continueHtml(target, base = '') {
-  if (!target) return '<p class="eyebrow">Continue</p><p class="cont-line">You have finished every lesson.</p>';
+  if (!target) return `<p class="eyebrow">Continue</p><p class="cont-line">You have finished every lesson.</p><a class="textlink" href="${base}games/">All games</a>`;
   const lesson = lessonById(target.lesson.id);
   const verb = target.first ? 'Start' : 'Continue';
   return `<p class="eyebrow">${target.first ? 'Start here' : 'Continue'}</p>
@@ -31,12 +32,11 @@ export function trackRowHtml(track, done, base = '') {
   const { live, soon } = trackCounts(track);
   const prog = trackProgress(done, track);
   const label = `${prog.done} of ${prog.live} done`;
-  const pct = prog.live ? Math.round((prog.done / prog.live) * 100) : 0;
   const verb = prog.done === 0 ? 'Start' : 'Continue';
   return `<li class="trow">
   <span class="num">${n}</span>
   <div class="what"><h2>${esc(track.title)}</h2><p>${esc(track.blurb)}</p></div>
-  <div class="prog"><span>${live} ${live === 1 ? 'lesson' : 'lessons'}${soon ? ` · ${soon} coming soon` : ''}</span><div class="pbar" role="img" aria-label="${label}"><i style="width:${pct}%"></i></div><span class="num">${label}</span></div>
+  <div class="prog"><span>${live} ${live === 1 ? 'lesson' : 'lessons'}${soon ? ` · ${soon} coming soon` : ''}</span>${barHtml(prog, label)}<span class="num">${label}</span></div>
   <a class="btn" href="${trackHref(track.id, base)}" aria-label="${verb} ${esc(track.title)}">${verb}</a>
 </li>`;
 }
