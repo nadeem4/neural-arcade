@@ -48,3 +48,10 @@
   #markDone { width: 100%; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { .lesson-page * { scroll-behavior: auto; transition: none; animation: none; } }
+
+/* whole-game lessons: the game's banner is the stage */
+.lesson-page > section.banner-stage { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.banner { display: block; border-radius: 20px; overflow: hidden; background: var(--stage); }
+.banner img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.banner-play { margin: 0; }
+.banner-play .btn { min-height: 44px; height: auto; }

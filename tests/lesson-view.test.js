@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { lessonById } from '../assets/tracks/model.js';
 import { GAMES } from '../assets/games.js';
-import { crumbHtml, videoSlotHtml, wildListHtml, ownLineHtml, neighboursHtml, markDoneHtml, lessonBodyHtml } from '../assets/tracks/lesson-view.js';
+import { crumbHtml, videoSlotHtml, wildListHtml, ownLineHtml, neighboursHtml, markDoneHtml, lessonBodyHtml, bannerStageHtml, readHtml } from '../assets/tracks/lesson-view.js';
 
 const B = '../../';
 const l = lessonById('return');
@@ -54,6 +54,44 @@ describe('lesson view builders', () => {
     expect(markDoneHtml(false)).toContain('Mark as done');
     expect(markDoneHtml(true)).toContain('aria-pressed="true"');
     expect(markDoneHtml(true)).toContain('Done');
+  });
+});
+
+describe('whole-game lessons', () => {
+  const pid = lessonById('pid');
+  it('pid: banner and Play to the game, no level, the lesson video', () => {
+    const html = lessonBodyHtml(pid, args);
+    expect(html).toContain('href="../../games/balance/"');
+    expect(html).not.toContain('id="levelRoot"');
+    expect(html).toContain('data-youtube="drtqgVse4jo"');
+    expect(html).toContain('<section id="writeup">W</section>');
+    expect(bannerStageHtml(pid, GAMES, B)).toContain('src="../../games/balance/share.png"');
+    expect(bannerStageHtml(pid, GAMES, B)).toContain('alt="Balance: PID control"');
+    expect(bannerStageHtml(pid, GAMES, B)).toContain('Play Balance');
+  });
+  it('a basics lesson reads in the game how-it-works and falls back to the game video', () => {
+    const basics = lessonById('learning-from-examples');
+    const teach = lessonBodyHtml(basics, { games: GAMES, base: B, writeupHtml: '' });
+    expect(teach).toContain('href="../../games/teach/how-it-works/"');
+    expect(teach).toContain('data-youtube="qfzRiq3DoJo"');
+    expect(teach).not.toContain('id="writeup"');
+    expect(readHtml(basics, GAMES, B, '')).toContain('Read how ');
+  });
+  it('reward design: Reward City banner, no video yet, wild list and own line', () => {
+    const rd = lessonById('reward-design');
+    const html = lessonBodyHtml(rd, args);
+    expect(html).toContain('Video coming soon');
+    expect(html).toContain('href="../../games/city/"');
+    expect(wildListHtml(rd, GAMES, B)).toContain('Coin Runner');
+    expect(ownLineHtml(rd)).toContain('The rate card is the reward design');
+  });
+  it('level lessons keep the level stage', () => {
+    expect(lessonBodyHtml(l, args)).not.toContain('class="banner"');
+  });
+  it('lesson.css styles the banner with a 44px primary button', () => {
+    const css = readFileSync(new URL('../assets/lesson.css', import.meta.url), 'utf8');
+    expect(css).toContain('.banner');
+    expect(css).toMatch(/\.banner-play \.btn[^{]*\{[^}]*min-height: 44px/);
   });
 });
 
