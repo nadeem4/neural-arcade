@@ -8,10 +8,14 @@ const SITE = 'https://arcade.codewithnk.com/';
 const root = new URL('../', import.meta.url);
 // the generated pages: every live lesson and the three track pages
 const generated = Object.keys(buildPages({ files: { read: f => (existsSync(new URL(f, root)) ? readFileSync(new URL(f, root), 'utf8') : null), exists: f => existsSync(new URL(f, root)) } }));
-const lessonImages = f => {
-  const l = flatLessons().find(x => f === `concepts/${x.id}/index.html`);
-  return l ? [`concepts/${l.id}/share.png`, `games/${l.game}/share.png`, 'assets/share.png'] : ['assets/share.png'];
+// the one share image each generated page must use
+const PINNED = {
+  'concepts/pid/index.html': 'concepts/pid/share.png',
+  'concepts/reward-design/index.html': 'concepts/reward-design/share.png',
+  'concepts/learning-from-examples/index.html': 'games/teach/share.png',
+  'concepts/learning-by-selection/index.html': 'games/racer/share.png',
 };
+const lessonImages = f => [PINNED[f] ?? 'assets/share.png'];
 const GENERATED_PAGES = generated.map(f => [f, lessonImages(f)]);
 
 const pages = [
@@ -77,6 +81,11 @@ describe('share and SEO tags', () => {
     });
   }
 
+  it('keeps the descriptive image alt on pid and reward design', () => {
+    const alt = f => readFileSync(new URL(f, root), 'utf8').match(/og:image:alt" content="([^"]*)"/)[1].replace('&#39;', "'");
+    expect(alt('concepts/pid/index.html')).toBe("PID, explained: a car's speed on a hill, P alone against P plus I");
+    expect(alt('concepts/reward-design/index.html')).toBe('Reward design: a taxi that learns to cut across the park');
+  });
   it('gives every game a banner (share.png, or shot.jpg when it has no video)', () => {
     for (const g of GAMES) {
       const banner = existsSync(new URL(`games/${g.id}/share.png`, root)) || (!g.youtube && existsSync(new URL(`games/${g.id}/shot.jpg`, root)));

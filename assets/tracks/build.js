@@ -51,7 +51,7 @@ export function lessonPageHtml(lesson, games, files) {
     mainHtml: whole ? body : INFO_ICON + '\n' + body,
     scripts: ['assets/lesson-page.js', ...(files.exists(`concepts/${lesson.id}/page.js`) ? ['./page.js'] : [])],
     image,
-    imageAlt: own || whole ? `${lessonLabel(lesson)}, a Neural Arcade lesson` : SITE_ALT,
+    imageAlt: lesson.shareAlt ?? (own || whole ? `${lessonLabel(lesson)}, a Neural Arcade lesson` : SITE_ALT),
   });
 }
 
