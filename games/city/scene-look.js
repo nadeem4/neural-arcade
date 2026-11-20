@@ -1,5 +1,5 @@
 // three.js glue for the street's look: the sky dome with sun glow and clouds, environment light, and the light rig. Everything is painted at runtime (the building windows are in facade.js).
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { domeRadius } from './scene-math.js';
 import { skyColours, sunDirection, sunUv, cloudLayout } from './sky.js';
 

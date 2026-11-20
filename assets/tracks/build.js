@@ -1,7 +1,7 @@
 // Pure page generator: config in, { published path: HTML } out. scripts/build-pages.mjs writes or checks the files.
 import { TRACKS } from './index.js';
 import { GAMES } from '../games.js';
-import { pageHtml } from './shell.js';
+import { pageHtml, IMPORT_MAP_HTML } from './shell.js';
 import { trackBodyHtml } from './track-view.js';
 import { lessonBodyHtml } from './lesson-view.js';
 import { flatLessons, lessonLabel } from './model.js';
@@ -46,6 +46,7 @@ export function lessonPageHtml(lesson, games, files) {
     styles: whole ? ['assets/concept.css', 'assets/lesson.css']
       : ['assets/game.css', 'games/treasure-room/treasure-room.css', 'assets/concept.css', 'assets/lesson.css'],
     siteKey: lesson.trackId,
+    headHtml: lesson.level != null ? IMPORT_MAP_HTML : '',
     bodyAttrs: `data-lesson="${lesson.id}"`,
     mainAttrs: 'class="wrap concept-page lesson-page"',
     mainHtml: whole ? body : INFO_ICON + '\n' + body,

@@ -24,9 +24,12 @@ export function shareTagsHtml({ title, description, path, image = 'assets/share.
 <meta name="twitter:image" content="${img}">`;
 }
 
+// Pages that load GLTFLoader or OrbitControls need this: they import the bare specifier `three`.
+export const IMPORT_MAP_HTML = '<script type="importmap">{"imports":{"three":"/assets/vendor/three/three.module.min.js"}}</script>';
+
 // A whole document. `depth` is the number of folders below the site root.
 export function pageHtml({ title, description, path, depth, styles = [], siteKey, mainHtml, scripts = [],
-  bodyAttrs = '', mainAttrs = 'class="wrap"', image = 'assets/share.png', imageAlt }) {
+  bodyAttrs = '', headHtml = '', mainAttrs = 'class="wrap"', image = 'assets/share.png', imageAlt }) {
   const base = '../'.repeat(depth);
   const css = ['assets/studio.css', ...styles].map(h => `<link rel="stylesheet" href="${base}${h}">`).join('\n');
   const js = scripts.map(s => `<script type="module" src="${s.startsWith('./') ? s : base + s}"></script>`).join('\n');
@@ -38,7 +41,7 @@ export function pageHtml({ title, description, path, depth, styles = [], siteKey
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 ${shareTagsHtml({ title, description, path, image, imageAlt })}
-<link rel="icon" href="${base}assets/icon.svg" type="image/svg+xml">
+${headHtml ? headHtml + '\n' : ''}<link rel="icon" href="${base}assets/icon.svg" type="image/svg+xml">
 ${css}
 <script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>

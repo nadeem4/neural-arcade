@@ -1,7 +1,7 @@
 // A cheap bloom: a soft additive dot over each lit lamp (street lamp heads, lit signal lamps, the taxi's brake lamps), drawn as THREE.Points.
 // It replaces a post-processing chain; it only runs on the high quality tier (quality.js bloom) and is the same in record mode.
 // Nothing here reads a clock: a dot's strength is a pure function of the lamp's state (which the caller derives from ms).
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 
 export const SIGNAL_GLOW = 0.8, LAMP_GLOW = 0.5, BRAKE_GLOW = 0.9; // linear strength of each kind of dot
 export const MAX_DOT_PX = 40; // the biggest a dot gets on screen, in pixels

@@ -3,7 +3,7 @@
 // In the chase the camera sits about deck height, so trees, lamps and the raised parts of the L near it or on its line to the taxi are scaled to nothing (hiders below).
 // Draw calls added: lamps 2 (poles, heads) + trees 2 (trunks, crowns) + the L 1 (deck, girders, rails, columns and ground track beds as one box mesh).
 // Instances (Chicago Loop export): 410 lamps, 4,128 trees (2,064 on phones), about 1,700 L boxes.
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { treesToHide } from './scene-math.js';
 import { headPlacement } from './signal-heads.js';
 import { createGlow, LAMP_GLOW } from './glow.js';

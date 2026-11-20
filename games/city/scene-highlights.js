@@ -1,7 +1,7 @@
 // The in-world highlight of each recent offence, drawn from what highlights.js says is active. Three.js, thin: no decisions here.
 // A pool of flat meshes is made once; update() only moves, turns, scales and fades them.
 //   off   -> the tile flashes (a one-cell quad)    red   -> a red ring pulses on the road    wrong -> a red arrow on the road, pointing the legal way
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { arrowPolys } from './street-model.js';
 import { ROAD_Y } from './scene-math.js';
 import { highlightLook } from './highlights.js';
