@@ -4,6 +4,7 @@ import { ROOM } from '../games/treasure-room/sim.js';
 import { ACTIONS } from '../assets/grid.js';
 import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList } from '../games/treasure-room/room-overlays.js';
 import { heatColor } from '../games/treasure-room/room-math.js';
+import { createMarks, MESH_LAYERS, TRAIL_COIN } from '../games/treasure-room/room-overlay-meshes.js';
 
 const read = f => readFileSync(new URL('../games/treasure-room/' + f, import.meta.url), 'utf8');
 const v = new Array(25).fill(0);
@@ -125,5 +126,38 @@ describe('level 3 trail', () => {
   });
   it('the scene shows a focus ring on setFocus', () => {
     expect(read('room-scene.js')).toMatch(/setFocus\(cell\) \{ focusRing\.set\(/);
+  });
+});
+
+const fakeThree = () => {
+  const made = { meshes: [], scalars: [] };
+  class Geo { rotateX() { return this; } dispose() {} }
+  class Mesh { constructor() { this.count = 0; this.instanceMatrix = {}; made.meshes.push(this); } setMatrixAt() {} setColorAt() {} dispose() {} removeFromParent() {} }
+  class Mat { dispose() {} }
+  class M4 { makeTranslation() { return this; } compose() { return this; } multiply() { return this; } }
+  class V3 { set() { return this; } setScalar(x) { made.scalars.push(x); return this; } }
+  class Q { identity() { return this; } }
+  class Col { constructor() {} }
+  return { made, THREE: { RingGeometry: Geo, MeshBasicMaterial: Mat, InstancedMesh: Mesh, Matrix4: M4, Vector3: V3, Quaternion: Q, Color: Col } };
+};
+
+describe('focus ring (a one-cell createMarks, as room-scene setFocus uses it)', () => {
+  it('shows one ring for a cell and none for null', () => {
+    const { made, THREE } = fakeThree();
+    const ring = createMarks(THREE, { room: ROOM, parent: { add() {} } });
+    ring.set([{ x: 1, y: 2 }]);
+    expect(made.meshes[0].count).toBe(1);
+    ring.set([]);
+    expect(made.meshes[0].count).toBe(0);
+  });
+});
+
+describe('trail coin size', () => {
+  it('is the trail base size times each entry scale, and never the chest treasureScale', () => {
+    const { made, THREE } = fakeThree();
+    const kit = { instancesOf: () => [{ geometry: new THREE.RingGeometry(), material: {}, local: new THREE.Matrix4() }] };
+    const layer = MESH_LAYERS.trail({ THREE, room: ROOM, parent: { add() {} }, kit, coinScale: 0.28, treasureScale: 0 });
+    layer.update(trailList(ROOM, [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }], 0.1));
+    expect(made.scalars.slice(0, 3)).toEqual([TRAIL_COIN, TRAIL_COIN * 0.25, TRAIL_COIN * 0.25]);
   });
 });

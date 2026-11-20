@@ -15,6 +15,9 @@ const token = (name, fallback) => {
 };
 
 // ctx: { THREE, room, parent, kit, coinScale, labelScale(): world height of a label, tilt }. Each builder returns { update(list), dispose() }.
+// A trail coin at its biggest (the first step) is about half a tile wide; later steps shrink to at least a quarter of that.
+export const TRAIL_COIN = 0.5;
+
 export const MESH_LAYERS = {
   values(ctx) {
     const { THREE, room, parent } = ctx;
@@ -90,7 +93,7 @@ export const MESH_LAYERS = {
   },
 
   // The route as coin stacks: one InstancedMesh per kit mesh per route (the second route is dimmed), capacity 12 per route.
-  trail(ctx) {
+  trail(ctx) { // size: TRAIL_COIN times the entry scale only; the chest's treasureScale never reaches here
     const { THREE, room, parent, kit } = ctx;
     const parts = kit.instancesOf('coin_stack_medium');
     const meshes = [];
@@ -111,7 +114,7 @@ export const MESH_LAYERS = {
           const cells = list.routes[route] ?? [];
           cells.slice(0, TRAIL_CAPACITY).forEach((c, i) => {
             const w = cellToWorld(room, c.x, c.y);
-            mesh.setMatrixAt(i, m4.compose(pos.set(w.x, ROCK_TOP, w.z), q.identity(), scl.setScalar(ctx.coinScale * c.scale)).multiply(local));
+            mesh.setMatrixAt(i, m4.compose(pos.set(w.x, ROCK_TOP, w.z), q.identity(), scl.setScalar(TRAIL_COIN * c.scale)).multiply(local));
             mesh.setColorAt(i, list.faint[route] ? dim : full);
           });
           mesh.count = Math.min(cells.length, TRAIL_CAPACITY);

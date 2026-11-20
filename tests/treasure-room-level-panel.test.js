@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { INFO } from '../games/treasure-room/words.js';
-import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS, forwardTap, tileSelector } from '../games/treasure-room/level-panel.js';
+import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS, forwardTap, tileSelector, wireTileFocus } from '../games/treasure-room/level-panel.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = levelPanelHtml();
@@ -92,5 +92,37 @@ describe('tap bridge', () => {
     expect(src).toMatch(/focusin/);
     expect(src).toMatch(/host\.setFocus\(null\)/);
     expect(read('games/treasure-room/treasure-room.css')).toMatch(/#roomBox\[data-room="3d"\] \.tilegrid \{ pointer-events: none; opacity: 0;/);
+  });
+});
+
+describe('tap bridge guards and focus wiring', () => {
+  const mk = ({ room = '3d', cell = { x: 2, y: 3 }, hidden = false } = {}) => {
+    const clicked = [], asked = [];
+    const tile = { click: () => clicked.push('tile') };
+    const tiles = { hidden, contains: () => false, querySelector: s => { asked.push(s); return tile; } };
+    return { clicked, asked, tiles, host: { cellAt: vi.fn(() => cell) }, e: { target: {} }, box: { dataset: { room } } };
+  };
+  it('asks for the tile at the tapped cell', () => {
+    const t = mk();
+    forwardTap(t);
+    expect(t.asked).toEqual([tileSelector(2, 3)]);
+  });
+  it('does nothing in 2D, on a miss or drag, or when the grid is hidden', () => {
+    for (const t of [mk({ room: '2d' }), mk({ cell: null }), mk({ hidden: true })]) {
+      forwardTap(t);
+      expect(t.clicked).toEqual([]);
+    }
+  });
+  it('focus on a tile sets the ring cell, and leaving the grid clears it', () => {
+    const on = {};
+    const tiles = { addEventListener: (t, fn) => { on[t] = fn; } };
+    const host = { setFocus: vi.fn() };
+    wireTileFocus({ tiles, host });
+    on.focusin({ target: { dataset: { x: '1', y: '2' } } });
+    expect(host.setFocus).toHaveBeenLastCalledWith({ x: 1, y: 2 });
+    on.focusin({ target: { dataset: {} } });
+    expect(host.setFocus).toHaveBeenCalledTimes(1);
+    on.focusout();
+    expect(host.setFocus).toHaveBeenLastCalledWith(null);
   });
 });
