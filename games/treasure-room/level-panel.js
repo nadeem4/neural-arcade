@@ -1,4 +1,4 @@
-// One Treasure Room level (room, readouts, panel, (i) buttons) mounted into any element: used by the game page and by the lesson pages.
+// One Treasure Room level (room, readouts, panel, (i) buttons) mounted into any element: the game page mounts it.
 // The (i) icon is an SVG <symbol id="i"> that the host page must define once.
 import { sizeCanvas } from '../racer/track-view.js';
 import { ROOM } from './sim.js';
@@ -134,8 +134,8 @@ export function levelPanelHtml({ showTitle = true } = {}) {
 }
 
 // Mounts level n into root and returns { n, redraw(), destroy() }. An unbuilt n falls back to level 1.
-// onTheme (optional) is called after the room redraws for a light or dark switch.
-export function mountLevelPlay(root, { n, title = '', showTitle = true, onTheme } = {}) {
+// The caller redraws on a theme change (handle.redraw).
+export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   root.innerHTML = levelPanelHtml({ showTitle });
   const $ = id => root.querySelector(`#${id}`);
   const canvas = $('stage'), ctx = canvas.getContext('2d');
@@ -183,8 +183,6 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true, onTheme 
   // Watch the canvas, not root: the game page lays root out with display: contents, which has no box to observe.
   const resize = new ResizeObserver(() => { size = sizeCanvas(canvas, 1); redraw(); });
   resize.observe(canvas);
-  const theme = new MutationObserver(() => { redraw(); onTheme?.(); });
-  theme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   size = sizeCanvas(canvas, 1);
   view = views[n].mount(ui);
@@ -195,7 +193,6 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true, onTheme 
       view?.destroy();
       view = null;
       resize.disconnect();
-      theme.disconnect();
       root.innerHTML = '';
     },
   };
