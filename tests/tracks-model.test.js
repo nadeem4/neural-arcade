@@ -111,8 +111,12 @@ describe('moreGames', () => {
     expect(ids('city')).not.toContain('city');
     expect(ids('city', 2)).toHaveLength(2);
   });
-  it('shows only track mates when there are some', () => {
-    expect(ids('racer')).toEqual(['teach']);
+  it('tops up with the newest other games, no duplicates, never itself', () => {
+    const r = ids('racer');
+    expect(r).toHaveLength(3);
+    expect(r[0]).toBe('teach');
+    expect(r).not.toContain('racer');
+    expect(new Set(r).size).toBe(3);
   });
   it('falls back to the newest other games when none share a track', () => {
     expect(ids('balance')).toEqual(['treasure-room', 'city', 'maze']);

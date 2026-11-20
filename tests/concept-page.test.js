@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-const CONCEPT_IDS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
 import { lessonById } from '../assets/tracks/model.js';
 import * as cp from '../assets/concept-page.js';
+
+const CONCEPT_IDS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
 
 const { videoHtml, triesHtml, wireTries } = cp;
 const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['mdp'] };

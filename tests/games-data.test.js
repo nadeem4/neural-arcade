@@ -74,6 +74,10 @@ describe('browse', () => {
     expect(browse(GAMES, TRACKS, { q: 'NEURAL RACER' }).items.map(g => g.id)).toEqual(['racer']);
     expect(browse(GAMES, TRACKS, { q: 'overfitting' }).items.map(g => g.id)).toContain('racer');
   });
+  it('searches the titles of the lessons a game appears in', () => {
+    expect(browse(GAMES, TRACKS, { q: 'return' }).items.map(g => g.id).sort()).toEqual(['city', 'maze', 'treasure-room']);
+    expect(browse(GAMES, TRACKS, { q: 'physical ai' }).items.map(g => g.id)).toEqual(['balance']);
+  });
   it('sorts newest or a to z', () => {
     const two = [fake('b', { title: 'Alpha', added: '2026-01-01' }), fake('a', { title: 'Zulu', added: '2026-03-01' })];
     expect(browse(two, TRACKS, {}).items.map(g => g.id)).toEqual(['a', 'b']);

@@ -38,6 +38,11 @@ describe('mountGamePage lessons row', () => {
     expect(els.usesTitle.innerHTML).toBe('Lessons this game appears in');
     expect(els.usesChips.innerHTML).toContain('href="../../concepts/return/">Lesson 3: Return</a>');
   });
+  it('a page without the #uses section still sets up the rest', async () => {
+    const els = await mount(['crumb']);
+    expect(els.crumb.innerHTML).toContain('Treasure Maze');
+    expect(els.moreTitle.innerHTML).toBe('More games');
+  });
   it('sets the track crumb and the More games title and tiles', async () => {
     const els = await mount(['crumb']);
     expect(els.crumb.innerHTML).toBe('<a href="../../reinforcement-learning/">Reinforcement learning</a> / Treasure Maze');

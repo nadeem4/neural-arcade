@@ -11,7 +11,7 @@ export function parseQuery(search) {
   const page = parseInt(p.get('page'), 10);
   return {
     q: p.get('q') ?? '',
-    track: p.get('t') ?? '',
+    track: TRACKS.some(t => t.id === p.get('t')) ? p.get('t') : '',
     sort: p.get('sort') === 'az' ? 'az' : 'newest',
     page: page >= 1 ? page : 1,
   };

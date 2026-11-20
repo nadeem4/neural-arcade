@@ -101,6 +101,7 @@ describe('home page', () => {
     expect(about).toMatch(/Neural networks[\s\S]*Reinforcement learning[\s\S]*Physical AI/);
     expect(about).toMatch(/lesson[\s\S]*write-up[\s\S]*video/i);
     expect(about).not.toContain('each game teaches exactly one');
+    expect(about).toContain('a lesson mixes something to play and an illustrated write-up, with a video where there is one.');
   });
 });
 
@@ -428,5 +429,13 @@ describe('old styles and fonts are gone', () => {
       const isTrackPage = TRACKS.some(t => f.replace(/\\/g, '/').endsWith(`/${t.id}/index.html`));
       if (f.endsWith('.html')) expect(text, f).not.toMatch(isTrackPage ? /Playable/ : /Coming soon|Playable/);
     }
+  });
+});
+
+describe('phone header lamp', () => {
+  it('positions the lamp absolutely only under .top, never bare', () => {
+    const phone = css.match(/@media \(max-width: 760px\) \{([\s\S]*?)\n\}/)[1];
+    expect(phone).toMatch(/\.top \.btn\.lamp\s*\{[^}]*position:\s*absolute/);
+    expect(phone).not.toMatch(/(^|\n)\s*\.btn\.lamp\s*\{[^}]*position:\s*absolute/);
   });
 });

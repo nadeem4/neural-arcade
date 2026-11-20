@@ -13,6 +13,10 @@ describe('browse url state', () => {
       .toEqual({ q: 'reward', track: 'physical-ai', sort: 'az', page: 3 });
     expect(parseQuery('?t=physical-ai&q=pole')).toMatchObject({ track: 'physical-ai', q: 'pole' });
   });
+  it('keeps t only when it is a real track id', () => {
+    expect(parseQuery('?t=nope').track).toBe('');
+    expect(parseQuery('?t=physical-ai').track).toBe('physical-ai');
+  });
   it('ignores the old c key', () => {
     expect(parseQuery('?c=physical-ai').track).toBe('');
   });
@@ -29,7 +33,7 @@ describe('browse url state', () => {
     expect(toQuery({ q: 'a b', track: '', sort: 'az', page: 1 })).toBe('?q=a+b&sort=az');
   });
   it('round trips', () => {
-    const s = '?q=a+b&t=x&sort=az&page=2';
+    const s = '?q=a+b&t=physical-ai&sort=az&page=2';
     expect(toQuery(parseQuery(s))).toBe(s);
   });
 });

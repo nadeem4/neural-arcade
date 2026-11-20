@@ -1,6 +1,6 @@
 // The one list of games. Pages render from this; adding a game means adding one entry here.
 // Which lessons a game appears in lives in the track configs (assets/tracks/), not here.
-import { tracksOfGame } from './tracks/model.js';
+import { tracksOfGame, chipsForGame } from './tracks/model.js';
 
 export const GAMES = [
   {
@@ -69,11 +69,11 @@ export const newest = games => [...games].sort(byNewest)[0];
 // the home hero: the newest game with an explainer video and a demo (its `demo` words and games/<id>/demo.js), else the newest game with a demo, else the newest game (then the home shows no recorded run).
 export const heroOf = games => newest(games.filter(g => g.youtube && g.demo)) ?? newest(games.filter(g => g.demo)) ?? newest(games);
 
-// The games page list: filter by track (a game is in every track that names it), search title, lesson and track titles, sort, page.
+// The games page list: filter by track (a game is in every track that names it), search title, lesson, track titles and the lessons it appears in, sort, page.
 export function browse(games, tracks, { q = '', track = '', sort = 'newest', page = 1, pageSize = 24 } = {}) {
   const needle = q.trim().toLowerCase();
   const trackIds = g => tracksOfGame(g.id, tracks).map(t => t.id);
-  const titles = g => tracksOfGame(g.id, tracks).map(t => t.title);
+  const titles = g => [...tracksOfGame(g.id, tracks).map(t => t.title), ...chipsForGame(g.id, tracks).map(c => c.label)];
   const hits = games
     .filter(g => !track || trackIds(g).includes(track))
     .filter(g => !needle || [g.title, g.lesson, ...titles(g)].some(s => s.toLowerCase().includes(needle)))
