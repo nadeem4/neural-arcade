@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { GAMES, CONCEPTS, conceptById, usesHtml } from '../assets/games.js';
-import { conceptHtml } from '../assets/concepts.js';
 
 const DEFINITIONS = {
   agent: ['Agent and environment', 'The agent is the learner that acts; the environment is everything it acts on, and it answers each move with a new situation and a reward.'],
@@ -52,55 +51,6 @@ describe('usesHtml', () => {
   });
   it('skips unknown ids instead of crashing', () => {
     expect(usesHtml({ uses: ['nope'] }, '')).toBe('');
-  });
-});
-
-describe('concept page rendering', () => {
-  const c = { id: 'policy', title: 'Policy', definition: 'Def.', youtube: null };
-  it('has the anchor id, the definition and no video without a youtube id', () => {
-    const h = conceptHtml(c, [], '../');
-    expect(h).toContain('id="policy"');
-    expect(h).toContain('Def.');
-    expect(h).not.toContain('data-youtube');
-  });
-  it('shows the click-to-play facade with a youtube id', () => {
-    expect(conceptHtml({ ...c, youtube: 'abcdef12345' }, [], '../')).toContain('data-youtube="abcdef12345"');
-  });
-  it('renders the full facade (box, play button, thumbnail) for a stubbed id, with its styles in studio.css', () => {
-    const h = conceptHtml({ ...c, id: 'pid', youtube: 'abcdef12345' }, [], '../');
-    expect(h).toMatch(/<div class="video" data-youtube="abcdef12345"[^>]*><button class="video-play"/);
-    expect(h).toContain('abcdef12345/hqdefault.jpg');
-    const css = readFileSync(new URL('../assets/studio.css', import.meta.url), 'utf8');
-    for (const sel of ['.video {', '.video-play {', '.video-label {', '.video iframe {']) expect(css).toContain(sel);
-  });
-  it('links the title to its page and keeps the id so old concepts/#id anchors land', () => {
-    const h = conceptHtml({ ...c, id: 'pid' }, [], '../');
-    expect(h).toContain('<h2><a href="../concepts/pid/">Policy</a></h2>');
-    expect(h).toContain('id="pid"');
-  });
-  it('escapes the title', () => {
-    expect(conceptHtml({ ...c, title: 'A<b>' }, [], '../')).toContain('>A&lt;b&gt;</a></h2>');
-  });
-  it('lists the games that use it', () => {
-    const h = conceptHtml(c, [{ title: 'Gee', path: 'games/g/' }], '../');
-    expect(h).toContain('Used in');
-    expect(h).toContain('href="../games/g/"');
-  });
-  it('renders every concept, with the games using it, from the real config', () => {
-    const html = CONCEPTS.map(k => conceptHtml(k, GAMES.filter(g => g.uses?.includes(k.id)), '../')).join('');
-    expect(html).toContain('href="../games/maze/"');
-    expect(html).toContain('href="../games/runner/"');
-    for (const k of CONCEPTS) expect(html).toContain(`id="${k.id}"`);
-  });
-});
-
-describe('concepts page file', () => {
-  const html = readFileSync(new URL('../concepts/index.html', import.meta.url), 'utf8');
-  it('uses the shared styles, header, footer and its script', () => {
-    expect(html).toContain('<header data-site>');
-    expect(html).toContain('<footer data-site>');
-    expect(html).toContain('../assets/studio.css');
-    expect(html).toContain('concepts.js');
   });
 });
 

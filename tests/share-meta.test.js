@@ -22,10 +22,8 @@ const pages = [
   ['index.html', ['assets/share.png']],
   ['about/index.html', ['assets/share.png']],
 
-  ['concepts/index.html', ['assets/share.png']],
   ...GENERATED_PAGES,
   ['games/index.html', ['assets/share.png']],
-  ['category/index.html', ['assets/share.png']],
   ...GAMES.flatMap(g => {
     // a game with a video uses share.png; one without may use its shot.jpg
     const banners = g.youtube ? [`games/${g.id}/share.png`] : [`games/${g.id}/share.png`, `games/${g.id}/shot.jpg`];
@@ -41,7 +39,7 @@ describe('share and SEO tags', () => {
   it('covers every page, including each game and its write-up', () => {
     expect(GENERATED_PAGES.filter(([f]) => f.startsWith('concepts/'))).toHaveLength(10);
     expect(GENERATED_PAGES.filter(([f]) => !f.startsWith('concepts/'))).toHaveLength(3);
-    expect(pages.length).toBe(5 + GAMES.length * 2 + GENERATED_PAGES.length);
+    expect(pages.length).toBe(3 + GAMES.length * 2 + GENERATED_PAGES.length);
   });
 
   for (const [file, allowed] of pages) {

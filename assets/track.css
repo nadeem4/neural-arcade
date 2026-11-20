@@ -7,8 +7,6 @@
 .facts p { margin: 0; }
 .facts a:not(.btn) { color: var(--ink); text-underline-offset: 3px; }
 .prog { display: grid; gap: 8px; }
-.bar { height: 6px; border-radius: 99px; background: var(--track); overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--signal-fill); }
 .facts .btn.primary { justify-self: start; height: auto; min-height: 44px; padding: 10px 20px; line-height: 1.25; }
 
 .part { padding-top: 22px; }
