@@ -239,7 +239,7 @@ The dark plane every game plays on. A head row (live orange dot, bold stage-ink 
 White, hairline, 18px. The panel stacks sections split by hairlines; each has a 15px 700 heading with an (i) button, a segmented control (track trough, white raised selection), hints in 13px `ink-2`, range dials (name, mono value, orange accent) and default buttons. Cards hold one canvas each (the brain, a chart) under a heading and a one-line question, with a legend of small rounded swatches.
 
 ### (i) buttons
-A 28px round, transparent icon button (a 44px tap area around it) beside a heading or readout label; it toggles a short explanation in a track-coloured 8px box (stage-2 on the stage). An opened readout explanation spans the full row.
+A 28px round, transparent icon button (a 40 by 44px tap area around it, so it does not cover buttons in the 8px gaps beside it) beside a heading or readout label; it toggles a short explanation in a track-coloured 8px box (stage-2 on the stage). An opened readout explanation spans the full row.
 
 ### Switch, brief, lesson
 - **Switch:** a white pill holding pill links; the current one is ink-filled. Watch is hidden until the game has a video.

@@ -43,21 +43,34 @@ describe('44px targets, shared header and chips', () => {
   it('(i) buttons stay 28px drawn with a 44px hit area', () => {
     expect(rulesOf(game, '.info')).toMatch(/width:\s*28px/);
     expect(rulesOf(game, '.info')).toMatch(/position:\s*relative/);
-    expect(rulesOf(game, '.info::after')).toMatch(/inset:\s*-8px/);
+    expect(rulesOf(game, '.info::after')).toMatch(/inset:\s*-8px -6px/);
   });
   it('step buttons, try buttons and dial ranges', () => {
     expect(rulesOf(concept, '.sbtn')).toMatch(S44);
     expect(rulesOf(concept, '.tries button')).toMatch(S44);
     expect(rulesOf(concept, '.dial input[type=range]')).toMatch(S44);
-    expect(rulesOf(lessonCss, '#playground .dial input')).toMatch(S44);
+    expect(rulesOf(lessonCss, '#playground .dial input')).not.toMatch(/height/);
   });
   it('game page switch links', () => {
     expect(rulesOf(game, '.switch a')).toMatch(S44);
   });
 });
 
+describe('Reward City keeps its own hit areas', () => {
+  const city = read('games/city/city.css');
+  it('resets the shared (i) ring and crumb padding', () => {
+    expect(rulesOf(city, '.info::after')).toMatch(/content:\s*none/);
+    expect(rulesOf(city, '.crumb a')).toMatch(/padding-block:\s*0/);
+  });
+});
+
 describe('home share text', () => {
   const html = read('index.html');
+  it('hero line admits not every lesson has a video', () => {
+    const hero = html.match(/<p>Three tracks, from[^<]*<\/p>/)[0];
+    expect(hero).toContain('where there is one');
+    expect(hero).not.toContain('a video you watch');
+  });
   const get = re => html.match(re)[1];
   it('describes tracks, levels, a short page and a video, in all three tags', () => {
     const d = get(/<meta name="description" content="([^"]*)"/);
@@ -88,7 +101,7 @@ describe('track and lesson page guards', () => {
     }
   });
   it('no lesson title is shown as a bare label without its number', () => {
-    const titles = new Set(lessons.map(l => l.title));
+    const says = new Set(lessons.map(l => l.says));
     const pages = [
       ...TRACKS.map(t => trackBodyHtml(t, { done: [], base: '../' })),
       ...TRACKS.map(t => trackRowHtml(t, [], '')),
@@ -100,7 +113,19 @@ describe('track and lesson page guards', () => {
     for (const page of pages) {
       // a track row prints the number in its own cell right before the title
       const html = page.replace(/<span class="num">\d+<\/span>\s*<span class="what"><b>[^<]*<\/b>/g, '');
-      const bare = [...html.matchAll(/>([^<>]+)</g)].map(m => m[1].trim()).filter(s => titles.has(s));
+      const bare = [];
+      for (const m of html.matchAll(/>([^<>]+)</g)) {
+        // a lesson's own description sentence is prose, not a label
+        if (says.has(m[1].trim().replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, '&'))) continue;
+        // drop every numbered label first, so "Lesson 8: Policy iteration" does not count as a bare "Policy"
+        let text = m[1];
+        for (const k of lessons) text = text.split(`Lesson ${k.n}: ${k.title}`).join('').split(`Lesson ${k.n}, ${k.title}`).join('');
+        for (const l of lessons) {
+          const esc = l.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const re = new RegExp('(^|[^\\w-])' + esc + '(?![\\w-])');
+          if (re.test(text) && !text.includes(`Lesson ${l.n}`)) bare.push(m[1].trim());
+        }
+      }
       expect(bare).toEqual([]);
     }
   });

@@ -40,7 +40,7 @@
 /* (i) buttons and the short explanation each one opens */
 .info { position: relative; display: inline-grid; place-items: center; width: 28px; height: 28px; margin: -4px -2px; padding: 0; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink-2); cursor: pointer; vertical-align: middle; flex: none; }
-.info::after { content: ""; position: absolute; inset: -8px; } /* drawn 28px, 44px to tap */
+.info::after { content: ""; position: absolute; inset: -8px -6px; } /* drawn 28px, 44 tall and 40 wide to tap */
 .info svg { width: 16px; height: 16px; }
 .info:hover, .info[aria-expanded="true"] { color: var(--ink); }
 .info-text { margin: 0; max-width: 62ch; padding: 8px 12px; border-radius: 8px; background: var(--track); font: 400 14px/1.5 var(--sans); color: var(--ink-2); }
