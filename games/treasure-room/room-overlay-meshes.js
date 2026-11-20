@@ -3,8 +3,8 @@
 import { cellToWorld, heatColor } from './room-math.js';
 import { createLabelBoard } from './room-labels.js';
 
-const LABEL_Y = 0.1;  // label centres sit just above the floor
-const TINT_Y = 0.012; // the heat tint lies on the tile tops
+const LABEL_Y = 0.2;  // label centres float above the floor, clear of the rock tiles
+const TINT_Y = 0.03;  // the heat tint lies just above the tile tops
 const TINT_HALF = 0.46;
 
 // ctx: { THREE, room, parent, labelScale(): world height of a label, tilt }. Each builder returns { update(list), dispose() }.
@@ -15,7 +15,7 @@ export const MESH_LAYERS = {
 
     // Heat tint: one merged mesh of flat quads, one per floor tile, with the heat as vertex colour and alpha.
     const pos = new Float32Array(capacity * 12), col = new Float32Array(capacity * 16), idx = new Uint16Array(capacity * 6);
-    for (let i = 0; i < capacity; i++) idx.set([i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3], i * 6);
+    for (let i = 0; i < capacity; i++) idx.set([i * 4, i * 4 + 2, i * 4 + 1, i * 4, i * 4 + 3, i * 4 + 2], i * 6); // wound to face up
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(col, 4));
