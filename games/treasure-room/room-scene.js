@@ -149,7 +149,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   const marks = createMarks(THREE, { room, parent: world });
   const focusRing = createMarks(THREE, { room, parent: world }); // the keyboard focus on the hidden tile grid
   let layers = [], lastOpts = null;
-  const layerCtx = { THREE, room, parent: world, kit, coinScale: L.coin?.scale ?? 0.28, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
+  const layerCtx = { THREE, room, parent: world, kit, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
   const drawOverlays = opts => {
     lastOpts = opts;
     marks.set(marksList(opts?.marks));

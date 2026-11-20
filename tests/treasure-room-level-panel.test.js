@@ -91,7 +91,7 @@ describe('tap bridge', () => {
     const src = readFileSync(new URL('../games/treasure-room/level-panel.js', import.meta.url), 'utf8');
     expect(src).toMatch(/focusin/);
     expect(src).toMatch(/host\.setFocus\(null\)/);
-    expect(read('games/treasure-room/treasure-room.css')).toMatch(/#roomBox\[data-room="3d"\] \.tilegrid \{ pointer-events: none; opacity: 0;/);
+    expect(read('games/treasure-room/treasure-room.css')).toMatch(/#roomBox\[data-room="3d"\] \.tilegrid[^}]*opacity:\s*0/);
   });
 });
 

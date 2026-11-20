@@ -136,3 +136,17 @@ describe('walkItState', () => {
     expect(walkItState({ route: [a, b], busy: true })).toEqual({ disabled: true, why: '' });
   });
 });
+
+describe('level 3 with no route', () => {
+  it('leaves the reason to #walkItWhy, and draws with gamma and its ghost', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    const ui = fakeUi();
+    const view = mount(ui);
+    expect(ui.last()).toMatchObject({ gamma: 0.9 });
+    expect(ui.last().ghost.length).toBeGreaterThan(1);
+    ui.click('#clear');
+    expect(ui.panel.querySelector('#sum').textContent).toBe('');
+    expect(ui.panel.querySelector('#walkItWhy').textContent).toBe('Pick a route, or tap tiles from the robot.');
+    view.destroy();
+  });
+});

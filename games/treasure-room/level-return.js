@@ -83,7 +83,7 @@ export function mount(ui) {
     $('#gammaHint').textContent = gammaHint(gamma);
     $('#sum').textContent = s.steps
       ? `Rewards: ${s.rewards.slice(0, shown).map(signed).join(' ')}\nDiscounted: ${s.terms.slice(0, shown).map(fmt).join(' ')}\nReturn: ${fmt(s.terms.slice(0, shown).reduce((a, b) => a + b, 0))}`
-      : 'Pick a route, or tap tiles outward from the robot.';
+      : '';
     ui.readout(shown, fmt(s.terms.slice(0, shown).reduce((a, b) => a + b, 0)));
     const w = walkItState({ route: s.cells.slice(1), busy: !!timer });
     walkBtn.disabled = w.disabled;

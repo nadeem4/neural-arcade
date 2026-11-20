@@ -14,7 +14,7 @@ const token = (name, fallback) => {
   catch { return fallback; }
 };
 
-// ctx: { THREE, room, parent, kit, coinScale, labelScale(): world height of a label, tilt }. Each builder returns { update(list), dispose() }.
+// ctx: { THREE, room, parent, kit, labelScale(): world height of a label, tilt }. Each builder returns { update(list), dispose() }.
 // A trail coin at its biggest (the first step) is about half a tile wide; later steps shrink to at least a quarter of that.
 export const TRAIL_COIN = 0.5;
 
