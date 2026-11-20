@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { GAMES } from '../assets/games.js';
-import { LESSON, INFO } from '../games/treasure-room/words.js';
-import { LEVELS, levelFromUrl, navModel } from '../games/treasure-room/levels.js';
+import { LESSON } from '../games/treasure-room/words.js';
+import { levelFromUrl, navModel } from '../games/treasure-room/levels.js';
+import { BUILT_LEVELS } from '../games/treasure-room/level-panel.js';
+import { lessonOfLevel } from '../assets/tracks/model.js';
 import { initial, reduce } from '../games/treasure-room/level-agent.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
@@ -41,6 +43,24 @@ describe('treasure room input after the episode', () => {
   it('ignores your moves once the AI has taken over', () => {
     const ai = reduce(initial(), { type: 'handover' });
     expect(reduce(ai, { type: 'move', action: 3 })).toEqual(ai);
+  });
+});
+
+describe('treasure room page mounts the shared panel', () => {
+  it('has an empty mount point and no second copy of the panel', () => {
+    expect(html).toContain('id="levelRoot"');
+    expect(html).toContain('id="levels"');
+    for (const bad of ['id="stage"', 'data-move=', 'id="levelPanel"']) expect(html, bad).not.toContain(bad);
+  });
+  it('main.js mounts the panel and draws nothing itself', () => {
+    expect(main).toMatch(/import \{[^}]*mountLevelPlay[^}]*\} from '\.\/level-panel\.js'/);
+    expect(main).not.toContain('getContext');
+  });
+  it('the nav reads its names from the track config', () => {
+    const titleOf = n => lessonOfLevel('treasure-room', n).title;
+    expect(navModel(BUILT_LEVELS, 3, titleOf).find(x => x.n === 3).title).toBe('Return');
+    expect(navModel(BUILT_LEVELS, 3, titleOf).find(x => x.n === 6).title).toBe('MDP');
+    expect(main).toContain('lessonOfLevel');
   });
 });
 
