@@ -66,6 +66,6 @@ describe('home css', () => {
     expect(css).toMatch(/\.top \{[^}]*flex-wrap: wrap/);
   });
   it('drops the category and tile shelf rules', () => {
-    for (const s of ['.category {', '.tiles {', '.cats {', '.seeall', '.sec-h']) expect(css).not.toContain(s);
+    for (const s of ['.category {', '.cats {', '.seeall', '.sec-h', '.concepts {']) expect(css).not.toContain(s);
   });
 });

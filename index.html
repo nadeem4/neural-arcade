@@ -28,10 +28,12 @@
 
 <main>
   <section class="wrap hero" aria-labelledby="h">
-    <h1 id="h">Watch an AI learn to play. <span>Then change how it learns.</span></h1>
     <div class="hero-row">
-      <p>Small browser games where a tiny neural network starts knowing nothing and gets better in front of you. Every number is real, and every control changes the training.</p>
-      <div class="acts" id="hero-actions"></div>
+      <div class="hero-text">
+        <h1 id="h">Learn AI by playing it.</h1>
+        <p>Three tracks, from the first idea to the deep end. Every lesson is a game level you play, a short page you read and a video you watch.</p>
+      </div>
+      <section class="continue" id="continue" aria-label="Where to start"></section>
     </div>
 
     <div class="stage">
@@ -44,12 +46,15 @@
         </aside>
       </div>
     </div>
+    <div class="acts" id="hero-actions"></div>
   </section>
 
-  <section class="wrap games" id="games" aria-labelledby="gh">
-    <div class="sec-h"><h2 id="gh">Pick what you want to understand</h2><p>Games are grouped by the idea they teach. Each category shows its newest game and a few more.</p></div>
-    <div id="categories"></div>
-    <nav class="cats" id="chips" aria-label="All categories"><a class="chip" href="games/">Browse every game</a></nav>
+  <section class="wrap tracks" aria-label="The three tracks">
+    <ol class="trows" id="tracks"></ol>
+  </section>
+
+  <section class="wrap flow" aria-label="How a lesson works">
+    <ul id="flow"></ul>
   </section>
 </main>
 
