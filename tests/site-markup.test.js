@@ -183,7 +183,7 @@ describe.each(PAGES)('game page contract (%s)', id => {
   it('has every id that main.js looks up', () => {
     const js = read(`games/${id}/main.js`);
     const ids = [...js.matchAll(/(?:\$|getElementById)\('([\w-]+)'\)/g)].map(m => m[1]);
-    expect(ids.length).toBeGreaterThan(10);
+    expect(ids.length).toBeGreaterThan(id === 'treasure-room' ? 2 : 10); // treasure-room's panel ids moved to level-panel.js
     for (const i of ids) expect(everywhere, i).toContain(`id="${i}"`);
   });
   it('labels sections by a heading span, never a heading holding the (i) button', () => {
