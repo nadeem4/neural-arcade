@@ -96,6 +96,12 @@ describe('home page', () => {
     expect(about).toContain('<footer data-site>');
     expect(about).toContain('studio.css');
   });
+  it('about page names the three tracks and what a lesson is', () => {
+    const about = read('about/index.html');
+    expect(about).toMatch(/Neural networks[\s\S]*Reinforcement learning[\s\S]*Physical AI/);
+    expect(about).toMatch(/lesson[\s\S]*write-up[\s\S]*video/i);
+    expect(about).not.toContain('each game teaches exactly one');
+  });
 });
 
 describe('home rendering', () => {
@@ -150,10 +156,12 @@ describe('signal-text contrast', () => {
     expect(ratio(val('--signal-text'), val('--bg'))).toBeGreaterThanOrEqual(4.5);
     expect(ratio(val('--signal-text'), val('--surface'))).toBeGreaterThanOrEqual(4.5);
   });
-  it('filled orange buttons and badges reach 4.5:1 with white text', () => {
+  it('filled orange buttons reach 4.5:1 with white text', () => {
     expect(ratio(val('--signal-fill'), val('--signal-ink'))).toBeGreaterThanOrEqual(4.5);
     expect(css).toMatch(/\.btn\.primary\s*\{[^}]*background:\s*var\(--signal-fill\)/);
-    expect(css).toMatch(/\.tile \.badge\s*\{[^}]*background:\s*var\(--signal-fill\)/);
+  });
+  it('has no rules left for the old category page or the tile badge', () => {
+    for (const sel of ['.tile .badge', '.s-head', '.others', '.path ']) expect(css, sel).not.toContain(sel);
   });
   it('is used for the small orange text', () => {
     expect(css).toMatch(/\.facts dd\.warn\s*\{[^}]*var\(--signal-text\)/);

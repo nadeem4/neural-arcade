@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
-import { CONCEPTS } from '../assets/games.js';
+const CONCEPT_IDS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
 import { lessonById } from '../assets/tracks/model.js';
 import * as cp from '../assets/concept-page.js';
 
@@ -105,6 +105,6 @@ describe('every concept page', () => {
     }
   });
   it('every concept has sim.js and play.js', () => {
-    for (const c of CONCEPTS) for (const f of ['sim.js', 'play.js']) expect(() => read(c.id, f), `${c.id}/${f}`).not.toThrow();
+    for (const id of CONCEPT_IDS) for (const f of ['sim.js', 'play.js']) expect(() => read(id, f), `${id}/${f}`).not.toThrow();
   });
 });

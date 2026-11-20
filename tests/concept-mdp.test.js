@@ -4,7 +4,8 @@ import { mulberry32 } from '../engine/rng.js';
 import { MDP, oddsFrom, stepMdp, walk, stationary } from '../concepts/mdp/sim.js';
 import { presets } from '../concepts/mdp/play.js';
 import { figureHtml } from '../concepts/mdp/figures.js';
-import { conceptById, GAMES } from '../assets/games.js';
+import { GAMES } from '../assets/games.js';
+import { lessonById, chipsForGame } from '../assets/tracks/model.js';
 
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
 
@@ -106,10 +107,11 @@ describe('mdp page file', () => {
     expect(readFileSync(new URL('../concepts/mdp/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
     expect(readFileSync(new URL('../concepts/mdp/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
   });
-  it('leads with the definition from the config', () => {
-    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(conceptById('mdp').definition);
+  it('leads with the lesson line from the track config', () => {
+    expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('mdp').says);
   });
   it('only Treasure Room uses mdp', () => {
-    expect(GAMES.filter(g => (g.uses || []).includes('mdp')).map(g => g.id)).toEqual(['treasure-room']);
+    expect(chipsForGame('treasure-room').map(c => c.id)).toContain('mdp');
+    for (const g of GAMES.filter(g => g.id !== 'treasure-room')) expect(chipsForGame(g.id).map(c => c.id), g.id).not.toContain('mdp');
   });
 });
