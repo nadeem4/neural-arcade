@@ -425,7 +425,7 @@ describe('old styles and fonts are gone', () => {
       expect(text, f).not.toMatch(/arcade\.css|home\.css|public-sans|saira-condensed|Public Sans|Saira Condensed/);
       // Track pages (generated) say "Coming soon" on purpose, for lessons not built yet.
       const isTrackPage = TRACKS.some(t => f.replace(/\\/g, '/').endsWith(`/${t.id}/index.html`));
-      if (f.endsWith('.html') && !isTrackPage) expect(text, f).not.toMatch(/Coming soon|Playable/);
+      if (f.endsWith('.html')) expect(text, f).not.toMatch(isTrackPage ? /Playable/ : /Coming soon|Playable/);
     }
   });
 });

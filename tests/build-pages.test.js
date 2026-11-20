@@ -32,6 +32,11 @@ describe('page shell', () => {
     expect(t).toContain('content="https://arcade.codewithnk.com/games/x/share.png"');
     expect(t).toContain('og:image:alt" content="alt"');
   });
+  it('leaves ./ scripts alone and prefixes the rest', () => {
+    const html = pageHtml({ ...args, depth: 2, scripts: ['./page.js', 'assets/x.js'] });
+    expect(html).toContain('<script type="module" src="./page.js"></script>');
+    expect(html).toContain('<script type="module" src="../../assets/x.js"></script>');
+  });
   it('body and main attributes', () => {
     const html = pageHtml({ ...args, bodyAttrs: 'data-track="x"', mainAttrs: 'id="track" class="wrap"' });
     expect(html).toContain('<body data-track="x">');

@@ -29,7 +29,7 @@ export function pageHtml({ title, description, path, depth, styles = [], siteKey
   bodyAttrs = '', mainAttrs = 'class="wrap"', image = 'assets/share.png', imageAlt }) {
   const base = '../'.repeat(depth);
   const css = ['assets/studio.css', ...styles].map(h => `<link rel="stylesheet" href="${base}${h}">`).join('\n');
-  const js = scripts.map(s => `<script type="module" src="${base}${s}"></script>`).join('\n');
+  const js = scripts.map(s => `<script type="module" src="${s.startsWith('./') ? s : base + s}"></script>`).join('\n');
   return `<!doctype html>
 <html lang="en">
 <head>

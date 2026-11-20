@@ -73,4 +73,9 @@ describe('track.css', () => {
     expect(css).toMatch(/min-height:\s*44px/);
     expect(css).toMatch(/max-width:\s*480px/);
   });
+  it('pins the status to the last column, before the phone block', () => {
+    const at = css.indexOf('.row .st { grid-column: 4; }');
+    expect(at).toBeGreaterThan(-1);
+    expect(at).toBeLessThan(css.indexOf('max-width: 480px'));
+  });
 });
