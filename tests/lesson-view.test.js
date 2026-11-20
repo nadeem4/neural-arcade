@@ -47,6 +47,7 @@ describe('lesson view builders', () => {
     const mid = neighboursHtml(l, B);
     expect(mid).toContain('href="../../concepts/state-action-reward/"');
     expect(mid).toContain('Lesson 4: Policy');
+    expect(neighboursHtml(lessonById('mdp'), B)).toContain('Lesson 19: Reward design');
   });
   it('mark done button carries its state', () => {
     expect(markDoneHtml(false)).toContain('aria-pressed="false"');
@@ -63,5 +64,13 @@ describe('lesson.css', () => {
     expect(css).toMatch(/#markDone[^{]*\{[^}]*min-height: 44px/);
     expect(css).toMatch(/@media \(max-width: 480px\)/);
     expect(css).toContain('prefers-reduced-motion');
+  });
+  it('guards the concept playground against game.css and treasure-room.css, and keeps the level text unclipped', () => {
+    for (const rule of ['#playground .sum', '#playground .dial ', '#playground .dial input', '#playground {']) expect(css).toContain(rule);
+    expect(css).toContain('.lesson-page .play p { max-width: none; }');
+  });
+  it('the In this game caption has no side border, and a lone video takes the full row', () => {
+    expect(css.match(/^\.own \{[^}]*\}/m)[0]).not.toContain('border');
+    expect(css).toContain('.side:has(.wild)');
   });
 });
