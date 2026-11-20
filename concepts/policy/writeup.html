@@ -1,0 +1,15 @@
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>A policy is a rulebook, one move per place</h2>
+    <p>The agent does not plan from scratch every step. It carries a rulebook that says what to do in every state, and it just follows it. That rulebook is the policy.</p>
+    <h3>One action per state</h3>
+    <p>In this grid the policy is an arrow in every cell. Wherever the agent stands, it looks up that cell and takes the move the arrow shows.</p>
+    <h3>Good and bad rulebooks</h3>
+    <p>Some rulebooks go round in circles, some run straight into the pit, and some find the treasure. Learning is the search for a rulebook that earns a lot of reward.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> a policy says which action to take in each state, and a better policy earns more reward. Reinforcement learning is the search for a good one.</p>
+  </section>

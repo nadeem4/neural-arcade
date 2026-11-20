@@ -3,8 +3,13 @@ import { TRACKS } from './index.js';
 import { GAMES } from '../games.js';
 import { pageHtml } from './shell.js';
 import { trackBodyHtml } from './track-view.js';
+import { lessonBodyHtml } from './lesson-view.js';
+import { flatLessons, lessonLabel } from './model.js';
 
 const SITE_ALT = 'Neural Arcade: small browser games where tiny neural networks learn in front of you';
+
+// The (i) icon the mounted Treasure Room level uses; a host page defines it once.
+const INFO_ICON = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i" viewBox="0 0 256 256"><path fill="currentColor" d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol></svg>';
 
 export function trackPageHtml(track, games) {
   return pageHtml({
@@ -22,10 +27,33 @@ export function trackPageHtml(track, games) {
   });
 }
 
-// `files` (read, exists) is for later slices that look at files already on disk; the track pages do not need it.
+// A live lesson with a level: its page is the shell plus concepts/<id>/writeup.html, with page.js beside it.
+export function lessonPageHtml(lesson, games, files) {
+  const writeupHtml = files.read(`concepts/${lesson.id}/writeup.html`);
+  if (writeupHtml == null) throw new Error(`concepts/${lesson.id}/writeup.html is missing`);
+  const ownImage = files.exists(`concepts/${lesson.id}/share.png`);
+  return pageHtml({
+    title: `${lessonLabel(lesson)} · Neural Arcade`,
+    description: lesson.says,
+    path: `concepts/${lesson.id}/`,
+    depth: 2,
+    styles: ['assets/game.css', 'games/treasure-room/treasure-room.css', 'assets/concept.css', 'assets/lesson.css'],
+    siteKey: lesson.trackId,
+    bodyAttrs: `data-lesson="${lesson.id}"`,
+    mainAttrs: 'class="wrap concept-page lesson-page"',
+    mainHtml: INFO_ICON + '\n' + lessonBodyHtml(lesson, { games, base: '../../', writeupHtml: writeupHtml.replace(/\s+$/, '') }),
+    scripts: ['assets/lesson-page.js', './page.js'],
+    image: ownImage ? `concepts/${lesson.id}/share.png` : 'assets/share.png',
+    imageAlt: ownImage ? `${lessonLabel(lesson)}, a Neural Arcade lesson` : SITE_ALT,
+  });
+}
+
+// `files` (read, exists) looks at the hand-made files beside the generated pages.
 export function buildPages({ tracks = TRACKS, games = GAMES, files = { read: () => null, exists: () => false } } = {}) {
-  void files;
   const out = {};
   for (const track of tracks) out[`${track.id}/index.html`] = trackPageHtml(track, games);
+  for (const lesson of flatLessons(tracks)) {
+    if (lesson.status === 'live' && lesson.level != null) out[`concepts/${lesson.id}/index.html`] = lessonPageHtml(lesson, games, files);
+  }
   return out;
 }

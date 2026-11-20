@@ -1,0 +1,15 @@
+  <section>
+    <div class="stage" id="playground"></div>
+    <ol class="tries" id="tries"></ol>
+  </section>
+
+  <section id="writeup">
+    <h2>Rewards now count for more than rewards later</h2>
+    <p>One reward is not the goal. The agent wants all the reward that is still to come, added up. That total is the return.</p>
+    <h3>The return</h3>
+    <p>Look ahead along the path the agent will take and add up each reward it will collect. That sum is the return, and it is what the agent really tries to make big.</p>
+    <h3>The discount</h3>
+    <p>A reward far away is less certain than one right now, so it is counted for less. Each step further out multiplies the reward by the discount, a number from 0 to just under 1. At 1 nothing shrinks, at 0.5 every step halves it.</p>
+    <figure class="fig" id="figure"></figure>
+    <p><b>The lesson:</b> the return adds up the rewards still to come, and the discount sets how far ahead the agent looks. A small discount makes it near-sighted.</p>
+  </section>
