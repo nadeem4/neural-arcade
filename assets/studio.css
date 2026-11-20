@@ -30,14 +30,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 h1 { margin: 0; font-weight: 800; font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 1; letter-spacing: -.04em; text-wrap: balance; }
 .lead { margin: 0; max-width: 52ch; color: var(--ink-2); font-size: 19px; }
 .crumb { font-size: 14px; color: var(--ink-2); }
-.crumb a { text-underline-offset: 4px; }
+.crumb a { text-underline-offset: 4px; padding-block: 14px; } /* inline: a 44px hit height, the line itself does not grow */
 
 /* header */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 32px; padding-block: 14px; }
-.logo { white-space: nowrap; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; text-decoration: none; }
+.logo { min-height: 44px; white-space: nowrap; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; text-decoration: none; }
 .logo svg { width: 26px; height: 26px; }
 .top nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0 28px; margin-left: auto; font-weight: 500; font-size: 15px; }
-.top nav a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; color: var(--ink-2); }
+.top nav a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; text-decoration: none; color: var(--ink-2); }
 .top nav a:hover { color: var(--ink); }
 .top nav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 .btn.lamp { width: 44px; height: 44px; padding: 0; justify-content: center; }
@@ -57,6 +57,7 @@ h1 { margin: 0; font-weight: 800; font-size: clamp(2.4rem, 5vw, 4.2rem); line-he
 .textlink { display: inline-flex; align-items: center; height: 46px; font-weight: 600; font-size: 15px; text-underline-offset: 5px; }
 .acts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .chip { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font: 500 14px var(--sans); color: var(--ink); text-decoration: none; cursor: pointer; }
+a.chip, button.chip { min-height: 44px; }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
 /* game rows (browse list) */
@@ -170,11 +171,11 @@ footer .foot-links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .tools .wrap { display: grid; gap: 12px; }
 .search { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 18px; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--line); }
 .search svg { width: 18px; height: 18px; flex: none; color: var(--ink-2); }
-.search input { flex: 1; min-width: 0; border: 0; background: transparent; font: 500 17px var(--sans); color: var(--ink); outline: none; }
+.search input { min-height: 44px; flex: 1; min-width: 0; border: 0; background: transparent; font: 500 17px var(--sans); color: var(--ink); outline: none; }
 .search input::placeholder { color: var(--ink-2); }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .sort { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
-.sort select { height: 38px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px var(--sans); padding: 0 12px; }
+.sort select { height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px var(--sans); padding: 0 12px; }
 .results { padding-block: 28px 96px; }
 .row .thumb { display: block; }
 .row .meta b { color: var(--signal-text); }

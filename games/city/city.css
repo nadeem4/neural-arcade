@@ -403,3 +403,7 @@ body.rc-record.rc-endcard .play[data-screen="done"] .meter, body.rc-record.rc-en
   body:not(.rc-record) .endcard .end-stats small, body:not(.rc-record) .endcard .end-stats > div:first-child small { font-size: var(--fs-xs); line-height: 1.25; white-space: normal; }
   body:not(.rc-record) .endcard .end-verdict { padding: 6px 10px; font-size: var(--fs-sm); }
 }
+
+/* the shared (i) tap ring and crumb padding from game.css would overlap the rate card buttons here; the (i) are already 44px on phones */
+.info::after { content: none; }
+.crumb a { padding-block: 0; }

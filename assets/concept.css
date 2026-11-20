@@ -20,9 +20,9 @@
 .dial label b { color: var(--stage-ink); font-size: 16px; }
 .dial .say { font-size: 13px; color: var(--stage-dim); }
 .dial .term { color: var(--stage-ink); }
-.dial input[type=range] { width: 100%; accent-color: var(--signal); }
+.dial input[type=range] { width: 100%; height: 44px; accent-color: var(--signal); }
 .stage-foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 20px; border-top: 1px solid var(--stage-2); }
-.sbtn { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--stage-dim); background: transparent; color: var(--stage-ink); font: 600 14px var(--sans); cursor: pointer; }
+.sbtn { height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--stage-dim); background: transparent; color: var(--stage-ink); font: 600 14px var(--sans); cursor: pointer; }
 .sbtn.primary { background: var(--signal-fill); border-color: var(--signal-fill); color: var(--signal-ink); }
 .stage-foot .hint { margin-left: auto; font-size: 13px; color: var(--stage-dim); }
 
@@ -37,7 +37,7 @@
 .tries { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; counter-reset: t; }
 .tries li { counter-increment: t; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 15px; display: grid; gap: 6px; align-content: start; }
 .tries li::before { content: "Try " counter(t); font: 700 12px var(--mono); color: var(--signal-text); letter-spacing: .04em; text-transform: uppercase; }
-.tries button { justify-self: start; margin-top: 4px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
+.tries button { justify-self: start; margin-top: 4px; height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
 
 /* write-up */
 .part { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 300px); gap: 20px; align-items: start; padding-top: 24px; border-top: 1px solid var(--line); }

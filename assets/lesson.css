@@ -30,7 +30,7 @@
 #playground .readouts { display: block; margin: 0; border: 0; }
 #playground { border-radius: 20px; box-shadow: 0 30px 60px -30px rgba(13, 16, 21, .45); }
 #playground .dial { grid-template-columns: none; column-gap: normal; align-items: stretch; font-size: inherit; }
-#playground .dial input { height: auto; margin: 2px; }
+#playground .dial input { margin: 2px; }
 #playground .sum { display: inline; white-space: normal; padding: 0; border-radius: 0; background: none; font: inherit; font-size: 16px; overflow-wrap: normal; }
 
 .neighbours { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
