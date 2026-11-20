@@ -118,3 +118,12 @@ describe('arrows and trail registry', () => {
     expect(read('level-return.js')).toMatch(/ghost: s\.cells, gamma/);
   });
 });
+
+describe('level 3 trail', () => {
+  it('level 3 draws the trail', () => {
+    expect(overlayNames(OVERLAYS_FOR_LEVEL[3])).toContain('trail');
+  });
+  it('the scene shows a focus ring on setFocus', () => {
+    expect(read('room-scene.js')).toMatch(/setFocus\(cell\) \{ focusRing\.set\(/);
+  });
+});

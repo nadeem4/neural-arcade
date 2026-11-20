@@ -51,7 +51,7 @@ export const OVERLAYS = {
 };
 
 // Later slices fill in the rest of the rows.
-export const OVERLAYS_FOR_LEVEL = { 1: [], 2: [], 3: [], 4: ['arrows'], 5: ['values'], 6: [] };
+export const OVERLAYS_FOR_LEVEL = { 1: [], 2: [], 3: ['trail'], 4: ['arrows'], 5: ['values'], 6: [] };
 
 export function overlayNames(names) {
   const list = names ?? [];

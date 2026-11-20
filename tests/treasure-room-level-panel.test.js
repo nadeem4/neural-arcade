@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { INFO } from '../games/treasure-room/words.js';
-import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS, forwardTap } from '../games/treasure-room/level-panel.js';
+import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS, forwardTap, tileSelector } from '../games/treasure-room/level-panel.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = levelPanelHtml();
@@ -79,5 +79,18 @@ describe('forwardTap', () => {
     forwardTap({ e, box, tiles, host });
     expect(host.cellAt).not.toHaveBeenCalled();
     expect(clicked).toEqual([]);
+  });
+});
+
+describe('tap bridge', () => {
+  it('builds the tile selector', () => {
+    expect(tileSelector(2, 3)).toBe('[data-x="2"][data-y="3"]');
+  });
+  it('the panel has the Walk it reason line, wires tile focus to the ring, and hides the 3D tile grid', () => {
+    expect(levelPanelHtml()).toContain('id="walkItWhy"');
+    const src = readFileSync(new URL('../games/treasure-room/level-panel.js', import.meta.url), 'utf8');
+    expect(src).toMatch(/focusin/);
+    expect(src).toMatch(/host\.setFocus\(null\)/);
+    expect(read('games/treasure-room/treasure-room.css')).toMatch(/#roomBox\[data-room="3d"\] \.tilegrid \{ pointer-events: none; opacity: 0;/);
   });
 });

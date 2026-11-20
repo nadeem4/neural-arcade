@@ -66,6 +66,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <p class="info-text" id="info-gamma" data-info="gamma" hidden></p>
         <input class="gamma" type="range" id="gamma" min="0.1" max="1" step="0.05" value="0.9">
         <p id="gammaHint"></p>
+        <p class="why" id="walkItWhy"></p>
         <output class="sum" id="sum"></output>
         <output class="compare" id="compare"></output>
       </section>
@@ -138,10 +139,12 @@ export function levelPanelHtml({ showTitle = true } = {}) {
 // The room is drawn by a room host: 2D first, 3D when it is ready (see room-host.js).
 // The caller redraws on a theme change (handle.redraw).
 // A tile's own click (or Enter on it) bubbles up to the room box; it must not be forwarded again.
+export const tileSelector = (x, y) => `[data-x="${x}"][data-y="${y}"]`;
+
 export function forwardTap({ e, box, tiles, host }) {
   if (box.dataset.room !== '3d' || tiles.hidden || tiles.contains(e.target)) return;
   const c = host.cellAt(e);
-  if (c) tiles.querySelector(`[data-x="${c.x}"][data-y="${c.y}"]`)?.click();
+  if (c) tiles.querySelector(tileSelector(c.x, c.y))?.click();
 }
 
 export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {

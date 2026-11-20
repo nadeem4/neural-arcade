@@ -52,9 +52,11 @@ describe('probe context', () => {
 
 describe('wants3d', () => {
   it('needs WebGL, and a level in LEVELS_IN_3D or ?room=3d', () => {
-    expect(LEVELS_IN_3D).toEqual([5]);
+    expect(LEVELS_IN_3D).toEqual([3, 4, 5]);
+    expect(wants3d({ n: 4, search: '', webgl: true })).toBe(true);
+    expect(wants3d({ n: 1, search: '', webgl: true })).toBe(false);
     expect(wants3d({ n: 5, search: '', webgl: true })).toBe(true);
-    expect(wants3d({ n: 3, search: '', webgl: true })).toBe(false);
+    expect(wants3d({ n: 2, search: '', webgl: true })).toBe(false);
     expect(wants3d({ n: 5, search: '?room=2d', webgl: true })).toBe(false);
     expect(wants3d({ n: 5, search: '?room=3d', webgl: true })).toBe(true);
     expect(wants3d({ n: 5, search: '?room=3d', webgl: false })).toBe(false);

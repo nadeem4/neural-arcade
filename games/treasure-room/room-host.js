@@ -3,7 +3,7 @@
 import { createView2d } from './room-view.js';
 
 // Levels that use 3D by default. ?room=3d turns it on for any level, ?room=2d or ?nowebgl=1 forces 2D.
-export const LEVELS_IN_3D = [5];
+export const LEVELS_IN_3D = [3, 4, 5];
 
 export const roomMode = (search = '') => {
   const v = new URLSearchParams(search).get('room');

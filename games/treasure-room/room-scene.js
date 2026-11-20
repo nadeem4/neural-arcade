@@ -147,6 +147,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
 
   // Overlays: the layers for the names the level asked for, and the outlined tiles (marks), which belong to the base room.
   const marks = createMarks(THREE, { room, parent: world });
+  const focusRing = createMarks(THREE, { room, parent: world }); // the keyboard focus on the hidden tile grid
   let layers = [], lastOpts = null;
   const layerCtx = { THREE, room, parent: world, kit, coinScale: L.coin?.scale ?? 0.28, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
   const drawOverlays = opts => {
@@ -251,7 +252,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     draw(opts) { setBackground(); drawAgent(opts); drawOverlays(opts); }, // a redraw (theme change) also re-reads the background
     cellAt,
     resize,
-    setFocus() {},
+    setFocus(cell) { focusRing.set(cell ? [cell] : []); },
     setOverlays(names) {
       const wanted = overlayNames(names);
       for (const l of layers) l.layer.dispose();
@@ -270,6 +271,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
       for (const l of layers) l.layer.dispose();
       layers = [];
       marks.dispose();
+      focusRing.dispose();
       ch?.destroy();
       for (const m of owned) m.dispose();
       boxGeo.dispose();
