@@ -34,6 +34,15 @@ describe('mountLessonPage', () => {
     markDone.click();
     expect(storage.get()).toBe('["return"]');
   });
+  it('a whole-game lesson mounts no level and still wires Mark as done', () => {
+    const { doc, markDone } = fakeDoc();
+    const mountLevel = vi.fn();
+    const storage = store('[]');
+    mountLessonPage({ id: 'pid', base: '../../', doc, storage, mountLevel });
+    expect(mountLevel).not.toHaveBeenCalled();
+    markDone.click();
+    expect(storage.get()).toBe('["pid"]');
+  });
   it('does nothing and does not throw for an unknown or soon lesson', () => {
     const { doc } = fakeDoc();
     const mountLevel = vi.fn();

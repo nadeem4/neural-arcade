@@ -111,6 +111,7 @@ export default {
       title: 'Getting the reward right',
       lessons: [
         { id: 'reward-design', title: 'Reward design', game: 'city', video: null, status: 'live',
+          shareAlt: 'Reward design: a taxi that learns to cut across the park',
           says: 'Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.',
           wild: [
             w('runner', 'Pay more for coins than for the flag and the hero farms the coin block above the start for about 50 coins and never finishes: the best plan its points allow.'),

@@ -1,7 +1,6 @@
 // The one list of games and categories. Pages render from this; adding a game means adding one entry here.
 // Optional game fields: `uses` (concept ids the game teaches), `where` (concept id -> one line on where the game shows it) and
-// `levels` (concept id -> the level number of that game that teaches it). Each concept page shows a "Play this level" link
-// to games/<name>/?level=N for the first game whose `levels` has its id (assets/concept-page.js playLevelHtml).
+// `levels` (concept id -> the level number of that game that teaches it).
 export const CATEGORIES = [
   { id: 'how-ai-learns', title: 'How AI learns', lead: 'Two ways a brain gets better: by evolution, and by copying examples.' },
   { id: 'physical-ai', title: 'Physical AI', lead: 'How robots learn to move, sense and act in the physical world.' },

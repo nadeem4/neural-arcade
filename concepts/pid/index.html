@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>PID control · Neural Arcade</title>
+<title>Lesson 1: PID control · Neural Arcade</title>
 <meta name="description" content="A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.">
 <link rel="canonical" href="https://arcade.codewithnk.com/concepts/pid/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
-<meta property="og:title" content="PID control · Neural Arcade">
+<meta property="og:title" content="Lesson 1: PID control · Neural Arcade">
 <meta property="og:description" content="A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.">
 <meta property="og:url" content="https://arcade.codewithnk.com/concepts/pid/">
 <meta property="og:image" content="https://arcade.codewithnk.com/concepts/pid/share.png">
@@ -16,24 +16,38 @@
 <meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="PID, explained: a car's speed on a hill, P alone against P plus I">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="PID control · Neural Arcade">
+<meta name="twitter:title" content="Lesson 1: PID control · Neural Arcade">
 <meta name="twitter:description" content="A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/concepts/pid/share.png">
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../assets/studio.css">
 <link rel="stylesheet" href="../../assets/concept.css">
+<link rel="stylesheet" href="../../assets/lesson.css">
 <script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
-<body>
-<header data-site="concepts"></header>
+<body data-lesson="pid">
+<header data-site="physical-ai"></header>
 
-<main class="wrap concept-page">
-  <section>
-    <div class="crumb"><a href="../">Concepts</a> / PID control</div>
-    <h1>PID control</h1>
-    <p class="lead">A PID controller steers by mixing three looks at the error: <em>how big it is now</em>, <em>how long it has lasted</em>, and <em>how fast it is changing</em>.</p>
-  </section>
+<main class="wrap concept-page lesson-page">
+<section class="lhead">
+  <div class="crumb"><a href="../../physical-ai/">Physical AI</a> / Feedback / Lesson 1 of 1</div>
+  <h1>Lesson 1: PID control</h1>
+  <p class="lead">A PID controller steers by mixing three looks at the error: how big it is now, how long it has lasted, and how fast it is changing.</p>
+</section>
 
+<section class="play banner-stage" id="play" aria-label="Play this lesson">
+  <a class="banner" href="../../games/balance/"><img src="../../games/balance/share.png" width="1280" height="720" alt="Balance: PID control"></a>
+  <p class="banner-play"><a class="btn primary" href="../../games/balance/">Play Balance</a></p>
+</section>
+<p class="own">In this game: Its &quot;A PID with three dials&quot; mode: tune P, I and D yourself, then let evolution tune them.</p>
+<p class="done-row"><button class="btn" id="markDone" type="button" aria-pressed="false">Mark as done</button></p>
+
+<div class="side">
+  <section id="watch" aria-label="Watch"><div class="video" data-youtube="drtqgVse4jo" data-title="Lesson 1: PID control"><button class="video-play" type="button"><img src="https://i.ytimg.com/vi/drtqgVse4jo/hqdefault.jpg" width="480" height="360" loading="lazy" alt=""><span class="video-label"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>Watch: Lesson 1: PID control</span></button></div></section>
+  
+</div>
+
+<div id="read">
   <section>
     <div class="stage" id="playground"></div>
     <ol class="tries" id="tries"></ol>
@@ -60,23 +74,13 @@
       </div>
     </div>
   </section>
-
-  <section id="video" hidden></section>
-  <section id="games" hidden></section>
-  <section id="related" hidden></section>
+</div>
+<nav class="neighbours" aria-label="Lessons"></nav>
 </main>
 
 <footer data-site></footer>
 
-<script type="module">
-  import { mountSite } from '../../assets/site.js';
-  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
-  import { presets, mountPlayground } from './play.js';
-  mountSite('../../');
-  mountConceptPage('pid', '../../');
-  document.getElementById('tries').innerHTML = triesHtml(presets);
-  const { apply } = mountPlayground(document.getElementById('playground'));
-  wireTries(document.getElementById('tries'), presets, apply);
-</script>
+<script type="module" src="../../assets/lesson-page.js"></script>
+<script type="module" src="./page.js"></script>
 </body>
 </html>

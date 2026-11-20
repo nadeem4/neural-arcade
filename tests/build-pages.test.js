@@ -49,9 +49,10 @@ describe('buildPages', () => {
   const files = { read: p => (existsSync(disk(p)) ? readFileSync(disk(p), 'utf8') : null), exists: p => existsSync(disk(p)) };
   const out = buildPages({ files });
   const LESSONS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'];
-  it('emits the three track pages and the six Treasure Room lesson pages', () => {
-    expect(Object.keys(out)).toEqual(['neural-networks/index.html', 'reinforcement-learning/index.html', 'physical-ai/index.html',
-      ...LESSONS.map(id => `concepts/${id}/index.html`)]);
+  it('emits the three track pages and a page for every live lesson', () => {
+    const live = flatLessons().filter(l => l.status === 'live').map(l => l.id);
+    expect(Object.keys(out).filter(p => p.startsWith('concepts/')).map(p => p.split('/')[1]).sort()).toEqual([...live].sort());
+    expect(Object.keys(out).filter(p => !p.startsWith('concepts/'))).toEqual(['neural-networks/index.html', 'reinforcement-learning/index.html', 'physical-ai/index.html']);
     expect(out['physical-ai/index.html']).toContain('<title>Physical AI · Neural Arcade</title>');
     expect(out['reinforcement-learning/index.html']).toContain('data-track="reinforcement-learning"');
   });
@@ -75,7 +76,23 @@ describe('buildPages', () => {
     expect(own['concepts/agent/index.html']).toContain('content="https://arcade.codewithnk.com/concepts/agent/share.png"');
     expect(own['concepts/return/index.html']).toContain('content="https://arcade.codewithnk.com/assets/share.png"');
   });
-  it('writes no page for a soon lesson or a whole-game lesson', () => {
+  it('whole-game lesson pages: banner shell, no Treasure Room CSS, own or game share image', () => {
+    expect(out['concepts/pid/index.html']).toContain('<title>Lesson 1: PID control · Neural Arcade</title>');
+    expect(out['concepts/pid/index.html']).toContain('concepts/pid/share.png');
+    expect(out['concepts/pid/index.html']).toContain('src="./page.js"');
+    expect(out['concepts/learning-by-selection/index.html']).toContain('games/racer/share.png');
+    expect(out['concepts/learning-from-examples/index.html']).toContain('games/teach/share.png');
+    for (const id of ['pid', 'reward-design', 'learning-from-examples', 'learning-by-selection']) {
+      const html = out[`concepts/${id}/index.html`];
+      expect(html, id).toContain('src="../../assets/lesson-page.js"');
+      expect(html, id).toContain('href="../../assets/lesson.css"');
+      expect(html, id).not.toContain('game.css');
+      expect(html, id).not.toContain('treasure-room');
+      expect(html, id).not.toContain('id="levelRoot"');
+    }
+    expect(out['concepts/learning-by-selection/index.html']).not.toContain('src="./page.js"');
+  });
+  it('writes no page for a soon lesson', () => {
     for (const soon of ['bellman-equation', 'sarsa', 'ppo']) expect(out).not.toHaveProperty(`concepts/${soon}/index.html`);
   });
   it('committed files match the config (run npm run pages)', () => {

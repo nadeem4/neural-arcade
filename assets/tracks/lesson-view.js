@@ -40,19 +40,41 @@ export const markDoneLabel = done => (done ? 'Done<span class="sr"> (undo)</span
 export const markDoneHtml = done =>
   `<button class="btn" id="markDone" type="button" aria-pressed="${done}">${markDoneLabel(done)}</button>`;
 
+// A whole-game lesson's stage: the game's banner as a link, and the way into the game.
+export function bannerStageHtml(lesson, games = GAMES, base = '') {
+  const title = games.find(g => g.id === lesson.game)?.title ?? lesson.game;
+  const href = `${base}games/${esc(lesson.game)}/`;
+  return `<a class="banner" href="${href}"><img src="${base}games/${esc(lesson.game)}/share.png" width="1280" height="720" alt="${esc(title)}: ${esc(lesson.title)}"></a>
+  <p class="banner-play"><a class="btn primary" href="${href}">Play ${esc(title)}</a></p>`;
+}
+
+// Read: the lesson's write-up when it has one, else a link to the game's How it works.
+export function readHtml(lesson, games, base, writeupHtml) {
+  if (writeupHtml) return `<div id="read">
+${writeupHtml}
+</div>`;
+  const g = games.find(x => x.id === lesson.game);
+  return `<div id="read"><p><a href="${base}${esc(g?.writeup ?? '')}">Read how ${esc(g?.title ?? lesson.game)} works</a></p></div>`;
+}
+
 // The inside of <main> for one lesson: everything from config baked in, the level mounted by lesson-page.js.
 export function lessonBodyHtml(lesson, { games = GAMES, base, writeupHtml }) {
   const wild = wildListHtml(lesson, games, base);
+  const stage = lesson.whole
+    ? `<section class="play banner-stage" id="play" aria-label="Play this lesson">
+  ${bannerStageHtml(lesson, games, base)}
+</section>`
+    : `<section class="play" id="play" aria-label="Play this lesson">
+  <div id="levelRoot" data-level="${lesson.level}"></div>
+  <noscript><p>Turn on JavaScript to play this level.</p></noscript>
+</section>`;
   return `<section class="lhead">
   <div class="crumb">${crumbHtml(lesson, base)}</div>
   <h1>${esc(lessonLabel(lesson))}</h1>
   <p class="lead">${esc(lesson.says)}</p>
 </section>
 
-<section class="play" id="play" aria-label="Play this lesson">
-  <div id="levelRoot" data-level="${lesson.level}"></div>
-  <noscript><p>Turn on JavaScript to play this level.</p></noscript>
-</section>
+${stage}
 ${ownLineHtml(lesson)}
 <p class="done-row">${markDoneHtml(false)}</p>
 
@@ -61,8 +83,6 @@ ${ownLineHtml(lesson)}
   ${wild ? `<section class="wild">${wild}</section>` : ''}
 </div>
 
-<div id="read">
-${writeupHtml}
-</div>
+${readHtml(lesson, games, base, writeupHtml)}
 ${neighboursHtml(lesson, base)}`;
 }

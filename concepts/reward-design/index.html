@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Reward design · Neural Arcade</title>
+<title>Lesson 19: Reward design · Neural Arcade</title>
 <meta name="description" content="Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.">
 <link rel="canonical" href="https://arcade.codewithnk.com/concepts/reward-design/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
-<meta property="og:title" content="Reward design · Neural Arcade">
+<meta property="og:title" content="Lesson 19: Reward design · Neural Arcade">
 <meta property="og:description" content="Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.">
 <meta property="og:url" content="https://arcade.codewithnk.com/concepts/reward-design/">
 <meta property="og:image" content="https://arcade.codewithnk.com/concepts/reward-design/share.png">
@@ -16,24 +16,38 @@
 <meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="Reward design: a taxi that learns to cut across the park">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Reward design · Neural Arcade">
+<meta name="twitter:title" content="Lesson 19: Reward design · Neural Arcade">
 <meta name="twitter:description" content="Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/concepts/reward-design/share.png">
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../assets/studio.css">
 <link rel="stylesheet" href="../../assets/concept.css">
+<link rel="stylesheet" href="../../assets/lesson.css">
 <script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
-<body>
-<header data-site="concepts"></header>
+<body data-lesson="reward-design">
+<header data-site="reinforcement-learning"></header>
 
-<main class="wrap concept-page">
-  <section>
-    <div class="crumb"><a href="../">Concepts</a> / Reward design</div>
-    <h1>Reward design</h1>
-    <p class="lead">Reward design is choosing the numbers an agent is paid and fined; it does <em>exactly</em> what they pay for, so every loophole in them becomes a behaviour.</p>
-  </section>
+<main class="wrap concept-page lesson-page">
+<section class="lhead">
+  <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / Getting the reward right / Lesson 19 of 19</div>
+  <h1>Lesson 19: Reward design</h1>
+  <p class="lead">Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.</p>
+</section>
 
+<section class="play banner-stage" id="play" aria-label="Play this lesson">
+  <a class="banner" href="../../games/city/"><img src="../../games/city/share.png" width="1280" height="720" alt="Reward City: Reward design"></a>
+  <p class="banner-play"><a class="btn primary" href="../../games/city/">Play Reward City</a></p>
+</section>
+<p class="own">In this game: The rate card is the reward design: every fine you add closes one loophole and the taxi finds the next.</p>
+<p class="done-row"><button class="btn" id="markDone" type="button" aria-pressed="false">Mark as done</button></p>
+
+<div class="side">
+  <section id="watch" aria-label="Watch"><p class="video-soon">Video coming soon</p></section>
+  <section class="wild"><h2>In the wild</h2><ul class="wild-list"><li><a href="../../games/runner/">Coin Runner</a><span>Pay more for coins than for the flag and the hero farms the coin block above the start for about 50 coins and never finishes: the best plan its points allow.</span></li></ul></section>
+</div>
+
+<div id="read">
   <section>
     <div class="stage" id="playground"></div>
     <ol class="tries" id="tries"></ol>
@@ -65,23 +79,13 @@
     <h2>What to try</h2>
     <p>Start with the clock only and watch it take the shortcut. Fine the shortcut and see the road win. Then pay by the mile and watch it stop arriving at all. Each time, ask what the slip really says, not what you meant.</p>
   </section>
-
-  <section id="video" hidden></section>
-  <section id="games" hidden></section>
-  <section id="related" hidden></section>
+</div>
+<nav class="neighbours" aria-label="Lessons"><a class="prev" href="../../concepts/mdp/"><small>Previous</small>Lesson 6: MDP</a></nav>
 </main>
 
 <footer data-site></footer>
 
-<script type="module">
-  import { mountSite } from '../../assets/site.js';
-  import { mountConceptPage, triesHtml, wireTries } from '../../assets/concept-page.js';
-  import { presets, mountPlayground } from './play.js';
-  mountSite('../../');
-  mountConceptPage('reward-design', '../../');
-  document.getElementById('tries').innerHTML = triesHtml(presets);
-  const { apply } = mountPlayground(document.getElementById('playground'));
-  wireTries(document.getElementById('tries'), presets, apply);
-</script>
+<script type="module" src="../../assets/lesson-page.js"></script>
+<script type="module" src="./page.js"></script>
 </body>
 </html>
