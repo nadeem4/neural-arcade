@@ -54,7 +54,7 @@ export function readHtml(lesson, games, base, writeupHtml) {
 ${writeupHtml}
 </div>`;
   const g = games.find(x => x.id === lesson.game);
-  return `<div id="read"><p>Read <a href="${base}${esc(g?.writeup ?? '')}">how ${esc(g?.title ?? lesson.game)} works</a>.</p></div>`;
+  return `<div id="read"><p><a href="${base}${esc(g?.writeup ?? '')}">Read how ${esc(g?.title ?? lesson.game)} works</a></p></div>`;
 }
 
 // The inside of <main> for one lesson: everything from config baked in, the level mounted by lesson-page.js.
