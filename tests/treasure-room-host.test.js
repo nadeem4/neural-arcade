@@ -37,6 +37,19 @@ describe('flags', () => {
   });
 });
 
+describe('probe context', () => {
+  it('is opened only when the flags want 3D', async () => {
+    for (const search of ['', '?room=2d']) {
+      const webgl = vi.fn(() => true);
+      await setup({ search, webgl }).host.ready;
+      expect(webgl, search).not.toHaveBeenCalled();
+    }
+    const webgl = vi.fn(() => true);
+    await setup({ search: '?room=3d', webgl }).host.ready;
+    expect(webgl).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('wants3d', () => {
   it('needs WebGL, and a level in LEVELS_IN_3D or ?room=3d', () => {
     expect(LEVELS_IN_3D).toEqual([]);

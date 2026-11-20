@@ -56,7 +56,8 @@ export function createRoomHost({
   };
 
   const ready = (async () => {
-    if (!wants3d({ n, search, webgl: typeof webgl === 'function' ? webgl() : webgl })) return '2d';
+    if (!wants3d({ n, search, webgl: true })) return '2d';
+    if (!(typeof webgl === 'function' ? webgl() : webgl)) return '2d';
     let mod;
     try { mod = await loader(); } catch { return '2d'; }
     if (dead) return '2d';

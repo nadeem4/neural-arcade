@@ -27,7 +27,8 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
   canvas.setAttribute('aria-label', box.querySelector('#stage')?.getAttribute('aria-label') ?? 'The treasure room');
   box.appendChild(canvas);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch (err) { canvas.remove(); throw err; }
   renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, tier.pixelRatioMax));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -171,7 +172,7 @@ export function createScene3d({ box, room, kit, reduceMotion = false, debug = fa
     controls.update();
     renderer.render(scene, camera);
     if (!debug) return;
-    if (!firstMs) firstMs = performance.now();
+    if (!firstMs) firstMs = performance.now() - t0;
     frames++;
     if (now - lastStat >= 1000) {
       const i = renderer.info;

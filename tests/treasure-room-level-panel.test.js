@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { INFO } from '../games/treasure-room/words.js';
-import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS } from '../games/treasure-room/level-panel.js';
+import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS, forwardTap } from '../games/treasure-room/level-panel.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = levelPanelHtml();
@@ -54,5 +54,27 @@ describe('levelPanelHtml', () => {
   it('lists the six built levels and exports a mount function', () => {
     expect(BUILT_LEVELS).toEqual([1, 2, 3, 4, 5, 6]);
     expect(typeof mountLevelPlay).toBe('function');
+  });
+});
+
+describe('forwardTap', () => {
+  const mk = inside => {
+    const clicked = [];
+    const target = {};
+    const tile = { click: () => clicked.push('tile') };
+    const tiles = { hidden: false, contains: t => inside && t === target, querySelector: () => tile };
+    const host = { cellAt: vi.fn(() => ({ x: 1, y: 1 })) };
+    return { clicked, tiles, host, e: { target }, box: { dataset: { room: '3d' } } };
+  };
+  it('clicks the tile under a tap on the room', () => {
+    const { clicked, tiles, host, e, box } = mk(false);
+    forwardTap({ e, box, tiles, host });
+    expect(clicked).toEqual(['tile']);
+  });
+  it('ignores a click that came from a tile itself', () => {
+    const { clicked, tiles, host, e, box } = mk(true);
+    forwardTap({ e, box, tiles, host });
+    expect(host.cellAt).not.toHaveBeenCalled();
+    expect(clicked).toEqual([]);
   });
 });

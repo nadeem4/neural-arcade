@@ -19,6 +19,9 @@ describe('room-scene.js source guards', () => {
     expect(src).toMatch(/rayToCell\(/);
     expect(src).toMatch(/isTap\(/);
   });
+  it('removes its canvas if the renderer cannot be created', () => {
+    expect(src).toMatch(/catch \(err\) \{ canvas\.remove\(\); throw err; \}/);
+  });
   it('keeps the camera turn-only', () => {
     expect(src).toMatch(/enablePan\s*:\s*false/);
   });

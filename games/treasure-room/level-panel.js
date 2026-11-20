@@ -135,6 +135,13 @@ export function levelPanelHtml({ showTitle = true } = {}) {
 // Mounts level n into root and returns { n, redraw(), destroy(), host }. An unbuilt n falls back to level 1.
 // The room is drawn by a room host: 2D first, 3D when it is ready (see room-host.js).
 // The caller redraws on a theme change (handle.redraw).
+// A tile's own click (or Enter on it) bubbles up to the room box; it must not be forwarded again.
+export function forwardTap({ e, box, tiles, host }) {
+  if (box.dataset.room !== '3d' || tiles.hidden || tiles.contains(e.target)) return;
+  const c = host.cellAt(e);
+  if (c) tiles.querySelector(`[data-x="${c.x}"][data-y="${c.y}"]`)?.click();
+}
+
 export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   root.innerHTML = levelPanelHtml({ showTitle });
   const $ = id => root.querySelector(`#${id}`);
@@ -181,11 +188,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   resize.observe(box);
 
   // In 3D the tile buttons sit under the picture and take no pointer, so a tap on the room clicks the tile it lands on.
-  box.addEventListener('click', e => {
-    if (box.dataset.room !== '3d' || tiles.hidden) return;
-    const c = host.cellAt(e);
-    if (c) tiles.querySelector(`[data-x="${c.x}"][data-y="${c.y}"]`)?.click();
-  });
+  box.addEventListener('click', e => forwardTap({ e, box, tiles, host }));
   tiles.addEventListener('focusin', e => {
     const { x, y } = e.target.dataset ?? {};
     if (x !== undefined) host.setFocus({ x: Number(x), y: Number(y) });
