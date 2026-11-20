@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { headerHtml, footerHtml } from '../assets/site.js';
 import { GAMES } from '../assets/games.js';
+import { TRACKS } from '../assets/tracks/index.js';
 import { videoHtml, crumbHtml, moreFromHtml, writeupHref } from '../assets/game-page.js';
 import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
 import { heroActionsHtml, stageHeadHtml, categoryHtml, chipsHtml } from '../assets/home-view.js';
@@ -425,7 +426,9 @@ describe('old styles and fonts are gone', () => {
     for (const f of files.filter(f => /\.(html|js|css)$/.test(f))) {
       const text = readFileSync(f, 'utf8');
       expect(text, f).not.toMatch(/arcade\.css|home\.css|public-sans|saira-condensed|Public Sans|Saira Condensed/);
-      if (f.endsWith('.html')) expect(text, f).not.toMatch(/Coming soon|Playable/);
+      // Track pages (generated) say "Coming soon" on purpose, for lessons not built yet.
+      const isTrackPage = TRACKS.some(t => f.replace(/\\/g, '/').endsWith(`/${t.id}/index.html`));
+      if (f.endsWith('.html')) expect(text, f).not.toMatch(isTrackPage ? /Playable/ : /Coming soon|Playable/);
     }
   });
 });

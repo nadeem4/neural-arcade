@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reinforcement learning · Neural Arcade</title>
+<meta name="description" content="Learning by reward, in one room that grows: from a single agent to deep RL.">
+<link rel="canonical" href="https://arcade.codewithnk.com/reinforcement-learning/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neural Arcade">
+<meta property="og:title" content="Reinforcement learning · Neural Arcade">
+<meta property="og:description" content="Learning by reward, in one room that grows: from a single agent to deep RL.">
+<meta property="og:url" content="https://arcade.codewithnk.com/reinforcement-learning/">
+<meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reinforcement learning · Neural Arcade">
+<meta name="twitter:description" content="Learning by reward, in one room that grows: from a single agent to deep RL.">
+<meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/studio.css">
+<link rel="stylesheet" href="../assets/track.css">
+<script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+</head>
+<body data-track="reinforcement-learning">
+<header data-site="reinforcement-learning"></header>
+
+<main id="track" class="wrap">
+<div class="thead">
+  <h1>Reinforcement learning</h1>
+  <p class="lead">Learning by reward, in one room that grows: from a single agent to deep RL.</p>
+  <div class="facts">
+    <div class="prog"><span class="count">0 of 7 lessons done</span><div class="bar" role="img" aria-label="0 of 7 lessons done"><i style="width:0%"></i></div></div>
+    <p>Played in Treasure Room</p>
+    <p class="needs">Before Lesson 14: Function approximation, you will want <a href="../neural-networks/">Neural networks</a>.</p>
+    <a class="btn primary" href="../concepts/agent/">Start: Lesson 1, Agent</a>
+  </div>
+</div>
+<section class="part">
+  <h2><span class="num">Part 1</span> The problem</h2>
+  <ol class="rows">
+<li class="row" data-lesson="agent" data-state="next">
+  <span class="num">1</span>
+  <span class="what"><b>Agent</b><span class="says">The agent is the learner that acts; the environment is everything it acts on, and it answers each move with a new situation and a reward.</span></span>
+  <span class="do"><a href="../concepts/agent/#play" aria-label="Play Lesson 1: Agent">Play</a><a href="../concepts/agent/#read" aria-label="Read Lesson 1: Agent">Read</a></span>
+  <span class="st">Up next</span>
+</li>
+<li class="row" data-lesson="state-action-reward" data-state="">
+  <span class="num">2</span>
+  <span class="what"><b>State, action, reward</b><span class="says">A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.</span></span>
+  <span class="do"><a href="../concepts/state-action-reward/#play" aria-label="Play Lesson 2: State, action, reward">Play</a><a href="../concepts/state-action-reward/#read" aria-label="Read Lesson 2: State, action, reward">Read</a></span>
+  <span class="st"></span>
+</li>
+<li class="row" data-lesson="return" data-state="">
+  <span class="num">3</span>
+  <span class="what"><b>Return</b><span class="says">The return is all the reward still to come, with far-off reward counted for less by the discount.</span></span>
+  <span class="do"><a href="../concepts/return/#play" aria-label="Play Lesson 3: Return">Play</a><a href="../concepts/return/#read" aria-label="Read Lesson 3: Return">Read</a></span>
+  <span class="st"></span>
+</li>
+<li class="row" data-lesson="policy" data-state="">
+  <span class="num">4</span>
+  <span class="what"><b>Policy</b><span class="says">A policy is the agent's rulebook: in each state, which action to take.</span></span>
+  <span class="do"><a href="../concepts/policy/#play" aria-label="Play Lesson 4: Policy">Play</a><a href="../concepts/policy/#read" aria-label="Read Lesson 4: Policy">Read</a></span>
+  <span class="st"></span>
+</li>
+<li class="row" data-lesson="value" data-state="">
+  <span class="num">5</span>
+  <span class="what"><b>Value</b><span class="says">A state's value is how much reward the agent can expect from there on, if it keeps following its policy.</span></span>
+  <span class="do"><a href="../concepts/value/#play" aria-label="Play Lesson 5: Value">Play</a><a href="../concepts/value/#read" aria-label="Read Lesson 5: Value">Read</a></span>
+  <span class="st"></span>
+</li>
+<li class="row" data-lesson="mdp" data-state="">
+  <span class="num">6</span>
+  <span class="what"><b>MDP</b><span class="says">An MDP is the whole game written down: states, actions, rewards and where each move leads, where only the present state matters, not how you got there.</span></span>
+  <span class="do"><a href="../concepts/mdp/#play" aria-label="Play Lesson 6: MDP">Play</a><a href="../concepts/mdp/#read" aria-label="Read Lesson 6: MDP">Read</a></span>
+  <span class="st"></span>
+</li>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 2</span> Planning with a map</h2>
+  <ol class="rows">
+<li class="row" data-lesson="bellman-equation" data-state="soon">
+  <span class="num">7</span>
+  <span class="what"><b>Bellman equation</b><span class="says">A state is worth its reward plus the discounted worth of where it leads.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="policy-iteration" data-state="soon">
+  <span class="num">8</span>
+  <span class="what"><b>Policy iteration</b><span class="says">Score the current plan, improve it, and repeat until it stops changing.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 3</span> Learning without a map</h2>
+  <ol class="rows">
+<li class="row" data-lesson="exploration" data-state="soon">
+  <span class="num">9</span>
+  <span class="what"><b>Exploration</b><span class="says">Sometimes try something new, or you never find what is better.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="monte-carlo" data-state="soon">
+  <span class="num">10</span>
+  <span class="what"><b>Monte Carlo</b><span class="says">Play whole episodes and learn from the rewards you actually got.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="td-learning" data-state="soon">
+  <span class="num">11</span>
+  <span class="what"><b>TD learning</b><span class="says">Learn after every step, from your own next guess.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="sarsa" data-state="soon">
+  <span class="num">12</span>
+  <span class="what"><b>SARSA</b><span class="says">Learn the value of the moves you really make, exploring included.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="q-learning" data-state="soon">
+  <span class="num">13</span>
+  <span class="what"><b>Q-learning</b><span class="says">Learn the best plan while exploring.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="wild"><a href="../games/maze/">Also in Treasure Maze</a><span class="says">The explorer learns the best move for each tile by trying them.</span></li>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 4</span> Too big for a table</h2>
+  <ol class="rows">
+<li class="row" data-lesson="function-approximation" data-state="soon">
+  <span class="num">14</span>
+  <span class="what"><b>Function approximation</b><span class="says">When there are too many states for a table, a network guesses the value instead.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="dqn" data-state="soon">
+  <span class="num">15</span>
+  <span class="what"><b>DQN</b><span class="says">Q-learning with a neural network, kept steady by replaying old moves.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 5</span> Learning the policy</h2>
+  <ol class="rows">
+<li class="row" data-lesson="policy-gradient" data-state="soon">
+  <span class="num">16</span>
+  <span class="what"><b>Policy gradient</b><span class="says">Nudge the policy itself toward the moves that paid well.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="wild"><a href="../games/runner/">Also in Coin Runner</a><span class="says">Its brain is a policy the points reshape.</span></li>
+<li class="row" data-lesson="actor-critic" data-state="soon">
+  <span class="num">17</span>
+  <span class="what"><b>Actor-critic</b><span class="says">One part picks the moves, another judges them, and both learn.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="ppo" data-state="soon">
+  <span class="num">18</span>
+  <span class="what"><b>PPO</b><span class="says">Improve the policy in small safe steps so one bad update cannot ruin it.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 6</span> Getting the reward right</h2>
+  <ol class="rows">
+<li class="row" data-lesson="reward-design" data-state="">
+  <span class="num">19</span>
+  <span class="what"><b>Reward design</b><span class="says">Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.</span></span>
+  <span class="do"><a href="../concepts/reward-design/#play" aria-label="Play Lesson 19: Reward design">Play</a><a href="../concepts/reward-design/#read" aria-label="Read Lesson 19: Reward design">Read</a></span>
+  <span class="st"></span>
+</li>
+  </ol>
+</section>
+</main>
+
+<footer data-site></footer>
+
+<script type="module" src="../assets/track-page.js"></script>
+</body>
+</html>
