@@ -1,6 +1,6 @@
 // three.js glue for the taxi: turns taxi-model.js parts into meshes (a rounded body, a glass cabin, wheels that spin and the
 // front pair steer, head and brake lamps, a soft contact shadow) and lights the brake lamps. Primitives only, no model file.
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { taxiParts, wheelAngle, steerAngle } from './taxi-model.js';
 import { ENV_INTENSITY } from './scene-look.js';
 import { ROAD_Y, MARK_Y } from './scene-math.js';

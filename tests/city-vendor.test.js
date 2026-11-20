@@ -3,7 +3,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { clampPitch, clampDistance, readColors } from '../games/city/scene-math.js';
 
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
-const VENDOR = '../games/city/vendor/three.module.min.js';
+const VENDOR = '../assets/vendor/three/three.module.min.js';
 
 describe('vendored three.js', () => {
   it('is present, pinned to r160 and under 1.5 MB', () => {
@@ -13,7 +13,7 @@ describe('vendored three.js', () => {
     expect(statSync(new URL(VENDOR, import.meta.url)).size).toBeLessThan(1.5 * 1024 * 1024);
   });
   it('ships its MIT licence', () => {
-    expect(read('../games/city/vendor/LICENSE-three.txt')).toMatch(/MIT/);
+    expect(read('../assets/vendor/three/LICENSE-three.txt')).toMatch(/MIT/);
   });
   it('no http imports in the page code', () => {
     for (const f of ['scene.js', 'main.js']) expect(read('../games/city/' + f)).not.toMatch(/from\s+['"]https?:|import\(\s*['"]https?:/);
@@ -52,6 +52,6 @@ describe('readColors', () => {
 
 describe('the windows hook', () => {
   it('vendored three.js still has the emissivemap_fragment include scene-look.js patches', () => {
-    expect(readFileSync(new URL('../games/city/vendor/three.module.min.js', import.meta.url), 'utf8')).toContain('#include <emissivemap_fragment>');
+    expect(readFileSync(new URL('../assets/vendor/three/three.module.min.js', import.meta.url), 'utf8')).toContain('#include <emissivemap_fragment>');
   });
 });

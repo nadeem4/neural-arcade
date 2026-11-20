@@ -87,3 +87,26 @@ export function drawRoom(ctx, room, opts = {}) {
     ctx.fillText(t.text, t.x * cell + cell / 2, t.y * cell + cell * 0.12);
   }
 }
+
+// The 2D backend: the canvas the host shows first and falls back to. No three.js here.
+export function createView2d(canvas, room) {
+  const ctx = canvas.getContext('2d');
+  let size = { dpr: 1, w: 0 };
+  return {
+    draw(opts) {
+      ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
+      ctx.clearRect(0, 0, size.w, size.w);
+      drawRoom(ctx, room, { cell: size.w / room.w, ...opts });
+    },
+    cellAt(e) {
+      const r = canvas.getBoundingClientRect();
+      return cellAt(r.width, room, e.clientX - r.left, e.clientY - r.top);
+    },
+    resize() { // sets the canvas to its CSS width (square); this clears it, so the caller draws again
+      const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth;
+      canvas.width = canvas.height = Math.round(w * dpr);
+      size = { dpr, w };
+    },
+    show(on) { canvas.style.display = on ? '' : 'none'; },
+  };
+}

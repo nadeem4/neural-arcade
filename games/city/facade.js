@@ -2,7 +2,7 @@
 // (wallUv in metres, facA = bay, floor height, fill, seed; facB = shopfront height, window top, glass tint). No textures, so windows
 // stay crisp and always scale with the real floor height. Window rows fade to their average when they get smaller than a pixel.
 // Which windows are lit is a hash of the window and the building's seed: nothing here reads a clock or an unseeded random.
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 
 
 // Warm light in a lit window, linear rgb.

@@ -1,6 +1,6 @@
 // Reward City traffic, drawn: other cars as instanced meshes. The positions come from traffic.js (pure); nothing here decides anything.
 // Desktop: 4 draw calls (bodies and glass, head lamps, tail lamps, honk halos). Phone: 1 draw call (bodies only, no lamps).
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { createTraffic, taxiOf, newPoses, carColour, honkLook } from './traffic.js';
 import { ROAD_Y } from './scene-math.js';
 import { motionAllowed } from './playback.js';

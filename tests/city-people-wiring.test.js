@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import * as THREE from '../games/city/vendor/three.module.min.js';
+import * as THREE from '../assets/vendor/three/three.module.min.js';
 import { loadWorld } from '../games/city/sim.js';
 import { tripEvents, tagsFor } from '../games/city/events.js';
 import { endCardModel } from '../games/city/endcard.js';

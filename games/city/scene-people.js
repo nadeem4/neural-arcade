@@ -2,7 +2,7 @@
 // Draw calls: 2 on a phone; 2 on desktop plus the same 2 again in the shadow pass (phones do not cast shadows).
 // Instances: the first `drawn` of the baked people (quality.js peopleDrawn: 60 on desktop, 24 on a phone). The rest are baked, just not drawn.
 // Everything moves from the trip clock handed to update(t): a small walk bob and, for a scared person, the hop sideways.
-import * as THREE from './vendor/three.module.min.js';
+import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { newPoses, outfitOf, SURF_WALK, SURF_PARK, SURF_CROSS } from './people.js';
 import { Y_CROSS, Y_WALK } from './street-model.js';
 import { TAXI_SCALE } from './scene-taxi.js';

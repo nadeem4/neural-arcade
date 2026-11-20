@@ -1,10 +1,9 @@
 // One Treasure Room level (room, readouts, panel, (i) buttons) mounted into any element: the game page mounts it.
 // The (i) icon is an SVG <symbol id="i"> that the host page must define once.
-import { sizeCanvas } from '../racer/track-view.js';
+import { createRoomHost } from './room-host.js';
 import { ROOM } from './sim.js';
 import { levelByN } from './levels.js';
 import { INFO } from './words.js';
-import { drawRoom, cellAt } from './room-view.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
 import * as levelReturn from './level-return.js';
@@ -22,7 +21,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <span class="stage-tools"><button class="info" type="button" aria-expanded="false" aria-controls="info-room" aria-label="Explain the room" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></span></div>
       <p class="info-text" id="info-room" data-info="room" hidden></p>
       <div class="stage-body">
-        <div class="room">
+        <div class="room" id="roomBox">
           <canvas id="stage" role="img" aria-label="A five by five room. The robot starts on the left, the treasure is at the bottom right, there is a pit in the middle and two walls."></canvas>
           <div class="tilegrid" id="tiles" data-levels="4" hidden></div>
         </div>
@@ -133,27 +132,32 @@ export function levelPanelHtml({ showTitle = true } = {}) {
 `;
 }
 
-// Mounts level n into root and returns { n, redraw(), destroy() }. An unbuilt n falls back to level 1.
+// Mounts level n into root and returns { n, redraw(), destroy(), host }. An unbuilt n falls back to level 1.
+// The room is drawn by a room host: 2D first, 3D when it is ready (see room-host.js).
 // The caller redraws on a theme change (handle.redraw).
+// A tile's own click (or Enter on it) bubbles up to the room box; it must not be forwarded again.
+export function forwardTap({ e, box, tiles, host }) {
+  if (box.dataset.room !== '3d' || tiles.hidden || tiles.contains(e.target)) return;
+  const c = host.cellAt(e);
+  if (c) tiles.querySelector(`[data-x="${c.x}"][data-y="${c.y}"]`)?.click();
+}
+
 export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   root.innerHTML = levelPanelHtml({ showTitle });
   const $ = id => root.querySelector(`#${id}`);
-  const canvas = $('stage'), ctx = canvas.getContext('2d');
+  const box = $('roomBox'), tiles = $('tiles');
   const arrows = [$('arrowOut'), $('arrowBack')];
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  let view = null, size = { dpr: 1, w: 0 };
+  let view = null;
 
+  n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
+  const host = createRoomHost({ box, canvas: $('stage'), room: ROOM, n, reduceMotion: reduceMotion.matches });
+
+  // ui.canvas is the room box, so a click on either the 2D or the 3D canvas reaches the level.
   const ui = {
-    canvas, room: ROOM, panel: $('levelPanel'), tiles: $('tiles'),
-    draw(opts) {
-      ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
-      ctx.clearRect(0, 0, size.w, size.w);
-      drawRoom(ctx, ROOM, { cell: size.w / ROOM.w, ...opts });
-    },
-    cellAt(e) {
-      const r = canvas.getBoundingClientRect();
-      return cellAt(r.width, ROOM, e.clientX - r.left, e.clientY - r.top);
-    },
+    canvas: box, room: ROOM, panel: $('levelPanel'), tiles,
+    draw: host.draw,
+    cellAt: host.cellAt,
     say: t => { $('say').textContent = t; },
     readout(steps, score) { $('steps').textContent = steps; $('score').textContent = score; },
     sees: t => { $('sees').textContent = t; },
@@ -166,7 +170,6 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
     },
   };
 
-  n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
   const level = levelByN(n);
   root.querySelectorAll('[data-levels]').forEach(el => { el.hidden = !el.dataset.levels.split(' ').includes(String(n)); });
   if (showTitle) $('levelTitle').textContent = title;
@@ -180,18 +183,27 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   }));
 
   const redraw = () => view?.redraw();
-  // Watch the canvas, not root: the game page lays root out with display: contents, which has no box to observe.
-  const resize = new ResizeObserver(() => { size = sizeCanvas(canvas, 1); redraw(); });
-  resize.observe(canvas);
+  // Watch the room box, not root: the game page lays root out with display: contents, which has no box to observe.
+  const resize = new ResizeObserver(() => { host.resize(); redraw(); });
+  resize.observe(box);
 
-  size = sizeCanvas(canvas, 1);
+  // In 3D the tile buttons sit under the picture and take no pointer, so a tap on the room clicks the tile it lands on.
+  box.addEventListener('click', e => forwardTap({ e, box, tiles, host }));
+  tiles.addEventListener('focusin', e => {
+    const { x, y } = e.target.dataset ?? {};
+    if (x !== undefined) host.setFocus({ x: Number(x), y: Number(y) });
+  });
+  tiles.addEventListener('focusout', () => host.setFocus(null));
+
+  host.resize();
   view = views[n].mount(ui);
 
   return {
-    n, redraw,
+    n, redraw, host,
     destroy() {
       view?.destroy();
       view = null;
+      host.destroy();
       resize.disconnect();
       root.innerHTML = '';
     },
