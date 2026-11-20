@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { ROOM } from '../games/treasure-room/sim.js';
-import { cellAt, drawRoom, tagTone } from '../games/treasure-room/room-view.js';
+import { cellAt, drawRoom, tagTone, createView2d } from '../games/treasure-room/room-view.js';
 
 const stub = () => {
   const calls = {};
@@ -64,5 +65,37 @@ describe('treasure room view helpers', () => {
     const c = stub();
     drawRoom(c, ROOM, { cell: 60, ghost: [p, p] });
     expect(c.calls.lineTo).toHaveLength(4);
+  });
+});
+
+describe('createView2d', () => {
+  const canvasStub = () => {
+    const ctx = stub();
+    return { ctx, style: {}, clientWidth: 300, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 10, top: 20, width: 300 }) };
+  };
+  it('sizes the canvas, draws the room and finds the cell under a pointer', () => {
+    const cv = canvasStub();
+    globalThis.window = { devicePixelRatio: 2 };
+    const v = createView2d(cv, ROOM);
+    v.resize();
+    expect(cv.width).toBe(600);
+    v.draw({ agent: { x: 1, y: 1 } });
+    expect(cv.ctx.calls.setTransform[0]).toEqual([2, 0, 0, 2, 0, 0]);
+    expect(cv.ctx.calls.arc).toHaveLength(1);
+    expect(v.cellAt({ clientX: 10 + 3.5 * 60, clientY: 20 + 2.5 * 60 })).toEqual({ x: 3, y: 2 });
+    delete globalThis.window;
+  });
+  it('hides and shows its canvas', () => {
+    const v = createView2d(canvasStub(), ROOM);
+    const cv = canvasStub();
+    const w = createView2d(cv, ROOM);
+    w.show(false);
+    expect(cv.style.display).toBe('none');
+    w.show(true);
+    expect(cv.style.display).toBe('');
+    expect(v).toBeTruthy();
+  });
+  it('never loads three.js', () => {
+    expect(readFileSync(new URL('../games/treasure-room/room-view.js', import.meta.url), 'utf8')).not.toMatch(/from\s+['"][^'"]*three/);
   });
 });

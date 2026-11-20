@@ -9,7 +9,7 @@ const panel = read('games/treasure-room/level-panel.js');
 
 describe('levelPanelHtml', () => {
   it('has every id the panel looks up', () => {
-    for (const id of ['stage', 'say', 'levelPanel', 'steps', 'score', 'sees', 'log', 'arrowOut', 'arrowBack', 'handover', 'restart', 'levelTitle', 'levelBrief', 'status', 'tiles']) {
+    for (const id of ['stage', 'say', 'levelPanel', 'steps', 'score', 'sees', 'log', 'arrowOut', 'arrowBack', 'handover', 'restart', 'levelTitle', 'levelBrief', 'status', 'tiles', 'roomBox']) {
       expect(html, id).toContain(`id="${id}"`);
     }
   });
@@ -17,6 +17,12 @@ describe('levelPanelHtml', () => {
     for (const id of ['routes', 'gamma', 'walk', 'go', 'fix', 'resetArrows', 'sum', 'sweep', 'sweep10', 'walkUp', 'resetSweeps', 'icy', 'dry', 'walkPlan', 'trips', 'showMdp', 'tags']) {
       expect(html, id).toContain(`id="${id}"`);
     }
+  });
+  it('wraps the 2D canvas in the room box the host swaps backends in, and draws through the host', () => {
+    expect(html).toMatch(/<div class="room" id="roomBox"/);
+    expect(panel).toMatch(/createRoomHost\(/);
+    expect(panel).not.toMatch(/getContext\('2d'\)/);
+    expect(panel).toMatch(/host\.destroy\(\)/);
   });
   it('has the stage canvas with a label, and a live line that is not announced', () => {
     expect(html).toMatch(/<canvas id="stage"[^>]*aria-label="[^"]+"/);

@@ -6,6 +6,13 @@
 .room { position: relative; width: min(100%, 56vh, 480px); margin: 0 auto; }
 .readouts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+/* The room box holds the 2D canvas, or the 3D one once room-host.js has swapped it in (data-room). */
+#roomBox[data-room="3d"] { aspect-ratio: 1; }
+#roomBox[data-room="3d"] #stage { display: none; }
+.room-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border-radius: 8px; touch-action: none; }
+#roomBox[data-room="3d"] .tilegrid { pointer-events: none; } /* the buttons stay focusable; a tap on the room clicks the tile */
+.room-debug { position: absolute; left: 6px; bottom: 6px; right: 6px; margin: 0; padding: 4px 6px; border-radius: 4px; background: rgba(0, 0, 0, .6); color: #fff; font: 500 11px/1.4 var(--mono); white-space: pre-wrap; pointer-events: none; }
+
 /* Level links above the stage. */
 .levels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
 .levels a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: 600 14px/1.5 var(--sans); text-decoration: none; }
