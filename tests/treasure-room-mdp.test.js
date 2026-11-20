@@ -129,7 +129,7 @@ describe('level 6 view and wiring', () => {
     expect(ui.listenerCount()).toBe(0);
   });
   it('the nav lists all six levels and every level has a registered view', () => {
-    expect(navModel([1, 2, 3, 4, 5, 6], 6).map(n => n.n)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(navModel([1, 2, 3, 4, 5, 6], 6, String).map(n => n.n)).toEqual([1, 2, 3, 4, 5, 6]);
     for (const l of LEVELS) expect(main).toMatch(new RegExp(`\\b${l.n}:\\s*level`));
     for (const m of html.matchAll(/data-levels="([\d ]+)"/g)) for (const n of m[1].split(' ')) expect(main).toMatch(new RegExp(`\\b${n}:\\s*level`));
   });

@@ -25,15 +25,15 @@ describe('treasure room deep links', () => {
     expect(levelFromUrl('?level=2', '#value')).toBe(2);
   });
   it('the nav lists only built levels and marks exactly one current', () => {
-    const nav = navModel([1, 2], 2);
+    const nav = navModel([1, 2], 2, n => `T${n}`);
     expect(nav.map(n => n.n)).toEqual([1, 2]);
     expect(nav.map(n => n.href)).toEqual(['?level=1', '?level=2']);
     expect(nav.filter(n => n.current)).toHaveLength(1);
     expect(nav.find(n => n.current).n).toBe(2);
-    expect(nav[0].title).toBe(LEVELS[0].title);
+    expect(nav[0].title).toBe('T1');
   });
   it('a level that is not built falls back to the first built one', () => {
-    expect(navModel([1, 2], 5).find(n => n.current).n).toBe(1);
+    expect(navModel([1, 2], 5, String).find(n => n.current).n).toBe(1);
   });
 });
 
@@ -95,8 +95,8 @@ describe('treasure room page markup', () => {
     expect(html).toMatch(/data-levels="6"/);
   });
   it('lists levels 3 and 4 in the nav once they are built', () => {
-    expect(navModel([1, 2, 3, 4], 4).filter(n => n.current)).toHaveLength(1);
-    expect(navModel([1, 2, 3, 4], 3).map(n => n.href)).toEqual(['?level=1', '?level=2', '?level=3', '?level=4']);
+    expect(navModel([1, 2, 3, 4], 4, String).filter(n => n.current)).toHaveLength(1);
+    expect(navModel([1, 2, 3, 4], 3, String).map(n => n.href)).toEqual(['?level=1', '?level=2', '?level=3', '?level=4']);
   });
   it('has the level 3 and 4 controls', () => {
     for (const id of ['routes', 'gamma', 'walk', 'go', 'fix', 'resetArrows', 'tiles', 'sum']) expect(html).toContain(`id="${id}"`);

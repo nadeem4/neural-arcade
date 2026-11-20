@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CONCEPTS } from '../assets/games.js';
-import { LEVELS, levelFromUrl, levelByN } from '../games/treasure-room/levels.js';
+import { LEVELS, levelFromUrl, levelByN, navModel } from '../games/treasure-room/levels.js';
 
 const LESSONS = [
   'The AI only knows what the room tells it.',
@@ -20,10 +20,23 @@ describe('treasure room levels', () => {
   it('slugs are unique and every level is filled in', () => {
     expect(LEVELS.map(l => l.slug)).toEqual(['agent', 'triples', 'return', 'policy', 'value', 'mdp']);
     LEVELS.forEach((l, i) => {
-      for (const k of ['title', 'brief', 'info']) expect(l[k].length, `${l.n}.${k}`).toBeGreaterThan(0);
+      expect(l, `${l.n}`).not.toHaveProperty('title');
+      for (const k of ['brief', 'info', 'lesson']) expect(l[k].length, `${l.n}.${k}`).toBeGreaterThan(0);
       expect(l.lesson).toBe(LESSONS[i]);
       expect(levelByN(l.n)).toBe(l);
     });
+  });
+});
+
+describe('navModel', () => {
+  it('takes each title from the caller', () => {
+    const nav = navModel([1, 2, 3], 3, n => `T${n}`);
+    expect(nav.map(x => x.title)).toEqual(['T1', 'T2', 'T3']);
+    expect(nav.find(x => x.current).title).toBe('T3');
+  });
+  it('slugs and concept ids still route', () => {
+    expect(levelFromUrl('?level=return')).toBe(3);
+    expect(levelFromUrl('?level=mdp')).toBe(6);
   });
 });
 
