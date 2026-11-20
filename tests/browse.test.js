@@ -1,14 +1,20 @@
 ﻿import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseQuery, toQuery, rowHtml, chipsHtml, pagerHtml } from '../assets/browse.js';
+import { TRACKS } from '../assets/tracks/index.js';
+import { gameById } from '../assets/games.js';
 
 describe('browse url state', () => {
   it('has defaults', () => {
-    expect(parseQuery('')).toEqual({ q: '', category: '', sort: 'newest', page: 1 });
+    expect(parseQuery('')).toEqual({ q: '', track: '', sort: 'newest', page: 1 });
   });
-  it('reads every field', () => {
-    expect(parseQuery('?q=reward&c=how-ai-learns&sort=az&page=3'))
-      .toEqual({ q: 'reward', category: 'how-ai-learns', sort: 'az', page: 3 });
+  it('reads every field, the track from t', () => {
+    expect(parseQuery('?q=reward&t=physical-ai&sort=az&page=3'))
+      .toEqual({ q: 'reward', track: 'physical-ai', sort: 'az', page: 3 });
+    expect(parseQuery('?t=physical-ai&q=pole')).toMatchObject({ track: 'physical-ai', q: 'pole' });
+  });
+  it('ignores the old c key', () => {
+    expect(parseQuery('?c=physical-ai').track).toBe('');
   });
   it('falls back to newest for an invalid sort', () => {
     expect(parseQuery('?sort=zzz').sort).toBe('newest');
@@ -18,18 +24,19 @@ describe('browse url state', () => {
     expect(parseQuery('?page=abc').page).toBe(1);
   });
   it('omits defaults from the query', () => {
-    expect(toQuery({ q: '', category: '', sort: 'newest', page: 1 })).toBe('');
-    expect(toQuery({ q: 'a b', category: '', sort: 'az', page: 1 })).toBe('?q=a+b&sort=az');
+    expect(toQuery({ q: '', track: '', sort: 'newest', page: 1 })).toBe('');
+    expect(toQuery({ q: '', track: 'physical-ai', sort: 'newest', page: 1 })).toBe('?t=physical-ai');
+    expect(toQuery({ q: 'a b', track: '', sort: 'az', page: 1 })).toBe('?q=a+b&sort=az');
   });
   it('round trips', () => {
-    const s = '?q=a+b&c=x&sort=az&page=2';
+    const s = '?q=a+b&t=x&sort=az&page=2';
     expect(toQuery(parseQuery(s))).toBe(s);
   });
 });
 
 const page = readFileSync(new URL('../games/index.html', import.meta.url), 'utf8');
-const g = { id: 'x', title: 'X <Game>', lesson: 'Teaches x.', category: 'c', shot: 'games/x/shot.jpg', path: 'games/x/', youtube: null };
-const cats = [{ id: 'c', title: 'Cat C' }];
+const g = { id: 'x', title: 'X <Game>', lesson: 'Teaches x.', shot: 'games/x/shot.jpg', path: 'games/x/', youtube: null };
+const tracks = [{ id: 'c', title: 'Track C', parts: [{ title: 'p', lessons: [{ id: 'l', title: 'L', game: 'x', status: 'live' }] }] }];
 
 describe('browse page markup', () => {
   it('has the search, sort, chips, results, pager and empty state with a Clear button', () => {
@@ -39,27 +46,37 @@ describe('browse page markup', () => {
     expect(page).toMatch(/<button[^>]*id="clear"/);
     expect(page).toContain('data-site="games"');
   });
+  it('is titled All games', () => {
+    expect(page).toContain('<title>All games · Neural Arcade</title>');
+    expect(page).toContain('<h1 id="bh">All games</h1>');
+    expect(page).not.toContain('Every game');
+    expect(page).toContain('aria-label="Track"');
+  });
   it('has no status labels', () => {
     expect(page).not.toMatch(/Coming soon|Playable|Videos/);
   });
 });
 
 describe('browse renderers', () => {
-  it('renders a row with escaped title, category label and link under the base', () => {
-    const h = rowHtml(g, cats, '../');
+  it('renders a row with escaped title, track title and link under the base', () => {
+    const h = rowHtml(g, tracks, '../');
     expect(h).toContain('X &lt;Game&gt;');
-    expect(h).toContain('Cat C');
+    expect(h).toContain('Track C');
     expect(h).toContain('href="../games/x/"');
     expect(h).toContain('src="../games/x/shot.jpg"');
   });
-  it('shows a video badge only when youtube is set', () => {
-    expect(rowHtml(g, cats, '')).not.toMatch(/video/i);
-    expect(rowHtml({ ...g, youtube: 'abc' }, cats, '')).toMatch(/Video/);
+  it('lists every track that names the game', () => {
+    expect(rowHtml(gameById('balance'), TRACKS, '')).toContain('Physical AI');
   });
-  it('renders chips with the active one pressed', () => {
-    const h = chipsHtml(cats, 'c');
-    expect(h).toMatch(/data-c=""[^>]*aria-pressed="false"[^>]*>All/);
-    expect(h).toMatch(/data-c="c"[^>]*aria-pressed="true"[^>]*>Cat C/);
+  it('shows a video badge only when youtube is set', () => {
+    expect(rowHtml(g, tracks, '')).not.toMatch(/video/i);
+    expect(rowHtml({ ...g, youtube: 'abc' }, tracks, '')).toMatch(/Video/);
+  });
+  it('renders All and one chip per track, the active one pressed', () => {
+    const h = chipsHtml(tracks, 'c');
+    expect(h).toMatch(/data-t=""[^>]*aria-pressed="false"[^>]*>All/);
+    expect(h).toMatch(/data-t="c"[^>]*aria-pressed="true"[^>]*>Track C/);
+    expect(chipsHtml(TRACKS, '').match(/data-t=/g)).toHaveLength(4);
   });
   it('renders a pager only when there is more than one page', () => {
     expect(pagerHtml(1, 1)).toBe('');
@@ -75,10 +92,10 @@ const noSkips = ls => ls.every((l, i) => i === 0 || l <= ls[i - 1] + 1);
 
 describe('accessibility', () => {
   it('browse page headings go h1 then h2 with no skips, rows included', () => {
-    const ls = levels(page + rowHtml(g, cats, ''));
+    const ls = levels(page + rowHtml(g, tracks, ''));
     expect(ls[0]).toBe(1);
     expect(noSkips(ls)).toBe(true);
-    expect(levels(rowHtml(g, cats, ''))).toEqual([2]);
+    expect(levels(rowHtml(g, tracks, ''))).toEqual([2]);
   });
   it('labels the search input and keeps aria-live off the whole results section', () => {
     expect(page).toMatch(/<label class="search"[^>]*>.*<span class="sr">Search games<\/span>/);

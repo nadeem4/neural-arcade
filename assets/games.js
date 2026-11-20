@@ -1,6 +1,8 @@
 // The one list of games and categories. Pages render from this; adding a game means adding one entry here.
 // Optional game fields: `uses` (concept ids the game teaches), `where` (concept id -> one line on where the game shows it) and
 // `levels` (concept id -> the level number of that game that teaches it).
+import { tracksOfGame } from './tracks/model.js';
+
 export const CATEGORIES = [
   { id: 'how-ai-learns', title: 'How AI learns', lead: 'Two ways a brain gets better: by evolution, and by copying examples.' },
   { id: 'physical-ai', title: 'Physical AI', lead: 'How robots learn to move, sense and act in the physical world.' },
@@ -166,12 +168,14 @@ export function categoryModel(categories, games, categoryId) {
   };
 }
 
-export function browse(games, categories, { q = '', category = '', sort = 'newest', page = 1, pageSize = 24 } = {}) {
+// The games page list: filter by track (a game is in every track that names it), search title, lesson and track titles, sort, page.
+export function browse(games, tracks, { q = '', track = '', sort = 'newest', page = 1, pageSize = 24 } = {}) {
   const needle = q.trim().toLowerCase();
-  const titleOf = id => categories.find(c => c.id === id)?.title ?? '';
+  const trackIds = g => tracksOfGame(g.id, tracks).map(t => t.id);
+  const titles = g => tracksOfGame(g.id, tracks).map(t => t.title);
   const hits = games
-    .filter(g => !category || g.category === category)
-    .filter(g => !needle || [g.title, g.lesson, titleOf(g.category)].some(s => s.toLowerCase().includes(needle)))
+    .filter(g => !track || trackIds(g).includes(track))
+    .filter(g => !needle || [g.title, g.lesson, ...titles(g)].some(s => s.toLowerCase().includes(needle)))
     .sort(sort === 'az' ? byTitle : byNewest);
   const pages = Math.max(1, Math.ceil(hits.length / pageSize));
   const p = Math.min(Math.max(1, page), pages);
