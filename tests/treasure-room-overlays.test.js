@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ROOM } from '../games/treasure-room/sim.js';
-import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList } from '../games/treasure-room/room-overlays.js';
+import { ACTIONS } from '../assets/grid.js';
+import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList } from '../games/treasure-room/room-overlays.js';
 import { heatColor } from '../games/treasure-room/room-math.js';
 
 const read = f => readFileSync(new URL('../games/treasure-room/' + f, import.meta.url), 'utf8');
@@ -71,5 +72,49 @@ describe('source guards', () => {
     const s = read('room-scene.js');
     expect(s).toMatch(/MESH_LAYERS/);
     expect(s).toMatch(/marksList\(/);
+  });
+});
+
+describe('arrowsList', () => {
+  const pol = new Array(25).fill(3); // every tile says right (ACTIONS index 3)
+  pol[5] = 0; // the tile at x = 0, y = 1 says up
+  const A = arrowsList(ROOM, pol, ACTIONS);
+  it('draws floor tiles only', () => {
+    expect(A.every(a => !'TX#'.includes(ROOM.cells[a.y][a.x]))).toBe(true);
+  });
+  it('maps the policy action to a compass direction', () => {
+    expect(A.find(a => a.x === 0 && a.y === 0).dir).toBe('E');
+    expect(A.find(a => a.x === 0 && a.y === 1).dir).toBe('N');
+  });
+  it('uses one angle per direction', () => {
+    expect(new Set(A.map(a => a.rotY)).size).toBe(new Set(A.map(a => a.dir)).size);
+  });
+  it('is empty with no policy, and skips tiles with no action', () => {
+    expect(arrowsList(ROOM, undefined, ACTIONS)).toEqual([]);
+    const p = pol.slice(); p[0] = -1;
+    expect(arrowsList(ROOM, p, ACTIONS).some(a => a.x === 0 && a.y === 0)).toBe(false);
+  });
+});
+
+describe('trailList', () => {
+  const a = { x: 0, y: 0 }, b = { x: 1, y: 0 }, c = { x: 2, y: 0 }, d = { x: 3, y: 0 };
+  it('shrinks with the discount down to a floor', () => {
+    expect(trailList(ROOM, [[a, b, c]], 0.5).routes[0].map(t => t.scale)).toEqual([1, 0.5, 0.25]);
+  });
+  it('marks the second route faint', () => {
+    expect(trailList(ROOM, [[a, b], [c, d]], 1).faint).toEqual([false, true]);
+  });
+  it('treats one cell as no route, and accepts a bare route', () => {
+    expect(trailList(ROOM, [a], 1).routes).toEqual([]);
+    expect(trailList(ROOM, [a, b], 1).routes).toHaveLength(1);
+    expect(trailList(ROOM, undefined, 1).routes).toEqual([]);
+  });
+});
+
+describe('arrows and trail registry', () => {
+  it('level 4 draws arrows and the level passes gamma with its ghost', () => {
+    expect(overlayNames(OVERLAYS_FOR_LEVEL[4])).toEqual(['arrows']);
+    expect(Object.keys(OVERLAYS)).toEqual(expect.arrayContaining(['arrows', 'trail']));
+    expect(read('level-return.js')).toMatch(/ghost: s\.cells, gamma/);
   });
 });

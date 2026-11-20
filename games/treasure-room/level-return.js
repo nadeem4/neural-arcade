@@ -72,7 +72,7 @@ export function mount(ui) {
     const s = scoreRoute(ui.room, route, gamma), shown = walk ? at : s.steps;
     const f = walk ? walk[at] : null;
     ui.draw({
-      agent: f ? f.pos : START, ghost: s.cells, tags: [...(f?.tag ? [f.tag] : []), ...worthTags(ui.room, distance(s), gamma)], treasureScale: treasureScale(distance(s), gamma),
+      agent: f ? f.pos : START, ghost: s.cells, gamma, tags: [...(f?.tag ? [f.tag] : []), ...worthTags(ui.room, distance(s), gamma)], treasureScale: treasureScale(distance(s), gamma),
     });
     $('#compare').textContent = compare(ui.room, gamma);
     $('#gammaOut').textContent = gamma.toFixed(2);
