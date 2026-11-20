@@ -9,7 +9,7 @@
 .head h1 { font-size: clamp(2.4rem, 5vw, 3.8rem); }
 .head .lead { margin: 10px 0 0; font-size: 18px; }
 .switch { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
-.switch a { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 18px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; color: var(--ink-2); }
+.switch a { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 18px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; color: var(--ink-2); }
 .switch a:hover { color: var(--ink); }
 .switch a[aria-current="true"] { background: var(--ink); color: var(--bg); }
 
@@ -38,8 +38,9 @@
 .readouts dd.info-text { margin: 8px 0 0; font: 400 14px/1.5 var(--sans); letter-spacing: normal; }
 
 /* (i) buttons and the short explanation each one opens */
-.info { display: inline-grid; place-items: center; width: 28px; height: 28px; margin: -4px -2px; padding: 0; border: 0; border-radius: 50%;
+.info { position: relative; display: inline-grid; place-items: center; width: 28px; height: 28px; margin: -4px -2px; padding: 0; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink-2); cursor: pointer; vertical-align: middle; flex: none; }
+.info::after { content: ""; position: absolute; inset: -8px; } /* drawn 28px, 44px to tap */
 .info svg { width: 16px; height: 16px; }
 .info:hover, .info[aria-expanded="true"] { color: var(--ink); }
 .info-text { margin: 0; max-width: 62ch; padding: 8px 12px; border-radius: 8px; background: var(--track); font: 400 14px/1.5 var(--sans); color: var(--ink-2); }

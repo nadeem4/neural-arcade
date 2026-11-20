@@ -100,7 +100,7 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.pill}"
     padding: "0 14px"
-    height: "38px"
+    height: "44px"
   chip-pressed:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.ground}"
@@ -109,7 +109,7 @@ components:
     textColor: "{colors.ground}"
     rounded: "{rounded.pill}"
     padding: "0 18px"
-    height: "42px"
+    height: "44px"
   search:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -193,7 +193,7 @@ Canvas code reads colours through `assets/theme.js`, which also reports `dark` (
 Content sits in a 1200px wrap with 16px side gutters that respect safe-area insets. Sections breathe in tens of pixels: 40px between hero blocks, 56px around game-page bands, 96px at the end of a page.
 
 - **Home:** hero row (headline and lead beside a Continue panel: the next lesson with the page's one primary button, or a link to All games once every lesson is done), the demo stage with a 300px brain column and its Play and Watch buttons, then the three tracks as ruled rows (number, title and blurb, lesson count with a progress bar, Start or Continue), then a Play / Read / Watch line in three top-aligned columns.
-- **Browse (`games/`, titled All games):** headline and lead, a sticky toolbar (search pill, track chips, sort select), then a list of rows (150px thumb, title and lesson, track titles and video note, Play button) and a pager of chips.
+- **Browse (`games/`, titled All games):** headline and lead, a sticky toolbar (52px search pill, track chips, 44px sort select), then a list of rows (150px thumb, title and lesson, track titles and video note, Play button) and a pager of chips.
 - **About:** headline and three paragraphs in a 680px column.
 - **Game page** (`assets/game.css`; `games/runner` is the reference): crumb and h1 with the lesson as lead, with a Play / Watch / How it works switch on the right; the brief (setup, rule, watch for) in three columns between hairlines; the play row (dark stage beside a 360px controls panel); two cards (brain, chart); the lesson band with a "Why it happens" button; (Coin Runner) a Play it yourself button with an (i) in the stage head, a start card (key caps in a two-column grid, none on touch screens), an icon-only full screen button at the level's top right while you play (hidden where the browser has no element fullscreen), 3-2-1 countdown, score/coins/time readout and end card as HTML overlays inside the level (dialog, token colours on the stage), and a left, right and jump touch pad over the level on touch screens while you play; a watch-and-read pair; "Lessons this game appears in" as chips, each "Lesson N: Title" linking to its lesson page; "More games" (games sharing its track, topped up with the newest others) as up to three tiles; the art credit.
 - **How it works:** one 680px reading column of numbered steps; figures sit in plates, some up to 1040px wide.
@@ -226,7 +226,7 @@ Mounted by `assets/site.js` into `<header data-site>` and `<footer data-site>`. 
 - **Disabled:** 50% opacity. **Focus:** 2px orange outline, 3px offset, on every link, button and input.
 
 ### Chips
-38px pills, white with hairline, 500 14px. Pressed (browse filters) and current (pager) invert to ink fill with ground text. Used for tracks, lesson links, filters and pages.
+44px pills (links and buttons; a plain label chip stays 38px), white with hairline, 500 14px. Pressed (browse filters) and current (pager) invert to ink fill with ground text. Used for tracks, lesson links, filters and pages.
 
 ### Rows and tiles
 - **Row (browse):** a grid between hairlines; 4:3 dark thumb, title and lesson, track titles plus "Video explainer" in `signal-text` when a video exists, Play on the right.
@@ -239,7 +239,7 @@ The dark plane every game plays on. A head row (live orange dot, bold stage-ink 
 White, hairline, 18px. The panel stacks sections split by hairlines; each has a 15px 700 heading with an (i) button, a segmented control (track trough, white raised selection), hints in 13px `ink-2`, range dials (name, mono value, orange accent) and default buttons. Cards hold one canvas each (the brain, a chart) under a heading and a one-line question, with a legend of small rounded swatches.
 
 ### (i) buttons
-A 28px round, transparent icon button beside a heading or readout label; it toggles a short explanation in a track-coloured 8px box (stage-2 on the stage). An opened readout explanation spans the full row.
+A 28px round, transparent icon button (a 44px tap area around it) beside a heading or readout label; it toggles a short explanation in a track-coloured 8px box (stage-2 on the stage). An opened readout explanation spans the full row.
 
 ### Switch, brief, lesson
 - **Switch:** a white pill holding pill links; the current one is ink-filled. Watch is hidden until the game has a video.
@@ -250,7 +250,7 @@ A 28px round, transparent icon button beside a heading or readout label; it togg
 A two-column pair: "Watch it learn" with the video, and "How it works" with a primary button. Without a video only the read column shows, full width. The facade (`assets/video.js`) is a 16:9 rounded box with the YouTube thumbnail, a 76px orange play disc and a dark pill label "Watch: how it learns"; a click swaps in the iframe.
 
 ### Crumb and pager
-Crumb: 14px `ink-2` text, links underlined at 4px offset, "Track / Game" on game pages (the first track that names the game). Pager: chips, hidden when there is one page.
+Crumb: 14px `ink-2` text, links underlined at 4px offset with a 44px tap height (padding on the inline link, so the line does not grow), "Track / Game" on game pages (the first track that names the game). Pager: chips, hidden when there is one page.
 
 ### How it works page
 Intro (headline, 20px lede, read time and a "Try it live" arrow link), a wide opening figure, then numbered steps: a bold `signal-text` step number, a 30px 800 heading, reading prose with bold (not italic) terms. Figures are white hairline plates with "Fig. N" captions under a rule; bar figures use track troughs with orange fills. A "deep" details box with a heavy top rule holds the practitioner notes. The shared styles live in `assets/story.css`; the Coin Runner and Teach write-ups add their own figure CSS. The finale button is `btn primary`.
