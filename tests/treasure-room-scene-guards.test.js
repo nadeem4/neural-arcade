@@ -57,4 +57,7 @@ describe('room-scene.js source guards', () => {
   it('styles the debug readout', () => {
     expect(read('games/treasure-room/treasure-room.css')).toMatch(/room-debug/);
   });
+  it('drops a drag when the loop pauses, so a hidden tab cannot keep it at full rate', () => {
+    expect(src).toMatch(/if \(document\.hidden \|\| !visible\) \{[^}]*dragging = false/);
+  });
 });

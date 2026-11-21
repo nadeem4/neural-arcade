@@ -107,3 +107,15 @@ describe('treasure-room.css', () => {
     expect(css).not.toMatch(/racer|runner|balance|maze/i);
   });
 });
+
+describe('3D by default needs the import map and the docs say so', () => {
+  it('carries the import map on the game page and the six lesson pages', () => {
+    expect(read('games/treasure-room/index.html')).toContain('importmap');
+    for (const id of ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']) expect(read(`concepts/${id}/index.html`), id).toContain('importmap');
+  });
+  it('documents the 2D override and the host', () => {
+    expect(read('README.md')).toMatch(/room=2d/);
+    expect(read('CLAUDE.md')).toMatch(/room-host\.js/);
+    expect(read('DESIGN.md')).toMatch(/3D by default/);
+  });
+});

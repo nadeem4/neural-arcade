@@ -252,7 +252,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   };
   const syncLoop = () => {
     if (dead) return;
-    if (document.hidden || !visible) { cancelAnimationFrame(raf); raf = 0; return; }
+    if (document.hidden || !visible) { cancelAnimationFrame(raf); raf = 0; dragging = false; return; } // a cut-off drag must not hold the loop at full rate
     if (raf) return;
     prev = lastStat = performance.now(); frames = 0; // a pause is not a slow frame rate
     dirty = true; last = -Infinity;                    // one frame at once

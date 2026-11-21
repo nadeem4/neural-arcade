@@ -51,7 +51,7 @@
 /* Phone fit: scrolled to Play, the room and the move pad share one 390x700 screen. */
 @media (max-width: 640px) {
   .stage-body { padding: 8px; }
-  .room { width: min(100%, 70vh); } /* square, as wide as the screen allows (max-height: min(100vw, 70vh)) */
+  .room { width: min(100%, 70vh); } /* square, up to min(100%, 70vh) wide; at 390x700 the room and the pad still fit one screen (pad bottom at 549px) */
   .stage .say { min-height: 3em; padding: 8px 14px; }
   #levelBrief, #levelAssumes, #gammaHint { display: none; }
   .readouts div { padding: 8px 14px; }
