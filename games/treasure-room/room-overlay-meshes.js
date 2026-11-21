@@ -1,6 +1,6 @@
 // The thin mesh layer for the 3D room's overlays: one builder per overlay, each turning a draw list (room-overlays.js) into meshes.
 // Loaded by room-scene.js. THREE comes in through the context, so this file imports only pure code.
-import { cellToWorld, heatColor, tagStyle, TAG_CAPACITY } from './room-math.js';
+import { cellToWorld, heatColor, tagStyle, tagSize, tagInside, tagHalfWidth, TAG_CAPACITY } from './room-math.js';
 import { createLabelBoard } from './room-labels.js';
 
 const LABEL_Y = 0.2;  // label centres float above the floor, clear of the rock tiles
@@ -9,7 +9,7 @@ const TINT_HALF = 0.46;
 const ROCK_TOP = 0.17; // flat arrows and coins sit above the rock tiles' tops
 const TRAIL_CAPACITY = 12;
 const TAG_Y = 1.2;    // a tag floats this far above the floor (a cell is 1 wide): clear of the rogue's head, which is about 0.9 tall with the hood
-const TAG_SCALE = 2.2; // reward tags read bigger than the value numbers: they are the point of the level
+const TAG_SCALE = 1.8; // reward tags read bigger than the value numbers: they are the point of the level
 const ICE_Y = 0.02;   // the ice lies just above the floor
 const GOOD = '#2a9d4b'; // the dark green assets/grid.js uses for the treasure; no green token exists
 
@@ -105,7 +105,10 @@ export const MESH_LAYERS = {
     return {
       update(list) {
         board.setScale(ctx.labelScale() * TAG_SCALE);
-        board.set(list.map(t => { const w = cellToWorld(room, t.x, t.y); return { x: w.x, y: TAG_Y, z: w.z, text: t.text, color: colour(tagStyle(t.tone, t.onEnd)) }; }));
+        board.set(list.map(t => {
+          const w = cellToWorld(room, t.x, t.y), size = tagSize(t.text.length, ctx.labelScale() * TAG_SCALE);
+          return { x: tagInside(w.x, tagHalfWidth(t.text.length, size), room.w), y: TAG_Y, z: w.z, text: t.text, size, color: colour(tagStyle(t.tone, t.onEnd)) };
+        }));
       },
       dispose() { board.dispose(); },
     };

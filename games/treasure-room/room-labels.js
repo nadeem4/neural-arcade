@@ -39,6 +39,8 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0, onTo
     ctx.clearRect(x, y, SLOT_W, SLOT_H);
     if (!text) return;
     ctx.font = FONT;
+    const fit = ctx.measureText(text).width;
+    if (fit > SLOT_W - 12) ctx.font = FONT.replace('44px', `${Math.floor(44 * (SLOT_W - 12) / fit)}px`); // long words shrink to the slot
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
@@ -49,8 +51,9 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0, onTo
     ctx.fillText(text, x + SLOT_W / 2, y + SLOT_H / 2 + 2);
   };
   const place = () => {
-    const w = size, h = size / 2, c = Math.cos(tilt), s = Math.sin(tilt);
+    const c = Math.cos(tilt), s = Math.sin(tilt);
     shown.forEach((l, i) => {
+      const w = l.size ?? size, h = w / 2;
       // corners of an upright quad, leaned back about x, then moved to the label's world position
       [[-w, -h], [w, -h], [w, h], [-w, h]].forEach(([px, py], k) => pos.set([l.x + px, l.y + py * c, l.z - py * s], i * 12 + k * 3));
     });
@@ -75,7 +78,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0, onTo
 
   return {
     mesh,
-    // labels: [{ x, y, z, text, color? }] in world units (the centre of each label); colour is a CSS colour, default the stage ink. Extra labels past capacity are dropped.
+    // labels: [{ x, y, z, text, color?, size? }] in world units (the centre of each label); colour is a CSS colour, default the stage ink. Extra labels past capacity are dropped.
     set(labels) {
       shown = labels.slice(0, capacity);
       place();

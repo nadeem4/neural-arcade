@@ -5,7 +5,7 @@ import { ROOM } from '../games/treasure-room/sim.js';
 import {
   DIMS, PARTS, VIEW, cellToWorld, worldToCell, layoutRoom, nearSides, cameraPose, fitDistance,
   roomRadius, rayToCell, isTap, labelScale, tierFor, formatStats,
-  MOVE_MS, moveStyle, tweenAt, facing, atTreasure, slideLean
+  MOVE_MS, moveStyle, tweenAt, facing, atTreasure, slideLean, tagSize, tagInside
 } from '../games/treasure-room/room-math.js';
 
 const big = makeGrid(['S......', '.......', '...X...', '.#...#.', '......T', '.......', '.......', '.......', '.......']); // 7 x 9
@@ -69,6 +69,23 @@ describe('slideLean', () => {
     expect(slideLean({ x: 1, y: 2 }, { x: 1, y: 1 }).rotX).toBeCloseTo(-0.12, 5);
     expect(slideLean({ x: 1, y: 1 }, { x: 1, y: 1 })).toEqual({ rotX: 0, rotZ: 0 });
     expect(slideLean(null, { x: 1, y: 1 })).toEqual({ rotX: 0, rotZ: 0 });
+  });
+});
+
+describe('tag size and fit', () => {
+  it('short numbers keep their size, long words shrink so the text stays within 1.6 cells', () => {
+    const base = 0.53; // labelScale(1280) * 1.8 is about this
+    expect(tagSize(3, base)).toBeCloseTo(base, 5);
+    const wide = labelScale(360) * 1.8;
+    expect(tagSize(3, wide)).toBeCloseTo(wide, 5);
+    for (const len of [3, 5, 7, 12]) for (const sc of [base, wide, 5]) expect(2 * tagSize(len, sc) * Math.min(1, len * 0.21)).toBeLessThanOrEqual(1.6 + 1e-9);
+    expect(tagSize(7, wide)).toBeLessThan(wide);
+  });
+  it('an edge tag is nudged inward to stay over the room', () => {
+    expect(tagInside(-2, 0.9, 5)).toBeCloseTo(-1.6, 5);   // room 5 wide: edge at -2.5
+    expect(tagInside(2, 0.9, 5)).toBeCloseTo(1.6, 5);
+    expect(tagInside(0, 0.9, 5)).toBe(0);
+    expect(tagInside(1, 5, 5)).toBe(0);                   // wider than the room: centred
   });
 });
 

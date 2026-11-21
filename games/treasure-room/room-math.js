@@ -171,6 +171,15 @@ export const facing = (from, to) => Math.atan2(to.x - from.x, to.y - from.y);
 
 export const atTreasure = (room, pos) => !!pos && room.cells[pos.y]?.[pos.x] === 'T';
 
+// A tag's quad is 2 * size wide and its text fills about 0.21 of that per character (all of it from 5 characters on).
+// The text never runs wider than 1.6 cells: long words shrink, short numbers keep the size they were given.
+export const TAG_MAX_WIDTH = 1.6;
+const tagFill = len => Math.min(1, Math.max(1, len) * 0.21);
+export const tagSize = (len, size) => Math.min(size, TAG_MAX_WIDTH / 2 / tagFill(len));
+// Keeps a tag's text over the room: wx is its world x, halfW half the text width, roomW the room's width in cells.
+export const tagInside = (wx, halfW, roomW) => (halfW * 2 >= roomW ? 0 : Math.min(Math.max(wx, -roomW / 2 + halfW), roomW / 2 - halfW));
+export const tagHalfWidth = (len, size) => size * tagFill(len);
+
 // Tag colour names, the same rules as tagColor in room-view.js: a tag on the treasure or trap is always ink.
 export const TAG_CAPACITY = 8;
 export const tagStyle = (tone, onEnd) => ({ fill: onEnd ? 'ink' : tone === 'good' || tone === 'bad' ? tone : 'step' });
