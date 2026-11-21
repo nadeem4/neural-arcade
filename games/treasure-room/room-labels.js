@@ -6,8 +6,9 @@ const FONT = '700 44px "JetBrains Mono", ui-monospace, Consolas, monospace';
 const INK = '#E9EDF2'; // --stage-ink: the room stays dark in both themes
 
 // capacity: most labels at once. scale: world height of a quad (the width is twice that).
+// onTop: draw over everything (no depth test), for tags that must never hide behind the character.
 // tilt: radians the quads lean back from upright (the camera's polar angle puts them face on).
-export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
+export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0, onTop = false }) {
   const rows = Math.ceil(capacity / COLS);
   const canvas = document.createElement('canvas');
   canvas.width = COLS * SLOT_W;
@@ -27,29 +28,32 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
   geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geometry.setIndex(new THREE.BufferAttribute(index, 1));
   geometry.setDrawRange(0, 0);
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, toneMapped: false });
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, depthTest: !onTop, toneMapped: false });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   mesh.renderOrder = 2;
 
   let shown = [], drawn = [], size = scale;
-  const paintSlot = (i, text) => {
+  const paintSlot = (i, text, color = INK) => {
     const x = (i % COLS) * SLOT_W, y = Math.floor(i / COLS) * SLOT_H;
     ctx.clearRect(x, y, SLOT_W, SLOT_H);
     if (!text) return;
     ctx.font = FONT;
+    const fit = ctx.measureText(text).width;
+    if (fit > SLOT_W - 12) ctx.font = FONT.replace('44px', `${Math.floor(44 * (SLOT_W - 12) / fit)}px`); // long words shrink to the slot
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
     ctx.lineWidth = 8;
     ctx.strokeStyle = 'rgba(15, 19, 25, 0.85)';
     ctx.strokeText(text, x + SLOT_W / 2, y + SLOT_H / 2 + 2);
-    ctx.fillStyle = INK;
+    ctx.fillStyle = color;
     ctx.fillText(text, x + SLOT_W / 2, y + SLOT_H / 2 + 2);
   };
   const place = () => {
-    const w = size, h = size / 2, c = Math.cos(tilt), s = Math.sin(tilt);
+    const c = Math.cos(tilt), s = Math.sin(tilt);
     shown.forEach((l, i) => {
+      const w = l.size ?? size, h = w / 2;
       // corners of an upright quad, leaned back about x, then moved to the label's world position
       [[-w, -h], [w, -h], [w, h], [-w, h]].forEach(([px, py], k) => pos.set([l.x + px, l.y + py * c, l.z - py * s], i * 12 + k * 3));
     });
@@ -57,7 +61,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
     geometry.setDrawRange(0, shown.length * 6);
   };
   const paint = () => {
-    shown.forEach((l, i) => { if (drawn[i] !== l.text) { paintSlot(i, l.text); drawn[i] = l.text; } });
+    shown.forEach((l, i) => { const key = l.text + '|' + (l.color ?? ''); if (drawn[i] !== key) { paintSlot(i, l.text, l.color); drawn[i] = key; } });
     texture.needsUpdate = true;
   };
 
@@ -74,7 +78,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
 
   return {
     mesh,
-    // labels: [{ x, y, z, text }] in world units (the centre of each label). Extra labels past capacity are dropped.
+    // labels: [{ x, y, z, text, color?, size? }] in world units (the centre of each label); colour is a CSS colour, default the stage ink. Extra labels past capacity are dropped.
     set(labels) {
       shown = labels.slice(0, capacity);
       place();

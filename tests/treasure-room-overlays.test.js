@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ROOM } from '../games/treasure-room/sim.js';
 import { ACTIONS } from '../assets/grid.js';
-import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList } from '../games/treasure-room/room-overlays.js';
-import { heatColor } from '../games/treasure-room/room-math.js';
+import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList, tagsList, iceList } from '../games/treasure-room/room-overlays.js';
+import { heatColor, tagStyle, TAG_CAPACITY } from '../games/treasure-room/room-math.js';
 import { createMarks, MESH_LAYERS, TRAIL_COIN } from '../games/treasure-room/room-overlay-meshes.js';
 
 const read = f => readFileSync(new URL('../games/treasure-room/' + f, import.meta.url), 'utf8');
@@ -65,6 +65,14 @@ describe('source guards', () => {
   it('labels are one merged mesh, not sprites', () => {
     expect(read('room-labels.js')).not.toMatch(/new\s+THREE\.Sprite/);
     expect(read('room-labels.js')).toMatch(/JetBrains Mono/);
+  });
+  it('the values label board keeps depth testing and the default label size and colour', () => {
+    const m = read('room-overlay-meshes.js');
+    const values = m.slice(m.indexOf('values(ctx)'), m.indexOf('tags(ctx)'));
+    expect(values).toMatch(/createLabelBoard\(/);
+    expect(values).not.toMatch(/onTop/);
+    expect(values).toMatch(/return \{ x: w\.x, y: LABEL_Y, z: w\.z, text: l\.text \}/);
+    expect(values.match(/board\.set\(.*\)\);/)[0]).not.toMatch(/size|color/);
   });
   it('the panel hands the level its overlays', () => {
     expect(read('level-panel.js')).toMatch(/setOverlays\(OVERLAYS_FOR_LEVEL\[n\]\)/);
@@ -172,5 +180,56 @@ describe('arrows mesh', () => {
     expect(made.meshes[0].count).toBe(list.length);
     layer.update(list.slice(0, 2));
     expect(made.meshes[0].count).toBe(2);
+  });
+});
+
+describe('tags and ice lists', () => {
+  it('lists tags, marks the ones on the treasure or trap as onEnd, and defaults the tone', () => {
+    expect(tagsList(ROOM, [{ x: 1, y: 1, text: '-1', tone: 'step' }]).map(t => t.text)).toEqual(['-1']);
+    expect(tagsList(ROOM, [{ x: 4, y: 3, text: '+10', tone: 'good' }])[0].onEnd).toBe(true);
+    expect(tagsList(ROOM, [{ x: 2, y: 2, text: '-10', tone: 'bad' }])[0].onEnd).toBe(true);
+    expect(tagsList(ROOM, [{ x: 1, y: 1, text: '?', tone: 'odd' }])[0].tone).toBe('step');
+    const t = (x, y, text) => ({ x, y, text, tone: 'step' });
+    expect(tagsList(ROOM, [t(4, 3, '+10'), t(4, 3, '+5.9 here'), t(1, 1, '-1')]).map(g => g.stack)).toEqual([0, 1, 0]);
+  });
+  it('keeps at most TAG_CAPACITY tags and tolerates none', () => {
+    expect(tagsList(ROOM, new Array(12).fill({ x: 1, y: 1, text: '-1', tone: 'step' }))).toHaveLength(TAG_CAPACITY);
+    expect(tagsList(ROOM, undefined)).toEqual([]);
+    expect(tagsList(ROOM, [{ x: 1, y: 99, text: '-1', tone: 'step' }])[0].onEnd).toBe(false); // off-grid does not throw
+  });
+  it('ice covers every floor cell only when on', () => {
+    expect(iceList(ROOM, true)).toHaveLength(ROOM.cells.flat().filter(c => !'TX#'.includes(c)).length);
+    expect(iceList(ROOM, false)).toEqual([]);
+  });
+  it('tagStyle follows the 2D rules', () => {
+    expect(tagStyle('good', true)).toEqual({ fill: 'ink' });
+    expect(tagStyle('bad', false)).toEqual({ fill: 'bad' });
+    expect(tagStyle('good', false)).toEqual({ fill: 'good' });
+    expect(tagStyle('step', false)).toEqual({ fill: 'step' });
+    expect(tagStyle('odd', false)).toEqual({ fill: 'step' });
+  });
+  it('is registered, and level 6 draws trail, tags and ice', () => {
+    expect(OVERLAYS.tags.list(ROOM, { tags: [{ x: 1, y: 1, text: '-1', tone: 'step' }] })).toHaveLength(1);
+    expect(OVERLAYS.ice.list(ROOM, { ice: false })).toEqual([]);
+    expect(overlayNames(OVERLAYS_FOR_LEVEL[6])).toEqual(['trail', 'tags', 'ice']);
+  });
+});
+
+describe('tags and ice mesh layers (source)', () => {
+  it('builds tags from a label board and ice as a transparent, depth-write-free slab', () => {
+    const src = read('room-overlay-meshes.js');
+    expect(typeof MESH_LAYERS.tags).toBe('function');
+    expect(typeof MESH_LAYERS.ice).toBe('function');
+    expect(src).toMatch(/createLabelBoard/);
+    expect(src).toMatch(/depthWrite\s*:\s*false/);
+    expect(src).toMatch(/tagStyle/);
+    expect(src).toMatch(/TAG_CAPACITY/);
+  });
+  it('tags draw over the character: the board has no depth test (a depth-tested tag hid inside the rogue)', () => {
+    expect(read('room-labels.js')).toMatch(/depthTest\s*:\s*!onTop/);
+    expect(read('room-overlay-meshes.js')).toMatch(/onTop\s*:\s*true/);
+  });
+  it('the character leans on a slide', () => {
+    expect(read('room-character.js')).toMatch(/slideLean/);
   });
 });

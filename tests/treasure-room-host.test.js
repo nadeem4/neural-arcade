@@ -39,7 +39,7 @@ describe('flags', () => {
 
 describe('probe context', () => {
   it('is opened only when the flags want 3D', async () => {
-    for (const search of ['', '?room=2d']) {
+    for (const search of ['?room=2d']) {
       const webgl = vi.fn(() => true);
       await setup({ search, webgl }).host.ready;
       expect(webgl, search).not.toHaveBeenCalled();
@@ -52,11 +52,9 @@ describe('probe context', () => {
 
 describe('wants3d', () => {
   it('needs WebGL, and a level in LEVELS_IN_3D or ?room=3d', () => {
-    expect(LEVELS_IN_3D).toEqual([3, 4, 5]);
-    expect(wants3d({ n: 4, search: '', webgl: true })).toBe(true);
-    expect(wants3d({ n: 1, search: '', webgl: true })).toBe(false);
-    expect(wants3d({ n: 5, search: '', webgl: true })).toBe(true);
-    expect(wants3d({ n: 2, search: '', webgl: true })).toBe(false);
+    expect(LEVELS_IN_3D).toEqual([1, 2, 3, 4, 5, 6]);
+    for (const n of [1, 2, 3, 4, 5, 6]) expect(wants3d({ n, search: '', webgl: true })).toBe(true);
+    expect(wants3d({ n: 6, search: '?room=2d', webgl: true })).toBe(false);
     expect(wants3d({ n: 5, search: '?room=2d', webgl: true })).toBe(false);
     expect(wants3d({ n: 5, search: '?room=3d', webgl: true })).toBe(true);
     expect(wants3d({ n: 5, search: '?room=3d', webgl: false })).toBe(false);
@@ -98,7 +96,7 @@ describe('createRoomHost', () => {
     expect(box.dataset.room).toBe('3d');
   });
   it('stays 2D when 3D is not wanted, and never loads', async () => {
-    for (const over of [{ search: '' }, { search: '?room=2d' }, { search: '?room=3d&nowebgl=1' }, { webgl: () => false }]) {
+    for (const over of [{ search: '?room=2d' }, { search: '?room=3d&nowebgl=1' }, { webgl: () => false }]) {
       const loader = vi.fn();
       const { host, box } = setup({ ...over, loader });
       expect(await host.ready).toBe('2d');

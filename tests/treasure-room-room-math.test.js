@@ -5,7 +5,7 @@ import { ROOM } from '../games/treasure-room/sim.js';
 import {
   DIMS, PARTS, VIEW, cellToWorld, worldToCell, layoutRoom, nearSides, cameraPose, fitDistance,
   roomRadius, rayToCell, isTap, labelScale, tierFor, formatStats,
-  MOVE_MS, moveStyle, tweenAt, facing, atTreasure
+  MOVE_MS, moveStyle, tweenAt, facing, atTreasure, slideLean, tagSize, tagInside, tagHalfWidth
 } from '../games/treasure-room/room-math.js';
 
 const big = makeGrid(['S......', '.......', '...X...', '.#...#.', '......T', '.......', '.......', '.......', '.......']); // 7 x 9
@@ -58,6 +58,34 @@ describe('the move tween', () => {
     expect(atTreasure(ROOM, { x: 4, y: 3 })).toBe(true);
     expect(atTreasure(ROOM, { x: 0, y: 0 })).toBe(false);
     expect(atTreasure(ROOM, null)).toBe(false);
+  });
+});
+
+describe('slideLean', () => {
+  it('leans 0.12 rad forward along the move, and not at all for a snap', () => {
+    expect(slideLean({ x: 1, y: 1 }, { x: 2, y: 1 })).toEqual({ rotX: 0, rotZ: expect.closeTo(-0.12, 5) });
+    expect(slideLean({ x: 2, y: 1 }, { x: 1, y: 1 }).rotZ).toBeCloseTo(0.12, 5);
+    expect(slideLean({ x: 1, y: 1 }, { x: 1, y: 2 })).toEqual({ rotX: expect.closeTo(0.12, 5), rotZ: 0 });
+    expect(slideLean({ x: 1, y: 2 }, { x: 1, y: 1 }).rotX).toBeCloseTo(-0.12, 5);
+    expect(slideLean({ x: 1, y: 1 }, { x: 1, y: 1 })).toEqual({ rotX: 0, rotZ: 0 });
+    expect(slideLean(null, { x: 1, y: 1 })).toEqual({ rotX: 0, rotZ: 0 });
+  });
+});
+
+describe('tag size and fit', () => {
+  it('short numbers keep their size, long words shrink so the text stays within 1.6 cells', () => {
+    const base = labelScale(1280) * 1.8; // 0.432
+    expect(tagSize(3, base)).toBeCloseTo(base, 5);
+    const wide = labelScale(360) * 1.8;
+    expect(tagSize(3, wide)).toBeCloseTo(wide, 5);
+    for (const len of [3, 5, 7, 12]) for (const sc of [base, wide, 5]) expect(2 * tagHalfWidth(len, tagSize(len, sc))).toBeLessThanOrEqual(1.6 + 1e-9);
+    expect(tagSize(7, wide)).toBeLessThan(wide);
+  });
+  it('an edge tag is nudged inward to stay over the room', () => {
+    expect(tagInside(-2, 0.9, 5)).toBeCloseTo(-1.6, 5);   // room 5 wide: edge at -2.5
+    expect(tagInside(2, 0.9, 5)).toBeCloseTo(1.6, 5);
+    expect(tagInside(0, 0.9, 5)).toBe(0);
+    expect(tagInside(1, 5, 5)).toBe(0);                   // wider than the room: centred
   });
 });
 

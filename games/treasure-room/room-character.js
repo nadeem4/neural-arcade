@@ -2,7 +2,7 @@
 // Loaded by room-host.js with the scene. Needs the import map (the loader imports 'three').
 import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { GLTFLoader } from '../../assets/vendor/three/loaders/GLTFLoader.js';
-import { cellToWorld, facing, MOVE_MS, tweenAt } from './room-math.js';
+import { cellToWorld, facing, MOVE_MS, tweenAt, slideLean } from './room-math.js';
 
 const HEIGHT = 0.7; // the character stands about this much of a cell tall
 const FADE = 0.12;  // seconds to blend between clips
@@ -31,6 +31,7 @@ export async function loadCharacter(base = new URL('./models/', import.meta.url)
 
 function spawn(gltf, room, start) {
   const root = new THREE.Group();
+  root.rotation.order = 'XZY'; // the slide lean tips about the world axes, after the turn about y
   const model = gltf.scene;
   const box = new THREE.Box3().setFromObject(model), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   const k = HEIGHT / size.y;
@@ -66,9 +67,11 @@ function spawn(gltf, room, start) {
   const settle = arrived => {
     if (!tween) return;
     root.position.set(tween.to.x, 0, tween.to.z);
+    const slid = tween.style === 'slide'; // a slide never faded idle out, so there is nothing to restart
     tween = null;
     walk.fadeOut(FADE);
-    if (arrived === true && wantCheer) startCheer(); else backToIdle();
+    root.rotation.x = root.rotation.z = 0;
+    if (arrived === true && wantCheer) startCheer(); else if (!slid) backToIdle();
     wantCheer = false;
   };
   if (start) place(start);
@@ -85,7 +88,8 @@ function spawn(gltf, room, start) {
       cur = pos;
       root.rotation.y = facing(from, pos);
       tween = { from: at(from), to: at(pos), t: 0, style };
-      cheer.stop();
+      if (style === 'slide') { if (cheer.isRunning()) { cheer.fadeOut(FADE); backToIdle(); } } else cheer.stop();
+      if (style === 'slide') { tween.lean = slideLean(from, pos); return; } // gliding on ice: stays in the idle pose, no walking legs
       idle.fadeOut(FADE);
       walk.reset().fadeIn(FADE).play();
     },
@@ -96,6 +100,7 @@ function spawn(gltf, room, start) {
       tween.t += dt * 1000 / MOVE_MS;
       const { k: e, lift } = tweenAt(tween.style, tween.t);
       root.position.set(tween.from.x + (tween.to.x - tween.from.x) * e, lift, tween.from.z + (tween.to.z - tween.from.z) * e);
+      if (tween.lean) { const s = Math.sin(Math.PI * Math.min(1, tween.t)); root.rotation.x = tween.lean.rotX * s; root.rotation.z = tween.lean.rotZ * s; }
       if (tween.t >= 1) settle(true);
     },
     destroy() {
