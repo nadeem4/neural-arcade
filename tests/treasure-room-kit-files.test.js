@@ -30,6 +30,12 @@ describe('the model kit', () => {
     for (const clip of ['Unarmed_Idle', 'Walking_A', 'Cheer']) expect(src).toContain(clip);
     expect(src).toMatch(/new URL\('\.\/models\/rogue\.glb', import\.meta\.url\)|rogue\.glb/);
   });
+  it('a slide never restarts idle, and a slide that interrupts the cheer fades it out', () => {
+    const src = read('games/treasure-room/room-character.js');
+    expect(src).toMatch(/const slid = tween\.style === 'slide'/);
+    expect(src).toMatch(/else if \(!slid\) backToIdle\(\)/);
+    expect(src).toMatch(/cheer\.isRunning\(\)\) \{ cheer\.fadeOut\(FADE\); backToIdle\(\); \}/);
+  });
   it('loads relative to the module, from the local files only', () => {
     expect(kitSource).toMatch(/new URL\('\.\/models\/', import\.meta\.url\)/);
     expect(kitSource).not.toMatch(/https?:/);

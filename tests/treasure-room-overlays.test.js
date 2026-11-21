@@ -66,6 +66,14 @@ describe('source guards', () => {
     expect(read('room-labels.js')).not.toMatch(/new\s+THREE\.Sprite/);
     expect(read('room-labels.js')).toMatch(/JetBrains Mono/);
   });
+  it('the values label board keeps depth testing and the default label size and colour', () => {
+    const m = read('room-overlay-meshes.js');
+    const values = m.slice(m.indexOf('values(ctx)'), m.indexOf('tags(ctx)'));
+    expect(values).toMatch(/createLabelBoard\(/);
+    expect(values).not.toMatch(/onTop/);
+    expect(values).toMatch(/return \{ x: w\.x, y: LABEL_Y, z: w\.z, text: l\.text \}/);
+    expect(values.match(/board\.set\(.*\)\);/)[0]).not.toMatch(/size|color/);
+  });
   it('the panel hands the level its overlays', () => {
     expect(read('level-panel.js')).toMatch(/setOverlays\(OVERLAYS_FOR_LEVEL\[n\]\)/);
   });

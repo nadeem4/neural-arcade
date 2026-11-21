@@ -67,10 +67,11 @@ function spawn(gltf, room, start) {
   const settle = arrived => {
     if (!tween) return;
     root.position.set(tween.to.x, 0, tween.to.z);
+    const slid = tween.style === 'slide'; // a slide never faded idle out, so there is nothing to restart
     tween = null;
     walk.fadeOut(FADE);
     root.rotation.x = root.rotation.z = 0;
-    if (arrived === true && wantCheer) startCheer(); else backToIdle();
+    if (arrived === true && wantCheer) startCheer(); else if (!slid) backToIdle();
     wantCheer = false;
   };
   if (start) place(start);
@@ -87,7 +88,7 @@ function spawn(gltf, room, start) {
       cur = pos;
       root.rotation.y = facing(from, pos);
       tween = { from: at(from), to: at(pos), t: 0, style };
-      cheer.stop();
+      if (style === 'slide') { if (cheer.isRunning()) { cheer.fadeOut(FADE); backToIdle(); } } else cheer.stop();
       if (style === 'slide') { tween.lean = slideLean(from, pos); return; } // gliding on ice: stays in the idle pose, no walking legs
       idle.fadeOut(FADE);
       walk.reset().fadeIn(FADE).play();
