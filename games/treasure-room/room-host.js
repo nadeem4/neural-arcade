@@ -43,8 +43,16 @@ const loadSceneFiles = async () => {
 const loadScene = shareLoad(loadSceneFiles);
 
 // Starts the scene import and the model downloads early. Does nothing on a page that will stay 2D, so those never fetch three.js.
+// Each probe opens a throwaway WebGL context, so warm() asks a given probe only once (it runs on every nav hover).
+const probed = new WeakMap();
+const probeOnce = webgl => {
+  if (typeof webgl !== 'function') return webgl;
+  if (!probed.has(webgl)) probed.set(webgl, webgl());
+  return probed.get(webgl);
+};
+
 export function warm({ n = 1, search = globalThis.location?.search ?? '', webgl = webglAvailable, loader = loadScene } = {}) {
-  if (!wants3d({ n, search, webgl: true }) || !(typeof webgl === 'function' ? webgl() : webgl)) return;
+  if (!wants3d({ n, search, webgl: true }) || !probeOnce(webgl)) return;
   loader().catch(() => {});
 }
 

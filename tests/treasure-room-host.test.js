@@ -167,6 +167,13 @@ describe('warm and shared loading', () => {
     }
     expect(loader).toHaveBeenCalledTimes(1);
   });
+  it('warm probes WebGL once per probe, however often it is called', () => {
+    const webgl = vi.fn(() => true), loader = vi.fn(() => Promise.resolve({}));
+    warm({ n: 1, search: '', webgl, loader });
+    warm({ n: 1, search: '', webgl, loader });
+    expect(webgl).toHaveBeenCalledTimes(1);
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
   it('warm swallows a failed load', async () => {
     expect(() => warm({ n: 1, search: '', webgl: () => true, loader: () => Promise.reject(new Error('x')) })).not.toThrow();
   });
