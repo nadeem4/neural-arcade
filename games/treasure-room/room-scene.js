@@ -3,7 +3,7 @@
 import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { OrbitControls } from '../../assets/vendor/three/controls/OrbitControls.js';
 import {
-  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, frameGate, formatStats, moveStyle, atTreasure, labelScale,
+  VIEW, layoutRoom, nearSides, cameraPose, fitOutline, outlineCorners, roomRadius, rayToCell, isTap, tierFor, frameGate, formatStats, moveStyle, atTreasure, labelScale,
 } from './room-math.js';
 import { OVERLAYS, overlayNames, marksList } from './room-overlays.js';
 import { MESH_LAYERS, createMarks } from './room-overlay-meshes.js';
@@ -170,13 +170,17 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   });
   controls.target.set(...TARGET);
   let fitted = false;
+  const corners = outlineCorners(room, L.wallH, L.wallD);
   const resize = () => {
     const w = box.clientWidth, h = box.clientHeight || w;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    const d = fitDistance({ w, h, fov: VIEW.fov, radius });
+    const d = fitOutline({
+      corners, azimuth: fitted ? controls.getAzimuthalAngle() : VIEW.azimuth, polar: fitted ? controls.getPolarAngle() : VIEW.polar,
+      target: TARGET, fov: VIEW.fov, aspect: w / h, margin: 0.04,
+    });
     controls.minDistance = d * 0.6;
     controls.maxDistance = d * 1.4;
     if (!fitted) {

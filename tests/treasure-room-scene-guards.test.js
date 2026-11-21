@@ -25,6 +25,11 @@ describe('room-scene.js source guards', () => {
   it('lets go of the renderer and canvas if the character cannot be built', () => {
     expect(src).toMatch(/try \{ ch = character\?\.spawn\(room, null\) \?\? null; \}\s*catch \(err\) \{[\s\S]*?forceContextLoss[\s\S]*?renderer\.dispose\(\)[\s\S]*?canvas\.remove\(\)[\s\S]*?throw err/);
   });
+  it('fits the camera to the real room outline, not a sphere', () => {
+    expect(src).toMatch(/fitOutline\(/);
+    expect(src).toMatch(/outlineCorners\(/);
+    expect(src).not.toMatch(/fitDistance/);
+  });
   it('keeps the camera turn-only', () => {
     expect(src).toMatch(/enablePan\s*:\s*false/);
   });
