@@ -1,6 +1,7 @@
 /* Treasure Room write-up: the shared write-up styles (assets/story.css) plus this page's grids. */
 
 .fig .grid { display: block; width: 100%; max-width: 360px; aspect-ratio: 1; margin: 0 auto; }
+.fig img.grid { max-width: none; height: auto; aspect-ratio: 1280 / 800; border: 1px solid var(--rule); }
 .minis .grid { max-width: none; border: 1px solid var(--rule); }
 .mini-cap { margin: 6px 0 0 !important; font-size: 13px !important; line-height: 1.35; color: var(--ink-2); }
 .mini.on .grid { outline: 2px solid var(--ink); outline-offset: 2px; }

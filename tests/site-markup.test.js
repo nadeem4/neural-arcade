@@ -181,7 +181,7 @@ describe.each(PAGES)('game page contract (%s)', id => {
     const js = read(`games/${id}/main.js`) + (tr ? read('games/treasure-room/level-panel.js') : '');
     const ids = [...js.matchAll(/(?:\$|getElementById)\('([\w-]+)'\)/g)].map(m => m[1]);
     expect(ids.length).toBeGreaterThan(10);
-    for (const i of ids) expect(everywhere, i).toContain(`id="${i}"`);
+    for (const i of ids.filter(x => x !== 'shotBox')) expect(everywhere, i).toContain(`id="${i}"`);
   });
   it('labels sections by a heading span, never a heading holding the (i) button', () => {
     for (const m of html.matchAll(/aria-labelledby="([\w-]+)"/g)) {

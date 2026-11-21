@@ -42,7 +42,7 @@
     <p>The robot is the <em>agent</em>. The room is its <em>environment</em>. Each turn the agent sends one action, up, down, left or right, and the room sends back two things: the tile the robot is now on, and a reward. Nothing else crosses over.</p>
     <p>The treasure pays +10, the pit costs 10, and every other step costs 1, even a bump into a wall. So wandering is never free.</p>
     <figure class="fig" id="fig1">
-      <canvas id="canvasRoom" class="grid" role="img" aria-label="The room: the robot starts on the left, the treasure is on the right edge, a pit sits in the middle and two walls block the way"></canvas>
+      <img class="grid" src="fig-1.webp" width="1280" height="800" alt="The room: the robot starts on the left, the treasure is on the right edge, a pit sits in the middle and two walls block the way">
       <figcaption><b>Fig. 1</b> The room, with the route the trained AI walks. It takes <span id="walkSteps"></span> steps and scores <span id="walkTotal"></span>. S is the start, T the treasure, X the pit and the dark tiles are walls.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>The AI only knows what the room tells it.</p>
@@ -68,7 +68,7 @@
     <p>The <em>discount</em> shrinks each later reward by a number between 0 and 1 for every step it is away. Set it low and the treasure at the end of a walk is hardly worth anything: the AI turns greedy for now.</p>
     <figure class="fig wide" id="fig3">
       <div class="duo">
-        <canvas id="canvasRoutes" class="grid" role="img" aria-label="The room with two routes drawn on it: the short way along the top, and the longer detour round the bottom"></canvas>
+        <img class="grid" src="fig-2.webp" width="1280" height="800" alt="The room with two routes drawn on it: the short way along the top, and the longer detour round the bottom" loading="lazy">
         <div class="tablewrap"><table class="returns">
           <thead><tr><th scope="col">Discount</th><th scope="col">Short way</th><th scope="col">Detour</th><th scope="col">Treasure worth</th></tr></thead>
           <tbody id="returnRows"></tbody>
@@ -86,8 +86,8 @@
     <p>A <em>policy</em> says what to do on each tile. In this room it is one arrow per tile. A rulebook of all-right arrows looks tidy and gets the robot nowhere. A good one points every tile the right way.</p>
     <figure class="fig wide" id="fig4">
       <div class="duo">
-        <div><p class="duo-label">All arrows right</p><canvas id="policyBad" class="grid" role="img" aria-label="Arrows pointing right on every tile. The robot never reaches the treasure."></canvas></div>
-        <div><p class="duo-label">Arrows after the AI fixes them</p><canvas id="policyFixed" class="grid" role="img" aria-label="Arrows after the AI fixes them. The robot reaches the treasure by the short way."></canvas></div>
+        <div><p class="duo-label">All arrows right</p><img class="grid" src="fig-3.webp" width="1280" height="800" alt="Arrows pointing right on every tile. The robot never reaches the treasure." loading="lazy"></div>
+        <div><p class="duo-label">Arrows after the AI fixes them</p><img class="grid" src="fig-4.webp" width="1280" height="800" alt="Arrows after the AI fixes them. The robot reaches the treasure by the short way." loading="lazy"></div>
       </div>
       <figcaption><b>Fig. 4</b> Two policies and the walk each one gives from the start, traced as a dashed line. The first never reaches the treasure. The second takes the short way in <span id="fixedSteps"></span> steps.</figcaption>
     </figure>
@@ -115,8 +115,8 @@
     <p>Five parts describe such a world: the <em>states</em>, the <em>actions</em>, the <em>rewards</em>, the <em>slip chance</em> and the <em>discount</em>. Together they are a Markov decision process, or MDP.</p>
     <figure class="fig wide" id="fig6">
       <div class="duo">
-        <div><p class="duo-label">Dry floor</p><canvas id="planDry" class="grid" role="img" aria-label="The best route on a dry floor, passing next to the pit."></canvas></div>
-        <div><p class="duo-label">Icy floor</p><canvas id="planIcy" class="grid" role="img" aria-label="The best route on an icy floor, keeping away from the pit."></canvas></div>
+        <div><p class="duo-label">Dry floor</p><img class="grid" src="fig-5.webp" width="1280" height="800" alt="The best route on a dry floor, passing next to the pit." loading="lazy"></div>
+        <div><p class="duo-label">Icy floor</p><img class="grid" src="fig-6.webp" width="1280" height="800" alt="The best route on an icy floor, keeping away from the pit." loading="lazy"></div>
       </div>
       <ul class="tallies">
         <li>The dry plan passes next to the pit, with a start value of <span id="dryValue"></span>. Walked on ice <span class="n-trips"></span> times, it falls in <span id="dryPit"></span>.</li>
