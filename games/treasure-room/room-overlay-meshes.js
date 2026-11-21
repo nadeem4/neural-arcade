@@ -107,7 +107,8 @@ export const MESH_LAYERS = {
         board.setScale(ctx.labelScale() * TAG_SCALE);
         board.set(list.map(t => {
           const w = cellToWorld(room, t.x, t.y), size = tagSize(t.text.length, ctx.labelScale() * TAG_SCALE);
-          return { x: tagInside(w.x, tagHalfWidth(t.text.length, size), room.w), y: TAG_Y, z: w.z, text: t.text, size, color: colour(tagStyle(t.tone, t.onEnd)) };
+          return { x: tagInside(w.x, tagHalfWidth(t.text.length, size), room.w), y: TAG_Y + t.stack * size, z: w.z, text: t.text, size, // a tag sharing a tile rises one line (its size) per tag below it
+             color: colour(tagStyle(t.tone, t.onEnd)) };
         }));
       },
       dispose() { board.dispose(); },

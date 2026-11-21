@@ -189,6 +189,8 @@ describe('tags and ice lists', () => {
     expect(tagsList(ROOM, [{ x: 4, y: 3, text: '+10', tone: 'good' }])[0].onEnd).toBe(true);
     expect(tagsList(ROOM, [{ x: 2, y: 2, text: '-10', tone: 'bad' }])[0].onEnd).toBe(true);
     expect(tagsList(ROOM, [{ x: 1, y: 1, text: '?', tone: 'odd' }])[0].tone).toBe('step');
+    const t = (x, y, text) => ({ x, y, text, tone: 'step' });
+    expect(tagsList(ROOM, [t(4, 3, '+10'), t(4, 3, '+5.9 here'), t(1, 1, '-1')]).map(g => g.stack)).toEqual([0, 1, 0]);
   });
   it('keeps at most TAG_CAPACITY tags and tolerates none', () => {
     expect(tagsList(ROOM, new Array(12).fill({ x: 1, y: 1, text: '-1', tone: 'step' }))).toHaveLength(TAG_CAPACITY);

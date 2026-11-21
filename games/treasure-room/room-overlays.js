@@ -43,10 +43,16 @@ export function trailList(room, ghost, gamma = 1) {
 }
 
 // The reward numbers floating over cells (levels 2, 3 and 6). onEnd tags sit on the treasure or trap.
+// stack: 0 for the first tag on a cell, 1, 2 ... for later tags on the same cell (after the capacity cap), so the view can lift them apart.
 const TONES = ['step', 'good', 'bad'];
-export const tagsList = (room, tags) => (Array.isArray(tags) ? tags : []).slice(0, TAG_CAPACITY).map(({ x, y, text, tone }) => ({
-  x, y, text, tone: TONES.includes(tone) ? tone : 'step', onEnd: 'TX'.includes(room.cells[y]?.[x]),
-}));
+export function tagsList(room, tags) {
+  const seen = new Map();
+  return (Array.isArray(tags) ? tags : []).slice(0, TAG_CAPACITY).map(({ x, y, text, tone }) => {
+    const key = x + ',' + y, stack = seen.get(key) ?? 0;
+    seen.set(key, stack + 1);
+    return { x, y, text, tone: TONES.includes(tone) ? tone : 'step', onEnd: 'TX'.includes(room.cells[y]?.[x]), stack };
+  });
+}
 
 // The icy floor (level 6): every floor cell when on.
 export function iceList(room, ice) {
