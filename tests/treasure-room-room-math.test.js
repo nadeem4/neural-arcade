@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { makeGrid } from '../assets/grid.js';
 import { ROOM } from '../games/treasure-room/sim.js';
 import {
-  DIMS, PARTS, VIEW, cellToWorld, worldToCell, layoutRoom, nearSides, cameraPose, fitDistance,
+  DIMS, PARTS, VIEW, cellToWorld, worldToCell, layoutRoom, nearSides, cameraPose, fitOutline, outlineCorners,
   roomRadius, rayToCell, isTap, labelScale, tierFor, frameGate, formatStats,
   MOVE_MS, moveStyle, tweenAt, facing, atTreasure, slideLean, tagSize, tagInside, tagHalfWidth
 } from '../games/treasure-room/room-math.js';
@@ -160,9 +160,56 @@ describe('camera and picking', () => {
     expect(rayToCell(ROOM, [0, 5, 0], [0, 1, 0])).toBeNull();
     expect(rayToCell(ROOM, [9, 5, 0], [0, -1, 0])).toBeNull();
   });
-  it('fits more distance on a narrow view and on a bigger room', () => {
-    expect(fitDistance({ w: 360, h: 360, fov: 35, radius: 4 })).toBeGreaterThanOrEqual(fitDistance({ w: 1280, h: 360, fov: 35, radius: 4 }));
+  it('a bigger room needs a bigger radius', () => {
     expect(roomRadius(big, 0.25)).toBeGreaterThan(roomRadius(ROOM, 0.25));
+  });
+});
+
+describe('fitOutline', () => {
+  const fov = 35, tanH = Math.tan(fov * Math.PI / 360), margin = 0.04;
+  const L = layoutRoom(ROOM, DIMS), corners = outlineCorners(ROOM, L.wallH, L.wallD);
+  const target = [0, 0.2, 0];
+  // Largest |ndc| of any corner at distance d (inline camera maths, independent of fitOutline).
+  const worst = (aspect, d, azimuth = VIEW.azimuth, polar = VIEW.polar) => {
+    const pos = cameraPose({ azimuth, polar, dist: d, target }).position;
+    const f = [0, 1, 2].map(i => target[i] - pos[i]), fl = Math.hypot(...f), fw = f.map(v => v / fl);
+    let r = [fw[2], 0, -fw[0]]; const rl = Math.hypot(...r); r = r.map(v => v / rl);
+    const u = [r[1] * fw[2] - r[2] * fw[1], r[2] * fw[0] - r[0] * fw[2], r[0] * fw[1] - r[1] * fw[0]];
+    let m = 0;
+    for (const c of corners) {
+      const q = [0, 1, 2].map(i => c[i] - pos[i]), z = q[0] * fw[0] + q[1] * fw[1] + q[2] * fw[2];
+      m = Math.max(m, Math.abs(q[0] * r[0] + q[1] * r[1] + q[2] * r[2]) / (z * tanH * aspect), Math.abs(q[0] * u[0] + q[1] * u[1] + q[2] * u[2]) / (z * tanH));
+    }
+    return m;
+  };
+  it('a lone corner to the side fixes the distance from the horizontal field', () => {
+    const d = fitOutline({ corners: [[2, 0, 0]], azimuth: 0, polar: Math.PI / 2, target: [0, 0, 0], fov, aspect: 1.6, margin });
+    expect(d).toBeCloseTo(2 / (tanH * 1.6 * (1 - margin)), 6);
+  });
+  it('a wider view needs no more distance than a narrow one', () => {
+    const at = aspect => fitOutline({ corners, azimuth: VIEW.azimuth, polar: VIEW.polar, target, fov, aspect, margin });
+    expect(at(16 / 9)).toBeLessThanOrEqual(at(1));
+    expect(at(1)).toBeLessThanOrEqual(at(9 / 16));
+  });
+  it('every corner of the real room lands inside the margin and one touches it', () => {
+    for (const aspect of [1.6, 1, 9 / 16]) {
+      const d = fitOutline({ corners, azimuth: VIEW.azimuth, polar: VIEW.polar, target, fov, aspect, margin });
+      const m = worst(aspect, d);
+      expect(m).toBeLessThanOrEqual(1 - margin + 1e-6);
+      expect(m).toBeGreaterThan(1 - margin - 1e-6);
+    }
+  });
+  it('is tighter than the old bounding sphere at 16:10', () => {
+    const half = fov * Math.PI / 360, aspect = 1.6, radius = roomRadius(ROOM, L.wallD);
+    const sphere = Math.max(radius / Math.sin(half), radius / Math.sin(Math.atan(Math.tan(half) * aspect)));
+    expect(fitOutline({ corners, azimuth: VIEW.azimuth, polar: VIEW.polar, target, fov, aspect, margin })).toBeLessThan(sphere);
+  });
+  it('outlineCorners is the box around the walls', () => {
+    expect(corners).toHaveLength(8);
+    const xs = corners.map(c => c[0]), ys = corners.map(c => c[1]), zs = corners.map(c => c[2]);
+    expect(Math.max(...xs)).toBeCloseTo(ROOM.w / 2 + L.wallD);
+    expect(Math.min(...zs)).toBeCloseTo(-(ROOM.h / 2 + L.wallD));
+    expect([Math.min(...ys), Math.max(...ys)]).toEqual([0, L.wallH]);
   });
 });
 
