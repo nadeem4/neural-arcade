@@ -94,18 +94,19 @@ describe('pid lesson files', () => {
 describe('every concept page', () => {
   const read = (id, f) => readFileSync(new URL(`../concepts/${id}/${f}`, import.meta.url), 'utf8');
   const WITH_WRITEUP = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
+  const NO_GRID = ['agent', 'state-action-reward', 'policy', 'value'];
   it('the eight concept pages are generated shells with the shared sections and the lesson says as lead', () => {
     for (const id of WITH_WRITEUP) {
       const html = read(id, 'index.html');
-      for (const s of ['playground', 'tries', 'writeup', 'play', 'watch', 'read']) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
+      for (const s of ['tries', 'writeup', 'play', 'watch', 'read', ...(NO_GRID.includes(id) ? [] : ['playground'])]) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
       for (const a of ['assets/studio.css', 'assets/concept.css', 'assets/lesson.css', 'assets/lesson-page.js']) expect(html, `${id} ${a}`).toContain(a);
       const lead = html.match(/<p class="lead">(.*?)<\/p>/s)[1].replace(/&#39;/g, "'").replace(/&quot;/g, '"');
       expect(lead, id).toBe(lessonById(id).says);
       expect(read(id, 'writeup.html'), id).toContain('id="writeup"');
-      expect(read(id, 'page.js'), id).toContain('wireTries');
+      if (!NO_GRID.includes(id)) expect(read(id, 'page.js'), id).toContain('wireTries');
     }
   });
   it('every concept has sim.js and play.js', () => {
-    for (const id of CONCEPT_IDS) for (const f of ['sim.js', 'play.js']) expect(() => read(id, f), `${id}/${f}`).not.toThrow();
+    for (const id of CONCEPT_IDS.filter(i => !['agent', 'state-action-reward', 'policy', 'value'].includes(i))) for (const f of ['sim.js', 'play.js']) expect(() => read(id, f), `${id}/${f}`).not.toThrow();
   });
 });

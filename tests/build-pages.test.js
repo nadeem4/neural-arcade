@@ -49,6 +49,7 @@ describe('buildPages', () => {
   const files = { read: p => (existsSync(disk(p)) ? readFileSync(disk(p), 'utf8') : null), exists: p => existsSync(disk(p)) };
   const out = buildPages({ files });
   const LESSONS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'];
+  const NO_GRID = ['agent', 'state-action-reward', 'policy', 'value'];
   it('emits the three track pages and a page for every live lesson', () => {
     const live = flatLessons().filter(l => l.status === 'live').map(l => l.id);
     expect(Object.keys(out).filter(p => p.startsWith('concepts/')).map(p => p.split('/')[1]).sort()).toEqual([...live].sort());
@@ -60,7 +61,7 @@ describe('buildPages', () => {
     for (const id of LESSONS) {
       const html = out[`concepts/${id}/index.html`];
       expect(html, id).toContain(`<link rel="canonical" href="https://arcade.codewithnk.com/concepts/${id}/">`);
-      expect(html, id).toContain('id="playground"');
+      if (!NO_GRID.includes(id)) expect(html, id).toContain('id="playground"');
       expect(html, id).toContain('id="writeup"');
       expect(html, id).toContain(`<body data-lesson="${id}">`);
       expect(html, id).toContain('src="../../assets/lesson-page.js"');

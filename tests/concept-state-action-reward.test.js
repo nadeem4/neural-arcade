@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { describeCell } from '../concepts/state-action-reward/sim.js';
-import { presets } from '../concepts/state-action-reward/play.js';
 import { figureHtml } from '../concepts/state-action-reward/figures.js';
 import { figureHtml as agentFigure } from '../concepts/agent/figures.js';
 import { GRID, REWARD, stateId } from '../assets/grid.js';
@@ -41,25 +40,6 @@ describe('describeCell', () => {
   });
 });
 
-describe('presets', () => {
-  it('has three presets, the last two beside the pit and the treasure', () => {
-    expect(presets.map(p => p.label)).toEqual(['Pick cell', 'Look next to the pit', 'Look next to the treasure']);
-    expect(presets[1].state.hover).toEqual([1, 0]);
-    expect(presets[2].state.hover).toEqual([3, 0]);
-  });
-  it('every hover is an in-grid cell and describes to finite numbers', () => {
-    for (const p of presets) {
-      const [x, y] = p.state.hover;
-      expect(x).toBeGreaterThanOrEqual(0); expect(x).toBeLessThan(GRID.w);
-      expect(y).toBeGreaterThanOrEqual(0); expect(y).toBeLessThan(GRID.h);
-      const d = describeCell(GRID, { x, y });
-      expect(Number.isFinite(d.state)).toBe(true);
-      for (const o of d.options) expect(Number.isFinite(o.reward)).toBe(true);
-      expect(p.text.length).toBeGreaterThan(10);
-    }
-  });
-});
-
 describe('figureHtml', () => {
   it('is an svg carrying the exact rewards describeCell gives', () => {
     const h = figureHtml();
@@ -80,10 +60,10 @@ describe('state-action-reward page file', () => {
     for (const s of ['<header data-site', '<footer data-site', '../../assets/studio.css', '../../assets/concept.css']) expect(html).toContain(s);
   });
   it('is generated: the lesson sections and runtime, with the write-up and page script beside it', () => {
-    for (const id of ['playground', 'tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
+    for (const id of ['tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
     expect(html).toContain('assets/lesson-page.js');
     expect(readFileSync(new URL('../concepts/state-action-reward/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
-    expect(readFileSync(new URL('../concepts/state-action-reward/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
+    expect(readFileSync(new URL('../concepts/state-action-reward/page.js', import.meta.url), 'utf8')).not.toContain('mountPlayground');
   });
   it('leads with the lesson line from the track config', () => {
     expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('state-action-reward').says);

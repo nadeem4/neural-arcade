@@ -1,4 +1,4 @@
-// The three example rulebooks, shared by the playground presets and the figure.
+// The three example rulebooks, used by the figure.
 import { GRID, valueIteration, greedyPolicy } from '../../assets/grid.js';
 import { createPolicy, setAction, runPolicy } from './sim.js';
 
