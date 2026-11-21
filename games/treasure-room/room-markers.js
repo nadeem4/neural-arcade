@@ -2,7 +2,7 @@
 // The DOM that draws them is room-markers-view.js; the card texts are MARKER_INFO in words.js.
 import { cellToWorld } from './room-math.js';
 
-export const AGENT_HEAD_Y = 1.5; // above the rogue's feet: the pill's pointer tip sits just over the head
+export const AGENT_HEAD_Y = 1.35; // above the rogue's feet: the pill's pointer tip sits just over the head
 const DOT_Y = 0.9;                // above the chest and the pit
 
 // The one place a level gets labels. An entry is { id, kind: 'pill' | 'dot', label?, cell?: grid char, anchor?: 'agent' }.
