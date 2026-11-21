@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { INFO } from '../games/treasure-room/words.js';
-import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS, forwardTap, tileSelector, wireTileFocus } from '../games/treasure-room/level-panel.js';
+import { levelPanelHtml, mountLevelPlay, BUILT_LEVELS, levelName, forwardTap, tileSelector, wireTileFocus } from '../games/treasure-room/level-panel.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = levelPanelHtml();
@@ -187,4 +187,16 @@ describe('button audit: disabled at start says why', () => {
       }
     });
   }
+});
+
+describe('levelName', () => {
+  it('is the lesson name for every built level, never the generic fallback', () => {
+    for (const n of BUILT_LEVELS) {
+      expect(levelName(n)).toBeTruthy();
+      expect(levelName(n)).not.toBe('The treasure room');
+    }
+  });
+  it('an unbuilt level uses level 1 (as the mount does)', () => {
+    expect(levelName(99)).toBe(levelName(BUILT_LEVELS[0]));
+  });
 });

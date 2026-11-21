@@ -4,24 +4,26 @@ import { createLoader, REASONS } from '../games/treasure-room/room-loader.js';
 
 function el(tag) {
   const n = {
-    tag, children: [], className: '', dataset: {}, attrs: {}, listeners: {}, parent: null, textContent: '', hidden: false,
+    tag, kids: [], className: '', dataset: {}, attrs: {}, listeners: {}, parentNode: null, textContent: '', hidden: false,
+    // Like a real HTMLCollection: indexable and with a length, but no array methods (no .at, .find, .flatMap).
+    get children() { const c = { length: n.kids.length, item: i => n.kids[i] ?? null }; n.kids.forEach((k, i) => { c[i] = k; }); return c; },
     style: { setProperty(k, v) { this[k] = v; } },
     setAttribute(k, v) { this.attrs[k] = v; },
-    append(...c) { for (const x of c) { x.parent = n; n.children.push(x); } },
+    append(...c) { for (const x of c) { x.parentNode = n; n.kids.push(x); } },
     appendChild(x) { n.append(x); return x; },
-    remove() { if (n.parent) n.parent.children = n.parent.children.filter(c => c !== n); n.parent = null; },
+    remove() { if (n.parentNode) n.parentNode.kids = n.parentNode.kids.filter(c => c !== n); n.parentNode = null; },
     addEventListener(t, f) { n.listeners[t] = f; },
     click() { n.listeners.click?.(); },
     focus() { n.focused = true; },
-    contains(x) { return x === n || n.children.some(c => c.contains(x)); },
+    contains(x) { return x === n || n.kids.some(c => c.contains(x)); },
   };
   return n;
 }
 const doc = { createElement: el, activeElement: null };
-const all = n => [n, ...n.children.flatMap(all)];
+const all = n => [n, ...n.kids.flatMap(all)];
 const find = (n, cls) => all(n).find(x => x.className.split(' ').includes(cls));
 const texts = n => all(n).map(x => x.textContent);
-const overlay = box => box.children.find(c => c.className.includes('room-loader'));
+const overlay = box => box.kids.find(c => c.className.includes('room-loader'));
 
 describe('createLoader', () => {
   let box, onRetry;

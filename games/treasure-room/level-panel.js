@@ -6,6 +6,7 @@ import { OVERLAYS_FOR_LEVEL } from './room-overlays.js';
 import { ROOM } from './sim.js';
 import { levelByN, assumesHtml } from './levels.js';
 import { INFO } from './words.js';
+import { lessonOfLevel } from '../../assets/tracks/model.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
 import * as levelReturn from './level-return.js';
@@ -154,6 +155,9 @@ export function wireTileFocus({ tiles, host }) {
   tiles.addEventListener('focusout', () => host.setFocus(null));
 }
 
+// The level's lesson name; an unbuilt n reads as level 1, like the mount.
+export const levelName = n => lessonOfLevel('treasure-room', BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0]).title;
+
 // Mounts level n into root and returns { n, redraw(), destroy(), host }. An unbuilt n falls back to level 1.
 // The room is drawn by a room host in 3D; a loader panel shows progress, or a failure with Try again (see room-host.js, room-loader.js).
 // The caller redraws on a theme change (handle.redraw).
@@ -168,7 +172,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
   // The loader comes first: the host reports its first state synchronously inside createRoomHost.
   let host;
-  const loader = createLoader(box, { title: title || 'The treasure room', onRetry: () => host.retry(), reduceMotion: reduceMotion.matches });
+  const loader = createLoader(box, { title: title || levelName(n), onRetry: () => host.retry(), reduceMotion: reduceMotion.matches });
   host = createRoomHost({
     box, room: ROOM, reduceMotion: reduceMotion.matches,
     onState: (state, reason) => { if (state === 'loading') loader.loading(); else if (state === '3d') loader.done(); else loader.fail(reason); },

@@ -7,7 +7,7 @@ export const REASONS = {
 };
 
 export function createLoader(box, { title, onRetry, doc = document, reduceMotion = false }) {
-  let root = null, fill, reason, timer = null;
+  let root = null, fill, reason, retryBtn, timer = null;
 
   const make = (tag, cls, text) => {
     const n = doc.createElement(tag);
@@ -25,15 +25,15 @@ export function createLoader(box, { title, onRetry, doc = document, reduceMotion
     bar.append(fill);
     const failure = make('div', 'room-loader-failure');
     reason = make('p', 'room-loader-reason');
-    const retry = make('button', 'btn primary', 'Try again');
-    retry.setAttribute('type', 'button');
-    retry.addEventListener('click', () => onRetry());
-    failure.append(make('h3', '', 'This room needs 3D graphics'), reason, retry);
+    retryBtn = make('button', 'btn primary', 'Try again');
+    retryBtn.setAttribute('type', 'button');
+    retryBtn.addEventListener('click', () => onRetry());
+    failure.append(make('h3', '', 'This room needs 3D graphics'), reason, retryBtn);
     root.append(make('p', 'room-loader-title', title), line, bar, failure);
     box.append(root);
   }
 
-  const alive = () => root && root.parent === box;
+  const alive = () => root !== null;
   const stopTimer = () => { clearTimeout(timer); timer = null; };
 
   function loading() {
@@ -56,7 +56,7 @@ export function createLoader(box, { title, onRetry, doc = document, reduceMotion
     root.dataset.state = 'failed';
     root.setAttribute('role', 'alert');
     reason.textContent = REASONS[why] ?? REASONS.scene;
-    if (hadFocus) root.children.at(-1).children.at(-1).focus();
+    if (hadFocus) retryBtn.focus();
   }
 
   function destroy() {
