@@ -1,11 +1,5 @@
-// Treasure Room drawing: the shared grid from assets/grid.js, plus floating reward tags, and tap-to-cell.
+// Treasure Room drawing for the How it works sweep grids (the shared grid from assets/grid.js, plus floating reward tags), and tagTone.
 import { drawGrid } from '../../assets/grid.js';
-
-export const cellAt = (size, room, px, py) => {
-  if (px < 0 || py < 0 || px >= size || py >= size) return null;
-  const cell = size / room.w;
-  return { x: Math.floor(px / cell), y: Math.floor(py / cell) };
-};
 
 export const tagTone = reward => (reward > 0 ? 'good' : reward <= -10 ? 'bad' : 'step');
 
@@ -86,27 +80,4 @@ export function drawRoom(ctx, room, opts = {}) {
     ctx.fillStyle = tagColor(t.tone, 'TX'.includes(room.cells[t.y][t.x]));
     ctx.fillText(t.text, t.x * cell + cell / 2, t.y * cell + cell * 0.12);
   }
-}
-
-// The 2D backend: the canvas the host shows first and falls back to. No three.js here.
-export function createView2d(canvas, room) {
-  const ctx = canvas.getContext('2d');
-  let size = { dpr: 1, w: 0 };
-  return {
-    draw(opts) {
-      ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
-      ctx.clearRect(0, 0, size.w, size.w);
-      drawRoom(ctx, room, { cell: size.w / room.w, ...opts });
-    },
-    cellAt(e) {
-      const r = canvas.getBoundingClientRect();
-      return cellAt(r.width, room, e.clientX - r.left, e.clientY - r.top);
-    },
-    resize() { // sets the canvas to its CSS width (square); this clears it, so the caller draws again
-      const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth;
-      canvas.width = canvas.height = Math.round(w * dpr);
-      size = { dpr, w };
-    },
-    show(on) { canvas.style.display = on ? '' : 'none'; },
-  };
 }

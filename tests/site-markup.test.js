@@ -312,6 +312,7 @@ describe('game page specifics', () => {
     const all = files.map(read).join('\n');
     const defined = new Set([...all.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
     defined.add('--row-gap'); // set inline on the family tree svg
+    defined.add('--p'); // set inline on the Treasure Room loader bar, with a 0 fallback
     const used = [...all.matchAll(/var\((--[\w-]+)/g)].map(m => m[1]);
     for (const u of used) expect(defined.has(u), u).toBe(true);
   });

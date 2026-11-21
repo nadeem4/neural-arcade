@@ -93,9 +93,17 @@ describe('treasure room page markup', () => {
 
 describe('treasure-room.css', () => {
   it('keeps the stage square and inside a phone width', () => {
-    expect(rules('#stage')).toMatch(/aspect-ratio:\s*1/);
-    expect(rules('#stage')).toMatch(/width:/);
+    expect(rules('#roomBox')).toMatch(/aspect-ratio:\s*1/);
+    expect(rules('.room')).toMatch(/width:/);
     expect(css).not.toMatch(/\bwidth:\s*\d{4,}px/);
+  });
+  it('styles the loader from tokens only, with no 2D leftovers', () => {
+    expect(rules('.room-loader')).toMatch(/background:\s*var\(--stage\)/);
+    expect(rules('.room-loader')).toMatch(/aspect-ratio:\s*1|inset:\s*0/);
+    expect(css).toMatch(/room-loader-fill[^}]*var\(--signal\)/);
+    for (const m of css.matchAll(/([^{}]*room-loader[^{}]*)\{([^{}]*)\}/g)) expect(m[2], m[1]).not.toMatch(/#[0-9a-fA-F]{3,8}/);
+    expect(css).not.toContain('#stage');
+    expect(css).not.toContain('data-room="2d"');
   });
   it('makes every level control at least 44px tall, with no tight line height', () => {
     expect(rules('.pad button')).toMatch(/min-height:\s*44px/);
@@ -113,9 +121,18 @@ describe('3D by default needs the import map and the docs say so', () => {
     expect(read('games/treasure-room/index.html')).toContain('importmap');
     for (const id of ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']) expect(read(`concepts/${id}/index.html`), id).toContain('importmap');
   });
-  it('documents the 2D override and the host', () => {
-    expect(read('README.md')).toMatch(/room=2d/);
+  it('documents the loader and the 3D-only host', () => {
+    expect(read('README.md')).toMatch(/room-loader\.js/);
     expect(read('CLAUDE.md')).toMatch(/room-host\.js/);
+    expect(read('CLAUDE.md')).toMatch(/room-loader\.js/);
     expect(read('DESIGN.md')).toMatch(/3D by default/);
+    expect(read('DESIGN.md')).toMatch(/Entering the room/);
+    expect(read('DESIGN.md')).toMatch(/Try again/);
+  });
+  it('no longer documents the 2D switches', () => {
+    for (const f of ['README.md', 'CLAUDE.md', 'DESIGN.md']) {
+      const txt = read(f).split('\n').filter((l) => /treasure room|room-host|room-view/i.test(l)).join('\n');
+      expect(txt, f).not.toMatch(/room=(2d|3d)|2D first|falls? back to (room-view|2D)/);
+    }
   });
 });

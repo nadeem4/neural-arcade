@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
+import { LOAD_TOTAL } from '../games/treasure-room/room-host.js';
 
 const read = p => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 const MODEL_FILES_EXPECTED = ['floor_tile_large', 'floor_tile_large_rocks', 'floor_tile_big_spikes', 'wall', 'wall_corner', 'chest_gold', 'coin_stack_medium', 'torch_lit'];
@@ -43,5 +44,12 @@ describe('the model kit', () => {
   it('MODEL_FILES is the one list of those eight', () => {
     const names = kitSource.match(/MODEL_FILES\s*=\s*\[([^\]]+)\]/)[1].match(/'[^']+'/g).map(s => s.slice(1, -1));
     expect([...names].sort()).toEqual([...MODEL_FILES_EXPECTED].sort());
+  });
+  it('LOAD_TOTAL counts the scene module, every model and the rogue', () => {
+    expect(LOAD_TOTAL).toBe(MODEL_FILES_EXPECTED.length + 2);
+  });
+  it('loadKit reports each loaded file through onFile', () => {
+    expect(kitSource).toMatch(/loadKit\(base = .+, onFile\)/);
+    expect(kitSource).toContain('onFile?.()');
   });
 });

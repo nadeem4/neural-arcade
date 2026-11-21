@@ -30,8 +30,8 @@ $('levels').addEventListener('click', e => {
 // shares one download, so warming for the current level covers the one about to be opened.
 const shot = parseShots(location.search);
 if (!shot) {
-  warm({ n: levelFromUrl(location.search, location.hash) });
-  $('levels').addEventListener('pointerenter', () => warm({ n: levelFromUrl(location.search, location.hash) }), true);
+  warm();
+  $('levels').addEventListener('pointerenter', () => warm(), true);
 }
 
 wireLamp($('lamp'), () => handle?.redraw());

@@ -1,10 +1,12 @@
 // One Treasure Room level (room, readouts, panel, (i) buttons) mounted into any element: the game page mounts it.
 // The (i) icon is an SVG <symbol id="i"> that the host page must define once.
 import { createRoomHost } from './room-host.js';
+import { createLoader } from './room-loader.js';
 import { OVERLAYS_FOR_LEVEL } from './room-overlays.js';
 import { ROOM } from './sim.js';
 import { levelByN, assumesHtml } from './levels.js';
 import { INFO } from './words.js';
+import { lessonOfLevel } from '../../assets/tracks/model.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
 import * as levelReturn from './level-return.js';
@@ -22,8 +24,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <span class="stage-tools"><button class="info" type="button" aria-expanded="false" aria-controls="info-room" aria-label="Explain the room" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></span></div>
       <p class="info-text" id="info-room" data-info="room" hidden></p>
       <div class="stage-body">
-        <div class="room" id="roomBox">
-          <canvas id="stage" role="img" aria-label="A five by five room. The robot starts on the left, the treasure is at the bottom right, there is a pit in the middle and two walls."></canvas>
+        <div class="room" id="roomBox" data-label="A five by five room. The robot starts on the left, the treasure is at the bottom right, there is a pit in the middle and two walls.">
           <div class="tilegrid" id="tiles" data-levels="4" hidden></div>
         </div>
       </div>
@@ -154,8 +155,11 @@ export function wireTileFocus({ tiles, host }) {
   tiles.addEventListener('focusout', () => host.setFocus(null));
 }
 
+// The level's lesson name; an unbuilt n reads as level 1, like the mount.
+export const levelName = n => lessonOfLevel('treasure-room', BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0]).title;
+
 // Mounts level n into root and returns { n, redraw(), destroy(), host }. An unbuilt n falls back to level 1.
-// The room is drawn by a room host: 2D first, 3D when it is ready (see room-host.js).
+// The room is drawn by a room host in 3D; a loader panel shows progress, or a failure with Try again (see room-host.js, room-loader.js).
 // The caller redraws on a theme change (handle.redraw).
 export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   root.innerHTML = levelPanelHtml({ showTitle });
@@ -166,10 +170,17 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   let view = null;
 
   n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
-  const host = createRoomHost({ box, canvas: $('stage'), room: ROOM, n, reduceMotion: reduceMotion.matches });
+  // The loader comes first: the host reports its first state synchronously inside createRoomHost.
+  let host;
+  const loader = createLoader(box, { title: title || levelName(n), onRetry: () => host.retry(), reduceMotion: reduceMotion.matches });
+  host = createRoomHost({
+    box, room: ROOM, reduceMotion: reduceMotion.matches,
+    onState: (state, reason) => { if (state === 'loading') loader.loading(); else if (state === '3d') loader.done(); else loader.fail(reason); },
+    onProgress: loader.progress,
+  });
   host.setOverlays(OVERLAYS_FOR_LEVEL[n]);
 
-  // ui.canvas is the room box, so a click on either the 2D or the 3D canvas reaches the level.
+  // ui.canvas is the room box, so a click on the 3D canvas reaches the level.
   const ui = {
     canvas: box, room: ROOM, panel: $('levelPanel'), tiles,
     draw: host.draw,
@@ -217,6 +228,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
       view?.destroy();
       view = null;
       host.destroy();
+      loader.destroy();
       resize.disconnect();
       root.innerHTML = '';
     },

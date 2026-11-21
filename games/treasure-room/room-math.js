@@ -183,6 +183,6 @@ export const tagSize = (len, size) => Math.min(size, TAG_MAX_WIDTH / 2 / tagFill
 export const tagInside = (wx, halfW, roomW) => (halfW * 2 >= roomW ? 0 : Math.min(Math.max(wx, -roomW / 2 + halfW), roomW / 2 - halfW));
 export const tagHalfWidth = (len, size) => size * tagFill(len);
 
-// Tag colour names, the same rules as tagColor in room-view.js: a tag on the treasure or trap is always ink.
+// Tag colour names, the same rules as tagColor in room-view.js (kept for the sweep grids): a tag on the treasure or trap is always ink.
 export const TAG_CAPACITY = 8;
 export const tagStyle = (tone, onEnd) => ({ fill: onEnd ? 'ink' : tone === 'good' || tone === 'bad' ? tone : 'step' });

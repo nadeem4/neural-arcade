@@ -26,7 +26,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   const canvas = document.createElement('canvas');
   canvas.className = 'room-canvas';
   canvas.setAttribute('role', 'img');
-  canvas.setAttribute('aria-label', box.querySelector('#stage')?.getAttribute('aria-label') ?? 'The treasure room');
+  canvas.setAttribute('aria-label', box.dataset.label ?? 'The treasure room');
   box.appendChild(canvas);
 
   let renderer;

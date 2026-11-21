@@ -1,31 +1,31 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ROOM } from '../games/treasure-room/sim.js';
-import { createRoomHost, wants3d, roomMode, noWebglFlag, debugFlag, webglAvailable, LEVELS_IN_3D, warm, shareLoad } from '../games/treasure-room/room-host.js';
+import { createRoomHost, debugFlag, webglAvailable, warm, shareLoad, subscribeProgress, LOAD_TOTAL } from '../games/treasure-room/room-host.js';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return Object.assign(promise, { resolve }); };
 
 function setup(over = {}) {
   const box = { dataset: {} };
-  const view2d = { draw: vi.fn(), cellAt: vi.fn(() => ({ x: 9, y: 9 })), resize: vi.fn(), show: vi.fn() };
-  const scene = {
-    draw: vi.fn(), cellAt: vi.fn(() => ({ x: 1, y: 2 })), resize: vi.fn(), setFocus: vi.fn(), setOverlays: vi.fn(), destroy: vi.fn(),
-  };
+  const scenes = [];
   const ctx = { lost: null };
-  const createScene3d = vi.fn(opts => { ctx.lost = opts.onContextLost; ctx.opts = opts; return scene; });
+  const createScene3d = vi.fn(opts => {
+    ctx.lost = opts.onContextLost;
+    const s = { draw: vi.fn(), cellAt: vi.fn(() => ({ x: 1, y: 2 })), resize: vi.fn(), setFocus: vi.fn(), setOverlays: vi.fn(), destroy: vi.fn() };
+    scenes.push(s);
+    return s;
+  });
+  const states = [], progress = [];
   const base = {
-    box, canvas: {}, room: ROOM, n: 1, search: '?room=3d', reduceMotion: false, webgl: () => true,
-    createView: () => view2d, loader: () => Promise.resolve({ createScene3d }), ...over,
+    box, room: ROOM, search: '', reduceMotion: false, webgl: () => true,
+    loader: vi.fn(() => Promise.resolve({ createScene3d })),
+    onState: (...a) => states.push(a), onProgress: f => progress.push(f), subscribe: () => () => {}, ...over,
   };
-  return { box, view2d, scene, ctx, createScene3d, base, host: createRoomHost(base) };
+  const host = createRoomHost(base);
+  return { box, scenes, ctx, createScene3d, host, states, progress, loader: base.loader };
 }
 
 describe('flags', () => {
-  it('reads the query string', () => {
-    expect(roomMode('?room=x')).toBeNull();
-    expect(roomMode('?room=3d')).toBe('3d');
-    expect(roomMode('?room=2d')).toBe('2d');
-    expect(noWebglFlag('?nowebgl=1')).toBe(true);
-    expect(noWebglFlag('')).toBe(false);
+  it('reads the debug flag', () => {
     expect(debugFlag('?debug=1')).toBe(true);
     expect(debugFlag('')).toBe(false);
   });
@@ -37,122 +37,159 @@ describe('flags', () => {
   });
 });
 
-describe('probe context', () => {
-  it('is opened only when the flags want 3D', async () => {
-    for (const search of ['?room=2d']) {
-      const webgl = vi.fn(() => true);
-      await setup({ search, webgl }).host.ready;
-      expect(webgl, search).not.toHaveBeenCalled();
-    }
-    const webgl = vi.fn(() => true);
-    await setup({ search: '?room=3d', webgl }).host.ready;
-    expect(webgl).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('wants3d', () => {
-  it('needs WebGL, and a level in LEVELS_IN_3D or ?room=3d', () => {
-    expect(LEVELS_IN_3D).toEqual([1, 2, 3, 4, 5, 6]);
-    for (const n of [1, 2, 3, 4, 5, 6]) expect(wants3d({ n, search: '', webgl: true })).toBe(true);
-    expect(wants3d({ n: 6, search: '?room=2d', webgl: true })).toBe(false);
-    expect(wants3d({ n: 5, search: '?room=2d', webgl: true })).toBe(false);
-    expect(wants3d({ n: 5, search: '?room=3d', webgl: true })).toBe(true);
-    expect(wants3d({ n: 5, search: '?room=3d', webgl: false })).toBe(false);
-    expect(wants3d({ n: 1, search: '?room=3d&nowebgl=1', webgl: true })).toBe(false);
-    expect(wants3d({ n: 1, search: '?room=2d', webgl: true })).toBe(false);
-  });
-});
-
 describe('createRoomHost', () => {
-  it('shows 2D first, then 3D replaces it and the last draw is replayed', async () => {
-    const { host, box, view2d, scene } = setup();
+  it('starts in loading and 3D replaces it, replaying the last draw', async () => {
+    const { host, box, scenes, states } = setup();
     host.draw({ agent: { x: 1, y: 1 } });
-    expect(host.mode()).toBe('2d');
-    expect(view2d.draw).toHaveBeenCalledTimes(1);
-    expect(box.dataset.room).toBe('2d');
+    expect(host.mode()).toBe('loading');
+    expect(box.dataset.room).toBe('loading');
+    expect(states[0]).toEqual(['loading']);
     expect(await host.ready).toBe('3d');
     expect(host.mode()).toBe('3d');
-    expect(scene.draw).toHaveBeenCalledWith({ agent: { x: 1, y: 1 } });
-    expect(view2d.show).toHaveBeenLastCalledWith(false);
     expect(box.dataset.room).toBe('3d');
+    expect(states.at(-1)).toEqual(['3d']);
+    expect(scenes[0].draw).toHaveBeenCalledWith({ agent: { x: 1, y: 1 } });
     host.draw({ agent: { x: 2, y: 1 } });
-    expect(scene.draw).toHaveBeenLastCalledWith({ agent: { x: 2, y: 1 } });
-    expect(view2d.draw).toHaveBeenCalledTimes(1);
+    expect(scenes[0].draw).toHaveBeenLastCalledWith({ agent: { x: 2, y: 1 } });
   });
-  it('hands the scene its inputs, and remembers overlays and focus for it', async () => {
-    const { host, createScene3d, scene } = setup({ search: '?room=3d&debug=1', reduceMotion: true });
+  it('hands the scene its inputs and remembers overlays and focus', async () => {
+    const { host, createScene3d, scenes } = setup({ search: '?debug=1', reduceMotion: true });
     host.setOverlays(['values']);
     host.setFocus({ x: 1, y: 1 });
     await host.ready;
     expect(createScene3d).toHaveBeenCalledWith(expect.objectContaining({ room: ROOM, reduceMotion: true, debug: true, onContextLost: expect.any(Function) }));
-    expect(scene.setOverlays).toHaveBeenCalledWith(['values']);
-    expect(scene.setFocus).toHaveBeenCalledWith({ x: 1, y: 1 });
+    expect(scenes[0].setOverlays).toHaveBeenCalledWith(['values']);
+    expect(scenes[0].setFocus).toHaveBeenCalledWith({ x: 1, y: 1 });
     host.resize();
-    expect(scene.resize).toHaveBeenCalled();
+    expect(scenes[0].resize).toHaveBeenCalled();
   });
-  it('level 5 goes 3D with no flag', async () => {
-    const { host, box } = setup({ n: 5, search: '' });
+  it('no WebGL fails fast and never loads', async () => {
+    const loader = vi.fn();
+    const { host, box, states } = setup({ webgl: () => false, loader });
+    expect(await host.ready).toBe('failed');
+    expect(loader).not.toHaveBeenCalled();
+    expect(states.at(-1)).toEqual(['failed', 'no-webgl']);
+    expect(box.dataset.room).toBe('failed');
+  });
+  it('a load error fails with reason load', async () => {
+    const { host, states } = setup({ loader: () => Promise.reject(new Error('404')) });
+    expect(await host.ready).toBe('failed');
+    expect(states.at(-1)).toEqual(['failed', 'load']);
+    expect(() => host.draw({})).not.toThrow();
+  });
+  it('loadCharacter rejection fails with reason load', async () => {
+    const loader = () => Promise.resolve({ loadCharacter: () => Promise.reject(new Error('bad glb')), createScene3d: () => ({}) });
+    const { host, states } = setup({ loader });
+    expect(await host.ready).toBe('failed');
+    expect(states.at(-1)).toEqual(['failed', 'load']);
+  });
+  it('a scene that throws fails with reason scene', async () => {
+    const { host, states } = setup({ loader: () => Promise.resolve({ createScene3d: () => { throw new Error('gl'); } }) });
+    expect(await host.ready).toBe('failed');
+    expect(states.at(-1)).toEqual(['failed', 'scene']);
+  });
+  it('context lost after 3D fails with reason lost and destroys the scene once', async () => {
+    const { host, scenes, ctx, states, box } = setup();
+    await host.ready;
+    ctx.lost();
+    ctx.lost();
+    expect(scenes[0].destroy).toHaveBeenCalledTimes(1);
+    expect(host.mode()).toBe('failed');
+    expect(box.dataset.room).toBe('failed');
+    expect(states.at(-1)).toEqual(['failed', 'lost']);
+  });
+  it('retry after a failure loads again and replays state', async () => {
+    let calls = 0;
+    const scene = { draw: vi.fn(), resize: vi.fn(), setFocus: vi.fn(), setOverlays: vi.fn(), destroy: vi.fn() };
+    const createScene3d = vi.fn(() => scene);
+    const loader = vi.fn(() => (calls++ ? Promise.resolve({ createScene3d }) : Promise.reject(new Error('x'))));
+    const { host, states } = setup({ loader });
+    const c = { x: 1, y: 1 };
+    host.draw({ a: 1 });
+    host.setOverlays(['values']);
+    host.setFocus(c);
+    expect(await host.ready).toBe('failed');
+    host.retry();
     expect(await host.ready).toBe('3d');
-    expect(box.dataset.room).toBe('3d');
+    expect(loader).toHaveBeenCalledTimes(2);
+    expect(scene.draw).toHaveBeenCalledWith({ a: 1 });
+    expect(scene.setOverlays).toHaveBeenCalledWith(['values']);
+    expect(scene.setFocus).toHaveBeenCalledWith(c);
+    expect(states.filter(s => s[0] === 'loading')).toHaveLength(2);
   });
-  it('stays 2D when 3D is not wanted, and never loads', async () => {
-    for (const over of [{ search: '?room=2d' }, { search: '?room=3d&nowebgl=1' }, { webgl: () => false }]) {
-      const loader = vi.fn();
-      const { host, box } = setup({ ...over, loader });
-      expect(await host.ready).toBe('2d');
-      expect(loader).not.toHaveBeenCalled();
-      expect(box.dataset.room).toBe('2d');
-    }
+  it('retry after context lost builds a fresh scene', async () => {
+    const { host, ctx, scenes, createScene3d } = setup();
+    host.draw({ a: 1 });
+    await host.ready;
+    ctx.lost();
+    host.retry();
+    expect(await host.ready).toBe('3d');
+    expect(createScene3d).toHaveBeenCalledTimes(2);
+    expect(scenes[1].draw).toHaveBeenCalledWith({ a: 1 });
   });
-  it('stays 2D and keeps working when loading fails or the scene cannot be built', async () => {
-    for (const over of [{ loader: () => Promise.reject(new Error('404')) }, { loader: () => Promise.resolve({ createScene3d: () => { throw new Error('gl'); } }) }]) {
-      const { host, box, view2d } = setup(over);
-      expect(await host.ready).toBe('2d');
-      host.draw({});
-      expect(view2d.draw).toHaveBeenCalled();
-      expect(box.dataset.room).toBe('2d');
-    }
+  it('retry twice quickly runs one load', async () => {
+    let calls = 0;
+    const loader = vi.fn(() => (calls++ ? Promise.resolve({ createScene3d: () => ({ resize() {}, destroy() {} }) }) : Promise.reject(new Error('x'))));
+    const { host } = setup({ loader });
+    await host.ready;
+    host.retry();
+    host.retry();
+    await host.ready;
+    expect(loader).toHaveBeenCalledTimes(2);
   });
-  it('builds no scene when destroyed before the models arrive', async () => {
+  it('retry is a no-op while 3D is up', async () => {
+    const { host, loader } = setup();
+    await host.ready;
+    host.retry();
+    expect(loader).toHaveBeenCalledTimes(1);
+  });
+  it('builds no scene when destroyed during loading, and no retry after destroy', async () => {
     const later = deferred();
     let built = 0;
-    const { host } = setup({ loader: () => later.then(() => ({ createScene3d: () => { built++; return {}; } })) });
+    const loader = vi.fn(() => later.then(() => ({ createScene3d: () => { built++; return {}; } })));
+    const { host } = setup({ loader });
     host.destroy();
     later.resolve();
     await host.ready;
     expect(built).toBe(0);
+    host.retry();
+    expect(loader).toHaveBeenCalledTimes(1);
   });
-  it('goes back to 2D with the same state when the context is lost', async () => {
-    const { host, view2d, scene, ctx, box } = setup();
-    host.draw({ agent: { x: 1, y: 1 } });
-    await host.ready;
-    ctx.lost();
-    expect(host.mode()).toBe('2d');
-    expect(box.dataset.room).toBe('2d');
-    expect(view2d.show).toHaveBeenLastCalledWith(true);
-    expect(scene.destroy).toHaveBeenCalled();
-    expect(view2d.draw).toHaveBeenLastCalledWith({ agent: { x: 1, y: 1 } });
-    ctx.lost(); // a second loss is ignored
-    expect(scene.destroy).toHaveBeenCalledTimes(1);
-  });
-  it('cellAt follows the active backend', async () => {
-    const { host, view2d, scene } = setup();
-    expect(host.cellAt({ clientX: 1, clientY: 1 })).toEqual({ x: 9, y: 9 });
-    expect(view2d.cellAt).toHaveBeenCalled();
+  it('cellAt is null until 3D, then follows the scene', async () => {
+    const { host } = setup();
+    expect(host.cellAt({ clientX: 1, clientY: 1 })).toBeNull();
     await host.ready;
     expect(host.cellAt({ clientX: 1, clientY: 1 })).toEqual({ x: 1, y: 2 });
-    expect(scene.cellAt).toHaveBeenCalled();
+  });
+  it('progress comes from the subscription and is clamped and monotonic', () => {
+    const unsub = vi.fn();
+    const { progress, host } = setup({ subscribe: fn => { fn(0.2); fn(0.1); fn(1.4); return unsub; } });
+    expect(progress).toEqual([0.2, 0.2, 1]);
+    host.destroy();
+    expect(unsub).toHaveBeenCalled();
   });
   it('destroy tears the scene down and later calls do nothing', async () => {
-    const { host, scene } = setup();
+    const { host, scenes } = setup();
     await host.ready;
     host.destroy();
-    expect(scene.destroy).toHaveBeenCalledTimes(1);
-    scene.draw.mockClear();
+    expect(scenes[0].destroy).toHaveBeenCalledTimes(1);
+    scenes[0].draw.mockClear();
     host.draw({});
-    expect(scene.draw).not.toHaveBeenCalled();
+    expect(scenes[0].draw).not.toHaveBeenCalled();
     host.destroy();
-    expect(scene.destroy).toHaveBeenCalledTimes(1);
+    expect(scenes[0].destroy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('subscribeProgress', () => {
+  it('replays the current fraction and unsubscribes', () => {
+    const seen = [];
+    const off = subscribeProgress(f => seen.push(f));
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toBeGreaterThanOrEqual(0);
+    expect(typeof off).toBe('function');
+    off();
+    expect(LOAD_TOTAL).toBe(10);
   });
 });
 
@@ -168,10 +205,6 @@ describe('each mount has its own rogue', () => {
     expect(seen).toEqual([{ id: 1 }, { id: 2 }]);
     expect(seen[0]).not.toBe(seen[1]);
   });
-  it('stays 2D when the rogue fails to load', async () => {
-    const loader = () => Promise.resolve({ loadCharacter: () => Promise.reject(new Error('bad glb')), createScene3d: () => ({}) });
-    expect(await setup({ loader }).host.ready).toBe('2d');
-  });
   it('probes WebGL once for a mount', async () => {
     const webgl = vi.fn(() => true);
     await setup({ webgl }).host.ready;
@@ -183,30 +216,27 @@ describe('each mount has its own rogue', () => {
 describe('warm and shared loading', () => {
   it('warm does not retry a failed load on later calls', async () => {
     const loader = vi.fn(() => Promise.reject(new Error('blocked')));
-    warm({ n: 1, search: '', webgl: () => true, loader });
+    warm({ webgl: () => true, loader });
     await new Promise(r => setTimeout(r, 0));
-    warm({ n: 1, search: '', webgl: () => true, loader });
+    warm({ webgl: () => true, loader });
     expect(loader).toHaveBeenCalledTimes(1);
   });
-  it('warm starts the loader once per call when 3D is wanted, and never for 2D pages', async () => {
+  it('warm starts the loader once per call, and never without WebGL', () => {
     const loader = vi.fn(() => Promise.resolve({}));
-    expect(typeof warm).toBe('function');
-    warm({ n: 1, search: '', webgl: () => true, loader });
+    warm({ webgl: () => true, loader });
     expect(loader).toHaveBeenCalledTimes(1);
-    for (const over of [{ search: '?room=2d' }, { search: '?nowebgl=1' }, { webgl: () => false }]) {
-      warm({ n: 1, search: '', webgl: () => true, loader, ...over });
-    }
+    warm({ webgl: () => false, loader });
     expect(loader).toHaveBeenCalledTimes(1);
   });
   it('warm probes WebGL once per probe, however often it is called', () => {
     const webgl = vi.fn(() => true), loader = vi.fn(() => Promise.resolve({}));
-    warm({ n: 1, search: '', webgl, loader });
-    warm({ n: 1, search: '', webgl, loader });
+    warm({ webgl, loader });
+    warm({ webgl, loader });
     expect(webgl).toHaveBeenCalledTimes(1);
     expect(loader).toHaveBeenCalledTimes(2);
   });
-  it('warm swallows a failed load', async () => {
-    expect(() => warm({ n: 1, search: '', webgl: () => true, loader: () => Promise.reject(new Error('x')) })).not.toThrow();
+  it('warm swallows a failed load', () => {
+    expect(() => warm({ webgl: () => true, loader: () => Promise.reject(new Error('x')) })).not.toThrow();
   });
   it('shareLoad runs the load once for every caller and forgets a failure', async () => {
     let calls = 0;
