@@ -49,8 +49,9 @@ describe('parseShots', () => {
     expect(parseShots('?fig=3')).toBeNull();
     expect(parseShots('?shots=1&fig=9')).toBeNull();
   });
-  it('is loaded by main.js only by dynamic import', () => {
+  it('mounts capture mode only on ?shots=1', () => {
     expect(read('games/treasure-room/main.js')).toMatch(/import\('\.\/shots\.js'\)/);
     expect(read('games/treasure-room/main.js')).toMatch(/if \(shot\)/);
+    expect(read('games/treasure-room/main.js')).toMatch(/if \(!shot\) \{\s*warm\(/);
   });
 });

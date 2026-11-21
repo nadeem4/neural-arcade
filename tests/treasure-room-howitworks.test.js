@@ -64,8 +64,8 @@ describe('treasure room how it works page', () => {
   it('shows six still images from the 3D room, each with its size and alt text', () => {
     expect(html).not.toMatch(/<canvas/);
     for (let n = 1; n <= 6; n++) {
-      expect(html).toMatch(new RegExp(`<img[^>]+src="fig-${n}\.webp"[^>]+width="1280"[^>]+height="800"[^>]+alt="[^"]{12,}"`));
-      expect(html.match(new RegExp(`<img[^>]+src="fig-${n}\.webp"[^>]*>`))[0].includes('loading="lazy"')).toBe(n > 1);
+      expect(html).toMatch(new RegExp(`<img[^>]+src="fig-${n}\\.webp"[^>]+width="1280"[^>]+height="800"[^>]+alt="[^"]{12,}"`));
+      expect(html.match(new RegExp(`<img[^>]+src="fig-${n}\\.webp"[^>]*>`))[0].includes('loading="lazy"')).toBe(n > 1);
       const f = new URL(`../games/treasure-room/how-it-works/fig-${n}.webp`, import.meta.url);
       expect(existsSync(f)).toBe(true);
       expect(statSync(f).size).toBeLessThanOrEqual(120 * 1024);

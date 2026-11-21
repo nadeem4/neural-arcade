@@ -28,13 +28,15 @@ $('levels').addEventListener('click', e => {
 
 // Start the 3D scene and models before the first mount asks for them, and on a hover over the level nav. Every level is 3D and
 // shares one download, so warming for the current level covers the one about to be opened.
-warm({ n: levelFromUrl(location.search, location.hash) });
-$('levels').addEventListener('pointerenter', () => warm({ n: levelFromUrl(location.search, location.hash) }), true);
+const shot = parseShots(location.search);
+if (!shot) {
+  warm({ n: levelFromUrl(location.search, location.hash) });
+  $('levels').addEventListener('pointerenter', () => warm({ n: levelFromUrl(location.search, location.hash) }), true);
+}
 
 wireLamp($('lamp'), () => handle?.redraw());
-const shot = parseShots(location.search);
 if (shot) {
-  // Developer capture mode for the How it works figures: replaces the page body with one figure and a Download button.
+  // Developer capture mode (a dynamic import keeps the three.js loads lazy) for the How it works figures: replaces the page body with one figure and a Download button.
   document.body.innerHTML = '<div id="shotBox"></div>';
   import('./shots.js').then(m => m.mountShots(document.getElementById('shotBox'), shot));
 } else {
