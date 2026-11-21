@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ROOM } from '../games/treasure-room/sim.js';
-import { createRoomHost, wants3d, roomMode, noWebglFlag, debugFlag, webglAvailable, LEVELS_IN_3D } from '../games/treasure-room/room-host.js';
+import { createRoomHost, wants3d, roomMode, noWebglFlag, debugFlag, webglAvailable, LEVELS_IN_3D, warm, shareLoad } from '../games/treasure-room/room-host.js';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return Object.assign(promise, { resolve }); };
 
@@ -153,5 +153,32 @@ describe('createRoomHost', () => {
     expect(scene.draw).not.toHaveBeenCalled();
     host.destroy();
     expect(scene.destroy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('warm and shared loading', () => {
+  it('warm starts the loader once per call when 3D is wanted, and never for 2D pages', async () => {
+    const loader = vi.fn(() => Promise.resolve({}));
+    expect(typeof warm).toBe('function');
+    warm({ n: 1, search: '', webgl: () => true, loader });
+    expect(loader).toHaveBeenCalledTimes(1);
+    for (const over of [{ search: '?room=2d' }, { search: '?nowebgl=1' }, { webgl: () => false }]) {
+      warm({ n: 1, search: '', webgl: () => true, loader, ...over });
+    }
+    expect(loader).toHaveBeenCalledTimes(1);
+  });
+  it('warm swallows a failed load', async () => {
+    expect(() => warm({ n: 1, search: '', webgl: () => true, loader: () => Promise.reject(new Error('x')) })).not.toThrow();
+  });
+  it('shareLoad runs the load once for every caller and forgets a failure', async () => {
+    let calls = 0;
+    const load = shareLoad(() => { calls++; return Promise.resolve({ ok: 1 }); });
+    const [a, b] = await Promise.all([load(), load()]);
+    expect(a).toBe(b);
+    expect(calls).toBe(1);
+    let fails = 0;
+    const flaky = shareLoad(() => (fails++ ? Promise.resolve('ok') : Promise.reject(new Error('x'))));
+    await expect(flaky()).rejects.toThrow();
+    expect(await flaky()).toBe('ok');
   });
 });

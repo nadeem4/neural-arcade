@@ -2,6 +2,7 @@
 import { wireLamp } from '../../assets/theme.js';
 import { lessonOfLevel } from '../../assets/tracks/model.js';
 import { levelFromUrl, navModel } from './levels.js';
+import { warm } from './room-host.js';
 import { mountLevelPlay, BUILT_LEVELS } from './level-panel.js';
 
 const $ = id => document.getElementById(id);
@@ -23,6 +24,10 @@ $('levels').addEventListener('click', e => {
   history.replaceState(null, '', a.getAttribute('href'));
   mountLevel(levelFromUrl(location.search, location.hash));
 });
+
+// Start the 3D scene and models before the first mount asks for them, and again when a level link is pointed at.
+warm({ n: levelFromUrl(location.search, location.hash) });
+$('levels').addEventListener('pointerenter', () => warm({ n: levelFromUrl(location.search, location.hash) }), true);
 
 wireLamp($('lamp'), () => handle?.redraw());
 mountLevel(levelFromUrl(location.search, location.hash));

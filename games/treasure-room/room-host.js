@@ -26,7 +26,13 @@ export function wants3d({ n, search = '', webgl }) {
 }
 
 // The files load together and in parallel; the scene is built only once the models (and this mount's own rogue) are in.
-const loadScene = async () => {
+// One load per page: every caller shares the promise, and a failure is forgotten so a later mount can retry.
+export const shareLoad = fn => {
+  let p = null;
+  return () => (p ??= fn().catch(e => { p = null; throw e; }));
+};
+
+const loadSceneFiles = async () => {
   const [scene, kit, character] = await Promise.all([
     import('./room-scene.js'),
     import('./room-kit.js').then(m => m.loadKit()),
@@ -34,6 +40,13 @@ const loadScene = async () => {
   ]);
   return { createScene3d: opts => scene.createScene3d({ ...opts, kit, character }) };
 };
+const loadScene = shareLoad(loadSceneFiles);
+
+// Starts the scene import and the model downloads early. Does nothing on a page that will stay 2D, so those never fetch three.js.
+export function warm({ n = 1, search = globalThis.location?.search ?? '', webgl = webglAvailable, loader = loadScene } = {}) {
+  if (!wants3d({ n, search, webgl: true }) || !(typeof webgl === 'function' ? webgl() : webgl)) return;
+  loader().catch(() => {});
+}
 
 // box: the .room element (it carries data-room); canvas: the 2D canvas inside it.
 // Returns { mode, ready, draw, cellAt, redraw, resize, setFocus, setOverlays, destroy }.
