@@ -6,8 +6,9 @@ const FONT = '700 44px "JetBrains Mono", ui-monospace, Consolas, monospace';
 const INK = '#E9EDF2'; // --stage-ink: the room stays dark in both themes
 
 // capacity: most labels at once. scale: world height of a quad (the width is twice that).
+// onTop: draw over everything (no depth test), for tags that must never hide behind the character.
 // tilt: radians the quads lean back from upright (the camera's polar angle puts them face on).
-export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
+export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0, onTop = false }) {
   const rows = Math.ceil(capacity / COLS);
   const canvas = document.createElement('canvas');
   canvas.width = COLS * SLOT_W;
@@ -27,7 +28,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
   geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geometry.setIndex(new THREE.BufferAttribute(index, 1));
   geometry.setDrawRange(0, 0);
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, toneMapped: false });
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, depthTest: !onTop, toneMapped: false });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   mesh.renderOrder = 2;

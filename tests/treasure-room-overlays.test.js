@@ -215,6 +215,10 @@ describe('tags and ice mesh layers (source)', () => {
     expect(src).toMatch(/tagStyle/);
     expect(src).toMatch(/TAG_CAPACITY/);
   });
+  it('tags draw over the character: the board has no depth test (a depth-tested tag hid inside the rogue)', () => {
+    expect(read('room-labels.js')).toMatch(/depthTest\s*:\s*!onTop/);
+    expect(read('room-overlay-meshes.js')).toMatch(/onTop\s*:\s*true/);
+  });
   it('the character leans on a slide', () => {
     expect(read('room-character.js')).toMatch(/slideLean/);
   });

@@ -8,7 +8,8 @@ const TINT_Y = 0.03;  // the heat tint lies just above the tile tops
 const TINT_HALF = 0.46;
 const ROCK_TOP = 0.17; // flat arrows and coins sit above the rock tiles' tops
 const TRAIL_CAPACITY = 12;
-const TAG_Y = 0.9;    // a tag floats this far above the floor (a cell is 1 wide)
+const TAG_Y = 1.2;    // a tag floats this far above the floor (a cell is 1 wide): clear of the rogue's head, which is about 0.9 tall with the hood
+const TAG_SCALE = 2.2; // reward tags read bigger than the value numbers: they are the point of the level
 const ICE_Y = 0.02;   // the ice lies just above the floor
 const GOOD = '#2a9d4b'; // the dark green assets/grid.js uses for the treasure; no green token exists
 
@@ -98,12 +99,12 @@ export const MESH_LAYERS = {
   // Reward tags: a second label board, up to TAG_CAPACITY labels floating above their tiles. The room is dark, so ink and step are light.
   tags(ctx) {
     const { THREE, room, parent } = ctx;
-    const board = createLabelBoard(THREE, { capacity: TAG_CAPACITY, scale: ctx.labelScale(), tilt: ctx.tilt });
+    const board = createLabelBoard(THREE, { capacity: TAG_CAPACITY, scale: ctx.labelScale() * TAG_SCALE, tilt: ctx.tilt, onTop: true });
     parent.add(board.mesh);
     const colour = ({ fill }) => fill === 'good' ? GOOD : fill === 'bad' ? token('--red', '#e5533f') : fill === 'step' ? '#aab2bd' : undefined; // ink: the board default
     return {
       update(list) {
-        board.setScale(ctx.labelScale());
+        board.setScale(ctx.labelScale() * TAG_SCALE);
         board.set(list.map(t => { const w = cellToWorld(room, t.x, t.y); return { x: w.x, y: TAG_Y, z: w.z, text: t.text, color: colour(tagStyle(t.tone, t.onEnd)) }; }));
       },
       dispose() { board.dispose(); },
