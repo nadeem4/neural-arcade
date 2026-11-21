@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createPolicy, setAction, runPolicy } from '../concepts/policy/sim.js';
-import { presets } from '../concepts/policy/play.js';
+import { RULEBOOKS } from '../concepts/policy/rulebooks.js';
 import { figureHtml } from '../concepts/policy/figures.js';
 import { GRID } from '../assets/grid.js';
 import { lessonById } from '../assets/tracks/model.js';
 
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
 const CELLS = GRID.w * GRID.h;
-const outcomeOf = i => runPolicy(GRID, presets[i].state.policy);
+const outcomeOf = i => runPolicy(GRID, RULEBOOKS[i].policy);
 
 describe('createPolicy and setAction', () => {
   it('has one action per cell, all the fill', () => {
@@ -47,17 +47,7 @@ describe('runPolicy', () => {
   });
 });
 
-describe('presets', () => {
-  it('are the bad, risky and good rulebook, in that order', () => {
-    expect(presets.map(p => p.label)).toEqual(['A bad rulebook', 'A risky rulebook', 'A good rulebook']);
-  });
-  it('every policy has the grid cell count and valid action ints', () => {
-    for (const p of presets) {
-      expect(p.state.policy).toHaveLength(CELLS);
-      for (const a of p.state.policy) expect([0, 1, 2, 3]).toContain(a);
-      expect(p.text.length).toBeGreaterThan(10);
-    }
-  });
+describe('rulebooks', () => {
   it('the stated claims are true: bad loops, risky hits the pit, good finds the treasure', () => {
     expect(outcomeOf(0).outcome).toBe('loop');
     expect(outcomeOf(1).outcome).toBe('pit');
@@ -87,10 +77,10 @@ describe('policy page file', () => {
     for (const s of ['<header data-site', '<footer data-site', '../../assets/studio.css', '../../assets/concept.css']) expect(html).toContain(s);
   });
   it('is generated: the lesson sections and runtime, with the write-up and page script beside it', () => {
-    for (const id of ['playground', 'tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
+    for (const id of ['tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
     expect(html).toContain('assets/lesson-page.js');
     expect(readFileSync(new URL('../concepts/policy/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
-    expect(readFileSync(new URL('../concepts/policy/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
+    expect(readFileSync(new URL('../concepts/policy/page.js', import.meta.url), 'utf8')).not.toContain('mountPlayground');
   });
   it('leads with the lesson line from the track config', () => {
     expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('policy').says);

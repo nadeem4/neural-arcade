@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createWorld, act, autoAct } from '../concepts/agent/sim.js';
-import { presets } from '../concepts/agent/play.js';
 import { figureHtml } from '../concepts/agent/figures.js';
 import { GRID, ACTIONS, REWARD, move } from '../assets/grid.js';
 import { mulberry32 } from '../engine/rng.js';
@@ -60,22 +59,6 @@ describe('agent sim', () => {
   });
 });
 
-describe('presets', () => {
-  it('has the three presets', () => {
-    expect(presets.map(p => p.label)).toEqual(['Move it yourself', 'Let it act on its own', 'Ask the world']);
-    expect(presets.map(p => p.state)).toEqual([{ auto: false }, { auto: true }, { auto: false, act: 3 }]);
-  });
-  it('every preset applied to a fresh world leaves finite numbers', () => {
-    for (const p of presets) {
-      const w = createWorld(), rng = mulberry32(3);
-      if (p.state.act !== undefined) act(w, p.state.act);
-      if (p.state.auto) for (let i = 0; i < 10; i++) autoAct(w, rng);
-      for (const v of [w.pos.x, w.pos.y, w.steps, w.total]) expect(Number.isFinite(v)).toBe(true);
-      expect(p.text.length).toBeGreaterThan(10);
-    }
-  });
-});
-
 describe('figureHtml', () => {
   it('is deterministic, an svg, and carries the real first reward', () => {
     expect(figureHtml(7)).toBe(figureHtml(7));
@@ -100,10 +83,10 @@ describe('agent page file', () => {
     for (const s of ['<header data-site', '<footer data-site', '../../assets/studio.css', '../../assets/concept.css']) expect(html).toContain(s);
   });
   it('is generated: the lesson sections and runtime, with the write-up and page script beside it', () => {
-    for (const id of ['playground', 'tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
+    for (const id of ['tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
     expect(html).toContain('assets/lesson-page.js');
     expect(readFileSync(new URL('../concepts/agent/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
-    expect(readFileSync(new URL('../concepts/agent/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
+    expect(readFileSync(new URL('../concepts/agent/page.js', import.meta.url), 'utf8')).not.toContain('mountPlayground');
   });
   it('leads with the lesson line from the track config', () => {
     expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('agent').says);

@@ -1,15 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { valuesFor, shadeOf, moveTreasure } from '../concepts/value/sim.js';
-import { presets } from '../concepts/value/play.js';
+import { valuesFor, shadeOf } from '../concepts/value/sim.js';
 import { figureHtml } from '../concepts/value/figures.js';
 import { GRID, stateId } from '../assets/grid.js';
 import { lessonById } from '../assets/tracks/model.js';
 
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
 const at = (grid, x, y) => stateId(grid, { x, y });
-const stateOf = i => presets[i].state;
-const gridOf = s => (s.treasure ? moveTreasure(GRID, s.treasure) : GRID);
 
 describe('valuesFor', () => {
   it('values grow toward the treasure along the path', () => {
@@ -37,50 +34,6 @@ describe('shadeOf', () => {
   });
 });
 
-describe('moveTreasure', () => {
-  it('moves the T to a floor cell and returns a new grid', () => {
-    const g = moveTreasure(GRID, [0, 3]);
-    expect(g.cells[3][0]).toBe('T');
-    expect(g.cells[0][4]).toBe('.');
-    expect(g.cells.flat().filter(c => c === 'T')).toHaveLength(1);
-    expect(g).not.toBe(GRID);
-  });
-  it('does not mutate the original grid', () => {
-    moveTreasure(GRID, [0, 3]);
-    expect(GRID.cells[0][4]).toBe('T');
-    expect(GRID.cells[3][0]).toBe('.');
-  });
-  it('rejects wall, pit, start and off-grid cells', () => {
-    for (const p of [[1, 2], [2, 0], [0, 0], [9, 9], [-1, 0]]) expect(() => moveTreasure(GRID, p), String(p)).toThrow();
-  });
-  it('changes which neighbour has the highest value', () => {
-    const a = valuesFor(GRID, 0.9), b = valuesFor(moveTreasure(GRID, [0, 3]), 0.9);
-    expect(b[at(GRID, 0, 2)]).toBeGreaterThan(a[at(GRID, 0, 2)]);
-    expect(b[at(GRID, 4, 1)]).toBeLessThan(a[at(GRID, 4, 1)]);
-  });
-});
-
-describe('presets', () => {
-  it('are near-sighted, far-sighted and move treasure', () => {
-    expect(presets.map(p => p.label)).toEqual(['Near-sighted', 'Far-sighted', 'Move the treasure']);
-    for (const p of presets) expect(p.text.length).toBeGreaterThan(10);
-  });
-  it('every preset yields finite values on a valid grid', () => {
-    for (let i = 0; i < presets.length; i++) {
-      const s = stateOf(i), g = gridOf(s);
-      expect(valuesFor(g, s.gamma).every(Number.isFinite)).toBe(true);
-    }
-  });
-  it('the stated claims are true', () => {
-    const near = valuesFor(GRID, stateOf(0).gamma), far = valuesFor(GRID, stateOf(1).gamma);
-    expect(near[0]).toBeLessThan(0);
-    expect(far[0]).toBeGreaterThan(7);
-    const s = stateOf(2), g = gridOf(s);
-    expect(g.cells[s.treasure[1]][s.treasure[0]]).toBe('T');
-    expect(valuesFor(g, s.gamma)[at(g, 0, 2)]).toBeGreaterThan(valuesFor(GRID, s.gamma)[at(g, 0, 2)]);
-  });
-});
-
 describe('figureHtml', () => {
   it('shows the exact start-cell value at each discount, rounded', () => {
     const h = figureHtml();
@@ -103,10 +56,10 @@ describe('value page file', () => {
     for (const s of ['<header data-site', '<footer data-site', '../../assets/studio.css', '../../assets/concept.css']) expect(html).toContain(s);
   });
   it('is generated: the lesson sections and runtime, with the write-up and page script beside it', () => {
-    for (const id of ['playground', 'tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
+    for (const id of ['tries', 'writeup', 'play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
     expect(html).toContain('assets/lesson-page.js');
     expect(readFileSync(new URL('../concepts/value/writeup.html', import.meta.url), 'utf8')).toContain('id="figure"');
-    expect(readFileSync(new URL('../concepts/value/page.js', import.meta.url), 'utf8')).toContain('mountPlayground');
+    expect(readFileSync(new URL('../concepts/value/page.js', import.meta.url), 'utf8')).not.toContain('mountPlayground');
   });
   it('leads with the lesson line from the track config', () => {
     expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '')).toBe(lessonById('value').says);
