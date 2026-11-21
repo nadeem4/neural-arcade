@@ -93,6 +93,7 @@ function spawn(gltf, room, start) {
       idle.fadeOut(FADE);
       walk.reset().fadeIn(FADE).play();
     },
+    busy: () => !!tween || cheer.isRunning() || walk.isRunning(), // a move or a non-idle clip is playing
     cheer() { if (tween) wantCheer = true; else startCheer(); },
     update(dt) {
       mixer.update(dt);

@@ -136,6 +136,9 @@ export const tierFor = viewW => (viewW <= 600
   ? { pixelRatioMax: 1.5, shadowMap: 512, torchLights: false }
   : { pixelRatioMax: 2, shadowMap: 1024, torchLights: true });
 
+// Render this frame? Busy frames always; idle ones at most every idleMs.
+export const frameGate = ({ now, last, idleMs = 33, active }) => !!active || now - last >= idleMs;
+
 export const formatStats = ({ fps, calls, triangles, geometries, textures, kb, firstMs }) =>
   `${Math.round(fps)} fps | ${calls} calls | ${(triangles / 1000).toFixed(1)}k tris | ${geometries} geo | ${textures} tex | ${Math.round(kb)} KB | first ${Math.round(firstMs)} ms`;
 

@@ -4,7 +4,7 @@ import { makeGrid } from '../assets/grid.js';
 import { ROOM } from '../games/treasure-room/sim.js';
 import {
   DIMS, PARTS, VIEW, cellToWorld, worldToCell, layoutRoom, nearSides, cameraPose, fitDistance,
-  roomRadius, rayToCell, isTap, labelScale, tierFor, formatStats,
+  roomRadius, rayToCell, isTap, labelScale, tierFor, frameGate, formatStats,
   MOVE_MS, moveStyle, tweenAt, facing, atTreasure, slideLean, tagSize, tagInside, tagHalfWidth
 } from '../games/treasure-room/room-math.js';
 
@@ -192,5 +192,34 @@ describe('taps, labels, tiers and stats', () => {
     const src = readFileSync(new URL('../games/treasure-room/room-math.js', import.meta.url), 'utf8');
     expect(src).not.toMatch(/from\s+['"](three|\.\.\/\.\.\/assets\/vendor)/);
     expect(src).not.toMatch(/\bdocument\b|\bwindow\b/);
+  });
+});
+
+describe('idle frame cap, pause and phone sizing', () => {
+  const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+  it('frameGate: busy frames always render, idle ones at most every idleMs', () => {
+    expect(frameGate({ now: 10, last: 0, active: false })).toBe(false);
+    expect(frameGate({ now: 40, last: 0, active: false })).toBe(true);
+    expect(frameGate({ now: 1, last: 0, active: true })).toBe(true);
+    expect(frameGate({ now: 50, last: 0, idleMs: 100, active: false })).toBe(false);
+  });
+  it('tierFor keeps the TD1a tiers (no real-phone reading, so unchanged)', () => {
+    expect(tierFor(360)).toEqual({ pixelRatioMax: 1.5, shadowMap: 512, torchLights: false });
+    expect(tierFor(600)).toEqual({ pixelRatioMax: 1.5, shadowMap: 512, torchLights: false });
+    expect(tierFor(1280)).toEqual({ pixelRatioMax: 2, shadowMap: 1024, torchLights: true });
+  });
+  it('the scene gates frames, pauses off screen and when hidden, and lets go on destroy', () => {
+    const src = read('games/treasure-room/room-scene.js');
+    expect(src).toMatch(/IntersectionObserver/);
+    expect(src).toMatch(/document\.hidden/);
+    expect(src).toMatch(/frameGate\(/);
+    expect(src).toMatch(/io\?\.disconnect\(\)/);
+    expect(src).toMatch(/removeEventListener\('visibilitychange'/);
+  });
+  it('the character reports when it is busy', () => {
+    expect(read('games/treasure-room/room-character.js')).toMatch(/busy:/);
+  });
+  it('the room is capped to the screen height', () => {
+    expect(read('games/treasure-room/treasure-room.css')).toMatch(/\.room\s*\{[^}]*max-height:\s*min\(100vw,\s*70vh\)/);
   });
 });
