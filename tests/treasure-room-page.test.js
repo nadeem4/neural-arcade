@@ -92,10 +92,26 @@ describe('treasure room page markup', () => {
 });
 
 describe('treasure-room.css', () => {
-  it('keeps the stage square and inside a phone width', () => {
-    expect(rules('#roomBox')).toMatch(/aspect-ratio:\s*1/);
+  it('keeps the stage 4:3 and inside a phone width', () => {
+    expect(rules('#roomBox')).toMatch(/aspect-ratio:\s*4\s*\/\s*3/);
+    expect(rules('#roomBox')).not.toMatch(/16\s*\/\s*10/);
     expect(rules('.room')).toMatch(/width:/);
+    expect(rules('.room')).not.toMatch(/480px|56vh/);
     expect(css).not.toMatch(/\bwidth:\s*\d{4,}px/);
+  });
+  it('collapses the empty result strip to one line without hiding it', () => {
+    expect(rules('.stage .say:empty')).toMatch(/min-height:\s*1\.5em/);
+    expect(rules('.stage .say:empty')).not.toMatch(/display:\s*none/);
+  });
+  it('styles the level labels from tokens, with 44px touch targets and a visible focus', () => {
+    expect(rules('.marker-layer')).toMatch(/pointer-events:\s*none/);
+    expect(rules('.marker')).toMatch(/pointer-events:\s*auto/);
+    expect(rules('.marker::before')).toMatch(/inset:\s*-/);
+    expect(rules('.marker-pill .marker::after')).toMatch(/border/);
+    expect(rules('.marker-wrap[data-open]')).toMatch(/z-index/);
+    expect(rules('.marker-card')).toMatch(/max-width:\s*240px/);
+    expect(rules('.marker:focus-visible')).toMatch(/var\(--signal\)/);
+    for (const m of css.matchAll(/([^{}]*marker[^{}]*)\{([^{}]*)\}/g)) expect(m[2], m[1]).not.toMatch(/#[0-9a-fA-F]{3,8}/);
   });
   it('styles the loader from tokens only, with no 2D leftovers', () => {
     expect(rules('.room-loader')).toMatch(/background:\s*var\(--stage\)/);

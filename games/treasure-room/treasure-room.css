@@ -2,11 +2,11 @@
 
 #levelRoot { display: contents; } /* the mounted stage and panel stay the two columns of .play */
 .stage-body { display: block; padding: 14px; } /* studio.css makes it a two-column grid; here the room fills it */
-.room { position: relative; width: min(100%, 56vh, 480px); max-height: min(100vw, 70vh); margin: 0 auto; }
+.room { position: relative; width: 100%; max-width: 100vh; margin: 0 auto; } /* 4:3, so 100vh wide is 75vh tall */
 .readouts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* The room box holds the 3D canvas (room-host.js sets data-room to loading, 3d or failed) and the loader over it. */
-#roomBox { aspect-ratio: 1; }
+#roomBox { aspect-ratio: 4 / 3; }
 .room-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border-radius: 8px; touch-action: none; }
 #roomBox:not([data-room="3d"]) .tilegrid { z-index: 1; } /* while loading or failed the tile buttons stay above the loader and keep working */
 #roomBox[data-room="3d"] .tilegrid { pointer-events: none; opacity: 0; } /* the buttons stay focusable; a tap on the room clicks the tile */
@@ -25,6 +25,25 @@
 .room-loader[data-state="failed"] .room-loader-failure { display: grid; }
 .room-loader[data-state="failed"] .room-loader-line, .room-loader[data-state="failed"] .room-loader-bar { display: none; }
 @keyframes room-loader-pulse { from { opacity: .55; } to { opacity: 1; } }
+
+/* The empty result strip keeps one line, so the room does not jump when the first line of text arrives. */
+.stage .say:empty { min-height: 1.5em; padding-block: 0; }
+
+/* Labels over the room (room-markers-view.js): they sit above the canvas and take clicks only on the buttons. */
+.marker-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.marker-wrap { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.marker { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 13px/1.5 var(--sans); box-shadow: 0 2px 8px rgba(0, 0, 0, .35); }
+.marker::before { content: ""; position: absolute; inset: -8px; } /* the touch target is bigger than the label */
+.marker-pill .marker { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 12px; transform: translate(-50%, calc(-100% - 8px)); border-radius: 999px; white-space: nowrap; }
+.marker-pill .marker span { display: inline-grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--ink); border-radius: 50%; font: italic 600 11px/1 Georgia, serif; }
+.marker-pill .marker::after { content: ""; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--ink); border-bottom: 0; } /* points down at the head */
+.marker-dot .marker { transform: translate(-50%, -50%); width: 24px; height: 24px; padding: 0; border-radius: 50%; font: italic 600 15px/1.5 Georgia, serif; }
+.marker-dot .marker::before { inset: -10px; }
+.marker:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+.marker-wrap[data-open] { z-index: 5; } /* the open label and its card draw over the other labels */
+.marker-card { position: absolute; left: 0; top: 0; z-index: 4; width: max-content; max-width: 240px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: 500 13px/1.5 var(--sans); pointer-events: auto; }
+.marker-card[hidden] { display: none; }
+.marker-card p { margin: 4px 0 0; }
 
 /* Level links above the stage. */
 .levels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
@@ -64,7 +83,7 @@
 /* Phone fit: scrolled to Play, the room and the move pad share one 390x700 screen. */
 @media (max-width: 640px) {
   .stage-body { padding: 8px; }
-  .room { width: min(100%, 70vh); } /* square, up to min(100%, 70vh) wide; at 390x700 the room and the pad still fit one screen (pad bottom at 549px) */
+  .room { width: min(100%, 70vh); }
   .stage .say { min-height: 3em; padding: 8px 14px; }
   #levelBrief, #levelAssumes, #gammaHint { display: none; }
   .readouts div { padding: 8px 14px; }

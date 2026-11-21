@@ -3,9 +3,11 @@
 import { createRoomHost } from './room-host.js';
 import { createLoader } from './room-loader.js';
 import { OVERLAYS_FOR_LEVEL } from './room-overlays.js';
+import { markersFor } from './room-markers.js';
+import { createMarkerLayer } from './room-markers-view.js';
 import { ROOM } from './sim.js';
 import { levelByN, assumesHtml } from './levels.js';
-import { INFO } from './words.js';
+import { INFO, MARKER_INFO } from './words.js';
 import { lessonOfLevel } from '../../assets/tracks/model.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
@@ -171,14 +173,18 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
 
   n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
   // The loader comes first: the host reports its first state synchronously inside createRoomHost.
-  let host;
+  let host, markers = null;
   const loader = createLoader(box, { title: title || levelName(n), onRetry: () => host.retry(), reduceMotion: reduceMotion.matches });
   host = createRoomHost({
     box, room: ROOM, reduceMotion: reduceMotion.matches,
-    onState: (state, reason) => { if (state === 'loading') loader.loading(); else if (state === '3d') loader.done(); else loader.fail(reason); },
+    onState: (state, reason) => { markers?.setShown(state === '3d'); if (state === 'loading') loader.loading(); else if (state === '3d') loader.done(); else loader.fail(reason); },
     onProgress: loader.progress,
   });
   host.setOverlays(OVERLAYS_FOR_LEVEL[n]);
+  const list = markersFor(n, ROOM);
+  markers = list.length ? createMarkerLayer({ box, markers: list, info: MARKER_INFO }) : null;
+  markers?.setShown(host.mode() === '3d');
+  host.setMarkers(markers);
 
   // ui.canvas is the room box, so a click on the 3D canvas reaches the level.
   const ui = {
@@ -228,6 +234,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
       view?.destroy();
       view = null;
       host.destroy();
+      markers?.destroy();
       loader.destroy();
       resize.disconnect();
       root.innerHTML = '';

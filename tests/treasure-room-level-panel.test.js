@@ -200,3 +200,12 @@ describe('levelName', () => {
     expect(levelName(99)).toBe(levelName(BUILT_LEVELS[0]));
   });
 });
+
+describe('level labels in the panel (source guards)', () => {
+  it('mounts the label layer only for a level that has markers, and shows it only in 3D', () => {
+    expect(panel).toMatch(/import \{[^}]*markersFor[^}]*\} from '\.\/room-markers\.js'/);
+    expect(panel).toMatch(/list\.length \? createMarkerLayer\(/);
+    expect(panel).toMatch(/markers\?\.setShown\(state === '3d'\)/);
+    expect(panel).toMatch(/markers\?\.destroy\(\)/);
+  });
+});

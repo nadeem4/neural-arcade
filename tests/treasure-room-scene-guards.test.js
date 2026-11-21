@@ -25,6 +25,11 @@ describe('room-scene.js source guards', () => {
   it('lets go of the renderer and canvas if the character cannot be built', () => {
     expect(src).toMatch(/try \{ ch = character\?\.spawn\(room, null\) \?\? null; \}\s*catch \(err\) \{[\s\S]*?forceContextLoss[\s\S]*?renderer\.dispose\(\)[\s\S]*?canvas\.remove\(\)[\s\S]*?throw err/);
   });
+  it('fits the camera to the real room outline, not a sphere', () => {
+    expect(src).toMatch(/fitOutline\(/);
+    expect(src).toMatch(/outlineCorners\(/);
+    expect(src).not.toMatch(/fitDistance/);
+  });
   it('keeps the camera turn-only', () => {
     expect(src).toMatch(/enablePan\s*:\s*false/);
   });
@@ -59,5 +64,43 @@ describe('room-scene.js source guards', () => {
   });
   it('drops a drag when the loop pauses, so a hidden tab cannot keep it at full rate', () => {
     expect(src).toMatch(/if \(document\.hidden \|\| !visible\) \{[^}]*dragging = false/);
+  });
+});
+
+describe('level labels wiring (source guards)', () => {
+  const host = read('games/treasure-room/room-host.js');
+  const view = read('games/treasure-room/room-markers-view.js');
+  it('the scene projects the labels after each render', () => {
+    expect(src).toMatch(/setMarkers/);
+    expect(src).toMatch(/projectPoint\(/);
+    expect(src).toMatch(/AGENT_HEAD_Y/);
+  });
+  it('the host passes the layer on and replays it when the scene is built', () => {
+    expect(host).toMatch(/setMarkers\(layer\)/);
+    expect(host).toMatch(/scene\.setMarkers\(markers\)/);
+  });
+  it('the markers are buttons wired with aria-expanded and aria-controls, never disabled', () => {
+    expect(view).toMatch(/aria-expanded/);
+    expect(view).toMatch(/aria-controls/);
+    expect(view).not.toMatch(/disabled/);
+  });
+  it('clicks on a label stop at the layer so the room never moves the agent', () => {
+    expect(view).toMatch(/layer\.addEventListener\('click', e => e\.stopPropagation\(\)/);
+  });
+  it('hover and the keyboard close work on the whole wrapper, and the open card measures itself', () => {
+    expect(view).toMatch(/wrap\.addEventListener\('pointerenter'/);
+    expect(view).toMatch(/focusout/);
+    expect(view).toMatch(/offsetHeight/);
+    expect(view).toMatch(/offsetWidth/);
+  });
+  it('card text goes in with textContent, never innerHTML', () => {
+    expect(view).toMatch(/textContent/);
+    expect(view).not.toMatch(/innerHTML/);
+  });
+  it('the view listens for Escape and outside presses through one AbortController', () => {
+    expect(view).toMatch(/AbortController/);
+    expect(view).toMatch(/Escape/);
+    expect(view).toMatch(/pointerdown/);
+    expect(view).toMatch(/cardReduce\(/);
   });
 });

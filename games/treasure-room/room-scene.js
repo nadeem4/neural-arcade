@@ -3,10 +3,11 @@
 import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { OrbitControls } from '../../assets/vendor/three/controls/OrbitControls.js';
 import {
-  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, frameGate, formatStats, moveStyle, atTreasure, labelScale,
+  VIEW, layoutRoom, nearSides, cameraPose, fitOutline, outlineCorners, roomRadius, rayToCell, isTap, tierFor, frameGate, formatStats, moveStyle, atTreasure, labelScale,
 } from './room-math.js';
 import { OVERLAYS, overlayNames, marksList } from './room-overlays.js';
 import { MESH_LAYERS, createMarks } from './room-overlay-meshes.js';
+import { projectPoint, AGENT_HEAD_Y } from './room-markers.js';
 
 const NEAR_WALL_SCALE = 0.3; // a wall on the camera's side drops to this height so it never hides a tile
 const TARGET = [0, 0.2, 0];
@@ -170,13 +171,17 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   });
   controls.target.set(...TARGET);
   let fitted = false;
+  const corners = outlineCorners(room, L.wallH, L.wallD);
   const resize = () => {
     const w = box.clientWidth, h = box.clientHeight || w;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    const d = fitDistance({ w, h, fov: VIEW.fov, radius });
+    const d = fitOutline({
+      corners, azimuth: fitted ? controls.getAzimuthalAngle() : VIEW.azimuth, polar: fitted ? controls.getPolarAngle() : VIEW.polar,
+      target: TARGET, fov: VIEW.fov, aspect: w / h, margin: 0.04,
+    });
     controls.minDistance = d * 0.6;
     controls.maxDistance = d * 1.4;
     if (!fitted) {
@@ -187,6 +192,18 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     }
     controls.update();
     drawOverlays(lastOpts); // labels re-size with the view
+    placeMarkers();
+  };
+  // Labels over the room (room-markers-view.js): placed from the camera after every render and once after a resize or a draw.
+  let markerLayer = null;
+  const vp = new THREE.Matrix4();
+  const placeMarkers = () => {
+    const w = box.clientWidth, h = box.clientHeight;
+    if (!markerLayer || !w || !h) return;
+    camera.updateMatrixWorld();
+    vp.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    const o = ch?.object;
+    markerLayer.update(p => projectPoint(vp.elements, p, w, h, 12), o?.visible ? [o.position.x, o.position.y + AGENT_HEAD_Y, o.position.z] : null);
   };
   let dragging = false;
   const onChange = () => { dirty = true; applyNear(controls.getAzimuthalAngle()); }; // also fires while damping settles
@@ -237,6 +254,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     prev = now;
     controls.update();
     renderer.render(scene, camera);
+    placeMarkers();
     if (!debug) return;
     if (!firstMs) firstMs = performance.now() - t0;
     frames++;
@@ -269,9 +287,10 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   canvas.addEventListener('webglcontextlost', onLost);
 
   return {
-    draw(opts) { setBackground(); drawAgent(opts); drawOverlays(opts); }, // a redraw (theme change) also re-reads the background
+    draw(opts) { setBackground(); drawAgent(opts); drawOverlays(opts); placeMarkers(); }, // a redraw (theme change) also re-reads the background
     cellAt,
     resize,
+    setMarkers(layer) { markerLayer = layer; dirty = true; placeMarkers(); },
     setFocus(cell) { dirty = true; focusRing.set(cell ? [cell] : []); },
     setOverlays(names) {
       const wanted = overlayNames(names);

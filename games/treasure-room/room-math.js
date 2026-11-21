@@ -109,10 +109,27 @@ export function cameraPose({ azimuth, polar, dist, target = [0, 0, 0] }) {
   ] };
 }
 
-// Camera distance that keeps a sphere of `radius` in frame at both the vertical and the horizontal field of view. fov in degrees.
-export function fitDistance({ w, h, fov, radius }) {
-  const half = fov * Math.PI / 360, aspect = w / h;
-  return Math.max(radius / Math.sin(half), radius / Math.sin(Math.atan(Math.tan(half) * aspect)));
+// The 8 corners of the box around the room and its walls (far walls are full height, so the whole box is the safe outline).
+export function outlineCorners(room, wallH, wallD) {
+  const hx = room.w / 2 + wallD, hz = room.h / 2 + wallD, out = [];
+  for (const x of [-hx, hx]) for (const y of [0, wallH]) for (const z of [-hz, hz]) out.push([x, y, z]);
+  return out;
+}
+
+// Camera distance at which every outline corner sits inside the view with `margin` to spare (fov in degrees, aspect = w / h).
+export function fitOutline({ corners, azimuth, polar, target, fov, aspect, margin }) {
+  const tanH = Math.tan(fov * Math.PI / 360), k = 1 - margin;
+  const dir = [Math.sin(polar) * Math.sin(azimuth), Math.cos(polar), Math.sin(polar) * Math.cos(azimuth)]; // target to camera
+  const fw = dir.map(v => -v);
+  const rl = Math.hypot(fw[2], fw[0]), right = [fw[2] / rl, 0, -fw[0] / rl];
+  const up = [right[1] * fw[2] - right[2] * fw[1], right[2] * fw[0] - right[0] * fw[2], right[0] * fw[1] - right[1] * fw[0]];
+  const dot = (p, v) => p[0] * v[0] + p[1] * v[1] + p[2] * v[2];
+  let d = 0;
+  for (const c of corners) {
+    const p = [c[0] - target[0], c[1] - target[1], c[2] - target[2]], b = dot(p, fw);
+    d = Math.max(d, Math.abs(dot(p, right)) / (tanH * aspect * k) - b, Math.abs(dot(p, up)) / (tanH * k) - b);
+  }
+  return d;
 }
 
 export const roomRadius = (room, wallD) => (Math.max(room.w, room.h) / 2 + wallD) * 1.2 + 0.2;

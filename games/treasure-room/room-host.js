@@ -67,12 +67,12 @@ export function warm({ webgl = webglAvailable, loader = loadScene } = {}) {
 }
 
 // box: the .room element (it carries data-room). onState(state, reason?) fires on every change; onProgress(0..1) while loading.
-// Returns { mode, ready, retry, draw, cellAt, redraw, resize, setFocus, setOverlays, destroy }; `ready` is the current attempt's promise.
+// Returns { mode, ready, retry, draw, cellAt, redraw, resize, setFocus, setOverlays, setMarkers, destroy }; `ready` is the current attempt's promise.
 export function createRoomHost({
   box, room, search = globalThis.location?.search ?? '', reduceMotion = false,
   loader = loadScene, webgl = webglAvailable, onState = () => {}, onProgress = () => {}, subscribe = subscribeProgress,
 }) {
-  let scene = null, dead = false, inFlight = false, state = 'loading', last = null, focus = null, overlays = null;
+  let scene = null, dead = false, inFlight = false, state = 'loading', last = null, focus = null, overlays = null, markers = null;
 
   const setState = (s, reason) => { state = s; box.dataset.room = s; if (reason) onState(s, reason); else onState(s); };
   const fail = reason => { setState('failed', reason); return 'failed'; };
@@ -91,6 +91,7 @@ export function createRoomHost({
     try { scene = mod.createScene3d({ box, room, character, reduceMotion, debug: debugFlag(search), onContextLost: lost }); } catch { scene = null; return fail('scene'); }
     scene.resize();
     if (overlays) scene.setOverlays(overlays);
+    if (markers) scene.setMarkers(markers);
     if (focus) scene.setFocus(focus);
     if (last) scene.draw(last);
     setState('3d');
@@ -118,6 +119,7 @@ export function createRoomHost({
     resize() { if (!dead) scene?.resize(); },
     setFocus(cell) { focus = cell; scene?.setFocus(cell); },
     setOverlays(names) { overlays = names; scene?.setOverlays(names); },
+    setMarkers(layer) { markers = layer; scene?.setMarkers(layer); },
     destroy() {
       if (dead) return;
       dead = true;
