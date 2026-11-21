@@ -100,9 +100,11 @@
     <h2>Value spreads outward</h2>
     <p>The <em>value</em> of a tile is the return the robot can expect if it stands there and plays well. Start with zero everywhere. One sweep lets every tile look at its neighbours and take the best one. The tile next to the treasure learns it is worth something, then the tile beside that, and the news spreads outward one step per sweep.</p>
     <figure class="fig wide" id="fig5">
-      <div class="minis" id="sweepGrids"></div>
-      <p class="stepper"><button class="btn" type="button" id="stepThrough">Step through</button><span id="stepNote" aria-live="polite"></span></p>
-      <figcaption><b>Fig. 5</b> The value of each tile after 1, 2, 3, 5 and <span id="settleSweeps"></span> sweeps, at discount 0.9. A warmer tile is worth more. By the last grid nothing moves by more than 0.01 and the start tile settles at <span id="startValue"></span>.</figcaption>
+      <div class="duo">
+        <div><p class="duo-label">After 2 sweeps</p><img class="grid" src="fig-5.webp" width="1280" height="800" alt="The room after two sweeps: only the tiles beside the treasure are warm and carry a value; every other tile still reads the same low number" loading="lazy"></div>
+        <div><p class="duo-label">After <span id="settleSweeps"></span> sweeps</p><img class="grid" src="fig-6.webp" width="1280" height="800" alt="The room once the values have settled: every tile carries a value, warmer the closer it is to the treasure" loading="lazy"></div>
+      </div>
+      <figcaption><b>Fig. 5</b> The value of each tile after 2 sweeps and once the sweeps have settled, at discount 0.9. A warmer tile is worth more. By the last picture nothing moves by more than 0.01 and the start tile settles at <span id="startValue"></span>.</figcaption>
     </figure>
     <p class="lesson"><small>The lesson</small>Value is how good it is to stand here.</p>
     <p><a href="../../../concepts/value/">More on value</a> · <a href="../?level=5">Play level 5</a></p>
@@ -115,8 +117,8 @@
     <p>Five parts describe such a world: the <em>states</em>, the <em>actions</em>, the <em>rewards</em>, the <em>slip chance</em> and the <em>discount</em>. Together they are a Markov decision process, or MDP.</p>
     <figure class="fig wide" id="fig6">
       <div class="duo">
-        <div><p class="duo-label">Dry floor</p><img class="grid" src="fig-5.webp" width="1280" height="800" alt="The best route on a dry floor, passing next to the pit." loading="lazy"></div>
-        <div><p class="duo-label">Icy floor</p><img class="grid" src="fig-6.webp" width="1280" height="800" alt="The best route on an icy floor, keeping away from the pit." loading="lazy"></div>
+        <div><p class="duo-label">Dry floor</p><img class="grid" src="fig-7.webp" width="1280" height="800" alt="The best route on a dry floor, passing next to the pit." loading="lazy"></div>
+        <div><p class="duo-label">Icy floor</p><img class="grid" src="fig-8.webp" width="1280" height="800" alt="The best route on an icy floor, keeping away from the pit." loading="lazy"></div>
       </div>
       <ul class="tallies">
         <li>The dry plan passes next to the pit, with a start value of <span id="dryValue"></span>. Walked on ice <span class="n-trips"></span> times, it falls in <span id="dryPit"></span>.</li>

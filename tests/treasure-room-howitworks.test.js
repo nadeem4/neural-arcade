@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { LEVELS } from '../games/treasure-room/levels.js';
 import { GAMES } from '../assets/games.js';
 
@@ -61,9 +61,9 @@ describe('treasure room how it works page', () => {
     expect(html).toContain(`<meta name="twitter:image" content="${URL_}share.png">`);
   });
 
-  it('shows six still images from the 3D room, each with its size and alt text', () => {
+  it('shows eight still images from the 3D room, each with its size and alt text', () => {
     expect(html).not.toMatch(/<canvas/);
-    for (let n = 1; n <= 6; n++) {
+    for (let n = 1; n <= 8; n++) {
       expect(html).toMatch(new RegExp(`<img[^>]+src="fig-${n}\\.webp"[^>]+width="1280"[^>]+height="800"[^>]+alt="[^"]{12,}"`));
       expect(html.match(new RegExp(`<img[^>]+src="fig-${n}\\.webp"[^>]*>`))[0].includes('loading="lazy"')).toBe(n > 1);
       const f = new URL(`../games/treasure-room/how-it-works/fig-${n}.webp`, import.meta.url);
@@ -73,11 +73,18 @@ describe('treasure room how it works page', () => {
     expect(existsSync(new URL('../games/treasure-room/share.png', import.meta.url))).toBe(true);
   });
 
-  it('story.js no longer draws the six figure canvases', () => {
-    for (const id of ['canvasRoom', 'canvasRoutes', 'policyBad', 'policyFixed', 'planDry', 'planIcy']) expect(story).not.toContain(id);
+  it('story.js draws no canvases and imports no 2D room drawing', () => {
+    expect(story).not.toMatch(/canvas|drawRoom|room-view|sizeCanvas/i);
   });
 
-  it('story.js reads the recorded run and shows the sweeps the story records', () => {
+  it('nothing imports room-view.js, and the file is gone', () => {
+    expect(existsSync(new URL('../games/treasure-room/room-view.js', import.meta.url))).toBe(false);
+    for (const f of readdirSync(new URL('../games/treasure-room/', import.meta.url)).filter(x => x.endsWith('.js'))) {
+      expect(read('games/treasure-room/' + f), f).not.toMatch(/room-view/);
+    }
+  });
+
+  it('story.js reads the recorded run for the sweep numbers', () => {
     expect(story).toContain("fetch('../story.json')");
     expect(story).toContain('value.snapshots');
   });

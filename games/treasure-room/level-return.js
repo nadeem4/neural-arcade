@@ -2,7 +2,7 @@
 import { START, pathActions, discounted, returnOf, treasureWorth, REWARD } from './sim.js';
 import { ACTIONS } from '../../assets/grid.js';
 import { gammaHint } from './words.js';
-import { tagTone } from './room-view.js';
+import { tagTone } from './room-math.js';
 
 const D = 1, R = 3, U = 0;
 // Chosen from the real room: the dry greedy route (passes next to the pit), a longer safe way round the bottom, and one that ends in the pit.
