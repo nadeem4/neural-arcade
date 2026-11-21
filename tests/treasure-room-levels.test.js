@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { lessonById } from '../assets/tracks/model.js';
-import { LEVELS, levelFromUrl, levelByN, navModel } from '../games/treasure-room/levels.js';
+import { lessonById, lessonLabel, lessonHref } from '../assets/tracks/model.js';
+import { TRACKS } from '../assets/tracks/index.js';
+import { LEVELS, levelFromUrl, levelByN, navModel, assumesHtml } from '../games/treasure-room/levels.js';
 
 const LESSONS = [
   'The AI only knows what the room tells it.',
@@ -58,5 +59,30 @@ describe('levelFromUrl', () => {
   });
   it('an invalid query falls back to a valid hash', () => {
     expect(levelFromUrl('?level=abc', '#mdp')).toBe(6);
+  });
+});
+
+describe('assumesHtml', () => {
+  it('is empty with no assumes or no live lesson', () => {
+    expect(assumesHtml({ assumes: [] }, TRACKS)).toBe('');
+    expect(assumesHtml({}, TRACKS)).toBe('');
+    expect(assumesHtml({ assumes: ['nope'] }, TRACKS)).toBe('');
+  });
+  it('links each lesson a level builds on, with its number', () => {
+    const l = lessonById('state-action-reward');
+    const h = assumesHtml(levelByN(3), TRACKS);
+    expect(h).toContain('<p class="assumes">Builds on ');
+    expect(h).toContain(lessonLabel(l));
+    expect(h).toContain(`href="${lessonHref(l, '../../')}"`);
+  });
+  it('skips ids that are not live and keeps the rest', () => {
+    const h = assumesHtml({ assumes: ['nope', 'agent'] }, TRACKS);
+    expect(h).toContain(lessonLabel(lessonById('agent')));
+    expect(h).not.toContain('nope');
+  });
+  it('level 1 has none; 2 to 6 build on the lesson before', () => {
+    expect(LEVELS[0].assumes ?? []).toEqual([]);
+    expect(LEVELS.slice(1).map(l => l.assumes)).toEqual([['agent'], ['state-action-reward'], ['return'], ['policy'], ['value']]);
+    for (const lv of LEVELS) for (const id of lv.assumes ?? []) expect(lessonById(id), id).toBeTruthy();
   });
 });

@@ -22,6 +22,8 @@
 /* The controls come first in the panel, so on a phone they sit right under the room. */
 .panel .controls { order: -1; }
 .lesson-line { margin: 0; font-weight: 600; }
+.assumes { margin: 0; font: 500 13px/1.5 var(--sans); color: var(--ink-2); }
+.assumes a { color: var(--ink); }
 
 /* Four arrow buttons laid out as a cross. */
 .pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-areas: ". up ." "left down right"; gap: 8px; justify-content: center; }
@@ -51,7 +53,7 @@
   .stage-body { padding: 8px; }
   .room { width: min(100%, 40vh); }
   .stage .say { min-height: 3em; padding: 8px 14px; }
-  #levelBrief, #gammaHint { display: none; }
+  #levelBrief, #levelAssumes, #gammaHint { display: none; }
   .readouts div { padding: 8px 14px; }
   .readouts dd { font-size: 18px; }
   .panel section { padding: 12px 16px; gap: 10px; }
