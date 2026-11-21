@@ -66,3 +66,32 @@ describe('room-scene.js source guards', () => {
     expect(src).toMatch(/if \(document\.hidden \|\| !visible\) \{[^}]*dragging = false/);
   });
 });
+
+describe('level labels wiring (source guards)', () => {
+  const host = read('games/treasure-room/room-host.js');
+  const view = read('games/treasure-room/room-markers-view.js');
+  it('the scene projects the labels after each render', () => {
+    expect(src).toMatch(/setMarkers/);
+    expect(src).toMatch(/projectPoint\(/);
+    expect(src).toMatch(/AGENT_HEAD_Y/);
+  });
+  it('the host passes the layer on and replays it when the scene is built', () => {
+    expect(host).toMatch(/setMarkers\(layer\)/);
+    expect(host).toMatch(/scene\.setMarkers\(markers\)/);
+  });
+  it('the markers are buttons wired with aria-expanded and aria-controls, never disabled', () => {
+    expect(view).toMatch(/aria-expanded/);
+    expect(view).toMatch(/aria-controls/);
+    expect(view).not.toMatch(/disabled/);
+  });
+  it('card text goes in with textContent, never innerHTML', () => {
+    expect(view).toMatch(/textContent/);
+    expect(view).not.toMatch(/innerHTML/);
+  });
+  it('the view listens for Escape and outside presses through one AbortController', () => {
+    expect(view).toMatch(/AbortController/);
+    expect(view).toMatch(/Escape/);
+    expect(view).toMatch(/pointerdown/);
+    expect(view).toMatch(/cardReduce\(/);
+  });
+});
