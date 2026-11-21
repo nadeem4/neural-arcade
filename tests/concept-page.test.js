@@ -107,6 +107,6 @@ describe('every concept page', () => {
     }
   });
   it('every concept has sim.js and play.js', () => {
-    for (const id of CONCEPT_IDS.filter(i => !['agent', 'state-action-reward', 'policy', 'value'].includes(i))) for (const f of ['sim.js', 'play.js']) expect(() => read(id, f), `${id}/${f}`).not.toThrow();
+    for (const id of CONCEPT_IDS.filter(i => !NO_GRID.includes(i))) for (const f of ['sim.js', 'play.js']) expect(() => read(id, f), `${id}/${f}`).not.toThrow();
   });
 });

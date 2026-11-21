@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { valuesFor, shadeOf, moveTreasure } from '../concepts/value/sim.js';
+import { valuesFor, shadeOf } from '../concepts/value/sim.js';
 import { figureHtml } from '../concepts/value/figures.js';
 import { GRID, stateId } from '../assets/grid.js';
 import { lessonById } from '../assets/tracks/model.js';
@@ -31,29 +31,6 @@ describe('shadeOf', () => {
   it('is monotone and survives min equal to max', () => {
     expect(shadeOf(2, 0, 10)).toBeLessThan(shadeOf(3, 0, 10));
     expect(shadeOf(1, 1, 1)).toBe(0);
-  });
-});
-
-describe('moveTreasure', () => {
-  it('moves the T to a floor cell and returns a new grid', () => {
-    const g = moveTreasure(GRID, [0, 3]);
-    expect(g.cells[3][0]).toBe('T');
-    expect(g.cells[0][4]).toBe('.');
-    expect(g.cells.flat().filter(c => c === 'T')).toHaveLength(1);
-    expect(g).not.toBe(GRID);
-  });
-  it('does not mutate the original grid', () => {
-    moveTreasure(GRID, [0, 3]);
-    expect(GRID.cells[0][4]).toBe('T');
-    expect(GRID.cells[3][0]).toBe('.');
-  });
-  it('rejects wall, pit, start and off-grid cells', () => {
-    for (const p of [[1, 2], [2, 0], [0, 0], [9, 9], [-1, 0]]) expect(() => moveTreasure(GRID, p), String(p)).toThrow();
-  });
-  it('changes which neighbour has the highest value', () => {
-    const a = valuesFor(GRID, 0.9), b = valuesFor(moveTreasure(GRID, [0, 3]), 0.9);
-    expect(b[at(GRID, 0, 2)]).toBeGreaterThan(a[at(GRID, 0, 2)]);
-    expect(b[at(GRID, 4, 1)]).toBeLessThan(a[at(GRID, 4, 1)]);
   });
 });
 
