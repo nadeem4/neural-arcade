@@ -1,4 +1,6 @@
 // Treasure Room words: the page lesson, the (i) texts and the lines the game prints.
+import { REWARD } from './sim.js';
+
 export const LESSON = 'Six small ideas, one room: the AI only ever knows what the room tells it.';
 
 export const INFO = {
@@ -14,6 +16,13 @@ export const INFO = {
   tags: 'These five parts, states, actions, rewards, slip chance and discount, are what makes the room an MDP.',
   restart: 'Restart puts the robot back on the start tile and clears the score.',
   ai: 'The AI sees only its position and the last reward, nothing else about the room.',
+};
+
+// The cards on the labels over level 1's room (room-markers.js lists the labels).
+export const MARKER_INFO = {
+  agent: { title: 'The agent', text: 'This is the learner: the one that acts. Each move, it picks an action, and the room answers with where it is now and a reward. That is all it ever gets.' },
+  treasure: { title: 'The treasure', text: `The goal. Reaching it ends the round with +${REWARD.treasure}.` },
+  pit: { title: 'The pit', text: `A trap. Falling in ends the round with −${-REWARD.pit}.` },
 };
 
 const ARROWS = '↑↓←→';
