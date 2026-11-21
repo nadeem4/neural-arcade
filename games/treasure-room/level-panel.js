@@ -166,7 +166,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   let view = null;
 
   n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
-  const host = createRoomHost({ box, canvas: $('stage'), room: ROOM, n, reduceMotion: reduceMotion.matches });
+  const host = createRoomHost({ box, room: ROOM, reduceMotion: reduceMotion.matches });
   host.setOverlays(OVERLAYS_FOR_LEVEL[n]);
 
   // ui.canvas is the room box, so a click on either the 2D or the 3D canvas reaches the level.

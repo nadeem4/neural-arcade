@@ -1,15 +1,7 @@
-// Chooses between the 2D room (always first) and the 3D one (when WebGL and the models are ready), and keeps 2D on any failure.
+// Hosts the 3D room: loads the scene and models, reports load progress, and keeps a last-draw to replay when the scene comes up (or comes back).
+// States: 'loading' -> '3d' | 'failed' (reasons: 'no-webgl', 'load', 'scene', 'lost'); retry() starts a new attempt from 'failed'.
 // No three.js import here: the 3D scene and its models load through `loader`, so a page without WebGL never fetches them.
-import { createView2d } from './room-view.js';
 
-// Levels that use 3D by default. ?room=3d turns it on for any level, ?room=2d or ?nowebgl=1 forces 2D.
-export const LEVELS_IN_3D = [1, 2, 3, 4, 5, 6];
-
-export const roomMode = (search = '') => {
-  const v = new URLSearchParams(search).get('room');
-  return v === '2d' || v === '3d' ? v : null;
-};
-export const noWebglFlag = (search = '') => new URLSearchParams(search).get('nowebgl') === '1';
 export const debugFlag = (search = '') => new URLSearchParams(search).get('debug') === '1';
 
 // Copied from games/city/stage.js: pages never depend on another game's code.
@@ -20,11 +12,6 @@ export function webglAvailable(doc = globalThis.document) {
   } catch { return false; }
 }
 
-export function wants3d({ n, search = '', webgl }) {
-  if (noWebglFlag(search) || roomMode(search) === '2d' || !webgl) return false;
-  return roomMode(search) === '3d' || LEVELS_IN_3D.includes(n);
-}
-
 // The scene module and the kit load together and in parallel, once per page: every caller shares the promise, and a failure is
 // forgotten so a later mount can retry. The rogue is not shared: loadCharacter() parses its own copy per mount (its bytes download once).
 export const shareLoad = fn => {
@@ -32,18 +19,37 @@ export const shareLoad = fn => {
   return () => (p ??= fn().catch(e => { p = null; throw e; }));
 };
 
+// Load progress, page-wide: the scene module, each of the eight models and the rogue (room-kit.js MODEL_FILES, guarded by a test).
+export const LOAD_TOTAL = 10;
+const progress = { done: 0, listeners: new Set() };
+const notify = () => { for (const fn of [...progress.listeners]) fn(progress.done / LOAD_TOTAL); };
+const reportFile = () => { progress.done = Math.min(LOAD_TOTAL, progress.done + 1); notify(); };
+export function subscribeProgress(fn) {
+  progress.listeners.add(fn);
+  fn(progress.done / LOAD_TOTAL);
+  return () => { progress.listeners.delete(fn); };
+}
+
 const loadSceneFiles = async () => {
   const [scene, kit, ch] = await Promise.all([
-    import('./room-scene.js'),
-    import('./room-kit.js').then(m => m.loadKit()),
+    import('./room-scene.js').then(m => { reportFile(); return m; }),
+    import('./room-kit.js').then(m => m.loadKit(undefined, reportFile)),
     import('./room-character.js'),
   ]);
   await ch.preloadCharacter(); // the one shared download, so a mount only parses
+  reportFile();
   return { loadCharacter: () => ch.loadCharacter(), createScene3d: opts => scene.createScene3d({ ...opts, kit }) };
 };
-const loadScene = shareLoad(loadSceneFiles);
+const loadScene = shareLoad(async () => {
+  try {
+    const r = await loadSceneFiles();
+    progress.done = LOAD_TOTAL; // a cached kit reports no files, so a resolve always ends at 1
+    notify();
+    return r;
+  } catch (e) { progress.done = 0; notify(); throw e; }
+});
 
-// Starts the scene import and the model downloads early. Does nothing on a page that will stay 2D, so those never fetch three.js.
+// Starts the scene import and the model downloads early (nav hover). Does nothing without WebGL, so those never fetch three.js.
 // Each probe opens a throwaway WebGL context, so warm() asks a given probe only once (it runs on every nav hover).
 const probed = new WeakMap();
 const probeOnce = webgl => {
@@ -55,65 +61,71 @@ const probeOnce = webgl => {
 // A load that failed while warming is not retried by later hovers (a blocked file would refetch each time); a mount still retries.
 const warmFailed = new WeakSet();
 
-export function warm({ n = 1, search = globalThis.location?.search ?? '', webgl = webglAvailable, loader = loadScene } = {}) {
-  if (!wants3d({ n, search, webgl: true }) || warmFailed.has(loader) || !probeOnce(webgl)) return;
+export function warm({ webgl = webglAvailable, loader = loadScene } = {}) {
+  if (warmFailed.has(loader) || !probeOnce(webgl)) return;
   loader().catch(() => { warmFailed.add(loader); });
 }
 
-// box: the .room element (it carries data-room); canvas: the 2D canvas inside it.
-// Returns { mode, ready, draw, cellAt, redraw, resize, setFocus, setOverlays, destroy }.
+// box: the .room element (it carries data-room). onState(state, reason?) fires on every change; onProgress(0..1) while loading.
+// Returns { mode, ready, retry, draw, cellAt, redraw, resize, setFocus, setOverlays, destroy }; `ready` is the current attempt's promise.
 export function createRoomHost({
-  box, canvas, room, n, search = globalThis.location?.search ?? '', reduceMotion = false,
-  loader = loadScene, webgl = webglAvailable, createView = createView2d,
+  box, room, search = globalThis.location?.search ?? '', reduceMotion = false,
+  loader = loadScene, webgl = webglAvailable, onState = () => {}, onProgress = () => {}, subscribe = subscribeProgress,
 }) {
-  const view2d = createView(canvas, room);
-  let scene = null, dead = false, last = null, focus = null, overlays = null;
-  box.dataset.room = '2d';
+  let scene = null, dead = false, inFlight = false, state = 'loading', last = null, focus = null, overlays = null;
 
-  const active = () => scene ?? view2d;
-  const to2d = () => {
-    box.dataset.room = '2d';
-    view2d.show(true);
-    view2d.resize();
-    if (last) view2d.draw(last);
-  };
+  const setState = (s, reason) => { state = s; box.dataset.room = s; if (reason) onState(s, reason); else onState(s); };
+  const fail = reason => { setState('failed', reason); return 'failed'; };
   const lost = () => {
     if (dead || !scene) return;
     scene.destroy();
     scene = null;
-    to2d();
+    fail('lost');
   };
 
-  const ready = (async () => {
-    if (!wants3d({ n, search, webgl: true })) return '2d';
-    if (!probeOnce(webgl)) return '2d';
+  async function run() {
+    if (!probeOnce(webgl)) return fail('no-webgl');
     let mod, character;
-    try { mod = await loader(); character = await mod.loadCharacter?.(); } catch { return '2d'; }
-    if (dead) return '2d';
-    try { scene = mod.createScene3d({ box, room, character, reduceMotion, debug: debugFlag(search), onContextLost: lost }); } catch { scene = null; return '2d'; }
-    view2d.show(false);
-    box.dataset.room = '3d';
+    try { mod = await loader(); character = await mod.loadCharacter?.(); } catch { return dead ? 'failed' : fail('load'); }
+    if (dead) return 'failed';
+    try { scene = mod.createScene3d({ box, room, character, reduceMotion, debug: debugFlag(search), onContextLost: lost }); } catch { scene = null; return fail('scene'); }
     scene.resize();
     if (overlays) scene.setOverlays(overlays);
     if (focus) scene.setFocus(focus);
     if (last) scene.draw(last);
+    setState('3d');
     return '3d';
-  })();
+  }
 
-  return {
-    mode: () => (scene ? '3d' : '2d'),
-    ready,
-    draw(opts) { if (dead) return; last = opts; active().draw(opts); },
-    cellAt: e => active().cellAt(e),
-    redraw() { if (!dead && last) active().draw(last); },
-    resize() { if (!dead) active().resize(); },
+  let unsub = () => {};
+  async function attempt() {
+    inFlight = true;
+    let top = 0;
+    setState('loading');
+    unsub = subscribe(f => { top = Math.max(top, Math.min(1, f)); onProgress(top); });
+    try { return await run(); } finally { inFlight = false; unsub(); }
+  }
+
+  const host = {
+    mode: () => state,
+    retry() {
+      if (dead || inFlight || state !== 'failed') return;
+      host.ready = attempt();
+    },
+    draw(opts) { if (dead) return; last = opts; scene?.draw(opts); },
+    cellAt: e => (scene ? scene.cellAt(e) : null),
+    redraw() { if (!dead && last) scene?.draw(last); },
+    resize() { if (!dead) scene?.resize(); },
     setFocus(cell) { focus = cell; scene?.setFocus(cell); },
     setOverlays(names) { overlays = names; scene?.setOverlays(names); },
     destroy() {
       if (dead) return;
       dead = true;
+      unsub();
       scene?.destroy();
       scene = null;
     },
   };
+  host.ready = attempt();
+  return host;
 }

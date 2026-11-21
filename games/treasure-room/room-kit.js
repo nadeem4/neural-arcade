@@ -24,12 +24,12 @@ async function loadOne(loader, base, name) {
   return { name, dims, bytes: buf.byteLength, meshes };
 }
 
-// One download per page: later mounts share the same promise. A failed load is forgotten so a later mount can try again.
-export function loadKit(base = new URL('./models/', import.meta.url)) {
+// One download per page: later mounts share the same promise. A failed load is forgotten so a later mount can try again. onFile fires once per file loaded (not on a cache hit).
+export function loadKit(base = new URL('./models/', import.meta.url), onFile) {
   const key = String(base);
   if (!cache.has(key)) {
     const loader = new GLTFLoader();
-    const p = Promise.all(MODEL_FILES.map(n => loadOne(loader, base, n))).then(list => {
+    const p = Promise.all(MODEL_FILES.map(n => loadOne(loader, base, n).then(r => { onFile?.(); return r; }))).then(list => {
       const dims = {}, byName = {};
       let bytes = 0;
       for (const m of list) { dims[m.name] = m.dims; byName[m.name] = m.meshes; bytes += m.bytes; }
