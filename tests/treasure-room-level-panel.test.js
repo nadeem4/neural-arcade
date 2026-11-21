@@ -143,17 +143,21 @@ describe('button audit: disabled at start says why', () => {
     it(`level ${n}: each button disabled at start has a non-empty reason`, async () => {
       vi.stubGlobal('matchMedia', () => ({ matches: true }));
       vi.stubGlobal('document', { addEventListener() {}, removeEventListener() {} });
-      const { fakeUi } = await import('./treasure-room-fake-ui.js');
-      const ui = fakeUi();
-      const view = (await views[n]()).mount(ui);
-      const disabled = buttonIds.filter(id => ui.panel.querySelector('#' + id).disabled);
-      for (const id of disabled) {
-        const why = ui.panel.querySelector('#' + (whyIdOf[id] ?? ''));
-        expect(whyIdOf[id], `${id} has a why element`).toBeTruthy();
-        expect(why.textContent, `${id} says why`).not.toBe('');
+      let view;
+      try {
+        const { fakeUi } = await import('./treasure-room-fake-ui.js');
+        const ui = fakeUi();
+        view = (await views[n]()).mount(ui);
+        const disabled = buttonIds.filter(id => ui.panel.querySelector('#' + id).disabled);
+        for (const id of disabled) {
+          expect(whyIdOf[id], `${id} has a why element`).toBeTruthy();
+          const why = ui.panel.querySelector('#' + whyIdOf[id]);
+          expect(why.textContent, `${id} says why`).not.toBe('');
+        }
+      } finally {
+        view?.destroy?.();
+        vi.unstubAllGlobals();
       }
-      view?.destroy?.();
-      vi.unstubAllGlobals();
     });
   }
 });

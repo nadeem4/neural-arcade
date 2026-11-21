@@ -25,7 +25,8 @@ $('levels').addEventListener('click', e => {
   mountLevel(levelFromUrl(location.search, location.hash));
 });
 
-// Start the 3D scene and models before the first mount asks for them, and again when a level link is pointed at.
+// Start the 3D scene and models before the first mount asks for them, and on a hover over the level nav. Every level is 3D and
+// shares one download, so warming for the current level covers the one about to be opened.
 warm({ n: levelFromUrl(location.search, location.hash) });
 $('levels').addEventListener('pointerenter', () => warm({ n: levelFromUrl(location.search, location.hash) }), true);
 

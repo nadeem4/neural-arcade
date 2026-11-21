@@ -22,8 +22,14 @@ const fetchBytes = url => {
   return bytes.get(key);
 };
 
-export async function loadCharacter(base = new URL('./models/', import.meta.url)) {
-  const url = new URL('rogue.glb', base);
+const rogueUrl = base => new URL('rogue.glb', base);
+const MODELS = new URL('./models/', import.meta.url);
+
+// Downloads the bytes only (no parse), so warming costs no skeleton.
+export const preloadCharacter = (base = MODELS) => fetchBytes(rogueUrl(base));
+
+export async function loadCharacter(base = MODELS) {
+  const url = rogueUrl(base);
   const buf = await fetchBytes(url);
   const gltf = await new Promise((ok, fail) => new GLTFLoader().parse(buf, url.href, ok, fail));
   return { spawn: (room, start) => spawn(gltf, room, start), bytes: buf.byteLength };
