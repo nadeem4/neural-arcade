@@ -21,16 +21,16 @@ describe('capture mode figure table', () => {
     }
   });
 
-  it('builds each figure\'s opts from the recorded story, ', () => {
+  it('builds each figure\'s opts from the recorded story', () => {
     const walk = [START, ...story.agent.trace.map(t => t.pos)];
     const R = story.returns, P = story.policy, M = story.mdp;
     expect(figureOpts(story, 1)).toEqual({ agent: START, ghost: walk });
     expect(figureOpts(story, 2)).toEqual({ agent: START, ghost: [R.shortCells, R.detourCells] });
     expect(figureOpts(story, 3)).toEqual({ agent: START, policy: P.bad, ghost: P.badRun.cells });
     expect(figureOpts(story, 4)).toEqual({ agent: START, policy: P.fixed, ghost: P.fixedRun.cells });
-    const room = makeGrid(story.room), snaps = story.value.snapshots, mid = snaps[1], last = snaps.at(-1);
-    expect(figureOpts(story, 5)).toEqual({ agent: START, values: mid.values, heat: heatOf(mid.values, room) });
-    expect(figureOpts(story, 6)).toEqual({ agent: START, values: last.values, heat: heatOf(last.values, room) });
+    const room = makeGrid(story.room), snaps = story.value.snapshots, mid = snaps.find(s => s.sweep === 2), last = snaps.at(-1);
+    expect(figureOpts(story, 5)).toEqual({ values: mid.values, heat: heatOf(mid.values, room) });
+    expect(figureOpts(story, 6)).toEqual({ values: last.values, heat: heatOf(last.values, room) });
     expect(figureOpts(story, 7)).toEqual({ agent: START, ghost: M.dry.cells, ice: false });
     expect(figureOpts(story, 8)).toEqual({ agent: START, ghost: M.icy.cells, ice: true });
   });

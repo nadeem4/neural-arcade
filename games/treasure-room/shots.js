@@ -22,13 +22,13 @@ export const FIGURES = [
 // The scene.draw opts for image n.
 export function figureOpts(story, n) {
   const agent = story.triples[0].state, P = story.policy, M = story.mdp, room = makeGrid(story.room);
-  const sweep = sn => ({ agent, values: sn.values, heat: heatOf(sn.values, room) });
+  const sweep = sn => ({ values: sn.values, heat: heatOf(sn.values, room) }); // no agent: the rogue would hide the start tile's number
   switch (n) {
     case 1: return { agent, ghost: [agent, ...story.agent.trace.map(t => t.pos)] };
     case 2: return { agent, ghost: [story.returns.shortCells, story.returns.detourCells] };
     case 3: return { agent, policy: P.bad, ghost: P.badRun.cells };
     case 4: return { agent, policy: P.fixed, ghost: P.fixedRun.cells };
-    case 5: return sweep(story.value.snapshots[1]);
+    case 5: return sweep(story.value.snapshots.find(s => s.sweep === 2));
     case 6: return sweep(story.value.snapshots.at(-1));
     case 7: return { agent, ghost: M.dry.cells, ice: false };
     case 8: return { agent, ghost: M.icy.cells, ice: true };

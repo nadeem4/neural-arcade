@@ -101,7 +101,7 @@
     <p>The <em>value</em> of a tile is the return the robot can expect if it stands there and plays well. Start with zero everywhere. One sweep lets every tile look at its neighbours and take the best one. The tile next to the treasure learns it is worth something, then the tile beside that, and the news spreads outward one step per sweep.</p>
     <figure class="fig wide" id="fig5">
       <div class="duo">
-        <div><p class="duo-label">After 2 sweeps</p><img class="grid" src="fig-5.webp" width="1280" height="800" alt="The room after two sweeps: only the tiles beside the treasure are warm and carry a value; every other tile still reads the same low number" loading="lazy"></div>
+        <div><p class="duo-label">After 2 sweeps</p><img class="grid" src="fig-5.webp" width="1280" height="800" alt="After two sweeps only the tiles within two steps of the treasure are warm (10 next to it, 8 one further); every other tile still reads −1.9" loading="lazy"></div>
         <div><p class="duo-label">After <span id="settleSweeps"></span> sweeps</p><img class="grid" src="fig-6.webp" width="1280" height="800" alt="The room once the values have settled: every tile carries a value, warmer the closer it is to the treasure" loading="lazy"></div>
       </div>
       <figcaption><b>Fig. 5</b> The value of each tile after 2 sweeps and once the sweeps have settled, at discount 0.9. A warmer tile is worth more. By the last picture nothing moves by more than 0.01 and the start tile settles at <span id="startValue"></span>.</figcaption>

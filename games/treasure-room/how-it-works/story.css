@@ -1,7 +1,6 @@
 /* Treasure Room write-up: the shared write-up styles (assets/story.css) plus this page's grids. */
 
-.fig .grid { display: block; width: 100%; max-width: 360px; aspect-ratio: 1; margin: 0 auto; }
-.fig img.grid { max-width: none; height: auto; aspect-ratio: 1280 / 800; border: 1px solid var(--rule); }
+.fig img.grid { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 800; margin: 0 auto; border: 1px solid var(--rule); }
 
 .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
 .duo-label { margin: 0 0 8px !important; font-family: var(--sans); font-weight: 600; font-size: 16px !important; letter-spacing: normal; }
