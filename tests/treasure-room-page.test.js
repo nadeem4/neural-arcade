@@ -93,9 +93,17 @@ describe('treasure room page markup', () => {
 
 describe('treasure-room.css', () => {
   it('keeps the stage square and inside a phone width', () => {
-    expect(rules('#stage')).toMatch(/aspect-ratio:\s*1/);
-    expect(rules('#stage')).toMatch(/width:/);
+    expect(rules('#roomBox')).toMatch(/aspect-ratio:\s*1/);
+    expect(rules('.room')).toMatch(/width:/);
     expect(css).not.toMatch(/\bwidth:\s*\d{4,}px/);
+  });
+  it('styles the loader from tokens only, with no 2D leftovers', () => {
+    expect(rules('.room-loader')).toMatch(/background:\s*var\(--stage\)/);
+    expect(rules('.room-loader')).toMatch(/aspect-ratio:\s*1|inset:\s*0/);
+    expect(css).toMatch(/room-loader-fill[^}]*var\(--signal\)/);
+    for (const m of css.matchAll(/([^{}]*room-loader[^{}]*)\{([^{}]*)\}/g)) expect(m[2], m[1]).not.toMatch(/#[0-9a-fA-F]{3,8}/);
+    expect(css).not.toContain('#stage');
+    expect(css).not.toContain('data-room="2d"');
   });
   it('makes every level control at least 44px tall, with no tight line height', () => {
     expect(rules('.pad button')).toMatch(/min-height:\s*44px/);
@@ -113,7 +121,7 @@ describe('3D by default needs the import map and the docs say so', () => {
     expect(read('games/treasure-room/index.html')).toContain('importmap');
     for (const id of ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']) expect(read(`concepts/${id}/index.html`), id).toContain('importmap');
   });
-  it('documents the 2D override and the host', () => {
+  it('documents the 2D override and the host', () => { // Task 3 rewrites this for the loader docs
     expect(read('README.md')).toMatch(/room=2d/);
     expect(read('CLAUDE.md')).toMatch(/room-host\.js/);
     expect(read('DESIGN.md')).toMatch(/3D by default/);

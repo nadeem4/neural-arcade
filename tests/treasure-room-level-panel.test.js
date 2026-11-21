@@ -9,7 +9,7 @@ const panel = read('games/treasure-room/level-panel.js');
 
 describe('levelPanelHtml', () => {
   it('has every id the panel looks up', () => {
-    for (const id of ['stage', 'say', 'levelPanel', 'steps', 'score', 'sees', 'log', 'arrowOut', 'arrowBack', 'handover', 'restart', 'levelTitle', 'levelBrief', 'status', 'tiles', 'roomBox']) {
+    for (const id of ['say', 'levelPanel', 'steps', 'score', 'sees', 'log', 'arrowOut', 'arrowBack', 'handover', 'restart', 'levelTitle', 'levelBrief', 'status', 'tiles', 'roomBox']) {
       expect(html, id).toContain(`id="${id}"`);
     }
   });
@@ -24,11 +24,25 @@ describe('levelPanelHtml', () => {
     expect(panel).not.toMatch(/getContext\('2d'\)/);
     expect(panel).toMatch(/host\.destroy\(\)/);
   });
+  it('mounts the loader and wires Try again to the host', () => {
+    expect(panel).toMatch(/createLoader\(/);
+    expect(panel).toMatch(/onRetry/);
+    expect(panel).toMatch(/host\.retry\(\)/);
+    expect(panel).toMatch(/onState/);
+    expect(panel).toMatch(/onProgress/);
+    expect(panel).toMatch(/loader\.destroy\(\)/);
+  });
+  it('creates the loader before the host, which reports its first state synchronously', () => {
+    const body = panel.slice(panel.indexOf('export function mountLevelPlay'));
+    expect(body.indexOf('createLoader(')).toBeGreaterThan(-1);
+    expect(body.indexOf('createLoader(')).toBeLessThan(body.indexOf('createRoomHost('));
+  });
   it('has a line for why Walk uphill is disabled', () => {
     expect(html).toContain('id="walkUpWhy"');
   });
-  it('has the stage canvas with a label, and a live line that is not announced', () => {
-    expect(html).toMatch(/<canvas id="stage"[^>]*aria-label="[^"]+"/);
+  it('has the room box with a label for the 3D canvas, and a live line that is not announced', () => {
+    expect(html).toMatch(/id="roomBox"[^>]*data-label="[^"]+"/);
+    expect(html).not.toContain('id="stage"');
     expect(html).toMatch(/id="say"[^>]*aria-live="off"|aria-live="off"[^>]*id="say"/);
   });
   it('has four move buttons, one per action, as real buttons', () => {
@@ -80,6 +94,19 @@ describe('forwardTap', () => {
     expect(host.cellAt).not.toHaveBeenCalled();
     expect(clicked).toEqual([]);
   });
+});
+
+describe('forwardTap while 3D is not up', () => {
+  for (const room of ['loading', 'failed']) {
+    it(`does nothing when the room is ${room}`, () => {
+      const clicked = [], target = {};
+      const tiles = { hidden: false, contains: () => false, querySelector: () => ({ click: () => clicked.push('tile') }) };
+      const host = { cellAt: vi.fn(() => ({ x: 1, y: 1 })) };
+      forwardTap({ e: { target }, box: { dataset: { room } }, tiles, host });
+      expect(host.cellAt).not.toHaveBeenCalled();
+      expect(clicked).toEqual([]);
+    });
+  }
 });
 
 describe('tap bridge', () => {

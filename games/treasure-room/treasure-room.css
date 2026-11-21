@@ -2,16 +2,29 @@
 
 #levelRoot { display: contents; } /* the mounted stage and panel stay the two columns of .play */
 .stage-body { display: block; padding: 14px; } /* studio.css makes it a two-column grid; here the room fills it */
-#stage { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; }
 .room { position: relative; width: min(100%, 56vh, 480px); max-height: min(100vw, 70vh); margin: 0 auto; }
 .readouts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-/* The room box holds the 2D canvas, or the 3D one once room-host.js has swapped it in (data-room). */
-#roomBox[data-room="3d"] { aspect-ratio: 1; }
-#roomBox[data-room="3d"] #stage { display: none; }
+/* The room box holds the 3D canvas (room-host.js sets data-room to loading, 3d or failed) and the loader over it. */
+#roomBox { aspect-ratio: 1; }
 .room-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border-radius: 8px; touch-action: none; }
+#roomBox:not([data-room="3d"]) .tilegrid { z-index: 1; } /* while loading or failed the tile buttons stay above the loader and keep working */
 #roomBox[data-room="3d"] .tilegrid { pointer-events: none; opacity: 0; } /* the buttons stay focusable; a tap on the room clicks the tile */
 .room-debug { position: absolute; left: 6px; bottom: 6px; right: 6px; margin: 0; padding: 4px 6px; border-radius: 4px; background: rgba(0, 0, 0, .6); color: #fff; font: 500 11px/1.4 var(--mono); white-space: pre-wrap; pointer-events: none; }
+
+/* Loader and failure panel (room-loader.js). Reduced motion is handled by the global rule in studio.css. */
+.room-loader { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; padding: 24px; text-align: center; background: var(--stage); color: var(--stage-ink); border-radius: 8px; transition: opacity .2s; }
+.room-loader[data-state="done"] { opacity: 0; pointer-events: none; }
+.room-loader-title { margin: 0; font: 600 16px/1.5 var(--sans); }
+.room-loader-line { margin: 0; color: var(--stage-dim); font: 500 14px/1.5 var(--sans); animation: room-loader-pulse 1.4s ease-in-out infinite alternate; }
+.room-loader-bar { width: min(220px, 60vw); height: 6px; margin: 0 auto; border-radius: 3px; background: var(--stage-2); overflow: hidden; }
+.room-loader-fill { height: 100%; background: var(--signal); transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform .2s; }
+.room-loader-failure { display: none; position: relative; z-index: 2; justify-items: center; gap: 12px; } /* above the tile grid so Try again takes the click */
+.room-loader-failure h3 { margin: 0; font: 600 18px/1.5 var(--sans); }
+.room-loader-reason { margin: 0; color: var(--stage-dim); font: 500 14px/1.5 var(--sans); }
+.room-loader[data-state="failed"] .room-loader-failure { display: grid; }
+.room-loader[data-state="failed"] .room-loader-line, .room-loader[data-state="failed"] .room-loader-bar { display: none; }
+@keyframes room-loader-pulse { from { opacity: .55; } to { opacity: 1; } }
 
 /* Level links above the stage. */
 .levels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
