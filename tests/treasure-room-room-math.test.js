@@ -5,7 +5,7 @@ import { ROOM } from '../games/treasure-room/sim.js';
 import {
   DIMS, PARTS, VIEW, cellToWorld, worldToCell, layoutRoom, nearSides, cameraPose, fitDistance,
   roomRadius, rayToCell, isTap, labelScale, tierFor, formatStats,
-  MOVE_MS, moveStyle, tweenAt, facing, atTreasure
+  MOVE_MS, moveStyle, tweenAt, facing, atTreasure, slideLean
 } from '../games/treasure-room/room-math.js';
 
 const big = makeGrid(['S......', '.......', '...X...', '.#...#.', '......T', '.......', '.......', '.......', '.......']); // 7 x 9
@@ -58,6 +58,17 @@ describe('the move tween', () => {
     expect(atTreasure(ROOM, { x: 4, y: 3 })).toBe(true);
     expect(atTreasure(ROOM, { x: 0, y: 0 })).toBe(false);
     expect(atTreasure(ROOM, null)).toBe(false);
+  });
+});
+
+describe('slideLean', () => {
+  it('leans 0.12 rad forward along the move, and not at all for a snap', () => {
+    expect(slideLean({ x: 1, y: 1 }, { x: 2, y: 1 })).toEqual({ rotX: 0, rotZ: expect.closeTo(-0.12, 5) });
+    expect(slideLean({ x: 2, y: 1 }, { x: 1, y: 1 }).rotZ).toBeCloseTo(0.12, 5);
+    expect(slideLean({ x: 1, y: 1 }, { x: 1, y: 2 })).toEqual({ rotX: expect.closeTo(0.12, 5), rotZ: 0 });
+    expect(slideLean({ x: 1, y: 2 }, { x: 1, y: 1 }).rotX).toBeCloseTo(-0.12, 5);
+    expect(slideLean({ x: 1, y: 1 }, { x: 1, y: 1 })).toEqual({ rotX: 0, rotZ: 0 });
+    expect(slideLean(null, { x: 1, y: 1 })).toEqual({ rotX: 0, rotZ: 0 });
   });
 });
 

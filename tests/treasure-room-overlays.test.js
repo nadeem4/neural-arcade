@@ -185,6 +185,7 @@ describe('tags and ice lists', () => {
   it('keeps at most TAG_CAPACITY tags and tolerates none', () => {
     expect(tagsList(ROOM, new Array(12).fill({ x: 1, y: 1, text: '-1', tone: 'step' }))).toHaveLength(TAG_CAPACITY);
     expect(tagsList(ROOM, undefined)).toEqual([]);
+    expect(tagsList(ROOM, [{ x: 1, y: 99, text: '-1', tone: 'step' }])[0].onEnd).toBe(false); // off-grid does not throw
   });
   it('ice covers every floor cell only when on', () => {
     expect(iceList(ROOM, true)).toHaveLength(ROOM.cells.flat().filter(c => !'TX#'.includes(c)).length);
@@ -201,5 +202,20 @@ describe('tags and ice lists', () => {
     expect(OVERLAYS.tags.list(ROOM, { tags: [{ x: 1, y: 1, text: '-1', tone: 'step' }] })).toHaveLength(1);
     expect(OVERLAYS.ice.list(ROOM, { ice: false })).toEqual([]);
     expect(overlayNames(OVERLAYS_FOR_LEVEL[6])).toEqual(['trail', 'tags', 'ice']);
+  });
+});
+
+describe('tags and ice mesh layers (source)', () => {
+  it('builds tags from a label board and ice as a transparent, depth-write-free slab', () => {
+    const src = read('room-overlay-meshes.js');
+    expect(typeof MESH_LAYERS.tags).toBe('function');
+    expect(typeof MESH_LAYERS.ice).toBe('function');
+    expect(src).toMatch(/createLabelBoard/);
+    expect(src).toMatch(/depthWrite\s*:\s*false/);
+    expect(src).toMatch(/tagStyle/);
+    expect(src).toMatch(/TAG_CAPACITY/);
+  });
+  it('the character leans on a slide', () => {
+    expect(read('room-character.js')).toMatch(/slideLean/);
   });
 });

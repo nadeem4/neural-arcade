@@ -33,7 +33,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
   mesh.renderOrder = 2;
 
   let shown = [], drawn = [], size = scale;
-  const paintSlot = (i, text) => {
+  const paintSlot = (i, text, color = INK) => {
     const x = (i % COLS) * SLOT_W, y = Math.floor(i / COLS) * SLOT_H;
     ctx.clearRect(x, y, SLOT_W, SLOT_H);
     if (!text) return;
@@ -44,7 +44,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
     ctx.lineWidth = 8;
     ctx.strokeStyle = 'rgba(15, 19, 25, 0.85)';
     ctx.strokeText(text, x + SLOT_W / 2, y + SLOT_H / 2 + 2);
-    ctx.fillStyle = INK;
+    ctx.fillStyle = color;
     ctx.fillText(text, x + SLOT_W / 2, y + SLOT_H / 2 + 2);
   };
   const place = () => {
@@ -57,7 +57,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
     geometry.setDrawRange(0, shown.length * 6);
   };
   const paint = () => {
-    shown.forEach((l, i) => { if (drawn[i] !== l.text) { paintSlot(i, l.text); drawn[i] = l.text; } });
+    shown.forEach((l, i) => { const key = l.text + '|' + (l.color ?? ''); if (drawn[i] !== key) { paintSlot(i, l.text, l.color); drawn[i] = key; } });
     texture.needsUpdate = true;
   };
 
@@ -74,7 +74,7 @@ export function createLabelBoard(THREE, { capacity, scale = 0.24, tilt = 0 }) {
 
   return {
     mesh,
-    // labels: [{ x, y, z, text }] in world units (the centre of each label). Extra labels past capacity are dropped.
+    // labels: [{ x, y, z, text, color? }] in world units (the centre of each label); colour is a CSS colour, default the stage ink. Extra labels past capacity are dropped.
     set(labels) {
       shown = labels.slice(0, capacity);
       place();

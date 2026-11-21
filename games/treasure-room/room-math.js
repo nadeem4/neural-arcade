@@ -160,6 +160,12 @@ export const tweenAt = (style, k) => {
   return { k: c * c * (3 - 2 * c), lift: style === 'hop' ? Math.sin(Math.PI * c) * 0.18 : 0 };
 };
 
+// How far the character leans into a slide: 0.12 rad forward along the move, as rotations about x and z (world axes). A snap (no step) is upright.
+export function slideLean(from, to) {
+  const dx = from && to ? Math.sign(to.x - from.x) : 0, dy = from && to ? Math.sign(to.y - from.y) : 0;
+  return { rotX: dy * 0.12 || 0, rotZ: -dx * 0.12 || 0 };
+}
+
 // Rotation about y that points the character along a step (south, +y on the grid, is 0).
 export const facing = (from, to) => Math.atan2(to.x - from.x, to.y - from.y);
 

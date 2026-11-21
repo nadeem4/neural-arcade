@@ -1,6 +1,6 @@
 // The thin mesh layer for the 3D room's overlays: one builder per overlay, each turning a draw list (room-overlays.js) into meshes.
 // Loaded by room-scene.js. THREE comes in through the context, so this file imports only pure code.
-import { cellToWorld, heatColor } from './room-math.js';
+import { cellToWorld, heatColor, tagStyle, TAG_CAPACITY } from './room-math.js';
 import { createLabelBoard } from './room-labels.js';
 
 const LABEL_Y = 0.2;  // label centres float above the floor, clear of the rock tiles
@@ -8,6 +8,9 @@ const TINT_Y = 0.03;  // the heat tint lies just above the tile tops
 const TINT_HALF = 0.46;
 const ROCK_TOP = 0.17; // flat arrows and coins sit above the rock tiles' tops
 const TRAIL_CAPACITY = 12;
+const TAG_Y = 0.9;    // a tag floats this far above the floor (a cell is 1 wide)
+const ICE_Y = 0.02;   // the ice lies just above the floor
+const GOOD = '#2a9d4b'; // the dark green assets/grid.js uses for the treasure; no green token exists
 
 const token = (name, fallback) => {
   try { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback; }
@@ -87,6 +90,42 @@ export const MESH_LAYERS = {
         mesh.count = list.length;
         mesh.instanceMatrix.needsUpdate = true;
         material.color.set(token('--signal', '#ff5a1f')); // a theme change redraws
+      },
+      dispose() { geometry.dispose(); material.dispose(); mesh.dispose(); mesh.removeFromParent(); },
+    };
+  },
+
+  // Reward tags: a second label board, up to TAG_CAPACITY labels floating above their tiles. The room is dark, so ink and step are light.
+  tags(ctx) {
+    const { THREE, room, parent } = ctx;
+    const board = createLabelBoard(THREE, { capacity: TAG_CAPACITY, scale: ctx.labelScale(), tilt: ctx.tilt });
+    parent.add(board.mesh);
+    const colour = ({ fill }) => fill === 'good' ? GOOD : fill === 'bad' ? token('--red', '#e5533f') : fill === 'step' ? '#aab2bd' : undefined; // ink: the board default
+    return {
+      update(list) {
+        board.setScale(ctx.labelScale());
+        board.set(list.map(t => { const w = cellToWorld(room, t.x, t.y); return { x: w.x, y: TAG_Y, z: w.z, text: t.text, color: colour(tagStyle(t.tone, t.onEnd)) }; }));
+      },
+      dispose() { board.dispose(); },
+    };
+  },
+
+  // The icy floor (level 6): one InstancedMesh of flat pale slabs, one per floor tile, see-through so the floor shows.
+  ice(ctx) {
+    const { THREE, room, parent } = ctx;
+    const geometry = new THREE.BoxGeometry(0.96, 0.02, 0.96);
+    const material = new THREE.MeshBasicMaterial({ color: 0xbfd3e6, transparent: true, opacity: 0.35, depthWrite: false, toneMapped: false });
+    const mesh = new THREE.InstancedMesh(geometry, material, room.w * room.h);
+    mesh.count = 0;
+    mesh.frustumCulled = false;
+    mesh.renderOrder = 1;
+    parent.add(mesh);
+    const m4 = new THREE.Matrix4();
+    return {
+      update(list) {
+        list.forEach((c, i) => { const w = cellToWorld(room, c.x, c.y); mesh.setMatrixAt(i, m4.makeTranslation(w.x, ICE_Y, w.z)); });
+        mesh.count = list.length;
+        mesh.instanceMatrix.needsUpdate = true;
       },
       dispose() { geometry.dispose(); material.dispose(); mesh.dispose(); mesh.removeFromParent(); },
     };
