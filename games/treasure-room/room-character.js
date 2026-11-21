@@ -22,8 +22,14 @@ const fetchBytes = url => {
   return bytes.get(key);
 };
 
-export async function loadCharacter(base = new URL('./models/', import.meta.url)) {
-  const url = new URL('rogue.glb', base);
+const rogueUrl = base => new URL('rogue.glb', base);
+const MODELS = new URL('./models/', import.meta.url);
+
+// Downloads the bytes only (no parse), so warming costs no skeleton.
+export const preloadCharacter = (base = MODELS) => fetchBytes(rogueUrl(base));
+
+export async function loadCharacter(base = MODELS) {
+  const url = rogueUrl(base);
   const buf = await fetchBytes(url);
   const gltf = await new Promise((ok, fail) => new GLTFLoader().parse(buf, url.href, ok, fail));
   return { spawn: (room, start) => spawn(gltf, room, start), bytes: buf.byteLength };
@@ -93,6 +99,7 @@ function spawn(gltf, room, start) {
       idle.fadeOut(FADE);
       walk.reset().fadeIn(FADE).play();
     },
+    busy: () => !!tween || cheer.isRunning() || walk.isRunning(), // a move or a non-idle clip is playing
     cheer() { if (tween) wantCheer = true; else startCheer(); },
     update(dt) {
       mixer.update(dt);

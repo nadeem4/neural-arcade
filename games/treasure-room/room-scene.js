@@ -3,7 +3,7 @@
 import * as THREE from '../../assets/vendor/three/three.module.min.js';
 import { OrbitControls } from '../../assets/vendor/three/controls/OrbitControls.js';
 import {
-  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, formatStats, moveStyle, atTreasure, labelScale,
+  VIEW, layoutRoom, nearSides, cameraPose, fitDistance, roomRadius, rayToCell, isTap, tierFor, frameGate, formatStats, moveStyle, atTreasure, labelScale,
 } from './room-math.js';
 import { OVERLAYS, overlayNames, marksList } from './room-overlays.js';
 import { MESH_LAYERS, createMarks } from './room-overlay-meshes.js';
@@ -148,10 +148,11 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   // Overlays: the layers for the names the level asked for, and the outlined tiles (marks), which belong to the base room.
   const marks = createMarks(THREE, { room, parent: world });
   const focusRing = createMarks(THREE, { room, parent: world }); // the keyboard focus on the hidden tile grid
-  let layers = [], lastOpts = null;
+  let layers = [], lastOpts = null, dirty = true; // dirty: something changed since the last frame
   const layerCtx = { THREE, room, parent: world, kit, tilt: Math.PI / 2 - VIEW.polar, labelScale: () => labelScale(box.clientWidth || 1280) };
   const drawOverlays = opts => {
     lastOpts = opts;
+    dirty = true;
     marks.set(marksList(opts?.marks));
     drawCoin(opts?.treasureScale);
     if (opts) for (const l of layers) l.layer.update(OVERLAYS[l.name].list(room, opts));
@@ -187,8 +188,13 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     controls.update();
     drawOverlays(lastOpts); // labels re-size with the view
   };
-  const onChange = () => applyNear(controls.getAzimuthalAngle());
+  let dragging = false;
+  const onChange = () => { dirty = true; applyNear(controls.getAzimuthalAngle()); }; // also fires while damping settles
+  const onStart = () => { dragging = true; };
+  const onEnd = () => { dragging = false; };
   controls.addEventListener('change', onChange);
+  controls.addEventListener('start', onStart);
+  controls.addEventListener('end', onEnd);
   resize();
   applyNear(controls.getAzimuthalAngle());
 
@@ -216,11 +222,17 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     box.appendChild(pre);
   }
 
-  // The loop; it stops while the page is hidden.
-  let raf = 0, dead = false;
+  // The loop. Busy frames (a move, a drag, damping, a new draw) always render; idle ones at most every IDLE_MS.
+  // It stops while the tab is hidden or the room is off screen, and draws one frame at once on resuming.
+  const IDLE_MS = 33;
+  let raf = 0, dead = false, visible = true, last = -Infinity;
   let prev = performance.now();
   const tick = now => {
     raf = requestAnimationFrame(tick);
+    const active = dirty || dragging || !!ch?.busy();
+    if (!frameGate({ now, last, idleMs: IDLE_MS, active })) return;
+    last = now;
+    dirty = false;
     if (ch && !reduceMotion) ch.update(Math.min(0.1, (now - prev) / 1000));
     prev = now;
     controls.update();
@@ -238,12 +250,20 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
       lastStat = now;
     }
   };
-  const onVisibility = () => {
+  const syncLoop = () => {
     if (dead) return;
-    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else if (!raf) { prev = performance.now(); raf = requestAnimationFrame(tick); }
+    if (document.hidden || !visible) { cancelAnimationFrame(raf); raf = 0; dragging = false; return; } // a cut-off drag must not hold the loop at full rate
+    if (raf) return;
+    prev = lastStat = performance.now(); frames = 0; // a pause is not a slow frame rate
+    dirty = true; last = -Infinity;                    // one frame at once
+    raf = requestAnimationFrame(tick);
   };
-  document.addEventListener('visibilitychange', onVisibility);
-  if (!document.hidden) raf = requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', syncLoop);
+  const io = typeof IntersectionObserver === 'function'
+    ? new IntersectionObserver(entries => { visible = entries[entries.length - 1].isIntersecting; syncLoop(); })
+    : null;
+  io?.observe(box);
+  syncLoop();
 
   const onLost = e => { e.preventDefault(); onContextLost(); };
   canvas.addEventListener('webglcontextlost', onLost);
@@ -252,7 +272,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     draw(opts) { setBackground(); drawAgent(opts); drawOverlays(opts); }, // a redraw (theme change) also re-reads the background
     cellAt,
     resize,
-    setFocus(cell) { focusRing.set(cell ? [cell] : []); },
+    setFocus(cell) { dirty = true; focusRing.set(cell ? [cell] : []); },
     setOverlays(names) {
       const wanted = overlayNames(names);
       for (const l of layers) l.layer.dispose();
@@ -263,10 +283,13 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
       if (dead) return;
       dead = true;
       cancelAnimationFrame(raf);
-      document.removeEventListener('visibilitychange', onVisibility);
+      document.removeEventListener('visibilitychange', syncLoop);
+      io?.disconnect();
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('webglcontextlost', onLost);
       controls.removeEventListener('change', onChange);
+      controls.removeEventListener('start', onStart);
+      controls.removeEventListener('end', onEnd);
       controls.dispose();
       for (const l of layers) l.layer.dispose();
       layers = [];

@@ -2,6 +2,7 @@
 import { wireLamp } from '../../assets/theme.js';
 import { lessonOfLevel } from '../../assets/tracks/model.js';
 import { levelFromUrl, navModel } from './levels.js';
+import { warm } from './room-host.js';
 import { mountLevelPlay, BUILT_LEVELS } from './level-panel.js';
 
 const $ = id => document.getElementById(id);
@@ -23,6 +24,11 @@ $('levels').addEventListener('click', e => {
   history.replaceState(null, '', a.getAttribute('href'));
   mountLevel(levelFromUrl(location.search, location.hash));
 });
+
+// Start the 3D scene and models before the first mount asks for them, and on a hover over the level nav. Every level is 3D and
+// shares one download, so warming for the current level covers the one about to be opened.
+warm({ n: levelFromUrl(location.search, location.hash) });
+$('levels').addEventListener('pointerenter', () => warm({ n: levelFromUrl(location.search, location.hash) }), true);
 
 wireLamp($('lamp'), () => handle?.redraw());
 mountLevel(levelFromUrl(location.search, location.hash));

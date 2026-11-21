@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ROOM } from '../games/treasure-room/sim.js';
-import { createRoomHost, wants3d, roomMode, noWebglFlag, debugFlag, webglAvailable, LEVELS_IN_3D } from '../games/treasure-room/room-host.js';
+import { createRoomHost, wants3d, roomMode, noWebglFlag, debugFlag, webglAvailable, LEVELS_IN_3D, warm, shareLoad } from '../games/treasure-room/room-host.js';
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return Object.assign(promise, { resolve }); };
 
@@ -153,5 +153,70 @@ describe('createRoomHost', () => {
     expect(scene.draw).not.toHaveBeenCalled();
     host.destroy();
     expect(scene.destroy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('each mount has its own rogue', () => {
+  it('loads a fresh character per mount through one shared loader, and hands it to the scene', async () => {
+    let parsed = 0;
+    const loadCharacter = vi.fn(async () => ({ id: ++parsed }));
+    const seen = [];
+    const loader = () => Promise.resolve({ loadCharacter, createScene3d: opts => { seen.push(opts.character); return { resize() {}, draw() {}, destroy() {} }; } });
+    await setup({ loader }).host.ready;
+    await setup({ loader }).host.ready;
+    expect(loadCharacter).toHaveBeenCalledTimes(2);
+    expect(seen).toEqual([{ id: 1 }, { id: 2 }]);
+    expect(seen[0]).not.toBe(seen[1]);
+  });
+  it('stays 2D when the rogue fails to load', async () => {
+    const loader = () => Promise.resolve({ loadCharacter: () => Promise.reject(new Error('bad glb')), createScene3d: () => ({}) });
+    expect(await setup({ loader }).host.ready).toBe('2d');
+  });
+  it('probes WebGL once for a mount', async () => {
+    const webgl = vi.fn(() => true);
+    await setup({ webgl }).host.ready;
+    await setup({ webgl }).host.ready;
+    expect(webgl).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('warm and shared loading', () => {
+  it('warm does not retry a failed load on later calls', async () => {
+    const loader = vi.fn(() => Promise.reject(new Error('blocked')));
+    warm({ n: 1, search: '', webgl: () => true, loader });
+    await new Promise(r => setTimeout(r, 0));
+    warm({ n: 1, search: '', webgl: () => true, loader });
+    expect(loader).toHaveBeenCalledTimes(1);
+  });
+  it('warm starts the loader once per call when 3D is wanted, and never for 2D pages', async () => {
+    const loader = vi.fn(() => Promise.resolve({}));
+    expect(typeof warm).toBe('function');
+    warm({ n: 1, search: '', webgl: () => true, loader });
+    expect(loader).toHaveBeenCalledTimes(1);
+    for (const over of [{ search: '?room=2d' }, { search: '?nowebgl=1' }, { webgl: () => false }]) {
+      warm({ n: 1, search: '', webgl: () => true, loader, ...over });
+    }
+    expect(loader).toHaveBeenCalledTimes(1);
+  });
+  it('warm probes WebGL once per probe, however often it is called', () => {
+    const webgl = vi.fn(() => true), loader = vi.fn(() => Promise.resolve({}));
+    warm({ n: 1, search: '', webgl, loader });
+    warm({ n: 1, search: '', webgl, loader });
+    expect(webgl).toHaveBeenCalledTimes(1);
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+  it('warm swallows a failed load', async () => {
+    expect(() => warm({ n: 1, search: '', webgl: () => true, loader: () => Promise.reject(new Error('x')) })).not.toThrow();
+  });
+  it('shareLoad runs the load once for every caller and forgets a failure', async () => {
+    let calls = 0;
+    const load = shareLoad(() => { calls++; return Promise.resolve({ ok: 1 }); });
+    const [a, b] = await Promise.all([load(), load()]);
+    expect(a).toBe(b);
+    expect(calls).toBe(1);
+    let fails = 0;
+    const flaky = shareLoad(() => (fails++ ? Promise.resolve('ok') : Promise.reject(new Error('x'))));
+    await expect(flaky()).rejects.toThrow();
+    expect(await flaky()).toBe('ok');
   });
 });

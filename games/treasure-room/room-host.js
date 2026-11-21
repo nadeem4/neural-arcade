@@ -25,15 +25,40 @@ export function wants3d({ n, search = '', webgl }) {
   return roomMode(search) === '3d' || LEVELS_IN_3D.includes(n);
 }
 
-// The files load together and in parallel; the scene is built only once the models (and this mount's own rogue) are in.
-const loadScene = async () => {
-  const [scene, kit, character] = await Promise.all([
+// The scene module and the kit load together and in parallel, once per page: every caller shares the promise, and a failure is
+// forgotten so a later mount can retry. The rogue is not shared: loadCharacter() parses its own copy per mount (its bytes download once).
+export const shareLoad = fn => {
+  let p = null;
+  return () => (p ??= fn().catch(e => { p = null; throw e; }));
+};
+
+const loadSceneFiles = async () => {
+  const [scene, kit, ch] = await Promise.all([
     import('./room-scene.js'),
     import('./room-kit.js').then(m => m.loadKit()),
-    import('./room-character.js').then(m => m.loadCharacter()),
+    import('./room-character.js'),
   ]);
-  return { createScene3d: opts => scene.createScene3d({ ...opts, kit, character }) };
+  await ch.preloadCharacter(); // the one shared download, so a mount only parses
+  return { loadCharacter: () => ch.loadCharacter(), createScene3d: opts => scene.createScene3d({ ...opts, kit }) };
 };
+const loadScene = shareLoad(loadSceneFiles);
+
+// Starts the scene import and the model downloads early. Does nothing on a page that will stay 2D, so those never fetch three.js.
+// Each probe opens a throwaway WebGL context, so warm() asks a given probe only once (it runs on every nav hover).
+const probed = new WeakMap();
+const probeOnce = webgl => {
+  if (typeof webgl !== 'function') return webgl;
+  if (!probed.has(webgl)) probed.set(webgl, webgl());
+  return probed.get(webgl);
+};
+
+// A load that failed while warming is not retried by later hovers (a blocked file would refetch each time); a mount still retries.
+const warmFailed = new WeakSet();
+
+export function warm({ n = 1, search = globalThis.location?.search ?? '', webgl = webglAvailable, loader = loadScene } = {}) {
+  if (!wants3d({ n, search, webgl: true }) || warmFailed.has(loader) || !probeOnce(webgl)) return;
+  loader().catch(() => { warmFailed.add(loader); });
+}
 
 // box: the .room element (it carries data-room); canvas: the 2D canvas inside it.
 // Returns { mode, ready, draw, cellAt, redraw, resize, setFocus, setOverlays, destroy }.
@@ -61,11 +86,11 @@ export function createRoomHost({
 
   const ready = (async () => {
     if (!wants3d({ n, search, webgl: true })) return '2d';
-    if (!(typeof webgl === 'function' ? webgl() : webgl)) return '2d';
-    let mod;
-    try { mod = await loader(); } catch { return '2d'; }
+    if (!probeOnce(webgl)) return '2d';
+    let mod, character;
+    try { mod = await loader(); character = await mod.loadCharacter?.(); } catch { return '2d'; }
     if (dead) return '2d';
-    try { scene = mod.createScene3d({ box, room, reduceMotion, debug: debugFlag(search), onContextLost: lost }); } catch { scene = null; return '2d'; }
+    try { scene = mod.createScene3d({ box, room, character, reduceMotion, debug: debugFlag(search), onContextLost: lost }); } catch { scene = null; return '2d'; }
     view2d.show(false);
     box.dataset.room = '3d';
     scene.resize();

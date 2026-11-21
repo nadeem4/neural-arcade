@@ -126,3 +126,38 @@ describe('tap bridge guards and focus wiring', () => {
     expect(host.setFocus).toHaveBeenLastCalledWith(null);
   });
 });
+
+// Button audit: a button that cannot act at the start is disabled and shows why, on every level.
+describe('button audit: disabled at start says why', () => {
+  const buttonIds = [...html.matchAll(/<button\b[^>]*\bid="(\w+)"/g)].map(m => m[1]);
+  const whyIdOf = { walk: 'walkItWhy', walkUp: 'walkUpWhy', resetSweeps: 'walkUpWhy' };
+  const views = {
+    1: () => import('../games/treasure-room/level-agent.js'), 2: () => import('../games/treasure-room/level-triples.js'),
+    3: () => import('../games/treasure-room/level-return.js'), 4: () => import('../games/treasure-room/level-policy.js'),
+    5: () => import('../games/treasure-room/level-value.js'), 6: () => import('../games/treasure-room/level-mdp.js'),
+  };
+  it('every level has a view to audit', () => {
+    expect(Object.keys(views).map(Number)).toEqual(BUILT_LEVELS);
+  });
+  for (const n of [1, 2, 3, 4, 5, 6]) {
+    it(`level ${n}: each button disabled at start has a non-empty reason`, async () => {
+      vi.stubGlobal('matchMedia', () => ({ matches: true }));
+      vi.stubGlobal('document', { addEventListener() {}, removeEventListener() {} });
+      let view;
+      try {
+        const { fakeUi } = await import('./treasure-room-fake-ui.js');
+        const ui = fakeUi();
+        view = (await views[n]()).mount(ui);
+        const disabled = buttonIds.filter(id => ui.panel.querySelector('#' + id).disabled);
+        for (const id of disabled) {
+          expect(whyIdOf[id], `${id} has a why element`).toBeTruthy();
+          const why = ui.panel.querySelector('#' + whyIdOf[id]);
+          expect(why.textContent, `${id} says why`).not.toBe('');
+        }
+      } finally {
+        view?.destroy?.();
+        vi.unstubAllGlobals();
+      }
+    });
+  }
+});

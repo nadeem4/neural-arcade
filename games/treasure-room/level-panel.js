@@ -3,7 +3,7 @@
 import { createRoomHost } from './room-host.js';
 import { OVERLAYS_FOR_LEVEL } from './room-overlays.js';
 import { ROOM } from './sim.js';
-import { levelByN } from './levels.js';
+import { levelByN, assumesHtml } from './levels.js';
 import { INFO } from './words.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
@@ -38,6 +38,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
       <section>
         ${showTitle ? '<h2><span id="levelTitle"></span></h2>' : ''}
         <p id="levelBrief"></p>
+        <div id="levelAssumes"></div>
         <p class="lesson-line" id="status"></p>
       </section>
       <section data-levels="1" aria-labelledby="sh">
@@ -189,6 +190,7 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   root.querySelectorAll('[data-levels]').forEach(el => { el.hidden = !el.dataset.levels.split(' ').includes(String(n)); });
   if (showTitle) $('levelTitle').textContent = title;
   $('levelBrief').textContent = level.brief;
+  $('levelAssumes').innerHTML = assumesHtml(level);
   $('status').textContent = level.lesson;
   root.querySelectorAll('.info-text[data-info]').forEach(p => { p.textContent = INFO[p.dataset.info]; });
   root.querySelectorAll('.info').forEach(btn => btn.addEventListener('click', () => {
