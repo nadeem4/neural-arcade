@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { ROOM } from '../games/treasure-room/sim.js';
 import { ACTIONS } from '../assets/grid.js';
 import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList, tagsList, iceList } from '../games/treasure-room/room-overlays.js';
-import { heatColor, tagStyle, TAG_CAPACITY } from '../games/treasure-room/room-math.js';
+import { heatColor, tagStyle, tagTone, TAG_CAPACITY } from '../games/treasure-room/room-math.js';
 import { createMarks, MESH_LAYERS, TRAIL_COIN } from '../games/treasure-room/room-overlay-meshes.js';
 
 const read = f => readFileSync(new URL('../games/treasure-room/' + f, import.meta.url), 'utf8');
@@ -200,6 +200,11 @@ describe('tags and ice lists', () => {
   it('ice covers every floor cell only when on', () => {
     expect(iceList(ROOM, true)).toHaveLength(ROOM.cells.flat().filter(c => !'TX#'.includes(c)).length);
     expect(iceList(ROOM, false)).toEqual([]);
+  });
+  it('tagTone names a reward good, bad or step', () => {
+    expect(tagTone(10)).toBe('good');
+    expect(tagTone(-10)).toBe('bad');
+    expect(tagTone(-1)).toBe('step');
   });
   it('tagStyle follows the 2D rules', () => {
     expect(tagStyle('good', true)).toEqual({ fill: 'ink' });

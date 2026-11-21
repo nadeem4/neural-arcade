@@ -1,7 +1,7 @@
 // Level 2 (state, action, reward): the same play as level 1, with every step written as a line and a reward tag floating on the tile.
 import { mountPlay } from './level-agent.js';
 import { logLine } from './words.js';
-import { tagTone } from './room-view.js';
+import { tagTone } from './room-math.js';
 
 const KEEP = 8;
 
