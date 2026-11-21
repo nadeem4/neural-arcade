@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { LEVELS } from '../games/treasure-room/levels.js';
 import { GAMES } from '../assets/games.js';
 
@@ -61,13 +61,20 @@ describe('treasure room how it works page', () => {
     expect(html).toContain(`<meta name="twitter:image" content="${URL_}share.png">`);
   });
 
-  it('labels every canvas for screen readers', () => {
-    const canvases = html.match(/<canvas[^>]*>/g);
-    expect(canvases.length).toBeGreaterThan(0);
-    for (const c of canvases) {
-      expect(c).toContain('role="img"');
-      expect(c).toMatch(/aria-label="[^"]+"/);
+  it('shows six still images from the 3D room, each with its size and alt text', () => {
+    expect(html).not.toMatch(/<canvas/);
+    for (let n = 1; n <= 6; n++) {
+      expect(html).toMatch(new RegExp(`<img[^>]+src="fig-${n}\\.webp"[^>]+width="1280"[^>]+height="800"[^>]+alt="[^"]{12,}"`));
+      expect(html.match(new RegExp(`<img[^>]+src="fig-${n}\\.webp"[^>]*>`))[0].includes('loading="lazy"')).toBe(n > 1);
+      const f = new URL(`../games/treasure-room/how-it-works/fig-${n}.webp`, import.meta.url);
+      expect(existsSync(f)).toBe(true);
+      expect(statSync(f).size).toBeLessThanOrEqual(120 * 1024);
     }
+    expect(existsSync(new URL('../games/treasure-room/share.png', import.meta.url))).toBe(true);
+  });
+
+  it('story.js no longer draws the six figure canvases', () => {
+    for (const id of ['canvasRoom', 'canvasRoutes', 'policyBad', 'policyFixed', 'planDry', 'planIcy']) expect(story).not.toContain(id);
   });
 
   it('story.js reads the recorded run and shows the sweeps the story records', () => {

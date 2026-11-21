@@ -1,5 +1,5 @@
-// "How it works" for Treasure Room: every figure comes from story.json, one seeded run recorded by story-data.js, so
-// the pictures match the words on every visit. The figures are still, so they only redraw on resize and theme change.
+// "How it works" for Treasure Room: the words and the value sweeps come from story.json, one seeded run recorded by story-data.js. The six
+// figures are still images (fig-N.webp) captured from the 3D room (see ../shots.js); only the sweep grids of Fig. 5 are drawn here.
 import { wireLamp } from '../../../assets/theme.js';
 import { makeGrid } from '../../../assets/grid.js';
 import { sizeCanvas } from '../../racer/track-view.js';
@@ -21,13 +21,10 @@ function draw(canvas, opts = {}) {
 }
 
 const draws = [];
-const add = (id, opts) => { draws.push(() => draw($(id), opts)); draws.at(-1)(); };
 
 // ---------- Fig. 1: the agent and the room ----------
-const walkCells = [START, ...S.agent.trace.map(t => t.pos)];
 $('walkSteps').textContent = S.agent.trace.length;
 $('walkTotal').textContent = num(S.agent.total);
-add('canvasRoom', { agent: START, ghost: walkCells });
 
 // ---------- Fig. 2: state, action, reward ----------
 $('triples').innerHTML = S.triples.map(t => `<li>${logLine({ pos: t.state, action: t.action, reward: t.reward })}</li>`).join('');
@@ -38,14 +35,8 @@ $('shortSteps').textContent = R.shortCells.length - 1;
 $('detourSteps').textContent = R.detourCells.length - 1;
 $('returnRows').innerHTML = R.gammas.map((g, i) =>
   `<tr><th scope="row">${g}</th><td>${num(R.short[i].total)}</td><td>${num(R.detour[i].total)}</td><td>${num(R.short[i].terms.at(-1))}</td></tr>`).join('');
-add('canvasRoutes', { agent: START, ghost: [R.shortCells, R.detourCells] });
 
 // ---------- Fig. 4: a policy ----------
-for (const [id, key] of [['policyBad', 'bad'], ['policyFixed', 'fixed']]) {
-  const run = S.policy[`${key}Run`];
-  $(id).setAttribute('aria-label', `Arrows for each tile. ${run.outcome === 'treasure' ? `The robot reaches the treasure in ${run.cells.length - 1} steps.` : 'The robot never reaches the treasure.'}`);
-  add(id, { agent: START, policy: S.policy[key], ghost: run.cells });
-}
 $('fixedSteps').textContent = S.policy.fixedRun.cells.length - 1;
 
 // ---------- Fig. 5: value spreads outward ----------
@@ -71,10 +62,6 @@ $('stepThrough').addEventListener('click', () => {
 
 // ---------- Fig. 6: the icy floor ----------
 const M = S.mdp;
-for (const [id, key] of [['planDry', 'dry'], ['planIcy', 'icy']]) {
-  $(id).setAttribute('aria-label', `The best route on a ${key === 'dry' ? 'dry' : 'icy'} floor${M[key].pitAdjacent ? ', passing next to the pit' : ', keeping away from the pit'}.`);
-  add(id, { agent: START, ghost: M[key].cells, ice: key === 'icy' });
-}
 $('dryValue').textContent = num(M.dry.startValue);
 $('icyValue').textContent = num(M.icy.startValue);
 $('dryPit').textContent = `${M.trips.dry.pit} of them`;

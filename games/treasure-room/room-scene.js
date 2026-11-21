@@ -18,7 +18,7 @@ const stageColor = () => {
 };
 
 // box: the .room element the canvas goes into. kit: the loaded models (room-kit.js). Returns the scene's controls.
-export function createScene3d({ box, room, kit, character = null, reduceMotion = false, debug = false, onContextLost = () => {} }) {
+export function createScene3d({ box, room, kit, character = null, reduceMotion = false, debug = false, preserveDrawingBuffer = false, onContextLost = () => {} }) {
   const t0 = performance.now();
   const L = layoutRoom(room, kit.dims);
   const tier = tierFor(box.clientWidth || 1280);
@@ -30,7 +30,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   box.appendChild(canvas);
 
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch (err) { canvas.remove(); throw err; }
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer }); } catch (err) { canvas.remove(); throw err; }
   renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, tier.pixelRatioMax));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
