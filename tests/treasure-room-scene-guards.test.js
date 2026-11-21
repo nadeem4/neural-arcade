@@ -84,6 +84,15 @@ describe('level labels wiring (source guards)', () => {
     expect(view).toMatch(/aria-controls/);
     expect(view).not.toMatch(/disabled/);
   });
+  it('clicks on a label stop at the layer so the room never moves the agent', () => {
+    expect(view).toMatch(/layer\.addEventListener\('click', e => e\.stopPropagation\(\)/);
+  });
+  it('hover and the keyboard close work on the whole wrapper, and the open card measures itself', () => {
+    expect(view).toMatch(/wrap\.addEventListener\('pointerenter'/);
+    expect(view).toMatch(/focusout/);
+    expect(view).toMatch(/offsetHeight/);
+    expect(view).toMatch(/offsetWidth/);
+  });
   it('card text goes in with textContent, never innerHTML', () => {
     expect(view).toMatch(/textContent/);
     expect(view).not.toMatch(/innerHTML/);

@@ -266,7 +266,7 @@ describe('idle frame cap, pause and phone sizing', () => {
   it('the character reports when it is busy', () => {
     expect(read('games/treasure-room/room-character.js')).toMatch(/busy:/);
   });
-  it('the room is capped to about 70vh tall (112vh wide at 16:10)', () => {
-    expect(read('games/treasure-room/treasure-room.css')).toMatch(/\.room\s*\{[^}]*max-width:\s*min\(100%,\s*112vh\)/);
+  it('the room is capped to 75vh tall (100vh wide at 4:3)', () => {
+    expect(read('games/treasure-room/treasure-room.css')).toMatch(/\.room\s*\{[^}]*max-width:\s*100vh/);
   });
 });
