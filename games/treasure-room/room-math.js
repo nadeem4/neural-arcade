@@ -164,3 +164,7 @@ export const tweenAt = (style, k) => {
 export const facing = (from, to) => Math.atan2(to.x - from.x, to.y - from.y);
 
 export const atTreasure = (room, pos) => !!pos && room.cells[pos.y]?.[pos.x] === 'T';
+
+// Tag colour names, the same rules as tagColor in room-view.js: a tag on the treasure or trap is always ink.
+export const TAG_CAPACITY = 8;
+export const tagStyle = (tone, onEnd) => ({ fill: onEnd ? 'ink' : tone === 'good' || tone === 'bad' ? tone : 'step' });

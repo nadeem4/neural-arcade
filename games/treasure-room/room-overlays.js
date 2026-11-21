@@ -1,6 +1,7 @@
 // Treasure Room 3D overlays: which ones a level draws, and what each one puts on the floor. Pure: no three.js and no DOM.
 // Each overlay is { list(room, opts) -> draw list }; room-overlay-meshes.js turns a list into meshes.
 import { ACTIONS } from '../../assets/grid.js';
+import { TAG_CAPACITY } from './room-math.js';
 
 const isFloor = (room, x, y) => !'TX#'.includes(room.cells[y][x]);
 const clamp01 = h => (h > 0 ? Math.min(1, h) : 0); // NaN and negatives are 0
@@ -41,6 +42,20 @@ export function trailList(room, ghost, gamma = 1) {
   };
 }
 
+// The reward numbers floating over cells (levels 2, 3 and 6). onEnd tags sit on the treasure or trap.
+const TONES = ['step', 'good', 'bad'];
+export const tagsList = (room, tags) => (Array.isArray(tags) ? tags : []).slice(0, TAG_CAPACITY).map(({ x, y, text, tone }) => ({
+  x, y, text, tone: TONES.includes(tone) ? tone : 'step', onEnd: 'TX'.includes(room.cells[y][x]),
+}));
+
+// The icy floor (level 6): every floor cell when on.
+export function iceList(room, ice) {
+  const out = [];
+  if (!ice) return out;
+  for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) if (isFloor(room, x, y)) out.push({ x, y });
+  return out;
+}
+
 // The outlined tiles. Part of the base room, not an overlay.
 export const marksList = marks => (marks ?? []).map(({ x, y }) => ({ x, y }));
 
@@ -48,10 +63,11 @@ export const OVERLAYS = {
   values: { list: (room, opts) => valuesList(room, opts.values, opts.heat) },
   arrows: { list: (room, opts) => arrowsList(room, opts.policy, ACTIONS) },
   trail: { list: (room, opts) => trailList(room, opts.ghost, opts.gamma) },
+  tags: { list: (room, opts) => tagsList(room, opts.tags) },
+  ice: { list: (room, opts) => iceList(room, opts.ice) },
 };
 
-// Later slices fill in the rest of the rows.
-export const OVERLAYS_FOR_LEVEL = { 1: [], 2: [], 3: ['trail'], 4: ['arrows'], 5: ['values'], 6: [] };
+export const OVERLAYS_FOR_LEVEL = { 1: [], 2: ['tags'], 3: ['trail', 'tags'], 4: ['arrows'], 5: ['values'], 6: ['trail', 'tags', 'ice'] };
 
 export function overlayNames(names) {
   const list = names ?? [];

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ROOM } from '../games/treasure-room/sim.js';
 import { ACTIONS } from '../assets/grid.js';
-import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList } from '../games/treasure-room/room-overlays.js';
-import { heatColor } from '../games/treasure-room/room-math.js';
+import { OVERLAYS, OVERLAYS_FOR_LEVEL, overlayNames, valuesList, marksList, arrowsList, trailList, tagsList, iceList } from '../games/treasure-room/room-overlays.js';
+import { heatColor, tagStyle, TAG_CAPACITY } from '../games/treasure-room/room-math.js';
 import { createMarks, MESH_LAYERS, TRAIL_COIN } from '../games/treasure-room/room-overlay-meshes.js';
 
 const read = f => readFileSync(new URL('../games/treasure-room/' + f, import.meta.url), 'utf8');
@@ -172,5 +172,34 @@ describe('arrows mesh', () => {
     expect(made.meshes[0].count).toBe(list.length);
     layer.update(list.slice(0, 2));
     expect(made.meshes[0].count).toBe(2);
+  });
+});
+
+describe('tags and ice lists', () => {
+  it('lists tags, marks the ones on the treasure or trap as onEnd, and defaults the tone', () => {
+    expect(tagsList(ROOM, [{ x: 1, y: 1, text: '-1', tone: 'step' }]).map(t => t.text)).toEqual(['-1']);
+    expect(tagsList(ROOM, [{ x: 4, y: 3, text: '+10', tone: 'good' }])[0].onEnd).toBe(true);
+    expect(tagsList(ROOM, [{ x: 2, y: 2, text: '-10', tone: 'bad' }])[0].onEnd).toBe(true);
+    expect(tagsList(ROOM, [{ x: 1, y: 1, text: '?', tone: 'odd' }])[0].tone).toBe('step');
+  });
+  it('keeps at most TAG_CAPACITY tags and tolerates none', () => {
+    expect(tagsList(ROOM, new Array(12).fill({ x: 1, y: 1, text: '-1', tone: 'step' }))).toHaveLength(TAG_CAPACITY);
+    expect(tagsList(ROOM, undefined)).toEqual([]);
+  });
+  it('ice covers every floor cell only when on', () => {
+    expect(iceList(ROOM, true)).toHaveLength(ROOM.cells.flat().filter(c => !'TX#'.includes(c)).length);
+    expect(iceList(ROOM, false)).toEqual([]);
+  });
+  it('tagStyle follows the 2D rules', () => {
+    expect(tagStyle('good', true)).toEqual({ fill: 'ink' });
+    expect(tagStyle('bad', false)).toEqual({ fill: 'bad' });
+    expect(tagStyle('good', false)).toEqual({ fill: 'good' });
+    expect(tagStyle('step', false)).toEqual({ fill: 'step' });
+    expect(tagStyle('odd', false)).toEqual({ fill: 'step' });
+  });
+  it('is registered, and level 6 draws trail, tags and ice', () => {
+    expect(OVERLAYS.tags.list(ROOM, { tags: [{ x: 1, y: 1, text: '-1', tone: 'step' }] })).toHaveLength(1);
+    expect(OVERLAYS.ice.list(ROOM, { ice: false })).toEqual([]);
+    expect(overlayNames(OVERLAYS_FOR_LEVEL[6])).toEqual(['trail', 'tags', 'ice']);
   });
 });
