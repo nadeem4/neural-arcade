@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 
 const root = new URL('../', import.meta.url);
-const claude = readFileSync(new URL('CLAUDE.md', root), 'utf8');
-const line = claude.split('\n').find(l => l.startsWith('- games/city/ ('));
+const layout = readFileSync(new URL('docs/layout.md', root), 'utf8');
+const line = layout.split('\n').find(l => l.startsWith('- games/city/ ('));
 const gameFiles = line.slice(0, line.indexOf('scripts/city/:'));
 
-describe('CLAUDE.md Layout for games/city/', () => {
+describe('docs/layout.md for games/city/', () => {
   it('lists every game file that exists', () => {
     const files = readdirSync(new URL('games/city/', root)).filter(f => /\.(js|css|html)$/.test(f));
     for (const f of files) expect(gameFiles, f).toContain(f);

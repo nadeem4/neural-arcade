@@ -139,14 +139,14 @@ describe('3D by default needs the import map and the docs say so', () => {
   });
   it('documents the loader and the 3D-only host', () => {
     expect(read('README.md')).toMatch(/room-loader\.js/);
-    expect(read('CLAUDE.md')).toMatch(/room-host\.js/);
-    expect(read('CLAUDE.md')).toMatch(/room-loader\.js/);
+    expect(read('docs/layout.md')).toMatch(/room-host\.js/);
+    expect(read('docs/layout.md')).toMatch(/room-loader\.js/);
     expect(read('DESIGN.md')).toMatch(/3D by default/);
     expect(read('DESIGN.md')).toMatch(/Entering the room/);
     expect(read('DESIGN.md')).toMatch(/Try again/);
   });
   it('no longer documents the 2D switches', () => {
-    for (const f of ['README.md', 'CLAUDE.md', 'DESIGN.md']) {
+    for (const f of ['README.md', 'docs/layout.md', 'DESIGN.md']) {
       const txt = read(f).split('\n').filter((l) => /treasure room|room-host|room-view/i.test(l)).join('\n');
       expect(txt, f).not.toMatch(/room=(2d|3d)|2D first|falls? back to (room-view|2D)/);
     }

@@ -6,7 +6,8 @@ node_modules/
 .vercel
 .remember/
 spike/
-docs/
+docs/*
+!docs/layout.md
 .claude/
 videos/
 scripts/city/data/
