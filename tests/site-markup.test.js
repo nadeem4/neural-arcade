@@ -415,7 +415,7 @@ describe('no dead css or shelf wording', () => {
 });
 
 describe('old styles and fonts are gone', () => {
-  const skip = ['node_modules', 'docs', 'videos', '.git', '.claude', '.impeccable', 'tests'];
+  const skip = ['node_modules', 'docs', 'videos', '.git', '.claude', '.impeccable', '.superpowers', '.plan', 'tests'];
   const walk = d => readdirSync(d, { withFileTypes: true }).flatMap(e =>
     skip.includes(e.name) ? [] : e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]);
   const files = walk(fileURLToPath(new URL('../', import.meta.url)));

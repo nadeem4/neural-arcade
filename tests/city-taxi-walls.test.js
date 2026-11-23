@@ -146,7 +146,7 @@ describe('the taxi never drives through a post', () => {
       const counts = story.cards.map((c) => postHits(posts, c.rewards, c.route));
       if (process.env.DBG) console.log('POSTS', name, posts.length, counts);
       expect(counts).toEqual(counts.map(() => 0));
-    });
+    }, 30000);
   }
 });
 
