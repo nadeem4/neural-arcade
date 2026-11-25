@@ -12,6 +12,8 @@ CODE_SUFFIXES = (".py", ".js", ".ts", ".tsx", ".go", ".rs", ".java", ".cs")
 PROSE_SUFFIXES = (".md", ".txt")
 CHECK_TIMEOUT = 540
 CHECK_MAP_RE = re.compile(r"^Check \[([^\]]*)\]:(.*)$")
+DOCS_NONE_RE = re.compile(r"^Docs: none \(.+\)$", re.M)
+LAYOUT_ENTRY_RE = re.compile(r"^- `([^`]+)`")
 
 COMMENT_RE = re.compile(r"^\s*(?:#|//|/\*|\*|--)\s*(.*)$")
 SLOP_COMMENT_RES = [
@@ -102,6 +104,8 @@ def added_lines(diff: str) -> list[tuple[str, str]]:
 def find_slop(added: list[tuple[str, str]]) -> list[str]:
     found = []
     for path, text in added:
+        if "vendor" in path.split("/")[:-1]:
+            continue
         reasons = []
         if EMOJI_RE.search(text):
             reasons.append("emoji")
@@ -114,12 +118,49 @@ def find_slop(added: list[tuple[str, str]]) -> list[str]:
     return found
 
 
-def docs_warning(changed: list[str]) -> str | None:
-    code = [p for p in changed if p.endswith(CODE_SUFFIXES)]
+def is_test_file(path: str) -> bool:
+    parts = path.split("/")
+    name = parts[-1]
+    return (
+        "tests" in parts[:-1] or "test" in parts[:-1] or name.startswith("test_")
+        or "_test." in name or ".test." in name or ".spec." in name
+    )
+
+
+def docs_error(changed: list[str], messages: str) -> str | None:
+    code = [p for p in changed if p.endswith(CODE_SUFFIXES) and not is_test_file(p)]
     docs = [p for p in changed if p.startswith("docs/") or p.endswith(".md")]
-    if code and not docs:
-        return "code changed but no docs changed; update the docs if behaviour changed"
-    return None
+    if not code or docs or DOCS_NONE_RE.search(messages):
+        return None
+    return "code changed but no docs changed: update the docs, or add a commit line 'Docs: none (reason)'"
+
+
+def layout_errors(repo: Path, tracked: list[str]) -> list[str]:
+    claude_md = repo / "CLAUDE.md"
+    if not claude_md.exists():
+        return []
+    entries = []
+    in_layout = False
+    found = False
+    for line in claude_md.read_text(encoding="utf-8", errors="replace").splitlines():
+        if line.startswith("## "):
+            in_layout = line.rstrip() == "## Layout"
+            found = found or in_layout
+        elif in_layout and (match := LAYOUT_ENTRY_RE.match(line)):
+            if not any(c in match.group(1) for c in ("{{", "*", "<")):
+                entries.append(match.group(1).rstrip("/"))
+    if not found:
+        return []
+    if not entries:
+        return ['Layout in CLAUDE.md has no entries in the form "- `path`: text"']
+    errors = [f"Layout names '{e}' but it does not exist" for e in entries if not (repo / e).exists()]
+    covered = {e.split("/")[0] for e in entries}
+    folders = sorted({p.split("/")[0] for p in tracked if "/" in p})
+    errors += [
+        f"top-level folder '{f}' is missing from Layout in CLAUDE.md"
+        for f in folders if not f.startswith(".") and f not in covered
+    ]
+    return errors
 
 
 def _git(repo: Path, *args: str) -> tuple[int, str]:
@@ -192,13 +233,15 @@ def run_checks(
         if failure := _run_check_command(repo, cmd):
             report.errors.append(failure)
 
+    report.errors += layout_errors(repo, [p for p in _git(repo, "ls-files", "-z")[1].split("\0") if p])
+
     if resolved is None:
         report.warnings.append("no base branch found (origin/main or main); slop and docs checks skipped")
         return report
 
     report.errors += find_slop(added_lines(_git(repo, "diff", "--unified=0", span)[1]))
-    if warning := docs_warning(changed):
-        report.warnings.append(warning)
+    if error := docs_error(changed, _git(repo, "log", "--format=%B", f"{resolved}..HEAD")[1]):
+        report.errors.append(error)
     return report
 
 
