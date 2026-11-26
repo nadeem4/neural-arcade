@@ -28,19 +28,18 @@ Release targets:
 - Record Reward City footage: open `/games/city/?record=1&card=<preset id>&fps=<n>&cam=<default|map|auto>&endcard=1&maxms=<n>` (frame-stepped through `window.__rc`; see README)
 
 ## Layout
-File-by-file detail: docs/layout.md (keep it current when a file is added, moved or removed; two tests check it).
-- index.html, about/, games/index.html: home, About, browse all games; category/ and concepts/index.html are redirect stubs
-- assets/: shared code and styles (studio.css, site.js, game.css + game-page.js, home.js, video.js); assets/games.js lists the games
-- assets/tracks/: the three track configs (lessons live only there), page builder (build.js), progress; scripts/build-pages.mjs writes the pages
-- neural-networks/, reinforcement-learning/, physical-ai/: generated track pages
-- concepts/<id>/: one lesson page per live lesson (index.html generated from config + writeup.html + page.js)
-- games/<name>/: one game each (index.html, sim.js, ai.js, main.js, words.js, story-data.js, how-it-works/)
-- games/city/ (Reward City): 3D taxi on an OSM Chicago grid; start at sim.js, presets.js, main.js; scripts/city/ makes chicago.json
-- games/treasure-room/ (Treasure Room): 3D room with six levels; start at sim.js, levels.js, level-panel.js
-- assets/vendor/three/: the one pinned three.js r160 plus loaders; pages that load it carry the import map
-- engine/: shared learning code (tinynet, evolve, reinforce, qlearn, train, brain-panel, curve)
-- tests/: Vitest tests, flat, named `<game>-*.test.js`
-- .github/workflows/check.yml, scripts/check_pr.py, .githooks/pre-push: the PR check
+- `docs/`: layout.md is the file-by-file map; keep it current when a file is added, moved or removed (two tests check it)
+- `about/`: the About page; `index.html` is home and `games/index.html` browses all games
+- `category/`: a redirect stub, as is `concepts/index.html`
+- `concepts/`: one lesson page per live lesson in `concepts/<id>/` (index.html generated from config + writeup.html + page.js)
+- `assets/`: shared code and styles (studio.css, site.js, game.css + game-page.js, home.js, video.js); games.js lists the games; tracks/ holds the three track configs (lessons live only there), page builder (build.js) and progress; vendor/three/ is the one pinned three.js r160 plus loaders, and pages that load it carry the import map
+- `neural-networks/`: generated track page
+- `reinforcement-learning/`: generated track page
+- `physical-ai/`: generated track page
+- `games/`: one game per folder (index.html, sim.js, ai.js, main.js, words.js, story-data.js, how-it-works/); city/ is Reward City, a 3D taxi on an OSM Chicago grid (start at sim.js, presets.js, main.js); treasure-room/ is Treasure Room, a 3D room with six levels (start at sim.js, levels.js, level-panel.js)
+- `engine/`: shared learning code (tinynet, evolve, reinforce, qlearn, train, brain-panel, curve)
+- `scripts/`: build-pages.mjs writes the generated pages; city/ makes chicago.json; check_pr.py, with .githooks/pre-push and .github/workflows/check.yml, is the PR check
+- `tests/`: Vitest tests, flat, named `<game>-*.test.js`
 
 ## Conventions
 - Adding a lesson is one config entry in its track, one level, one write-up, then `npm run pages`. Generated pages are committed; a test fails on drift. A game's chips and track crumb come from the track configs, so adding a game to a lesson (`game` or a `wild` entry) is all a game page needs; the game's own HTML carries only the empty `#uses` and `#moreFrom` sections
