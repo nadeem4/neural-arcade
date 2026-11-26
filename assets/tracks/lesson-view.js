@@ -15,13 +15,13 @@ export function videoSlotHtml(lesson, games = GAMES) {
     : '<p class="video-soon">Video coming soon</p>';
 }
 
-// "In the wild": what other games show of this lesson. The lesson's own game is the caption under the stage instead.
+// "Same idea in other games": what other games show of this lesson. The lesson's own game is the caption under the stage instead.
 export function wildListHtml(lesson, games = GAMES, base = '') {
   const items = (lesson.wild ?? []).filter(w => w.game !== lesson.game).map(w => {
     const g = games.find(x => x.id === w.game);
     return `<li><a href="${base}games/${esc(w.game)}/">${esc(g?.title ?? w.game)}</a><span>${esc(w.says)}</span></li>`;
   });
-  return items.length ? `<h2>In the wild</h2><ul class="wild-list">${items.join('')}</ul>` : '';
+  return items.length ? `<h2>Same idea in other games</h2><p class="wild-lead">Each of these games shows this idea in a different world.</p><ul class="wild-list">${items.join('')}</ul>` : '';
 }
 
 export function ownLineHtml(lesson) {
@@ -71,18 +71,19 @@ export function lessonBodyHtml(lesson, { games = GAMES, base, writeupHtml }) {
   return `<section class="lhead">
   <div class="crumb">${crumbHtml(lesson, base)}</div>
   <h1>${esc(lessonLabel(lesson))}</h1>
-  <p class="lead">${esc(lesson.says)}</p>
+  <p class="lead">${esc(lesson.asks ?? lesson.says)}</p>
 </section>
 
 ${stage}
 ${ownLineHtml(lesson)}
-<p class="done-row">${markDoneHtml(false)}</p>
+
+${readHtml(lesson, games, base, writeupHtml)}
 
 <div class="side">
   <section id="watch" aria-label="Watch">${videoSlotHtml(lesson, games)}</section>
   ${wild ? `<section class="wild">${wild}</section>` : ''}
 </div>
 
-${readHtml(lesson, games, base, writeupHtml)}
+<p class="done-row">${markDoneHtml(false)}</p>
 ${neighboursHtml(lesson, base)}`;
 }

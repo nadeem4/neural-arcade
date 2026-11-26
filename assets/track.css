@@ -24,6 +24,7 @@
 .do svg { width: 18px; height: 18px; }
 .row .st { grid-column: 4; }
 .st { justify-self: end; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.st svg { display: block; width: 24px; height: 24px; }
 .row[data-state="done"] .st { color: var(--ink); }
 .row[data-state="next"] .st { color: var(--signal-text); }
 .row[data-state="soon"] .what b, .row[data-state="soon"] .num { color: var(--ink-2); }

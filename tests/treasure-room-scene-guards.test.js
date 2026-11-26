@@ -33,6 +33,9 @@ describe('room-scene.js source guards', () => {
   it('keeps the camera turn-only', () => {
     expect(src).toMatch(/enablePan\s*:\s*false/);
   });
+  it('does not zoom, so scrolling the page over the room scrolls the page', () => {
+    expect(src).toMatch(/enableZoom\s*:\s*false/);
+  });
   it('has no sprite labels (they are one merged mesh, later)', () => {
     expect(src).not.toMatch(/\bnew\s+THREE\.Sprite\b/);
   });

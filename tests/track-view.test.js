@@ -14,6 +14,14 @@ describe('track body', () => {
     expect(html).toContain('Continue: Lesson 2, State, action, reward');
     expect(html).toContain('class="btn primary"');
   });
+  it('done and next show an icon and keep the words for screen readers', () => {
+    for (const [lesson, word] of [['agent', 'Done'], ['state-action-reward', 'Up next']]) {
+      const row = html.slice(html.indexOf(`data-lesson="${lesson}"`)).split('</li>')[0];
+      const st = row.slice(row.indexOf('<span class="st"'));
+      expect(st).toContain('<svg');
+      expect(st).toContain(`<span class="sr">${word}</span>`);
+    }
+  });
   it('marks each row with its state', () => {
     expect(html).toMatch(/<li[^>]*data-lesson="agent"[^>]*data-state="done"/);
     expect(html).toMatch(/data-lesson="state-action-reward"[^>]*data-state="next"/);

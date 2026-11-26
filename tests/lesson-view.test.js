@@ -18,6 +18,12 @@ describe('lesson view builders', () => {
     expect(html).toContain('<section id="writeup">W</section>');
     expect(html).toContain(l.says);
   });
+  it('page order: lead, stage, write-up, video, other games, Mark as done, neighbours', () => {
+    const html = lessonBodyHtml(l, args);
+    const at = ['class="lead"', 'id="play"', 'id="writeup"', 'id="watch"', 'class="wild"', 'id="markDone"', 'class="neighbours"'].map(s => html.indexOf(s));
+    expect(at).not.toContain(-1);
+    expect(at).toEqual([...at].sort((a, b) => a - b));
+  });
   it('crumb links the track and counts the lesson', () => {
     expect(crumbHtml(l, B)).toContain('<a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 3 of 19');
   });
@@ -30,6 +36,7 @@ describe('lesson view builders', () => {
   });
   it('wild list leaves out the own game and is empty without other entries', () => {
     const w = wildListHtml(l, GAMES, B);
+    expect(w).toContain('<h2>Same idea in other games</h2><p class="wild-lead">');
     expect(w).toContain('Treasure Maze');
     expect(w).toContain('Reward City');
     expect(w).not.toContain('Treasure Room');
