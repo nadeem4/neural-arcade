@@ -7,11 +7,19 @@ import { esc } from './shell.js';
 
 const STATE_TEXT = { done: 'Done', next: 'Up next', soon: 'Coming soon', '': '' };
 
+// Phosphor icons (MIT), as in game-page.js.
+const icon = d => `<svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="${d}"/></svg>`;
+const ICONS = {
+  play: icon('M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z'),
+  read: icon('M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z'),
+  watch: icon('M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224ZM157,113.34l-40-24A8,8,0,0,0,105,96v48a8,8,0,0,0,12,6.86l40-24a8,8,0,0,0,0-13.72ZM121,129.87V110.13L137.45,120Z'),
+};
+
 export function lessonRowHtml(lesson, { state = '', base = '../', games = GAMES } = {}) {
   const live = lesson.status === 'live';
   const href = lessonHref(lesson, base);
   const label = lessonLabel(lesson);
-  const link = (hash, text) => `<a href="${href}#${hash}" aria-label="${text} ${esc(label)}">${text}</a>`;
+  const link = (hash, text) => `<a href="${href}#${hash}" aria-label="${text} ${esc(label)}" title="${text}">${ICONS[hash]}</a>`;
   const actions = live
     ? `<span class="do">${link('play', 'Play')}${link('read', 'Read')}${lessonVideo(lesson, games) ? link('watch', 'Watch') : ''}</span>`
     : '';
@@ -54,7 +62,7 @@ export function trackBodyHtml(track, { done = [], base = '../', games = GAMES } 
 
   const startText = prog.done === 0 ? 'Start' : 'Continue';
   const button = next
-    ? `<a class="btn primary" href="${lessonHref(next, base)}">${startText}: ${esc(lessonLabel(lessons.find(l => l.id === next.id), ', '))}</a>`
+    ? `<a class="btn primary" href="${lessonHref(next, base)}">${ICONS.play}${startText}: ${esc(lessonLabel(lessons.find(l => l.id === next.id), ', '))}</a>`
     : '';
 
   const parts = track.parts.map((part, i) => {
