@@ -62,6 +62,17 @@
     <h3>The discount sets how far the slope reaches</h3>
     <p>With a low discount the slope is short: only cells close to the treasure look valuable. With a high discount it reaches all the way back to the start, so the agent can tell which way to go from far away.</p>
     <figure class="fig" id="figure"></figure>
+    <h3>In code</h3>
+    <pre class="code"><code>gamma = 0.9
+route = [5, 6, 7, 8, 13, 18]
+rewards = [-1, -1, -1, -1, -1, 10]
+
+V, G = {}, 0
+for state, reward in zip(reversed(route), reversed(rewards)):
+    G = reward + gamma * G
+    V[state] = round(G, 2)
+print(V)</code></pre>
+    <p>The same sum as the return, kept for every state on the route. The tile next to the treasure is worth 10; the start is worth 1.81.</p>
     <p><b>The lesson:</b> a state's value is the reward the agent can expect from there. It spreads back from the treasure, and the discount decides how far.</p>
   </section>
 </div>

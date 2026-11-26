@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describeCell } from '../concepts/state-action-reward/sim.js';
 import { figureHtml } from '../concepts/state-action-reward/figures.js';
 import { GRID, REWARD, stateId } from '../assets/grid.js';
-import { lessonById } from '../assets/tracks/model.js';
+import { flatLessons, lessonById } from '../assets/tracks/model.js';
 
 const UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3;
 const HEX_COLOUR = /["'(:]#[0-9a-f]{3,8}\b/i;
@@ -52,13 +52,16 @@ describe('figureHtml', () => {
   });
 });
 
-describe('Lesson 1 write-up', () => {
-  const w = readFileSync(new URL('../concepts/agent/writeup.html', import.meta.url), 'utf8');
-  it('shows its idea in one code block after the first h2, and no figure', () => {
+describe('Treasure Room lesson write-ups', () => {
+  const lessons = flatLessons().filter((l) => l.status === 'live' && l.level);
+  it.each(lessons.map((l) => l.id))('%s shows its idea in one code block after the first h2', (id) => {
+    const w = readFileSync(new URL(`../concepts/${id}/writeup.html`, import.meta.url), 'utf8');
     expect(w.match(/<pre class="code">/g)).toHaveLength(1);
     expect(w.indexOf('<h2>')).toBeGreaterThan(-1);
     expect(w.indexOf('<pre class="code">')).toBeGreaterThan(w.indexOf('<h2>'));
-    expect(w).not.toContain('<figure');
+  });
+  it('Lesson 1 has no figure', () => {
+    expect(readFileSync(new URL('../concepts/agent/writeup.html', import.meta.url), 'utf8')).not.toContain('<figure');
   });
 });
 

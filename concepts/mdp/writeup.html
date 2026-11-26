@@ -11,5 +11,17 @@
     <h3>Only the present state matters</h3>
     <p>The odds for tomorrow come from today's state alone. It does not matter whether it was sunny or rainy last week: once you know it is cloudy now, the odds are the same. That is the Markov property, and it is what makes the table small enough to write down.</p>
     <figure class="fig" id="figure"></figure>
+    <h3>In code</h3>
+    <pre class="code"><code># P[state][action] = [(probability, next_state, reward, done), ...]
+P = {
+    18: {
+        "right": [(0.8, 19, 10, True), (0.1, 13, -1, False), (0.1, 23, -1, False)],
+        "up":    [(0.8, 13, -1, False), (0.1, 17, -1, False), (0.1, 19, 10, True)],
+    },
+}
+
+for probability, next_state, reward, done in P[18]["right"]:
+    print(probability, next_state, reward, done)</code></pre>
+    <p>On ice a move goes where you meant 8 times in 10 and slips sideways otherwise. This table, for every state and action, is the whole game written down.</p>
     <p><b>The lesson:</b> an MDP writes the game down as states, moves, rewards and odds, and the next state depends only on the present one, not on how you got there.</p>
   </section>
