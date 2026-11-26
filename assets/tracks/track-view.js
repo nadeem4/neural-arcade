@@ -5,7 +5,6 @@ import { flatLessons, lessonLabel, lessonHref, lessonVideo, trackHref } from './
 import { trackProgress, nextLesson } from './progress.js';
 import { esc } from './shell.js';
 
-
 // Phosphor icons (MIT), as in game-page.js.
 const icon = d => `<svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="${d}"/></svg>`;
 const ICONS = {
@@ -16,7 +15,6 @@ const ICONS = {
   watch: icon('M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224ZM157,113.34l-40-24A8,8,0,0,0,105,96v48a8,8,0,0,0,12,6.86l40-24a8,8,0,0,0,0-13.72ZM121,129.87V110.13L137.45,120Z'),
 };
 
-// Done and Up next are icons; the words stay for screen readers and the tooltip.
 const stateHtml = {
   done: `<span class="st" title="Done">${ICONS.check}<span class="sr">Done</span></span>`,
   next: `<span class="st" title="Up next">${ICONS.arrow}<span class="sr">Up next</span></span>`,

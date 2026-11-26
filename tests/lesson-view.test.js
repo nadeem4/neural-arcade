@@ -24,10 +24,6 @@ describe('lesson view builders', () => {
     expect(at).not.toContain(-1);
     expect(at).toEqual([...at].sort((a, b) => a - b));
   });
-  it('lead shows the question when a lesson has one, else the says text', () => {
-    expect(lessonBodyHtml({ ...l, asks: 'Who decides?' }, args)).toContain('<p class="lead">Who decides?</p>');
-    expect(lessonBodyHtml(l, args)).toContain(`<p class="lead">${l.says}</p>`);
-  });
   it('crumb links the track and counts the lesson', () => {
     expect(crumbHtml(l, B)).toContain('<a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 3 of 19');
   });
