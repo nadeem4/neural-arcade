@@ -5,6 +5,7 @@ import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
 // The Treasure Room level on each page is the only playground; these four lessons used to repeat it as a 2D grid.
 const IDS = ['agent', 'state-action-reward', 'policy', 'value'];
 const read = (id, f) => readFileSync(new URL(`../concepts/${id}/${f}`, import.meta.url), 'utf8');
+const pageJs = id => (existsSync(new URL(`../concepts/${id}/page.js`, import.meta.url)) ? read(id, 'page.js') : '');
 const triesOf = id => [...read(id, 'index.html').match(/<ol class="tries" id="tries">([\s\S]*?)<\/ol>/)[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map(m => m[1]);
 
 describe.each(IDS)('%s lesson has no 2D grid playground', id => {
@@ -13,10 +14,10 @@ describe.each(IDS)('%s lesson has no 2D grid playground', id => {
     const html = read(id, 'index.html');
     expect(html).not.toContain('id="playground"');
     expect(html).not.toContain('<canvas');
-    expect(read(id, 'page.js')).not.toMatch(/play\.js|mountPlayground|wireTries/);
+    expect(pageJs(id)).not.toMatch(/play\.js|mountPlayground|wireTries/);
   });
-  it('keeps the figure and three tries that name the level controls above', () => {
-    expect(read(id, 'page.js')).toContain('figureHtml');
+  it('keeps its figure (Lesson 1 has none) and three tries that name the level controls above', () => {
+    if (id !== 'agent') expect(pageJs(id)).toContain('figureHtml');
     const tries = triesOf(id);
     expect(tries).toHaveLength(3);
     for (const t of tries) expect(t).not.toMatch(/<button/);

@@ -12,7 +12,8 @@ export default {
     {
       title: 'The problem',
       lessons: [
-        { id: 'agent', title: 'Agent', level: 1, video: null, status: 'live',
+        { id: 'agent', title: 'Agent and environment', level: 1, video: null, status: 'live',
+          asks: 'Who decides what happens next in this room: the robot, or the room?',
           says: 'The agent is the learner that acts; the environment is everything it acts on, and it answers each move with a new situation and a reward.',
           wild: [
             w('maze', 'The explorer is the agent and the grid, with its treasure and pit, is the environment.'),

@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { describeCell } from '../concepts/state-action-reward/sim.js';
 import { figureHtml } from '../concepts/state-action-reward/figures.js';
-import { figureHtml as agentFigure } from '../concepts/agent/figures.js';
 import { GRID, REWARD, stateId } from '../assets/grid.js';
 import { lessonById } from '../assets/tracks/model.js';
 
@@ -46,11 +45,20 @@ describe('figureHtml', () => {
     expect(h.startsWith('<svg')).toBe(true);
     for (const o of describeCell(GRID, { x: 1, y: 0 }).options) expect(h).toContain(o.reward.toFixed(1));
   });
-  it('uses theme tokens, never hard-coded hex colours (also the agent figure)', () => {
+  it('uses theme tokens, never hard-coded hex colours', () => {
     expect(figureHtml()).not.toMatch(HEX_COLOUR);
-    expect(agentFigure(7)).not.toMatch(HEX_COLOUR);
     expect(figureHtml()).toContain('var(--stage-ink)');
     expect(figureHtml()).not.toContain('var(--ink)'); // the figure sits on the dark stage
+  });
+});
+
+describe('Lesson 1 write-up', () => {
+  const w = readFileSync(new URL('../concepts/agent/writeup.html', import.meta.url), 'utf8');
+  it('shows its idea in one code block after the first h2, and no figure', () => {
+    expect(w.match(/<pre class="code">/g)).toHaveLength(1);
+    expect(w.indexOf('<h2>')).toBeGreaterThan(-1);
+    expect(w.indexOf('<pre class="code">')).toBeGreaterThan(w.indexOf('<h2>'));
+    expect(w).not.toContain('<figure');
   });
 });
 

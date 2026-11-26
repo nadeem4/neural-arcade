@@ -7,12 +7,17 @@
   </section>
 
   <section id="writeup">
-    <h2>Two sides of one loop</h2>
-    <p>Reinforcement learning splits the world in two. On one side is the agent, the thing that decides. On the other is the environment, everything the agent cannot decide: the walls, the treasure, the pit.</p>
-    <h3>The agent acts</h3>
-    <p>The agent picks one action, such as a step to the right. That is all it controls. It cannot move the treasure or change the walls.</p>
-    <h3>The environment answers</h3>
-    <p>The world replies with two things: where the agent now stands, and a reward, a number that says how that move went. Then the agent picks again.</p>
-    <figure class="fig" id="figure"></figure>
-    <p><b>The lesson:</b> the agent only ever sees what the environment tells it back. Learning is deciding better, using just those answers.</p>
+    <h2>Agent and environment</h2>
+    <p>The robot is the agent: the thing that decides. Everything else is the environment: the walls, the treasure, the pit.</p>
+    <p>They take turns. The agent picks one move. The environment answers with two things: where the agent now stands, and a number that says how that move went. Then the agent picks again. That turn-taking is the loop, and all of reinforcement learning happens inside it.</p>
+    <h3>In code</h3>
+    <pre class="code"><code>state, info = env.reset()
+done = False
+while not done:
+    action = agent.act(state)
+    state, reward, terminated, truncated, info = env.step(action)
+    done = terminated or truncated</code></pre>
+    <p><code>env</code> is the room and <code>agent</code> is the robot. Each pass through the loop is one turn.</p>
+    <p><b>The lesson:</b> the agent controls one thing, its next move. Everything it learns, it learns from what the environment answers.</p>
+    <p>Next: what exactly goes back and forth. Lesson 2 names the three pieces: state, action and reward.</p>
   </section>
