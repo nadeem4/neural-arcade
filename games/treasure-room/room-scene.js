@@ -163,6 +163,7 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   const controls = new OrbitControls(camera, canvas);
   Object.assign(controls, {
     enablePan: false,
+    enableZoom: false,
     enableDamping: !reduceMotion,
     minAzimuthAngle: VIEW.azimuth - VIEW.azRange,
     maxAzimuthAngle: VIEW.azimuth + VIEW.azRange,
@@ -182,8 +183,6 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
       corners, azimuth: fitted ? controls.getAzimuthalAngle() : VIEW.azimuth, polar: fitted ? controls.getPolarAngle() : VIEW.polar,
       target: TARGET, fov: VIEW.fov, aspect: w / h, margin: 0.04,
     });
-    controls.minDistance = d * 0.6;
-    controls.maxDistance = d * 1.4;
     if (!fitted) {
       camera.position.set(...cameraPose({ azimuth: VIEW.azimuth, polar: VIEW.polar, dist: d, target: TARGET }).position);
       fitted = true;
