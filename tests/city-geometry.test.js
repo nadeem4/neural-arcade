@@ -157,7 +157,7 @@ describe('real map', () => {
     let verts = 0, tris = 0;
     for (const g of Object.values(parts)) {
       for (const arr of g.positions ? Object.values(g) : [g]) {
-        for (const v of arr) expect(Number.isFinite(v)).toBe(true);
+        expect(arr.findIndex((v) => !Number.isFinite(v))).toBe(-1);
       }
       verts += (g.positions ?? g).length / 3; tris += (g.indices?.length ?? 0) / 3;
     }
