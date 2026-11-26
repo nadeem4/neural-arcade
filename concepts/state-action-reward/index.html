@@ -64,6 +64,16 @@
     <h3>Reward</h3>
     <p>For each action the world hands back a number. A treasure pays 10, a pit costs 10, and every ordinary step costs a little, so wandering is never free.</p>
     <figure class="fig" id="figure"></figure>
+    <h3>In code</h3>
+    <pre class="code"><code>state, info = env.reset()
+done = False
+while not done:
+    action = agent.act(state)
+    next_state, reward, terminated, truncated, info = env.step(action)
+    print(state, action, reward)
+    state = next_state
+    done = terminated or truncated</code></pre>
+    <p>One line is printed per turn: the state the agent was in, the action it took, and the reward that came back.</p>
     <p><b>The lesson:</b> a state offers actions, and every action comes with a reward. Learning is working out which actions are worth taking.</p>
   </section>
 </div>

@@ -62,6 +62,16 @@
     <h3>Good and bad rulebooks</h3>
     <p>Some rulebooks go round in circles, some run straight into the pit, and some find the treasure. Learning is the search for a rulebook that earns a lot of reward.</p>
     <figure class="fig" id="figure"></figure>
+    <h3>In code</h3>
+    <pre class="code"><code>policy = {5: "right", 6: "right", 7: "right", 8: "down", 13: "down", 18: "right"}
+
+state, info = env.reset()
+done = False
+while not done:
+    action = policy[state]
+    state, reward, terminated, truncated, info = env.step(action)
+    done = terminated or truncated</code></pre>
+    <p>The policy is a lookup: for the state the agent is in, which action to take. This one walks the shortest route to the treasure.</p>
     <p><b>The lesson:</b> a policy says which action to take in each state, and a better policy earns more reward. Reinforcement learning is the search for a good one.</p>
   </section>
 </div>

@@ -59,6 +59,15 @@
     <h3>The discount</h3>
     <p>A reward far away is less certain than one right now, so it is counted for less. Each step further out multiplies the reward by the discount, a number from 0 to just under 1. At 1 nothing shrinks, at 0.5 every step halves it.</p>
     <figure class="fig" id="figure"></figure>
+    <h3>In code</h3>
+    <pre class="code"><code>gamma = 0.9
+rewards = [-1, -1, -1, -1, -1, 10]
+
+G = 0
+for reward in reversed(rewards):
+    G = reward + gamma * G
+print(round(G, 2))</code></pre>
+    <p>Start from the last reward and work backwards. Six moves along the shortest route are worth 1.81 at a discount of 0.9.</p>
     <p><b>The lesson:</b> the return adds up the rewards still to come, and the discount sets how far ahead the agent looks. A small discount makes it near-sighted.</p>
   </section>
 </div>
