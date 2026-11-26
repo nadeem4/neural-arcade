@@ -55,10 +55,17 @@ describe('track body', () => {
 });
 
 describe('rows', () => {
-  it('lesson row has play and read links', () => {
+  it('lesson row has icon-only play and read links named for screen readers', () => {
     const row = lessonRowHtml(lessonById('return'), { state: '', base: '../' });
-    expect(row).toContain('concepts/return/#play');
-    expect(row).toContain('concepts/return/#read');
+    for (const [hash, name] of [['play', 'Play'], ['read', 'Read']]) {
+      const a = row.match(new RegExp(`<a href="[^"]*concepts/return/#${hash}"[^>]*>([\\s\\S]*?)</a>`));
+      expect(a, hash).not.toBeNull();
+      expect(a[0]).toContain(`aria-label="${name} Lesson 3: Return"`);
+      expect(a[1]).toMatch(/^<svg[^>]*aria-hidden="true"[\s\S]*<\/svg>$/);
+    }
+  });
+  it('start button leads with a play icon', () => {
+    expect(trackBodyHtml(rl, { done: [] })).toMatch(/class="btn primary"[^>]*><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>Start: Lesson 1, Agent/);
   });
   it('wild row links the game', () => {
     expect(wildRowHtml({ game: 'maze', says: 'x', show: true }, '../')).toContain('href="../games/maze/"');
@@ -72,6 +79,9 @@ describe('track.css', () => {
     expect(css).not.toMatch(/width:\s*\d{4}px/);
     expect(css).toMatch(/min-height:\s*44px/);
     expect(css).toMatch(/max-width:\s*480px/);
+  });
+  it('keeps the facts box one column, overriding studio.css .facts', () => {
+    expect(css).toMatch(/^\.facts \{[^}]*grid-template-columns: minmax\(0, 1fr\)/m);
   });
   it('pins the status to the last column, before the phone block', () => {
     const at = css.indexOf('.row .st { grid-column: 4; }');

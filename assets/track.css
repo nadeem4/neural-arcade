@@ -3,7 +3,7 @@
 .thead h1 { grid-column: 1; }
 .thead .lead { grid-column: 1; }
 .thead .facts { grid-column: 2; grid-row: 1 / span 2; }
-.facts { display: grid; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.facts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0; font-size: 14px; color: var(--ink-2); }
 .facts p { margin: 0; }
 .facts a:not(.btn) { color: var(--ink); text-underline-offset: 3px; }
 .prog { display: grid; gap: 8px; }
@@ -19,7 +19,9 @@
 .row .what b { font-size: 17px; }
 .says { font-size: 14px; color: var(--ink-2); }
 .do { display: flex; gap: 8px; }
-.do a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: none; }
+.do a { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; }
+.do a:hover { border-color: var(--ink); }
+.do svg { width: 18px; height: 18px; }
 .row .st { grid-column: 4; }
 .st { justify-self: end; font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .row[data-state="done"] .st { color: var(--ink); }
