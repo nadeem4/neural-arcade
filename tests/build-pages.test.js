@@ -65,7 +65,7 @@ describe('buildPages', () => {
       expect(html, id).toContain('id="writeup"');
       expect(html, id).toContain(`<body data-lesson="${id}">`);
       expect(html, id).toContain('src="../../assets/lesson-page.js"');
-      if (id !== 'agent') expect(html, id).toContain('src="./page.js"');
+      expect(html.includes('src="./page.js"'), id).toBe(existsSync(disk(`concepts/${id}/page.js`)));
       for (const css of ['studio', 'game', 'concept', 'lesson']) expect(html, id).toContain(`href="../../assets/${css}.css"`);
       expect(html, id).toContain('href="../../games/treasure-room/treasure-room.css"');
       expect(html, id).toContain('<symbol id="i"');

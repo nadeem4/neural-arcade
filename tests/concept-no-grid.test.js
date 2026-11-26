@@ -16,8 +16,8 @@ describe.each(IDS)('%s lesson has no 2D grid playground', id => {
     expect(html).not.toContain('<canvas');
     expect(pageJs(id)).not.toMatch(/play\.js|mountPlayground|wireTries/);
   });
-  it('keeps its figure (Lesson 1 has none) and three tries that name the level controls above', () => {
-    if (id !== 'agent') expect(pageJs(id)).toContain('figureHtml');
+  it('keeps its figure when it has one, and three tries that name the level controls above', () => {
+    if (existsSync(new URL(`../concepts/${id}/figures.js`, import.meta.url))) expect(pageJs(id)).toContain('figureHtml');
     const tries = triesOf(id);
     expect(tries).toHaveLength(3);
     for (const t of tries) expect(t).not.toMatch(/<button/);
