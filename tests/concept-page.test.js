@@ -94,7 +94,7 @@ describe('pid lesson files', () => {
 describe('every concept page', () => {
   const read = (id, f) => readFileSync(new URL(`../concepts/${id}/${f}`, import.meta.url), 'utf8');
   const WITH_WRITEUP = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
-  const NO_GRID = ['agent', 'state-action-reward', 'policy', 'value'];
+  const NO_GRID = ['agent', 'state-action-reward', 'return', 'policy', 'value'];
   it('the eight concept pages are generated shells with the shared sections and the lesson says as lead', () => {
     for (const id of WITH_WRITEUP) {
       const html = read(id, 'index.html');

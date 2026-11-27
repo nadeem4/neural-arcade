@@ -20,7 +20,7 @@ describe('treasure room: step', () => {
     expect([ROOM.w, ROOM.h]).toEqual([5, 5]);
     expect([count('S'), count('T'), count('X')]).toEqual([1, 1, 1]);
     expect(START).toEqual(find('S'));
-    expect(REWARD).toEqual({ treasure: 10, pit: -10, step: -1 });
+    expect(REWARD).toEqual({ treasure: 10, pit: -10, step: -1, coin: 2 });
     expect(SLIP).toBe(0.1);
   });
   it('floor costs 1, treasure pays 10, pit costs 10, both end the episode', () => {

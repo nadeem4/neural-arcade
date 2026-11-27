@@ -1,6 +1,6 @@
 import { ROOM } from '../games/treasure-room/sim.js';
 // A minimal stand-in for the page, so a level's mount() can be smoke-tested in Node (no DOM).
-export function fakeUi() {
+export function fakeUi(room = ROOM) {
   const els = {};
   let listeners = 0;
   const make = () => {
@@ -26,7 +26,7 @@ export function fakeUi() {
     panel: { querySelector: get, querySelectorAll: () => [] },
     tiles: get('#tiles'),
     canvas: get('canvas'),
-    room: ROOM,
+    room,
     draw(o) { drawn.push(o); },
     cellAt: () => null,
     said: [], say(t) { this.said.push(t); }, readout() {}, sees() {}, setLog() {}, flash() {},

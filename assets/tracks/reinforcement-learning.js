@@ -30,11 +30,12 @@ export default {
             w('treasure-room', 'Every move is logged as a state, an action and a reward, and the game is a list of these.'),
           ] },
         { id: 'return', title: 'Return', level: 3, video: null, status: 'live',
+          asks: 'A small coin 2 steps away, or a big chest 6 steps away: which should the robot go for?',
           says: 'The return is all the reward still to come, with far-off reward counted for less by the discount.',
           wild: [
             w('maze', 'The Discount slider sets how much far-off reward counts, which decides whether it walks to the small or the big treasure.'),
             w('city', 'The fare comes only at the drop-off, so the taxi weighs the whole trip, clock and fines included, not just the next block.'),
-            w('treasure-room', 'Add up the rewards on a route, and lower the discount to watch far-away treasure lose its pull.'),
+            w('treasure-room', 'Coin or chest: turn the discount down and the robot stops walking to the far chest.'),
           ] },
         { id: 'policy', title: 'Policy', level: 4, video: null, status: 'live',
           says: "A policy is the agent's rulebook: in each state, which action to take.",

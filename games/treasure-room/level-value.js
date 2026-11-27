@@ -1,12 +1,11 @@
 // Level 5 (value): sweep to spread worth outward from the treasure, see it as numbers and heat, then walk uphill to it.
 import { ACTIONS, stateId } from '../../assets/grid.js';
-import { ROOM, START, REWARD, sweepOnce } from './sim.js';
+import { ROOM, START, REWARD, sweepOnce, isFloor } from './sim.js';
 import { gammaHint } from './words.js';
 
 const BEAT = 400;   // ms between steps of the walk
 const RIPPLE = 150; // ms between the ten sweeps of Sweep x10
 const SETTLED = 0.01;
-const isFloor = (room, x, y) => !'TX#'.includes(room.cells[y][x]);
 
 // 0..1 per tile, over the floor tiles only: the lowest value is 0, the highest 1. Flat values give all 0.
 export function heatOf(values, room = ROOM) {

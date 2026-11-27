@@ -1,5 +1,5 @@
 // Level 4 (policy): an arrow on every tile is the robot's rulebook. Flip the arrows, press Go, or let the AI fix them.
-import { ROOM, START, valueIteration, greedyPolicy, runPolicy } from './sim.js';
+import { ROOM, START, valueIteration, greedyPolicy, runPolicy, isFloor } from './sim.js';
 import { stateId } from '../../assets/grid.js';
 
 const GAMMA = 0.9;
@@ -8,7 +8,6 @@ const SHOW = 1200;  // ms the fixed arrows stay outlined
 const KEYS = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3 };
 const NAMES = ['up', 'down', 'left', 'right'];
 
-const isFloor = (room, x, y) => !'TX#'.includes(room.cells[y][x]);
 const floorCells = room => room.cells.flatMap((row, y) => row.map((_, x) => ({ x, y }))).filter(c => isFloor(room, c.x, c.y));
 
 export const flipAction = a => (a + 1) % 4;

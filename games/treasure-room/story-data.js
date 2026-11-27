@@ -2,7 +2,7 @@
 //   node games/treasure-room/story-data.js
 // A test re-records them and checks story.json still matches, so the pictures can't drift from the code.
 import { ROOM, REWARD, SLIP, START, valueIteration, greedyPolicy, runPolicy, sweepOnce } from './sim.js';
-import { ROUTES, scoreRoute } from './level-return.js';
+import { scoreRoute } from './level-return.js';
 import { initialPolicy, fixPolicy } from './level-policy.js';
 import { sweepsToSettle } from './level-value.js';
 import { compareRoutes, simulateTrips } from './level-mdp.js';
@@ -12,6 +12,11 @@ const GAMMA = 0.9;
 const GAMMAS = [1, 0.9, 0.5, 0.1];
 const SWEEPS = [1, 2, 3, 5];
 const TRIPS = 200;
+const D = 1, R = 3, U = 0;
+const ROUTES = [
+  { id: 'short', actions: [R, R, R, D, D, R] },
+  { id: 'detour', actions: [D, D, D, R, R, R, R, U] },
+];
 const r4 = v => Math.round(v * 1e4) / 1e4 + 0;   // + 0 turns -0 into 0, which JSON would lose
 const cells = path => path.map(c => ({ x: c.x, y: c.y }));
 
@@ -44,7 +49,7 @@ export function recordStory(seed = STORY_SEED) {
   return {
     seed,
     room: ROOM.cells.map(r => r.join('')),
-    reward: REWARD,
+    reward: { treasure: REWARD.treasure, pit: REWARD.pit, step: REWARD.step },
     agent: { trace: agent.trace.map(t => ({ pos: t.pos, action: t.action, reward: t.reward })), total: agent.total },
     triples: agent.trace.slice(0, 8).map((t, i) => ({ state: i ? agent.trace[i - 1].pos : START, action: t.action, reward: t.reward })),
     returns: returns(),

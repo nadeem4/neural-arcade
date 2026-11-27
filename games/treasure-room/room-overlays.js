@@ -2,8 +2,8 @@
 // Each overlay is { list(room, opts) -> draw list }; room-overlay-meshes.js turns a list into meshes.
 import { ACTIONS } from '../../assets/grid.js';
 import { TAG_CAPACITY } from './room-math.js';
+import { ENDS, isFloor } from './sim.js';
 
-const isFloor = (room, x, y) => !'TX#'.includes(room.cells[y][x]);
 const clamp01 = h => (h > 0 ? Math.min(1, h) : 0); // NaN and negatives are 0
 
 // The numbers on the floor tiles and the heat tint behind them (the value level). Nothing when there are no values yet.
@@ -50,7 +50,7 @@ export function tagsList(room, tags) {
   return (Array.isArray(tags) ? tags : []).slice(0, TAG_CAPACITY).map(({ x, y, text, tone }) => {
     const key = x + ',' + y, stack = seen.get(key) ?? 0;
     seen.set(key, stack + 1);
-    return { x, y, text, tone: TONES.includes(tone) ? tone : 'step', onEnd: 'TX'.includes(room.cells[y]?.[x]), stack };
+    return { x, y, text, tone: TONES.includes(tone) ? tone : 'step', onEnd: !!ENDS[room.cells[y]?.[x]], stack };
   });
 }
 
