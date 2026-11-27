@@ -14,7 +14,7 @@ describe('levelPanelHtml', () => {
     }
   });
   it('has the level 3 to 6 controls', () => {
-    for (const id of ['routes', 'gamma', 'walk', 'go', 'fix', 'resetArrows', 'sum', 'sweep', 'sweep10', 'walkUp', 'resetSweeps', 'icy', 'dry', 'walkPlan', 'trips', 'showMdp', 'tags']) {
+    for (const id of ['stepTabs', 'sendCoin', 'sendChest', 'gamma', 'go', 'fix', 'resetArrows', 'sweep', 'sweep10', 'walkUp', 'resetSweeps', 'icy', 'dry', 'walkPlan', 'trips', 'showMdp', 'tags']) {
       expect(html, id).toContain(`id="${id}"`);
     }
   });
@@ -113,8 +113,8 @@ describe('tap bridge', () => {
   it('builds the tile selector', () => {
     expect(tileSelector(2, 3)).toBe('[data-x="2"][data-y="3"]');
   });
-  it('the panel has the Walk it reason line, wires tile focus to the ring, and hides the 3D tile grid', () => {
-    expect(levelPanelHtml()).toContain('id="walkItWhy"');
+  it('the panel has the Walk uphill reason line, wires tile focus to the ring, and hides the 3D tile grid', () => {
+    expect(levelPanelHtml()).toContain('id="walkUpWhy"');
     const src = readFileSync(new URL('../games/treasure-room/level-panel.js', import.meta.url), 'utf8');
     expect(src).toMatch(/focusin/);
     expect(src).toMatch(/host\.setFocus\(null\)/);
@@ -157,7 +157,7 @@ describe('tap bridge guards and focus wiring', () => {
 // Button audit: a button that cannot act at the start is disabled and shows why, on every level.
 describe('button audit: disabled at start says why', () => {
   const buttonIds = [...html.matchAll(/<button\b[^>]*\bid="(\w+)"/g)].map(m => m[1]);
-  const whyIdOf = { walk: 'walkItWhy', walkUp: 'walkUpWhy', resetSweeps: 'walkUpWhy' };
+  const whyIdOf = { walkUp: 'walkUpWhy', resetSweeps: 'walkUpWhy' };
   const views = {
     1: () => import('../games/treasure-room/level-agent.js'), 2: () => import('../games/treasure-room/level-triples.js'),
     3: () => import('../games/treasure-room/level-return.js'), 4: () => import('../games/treasure-room/level-policy.js'),

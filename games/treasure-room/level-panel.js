@@ -5,13 +5,14 @@ import { createLoader } from './room-loader.js';
 import { OVERLAYS_FOR_LEVEL } from './room-overlays.js';
 import { markersFor } from './room-markers.js';
 import { createMarkerLayer } from './room-markers-view.js';
-import { ROOM } from './sim.js';
+import { roomForLevel } from './sim.js';
 import { levelByN, assumesHtml } from './levels.js';
 import { INFO, MARKER_INFO } from './words.js';
 import { lessonOfLevel } from '../../assets/tracks/model.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
 import * as levelReturn from './level-return.js';
+import { tabsHtml } from './level-return.js';
 import * as levelPolicy from './level-policy.js';
 import * as levelValue from './level-value.js';
 import * as levelMdp from './level-mdp.js';
@@ -56,23 +57,39 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <ol class="log" id="log" aria-live="off"></ol>
       </section>
       <section class="controls" data-levels="3" aria-labelledby="rh" hidden>
-        <h2><span id="rh">Route and discount</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-route" aria-label="Explain routes" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <h2><span id="rh">Coin or chest</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-route" aria-label="Explain routes" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-route" data-info="route" hidden></p>
-        <div class="routes" id="routes" role="group" aria-label="Routes">
-          <button type="button" data-route="short">Short way</button>
-          <button type="button" data-route="detour">Detour</button>
-          <button type="button" data-route="pit">Risky way</button>
-          <button type="button" id="clear">Draw my own</button>
-          <button type="button" id="walk" class="primary">Walk it</button>
+        <nav class="steps" id="stepTabs" aria-label="Lesson steps">${tabsHtml(1)}</nav>
+        <div data-step-view="1">
+          <p>Every move costs 1. The coin pays 2, the chest pays 10. Send the robot down each route and add up what it collects.</p>
+          <div class="routes" role="group" aria-label="Routes">
+            <button type="button" id="sendCoin">Coin route</button>
+            <button type="button" id="sendChest">Chest route</button>
+          </div>
+          <output class="tally" id="tally"></output>
+          <div class="vs">
+            <div id="boxcoin"><small>Coin route total</small><b id="vcoin">?</b></div>
+            <div id="boxchest"><small>Chest route total</small><b id="vchest">?</b></div>
+          </div>
+          <p id="hint1">That total is the return. Try both.</p>
         </div>
-        <label class="gamma-row" for="gamma">Discount <output id="gammaOut">0.90</output>
-          <button class="info" type="button" aria-expanded="false" aria-controls="info-gamma" aria-label="Explain the discount" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></label>
-        <p class="info-text" id="info-gamma" data-info="gamma" hidden></p>
-        <input class="gamma" type="range" id="gamma" min="0.1" max="1" step="0.05" value="0.9">
-        <p id="gammaHint"></p>
-        <p class="why" id="walkItWhy"></p>
-        <output class="sum" id="sum"></output>
-        <output class="compare" id="compare"></output>
+        <div data-step-view="2" hidden>
+          <p>A reward one step later counts as 90% of the same reward now. That 0.9 is the discount.</p>
+          <table class="disc"><thead><tr><th>10 points, steps later</th><th>counts as</th></tr></thead><tbody id="discRows"></tbody></table>
+          <p>The chest is the 6th reward on its route, so it counts 0.9&#8309; of 10 = 5.9. Look at it shrink in the room. The coin, 2nd on its route, counts 1.8.</p>
+        </div>
+        <div data-step-view="3" hidden>
+          <label class="gamma-row" for="gamma">Discount <output id="gammaOut">0.90</output>
+            <button class="info" type="button" aria-expanded="false" aria-controls="info-gamma" aria-label="Explain the discount" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></label>
+          <p class="info-text" id="info-gamma" data-info="gamma" hidden></p>
+          <input class="gamma" type="range" id="gamma" min="0.1" max="1" step="0.01" value="0.9">
+          <div class="vs">
+            <div id="box3coin"><small>Coin route return</small><b id="ret3coin"></b></div>
+            <div id="box3chest"><small>Chest route return</small><b id="ret3chest"></b></div>
+          </div>
+          <p class="pick" aria-live="polite">Robot picks: <em id="pick"></em></p>
+          <p id="hint3"></p>
+        </div>
       </section>
       <section class="controls" data-levels="4" aria-labelledby="ah" hidden>
         <h2><span id="ah">Arrows</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-arrows" aria-label="Explain the arrows" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
@@ -172,23 +189,24 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   let view = null;
 
   n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
+  const room = roomForLevel(n);
   // The loader comes first: the host reports its first state synchronously inside createRoomHost.
   let host, markers = null;
   const loader = createLoader(box, { title: title || levelName(n), onRetry: () => host.retry(), reduceMotion: reduceMotion.matches });
   host = createRoomHost({
-    box, room: ROOM, reduceMotion: reduceMotion.matches,
+    box, room, reduceMotion: reduceMotion.matches,
     onState: (state, reason) => { markers?.setShown(state === '3d'); if (state === 'loading') loader.loading(); else if (state === '3d') loader.done(); else loader.fail(reason); },
     onProgress: loader.progress,
   });
   host.setOverlays(OVERLAYS_FOR_LEVEL[n]);
-  const list = markersFor(n, ROOM);
+  const list = markersFor(n, room);
   markers = list.length ? createMarkerLayer({ box, markers: list, info: MARKER_INFO }) : null;
   markers?.setShown(host.mode() === '3d');
   host.setMarkers(markers);
 
   // ui.canvas is the room box, so a click on the 3D canvas reaches the level.
   const ui = {
-    canvas: box, room: ROOM, panel: $('levelPanel'), tiles,
+    canvas: box, room, panel: $('levelPanel'), tiles,
     draw: host.draw,
     cellAt: host.cellAt,
     say: t => { $('say').textContent = t; },

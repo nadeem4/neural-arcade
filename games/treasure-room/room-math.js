@@ -47,13 +47,14 @@ export function layoutRoom(room, dims = DIMS) {
   const sc = part => sizeOf(PARTS[part], dims[part]);
 
   const tiles = [], blocks = [];
-  let chest = null, coin = null;
+  let chest = null, coin = null, coinTile = null;
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     const c = room.cells[j][i], p = cellToWorld(room, i, j);
     const part = c === 'X' ? 'floor_tile_big_spikes' : (i + j * 3) % 7 === 0 ? 'floor_tile_large_rocks' : 'floor_tile_large';
     const scale = sc(part);
     tiles.push({ part, x: p.x, y: -PARTS[part].drop * scale, z: p.z, rotY: 0, scale });
     if (c === '#') blocks.push({ x: p.x, y: BLOCK.h / 2, z: p.z, ...BLOCK });
+    if (c === 'C') coinTile = { part: 'coin_stack_medium', x: p.x, y: 0, z: p.z, rotY: 0, scale: sc('coin_stack_medium') * 0.7 };
     if (c === 'T') {
       chest = { part: 'chest_gold', x: p.x - 0.1, y: 0, z: p.z - 0.05, rotY: Math.PI, rotX: PARTS.chest_gold.rotX, scale: sc('chest_gold') };
       coin = { part: 'coin_stack_medium', x: p.x + 0.3, y: 0, z: p.z + 0.28, rotY: 0, scale: sc('coin_stack_medium') };
@@ -90,7 +91,7 @@ export function layoutRoom(room, dims = DIMS) {
   const ts = sc('torch_lit'), tx = Math.min(1.2, W / 2 - 0.5);
   const torches = [-tx, tx].map(x => ({ part: 'torch_lit', x, y: wallH * 0.42, z: -H / 2 + dims.torch_lit.d * ts / 2, rotY: 0, scale: ts }));
 
-  return { tiles, blocks, chest, coin, walls, corners, torches, wallH, wallD, cornerSize, ringHalf: Math.max(W, H) / 2 + wallD };
+  return { tiles, blocks, chest, coin, coinTile, walls, corners, torches, wallH, wallD, cornerSize, ringHalf: Math.max(W, H) / 2 + wallD };
 }
 
 // Which wall sides face the camera (and so are dropped low). N never does: the camera stays on the south side.
@@ -189,7 +190,7 @@ export function slideLean(from, to) {
 // Rotation about y that points the character along a step (south, +y on the grid, is 0).
 export const facing = (from, to) => Math.atan2(to.x - from.x, to.y - from.y);
 
-export const atTreasure = (room, pos) => !!pos && room.cells[pos.y]?.[pos.x] === 'T';
+export const atTreasure = (room, pos) => !!pos && 'TC'.includes(room.cells[pos.y]?.[pos.x]);
 
 // A tag's quad is 2 * size wide and its text fills about 0.21 of that per character (all of it from 5 characters on).
 // The text never runs wider than 1.6 cells: long words shrink, short numbers keep the size they were given.

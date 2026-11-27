@@ -15,7 +15,7 @@ describe('the recorded run behind the Treasure Room write-up', () => {
 
   it('records the room and its rewards', () => {
     expect(S.room).toEqual(ROOM.cells.map(r => r.join('')));
-    expect(S.reward).toEqual(REWARD);
+    expect(S.reward).toEqual({ treasure: 10, pit: -10, step: -1 });
   });
 
   it('the AI walk ends at the treasure and its total is the sum of the triple rewards', () => {

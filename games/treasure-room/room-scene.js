@@ -88,21 +88,24 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
   addParts(world, L.tiles);
   addParts(world, [L.chest, ...L.torches].filter(Boolean));
 
-  // The chest's coin stack is drawn on its own so treasureScale (level 3: 0 hides it, 1 is full size) can resize it.
-  const coinMeshes = L.coin ? kit.instancesOf(L.coin.part).map(({ geometry, material, local }) => {
-    const mesh = new THREE.InstancedMesh(geometry, material, 1);
-    addMesh(world, mesh);
-    return { mesh, local };
-  }) : [];
-  const drawCoin = factor => {
-    if (!L.coin) return;
-    const s = Math.max(0, Math.min(1, factor ?? 1));
-    for (const { mesh, local } of coinMeshes) {
-      mesh.setMatrixAt(0, m4.compose(pos.set(L.coin.x, L.coin.y, L.coin.z), q.identity(), scl.setScalar(L.coin.scale * s)).multiply(local));
-      mesh.instanceMatrix.needsUpdate = true;
-    }
+  // Coin stacks are drawn on their own so level 3 can resize them: the chest's (treasureScale) and the coin tile's (coinScale); 1 is full size.
+  const coinStack = entry => {
+    if (!entry) return () => {};
+    const meshes = kit.instancesOf(entry.part).map(({ geometry, material, local }) => {
+      const mesh = new THREE.InstancedMesh(geometry, material, 1);
+      addMesh(world, mesh);
+      return { mesh, local };
+    });
+    return factor => {
+      const s = Math.max(0, Math.min(1, factor ?? 1));
+      for (const { mesh, local } of meshes) {
+        mesh.setMatrixAt(0, m4.compose(pos.set(entry.x, entry.y, entry.z), q.identity(), scl.setScalar(entry.scale * s)).multiply(local));
+        mesh.instanceMatrix.needsUpdate = true;
+      }
+    };
   };
-  drawCoin(1);
+  const drawChestCoin = coinStack(L.coin), drawTileCoin = coinStack(L.coinTile);
+  drawChestCoin(1); drawTileCoin(1);
 
   // Blocks (the '#' cells): one box, instanced.
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
@@ -155,7 +158,8 @@ export function createScene3d({ box, room, kit, character = null, reduceMotion =
     lastOpts = opts;
     dirty = true;
     marks.set(marksList(opts?.marks));
-    drawCoin(opts?.treasureScale);
+    drawChestCoin(opts?.treasureScale);
+    drawTileCoin(opts?.coinScale);
     if (opts) for (const l of layers) l.layer.update(OVERLAYS[l.name].list(room, opts));
   };
 

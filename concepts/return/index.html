@@ -36,39 +36,53 @@
 <section class="lhead">
   <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 3 of 19</div>
   <h1>Lesson 3: Return</h1>
-  <p class="lead">The return is all the reward still to come, with far-off reward counted for less by the discount.</p>
+  <p class="lead">A small coin 2 steps away, or a big chest 6 steps away: which should the robot go for?</p>
 </section>
 
 <section class="play" id="play" aria-label="Play this lesson">
   <div id="levelRoot" data-level="3"></div>
   <noscript><p>Turn on JavaScript to play this level.</p></noscript>
 </section>
-<p class="own">In this game: Add up the rewards on a route, and lower the discount to watch far-away treasure lose its pull.</p>
+<p class="own">In this game: Coin or chest: turn the discount down and the robot stops walking to the far chest.</p>
 
 <div id="read">
   <section>
-    <div class="stage" id="playground"></div>
-    <ol class="tries" id="tries"></ol>
+    <ol class="tries" id="tries">
+      <li>In step 1, send the robot down each route and read its total.</li>
+      <li>In step 2, watch the chest and the coin shrink in the room.</li>
+      <li>In step 3, drag the discount down until the robot picks the coin.</li>
+    </ol>
   </section>
 
   <section id="writeup">
-    <h2>Rewards now count for more than rewards later</h2>
-    <p>One reward is not the goal. The agent wants all the reward that is still to come, added up. That total is the return.</p>
-    <h3>The return</h3>
-    <p>Look ahead along the path the agent will take and add up each reward it will collect. That sum is the return, and it is what the agent really tries to make big.</p>
-    <h3>The discount</h3>
-    <p>A reward far away is less certain than one right now, so it is counted for less. Each step further out multiplies the reward by the discount, a number from 0 to just under 1. At 1 nothing shrinks, at 0.5 every step halves it.</p>
-    <figure class="fig" id="figure"></figure>
+    <h2>The return is everything still to come, added up</h2>
+    <p>Each move costs 1 point. The coin pays 2, the chest pays 10. Add up every reward on a route and you get its <b>return</b>. The robot is not after the next reward; it is after the biggest return.</p>
+    <p>Coin: −1 + 2 = <b>1</b>. Chest: −1 −1 −1 −1 −1 + 10 = <b>5</b>. Counted like this, the chest wins easily.</p>
+    <h3>The discount: later counts for less</h3>
+    <p>A reward you get one step later counts as 90% of the same reward now. That 0.9 is the <b>discount</b>. Two steps later, 90% of 90%, and so on.</p>
+    <table class="disc">
+      <thead><tr><th>10 points…</th><th>count as</th></tr></thead>
+      <tbody>
+        <tr><td>now</td><td>10</td></tr>
+        <tr><td>1 step later</td><td>9</td></tr>
+        <tr><td>2 steps later</td><td>8.1</td></tr>
+        <tr><td>5 steps later</td><td>5.9</td></tr>
+      </tbody>
+    </table>
+    <p>Why? Sooner is surer: the longer the walk, the more can go wrong. And without it, a game that never ends would add up forever.</p>
+    <p>With the discount at 0.9 the chest is still worth more (1.81 against 0.8). Turn it down past about 0.85 and the coin wins: the robot gets near-sighted and grabs what is close.</p>
     <h3>In code</h3>
-    <pre class="code"><code>gamma = 0.9
-rewards = [-1, -1, -1, -1, -1, 10]
+    <pre class="code"><code>def ret(rewards, gamma):
+    return sum(r * gamma**t for t, r in enumerate(rewards))
 
-G = 0
-for reward in reversed(rewards):
-    G = reward + gamma * G
-print(round(G, 2))</code></pre>
-    <p>Start from the last reward and work backwards. Six moves along the shortest route are worth 1.81 at a discount of 0.9.</p>
-    <p><b>The lesson:</b> the return adds up the rewards still to come, and the discount sets how far ahead the agent looks. A small discount makes it near-sighted.</p>
+coin  = [-1, 2]
+chest = [-1, -1, -1, -1, -1, 10]
+
+for gamma in (1, 0.9, 0.5):
+    c, t = ret(coin, gamma), ret(chest, gamma)
+    print(gamma, round(c, 2), round(t, 2), "chest" if t &gt; c else "coin")</code></pre>
+    <p>Same two routes as the room. At 1 and 0.9 the chest wins; at 0.5 the coin does.</p>
+    <p><b>The lesson:</b> the return adds up what is still to come. The discount decides how far ahead the robot cares, and that can change what it chooses.</p>
   </section>
 </div>
 
@@ -84,6 +98,5 @@ print(round(G, 2))</code></pre>
 <footer data-site></footer>
 
 <script type="module" src="../../assets/lesson-page.js"></script>
-<script type="module" src="./page.js"></script>
 </body>
 </html>

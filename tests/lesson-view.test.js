@@ -16,7 +16,7 @@ describe('lesson view builders', () => {
     expect(html).toContain('<div id="levelRoot" data-level="3"></div>');
     expect(html).toContain('<noscript>');
     expect(html).toContain('<section id="writeup">W</section>');
-    expect(html).toContain(l.says);
+    expect(html).toContain(l.asks ?? l.says);
   });
   it('page order: lead, stage, write-up, video, other games, Mark as done, neighbours', () => {
     const html = lessonBodyHtml(l, args);
@@ -45,7 +45,7 @@ describe('lesson view builders', () => {
   });
   it('own line is the own-game entry', () => {
     expect(ownLineHtml(l)).toContain('<p class="own">In this game: ');
-    expect(ownLineHtml(l)).toContain('lower the discount');
+    expect(ownLineHtml(l)).toContain('turn the discount down');
     expect(ownLineHtml({ ...l, wild: [] })).toBe('');
   });
   it('neighbours are numbered labels and a missing side is omitted', () => {

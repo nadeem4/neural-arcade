@@ -49,7 +49,7 @@ describe('buildPages', () => {
   const files = { read: p => (existsSync(disk(p)) ? readFileSync(disk(p), 'utf8') : null), exists: p => existsSync(disk(p)) };
   const out = buildPages({ files });
   const LESSONS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'];
-  const NO_GRID = ['agent', 'state-action-reward', 'policy', 'value'];
+  const NO_GRID = ['agent', 'state-action-reward', 'return', 'policy', 'value'];
   it('emits the three track pages and a page for every live lesson', () => {
     const live = flatLessons().filter(l => l.status === 'live').map(l => l.id);
     expect(Object.keys(out).filter(p => p.startsWith('concepts/')).map(p => p.split('/')[1]).sort()).toEqual([...live].sort());

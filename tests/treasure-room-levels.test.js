@@ -6,7 +6,7 @@ import { LEVELS, levelFromUrl, levelByN, navModel, assumesHtml } from '../games/
 const LESSONS = [
   'The AI only knows what the room tells it.',
   'The game is a list of these: state, action, reward.',
-  'Shorter paths win, and a low discount makes the AI greedy for now.',
+  'A low discount makes the robot near-sighted: it grabs what is close.',
   'A policy is: on this tile, do this.',
   'Value is how good it is to stand here.',
   'The best plan changes once moves are uncertain.',
