@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lesson 5: Value · Neural Arcade</title>
-<meta name="description" content="A state's value is how much reward the agent can expect from there on, if it keeps following its policy.">
+<meta name="description" content="A state's value is the return you can expect from there. It spreads back from the treasure.">
 <link rel="canonical" href="https://arcade.codewithnk.com/concepts/value/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
 <meta property="og:title" content="Lesson 5: Value · Neural Arcade">
-<meta property="og:description" content="A state's value is how much reward the agent can expect from there on, if it keeps following its policy.">
+<meta property="og:description" content="A state's value is the return you can expect from there. It spreads back from the treasure.">
 <meta property="og:url" content="https://arcade.codewithnk.com/concepts/value/">
 <meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
 <meta property="og:image:width" content="1280">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lesson 5: Value · Neural Arcade">
-<meta name="twitter:description" content="A state's value is how much reward the agent can expect from there on, if it keeps following its policy.">
+<meta name="twitter:description" content="A state's value is the return you can expect from there. It spreads back from the treasure.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three/three.module.min.js"}}</script>
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
@@ -36,14 +36,14 @@
 <section class="lhead">
   <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 5 of 19</div>
   <h1>Lesson 5: Value</h1>
-  <p class="lead">A state's value is how much reward the agent can expect from there on, if it keeps following its policy.</p>
+  <p class="lead">A state's value is the return you can expect from there. It spreads back from the treasure.</p>
 </section>
 
 <section class="play" id="play" aria-label="Play this lesson">
   <div id="levelRoot" data-level="5"></div>
   <noscript><p>Turn on JavaScript to play this level.</p></noscript>
 </section>
-<p class="own">In this game: Sweep the room and each tile gets a number for how good it is to stand there.</p>
+<p class="own">In this game: The value is the number that appears on each tile.</p>
 
 <div id="read">
   <section>
@@ -55,24 +55,34 @@
   </section>
 
   <section id="writeup">
-    <h2>Value is the reward you can expect from here</h2>
-    <p>A state's value is a forecast: starting from this cell and playing well, how much reward will the agent collect? The cells leading to the treasure are worth a little less with every step back.</p>
-    <h3>Value spreads back from the treasure</h3>
-    <p>A cell next to the treasure is worth nearly the full prize. A cell one step further is worth a bit less, and so on. The numbers form a slope that always points toward the reward.</p>
-    <h3>The discount sets how far the slope reaches</h3>
-    <p>With a low discount the slope is short: only cells close to the treasure look valuable. With a high discount it reaches all the way back to the start, so the agent can tell which way to go from far away.</p>
+    <h2>What you saw</h2>
     <figure class="fig" id="figure"></figure>
-    <h3>In code</h3>
-    <pre class="code"><code>gamma = 0.9
-route = [5, 6, 7, 8, 13, 18]
-rewards = [-1, -1, -1, -1, -1, 10]
+    <ul class="steps">
+      <li><b>Value spreads back from the treasure.</b> The tile beside it is worth nearly the full prize, and each tile further back a little less.</li>
+      <li><b>The discount sets how far.</b> Low, and only tiles near the treasure look valuable. High, and it reaches the start.</li>
+      <li><b>A high discount makes the start worth more.</b> That is how the agent can tell which way to go from far away.</li>
+    </ul>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>Value</b><span>The return you can expect from a state, acting well.</span></th><td>10 beside the treasure, 1.81 at the start.</td></tr>
+        <tr><th scope="row"><b>Discount</b><span>How far the value spreads back. See <a href="../return/">Lesson 3</a>.</span></th><td>Higher reaches further back toward the start.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code>gamma = <span class="tn">0.9</span>
+route = [<span class="tn">5</span>, <span class="tn">6</span>, <span class="tn">7</span>, <span class="tn">8</span>, <span class="tn">13</span>, <span class="tn">18</span>]
+rewards = [-<span class="tn">1</span>, -<span class="tn">1</span>, -<span class="tn">1</span>, -<span class="tn">1</span>, -<span class="tn">1</span>, <span class="tn">10</span>]
 
-V, G = {}, 0
-for state, reward in zip(reversed(route), reversed(rewards)):
+V, G = {}, <span class="tn">0</span>
+<span class="tk">for</span> state, reward <span class="tk">in</span> <span class="tf">zip</span>(<span class="tf">reversed</span>(route), <span class="tf">reversed</span>(rewards)):
     G = reward + gamma * G
-    V[state] = round(G, 2)
-print(V)</code></pre>
-    <p>The same sum as the return, kept for every state on the route. The tile next to the treasure is worth 10; the start is worth 1.81.</p>
+    V[state] = <span class="tf">round</span>(G, <span class="tn">2</span>)
+<span class="tf">print</span>(V)</code></pre>
+      <p>The same sum as the return, kept for every state on the route. The tile next to the treasure is worth 10; the start is worth 1.81.</p>
+    </details>
     <p><b>The lesson:</b> a state's value is the reward the agent can expect from there. It spreads back from the treasure, and the discount decides how far.</p>
   </section>
 </div>

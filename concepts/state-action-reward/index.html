@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lesson 2: State, action, reward · Neural Arcade</title>
-<meta name="description" content="A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.">
+<meta name="description" content="Every step is three things: the state you are in, the action you take, the reward you get back.">
 <link rel="canonical" href="https://arcade.codewithnk.com/concepts/state-action-reward/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
 <meta property="og:title" content="Lesson 2: State, action, reward · Neural Arcade">
-<meta property="og:description" content="A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.">
+<meta property="og:description" content="Every step is three things: the state you are in, the action you take, the reward you get back.">
 <meta property="og:url" content="https://arcade.codewithnk.com/concepts/state-action-reward/">
 <meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
 <meta property="og:image:width" content="1280">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lesson 2: State, action, reward · Neural Arcade">
-<meta name="twitter:description" content="A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.">
+<meta name="twitter:description" content="Every step is three things: the state you are in, the action you take, the reward you get back.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three/three.module.min.js"}}</script>
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
@@ -36,14 +36,14 @@
 <section class="lhead">
   <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 2 of 19</div>
   <h1>Lesson 2: State, action, reward</h1>
-  <p class="lead">A state is where things stand now, an action is a move the agent can make, and a reward is the number the world hands back for that move.</p>
+  <p class="lead">Every step is three things: the state you are in, the action you take, the reward you get back.</p>
 </section>
 
 <section class="play" id="play" aria-label="Play this lesson">
   <div id="levelRoot" data-level="2"></div>
   <noscript><p>Turn on JavaScript to play this level.</p></noscript>
 </section>
-<p class="own">In this game: Every move is logged as a state, an action and a reward, and the game is a list of these.</p>
+<p class="own">In this game: The state is where the robot stands. The action is an arrow. The reward is the number the room hands back.</p>
 
 <div id="read">
   <section>
@@ -55,25 +55,34 @@
   </section>
 
   <section id="writeup">
-    <h2>Three words, one step</h2>
-    <p>Every step of reinforcement learning is described with the same three words. Learn them once and every game here reads the same way.</p>
-    <h3>State</h3>
-    <p>The state is where things stand right now. In this grid it is just which cell the agent is on, so each cell has its own number.</p>
-    <h3>Action</h3>
-    <p>An action is one move the agent may make from that state. Here there are four: up, down, left and right.</p>
-    <h3>Reward</h3>
-    <p>For each action the world hands back a number. A treasure pays 10, a pit costs 10, and every ordinary step costs a little, so wandering is never free.</p>
+    <h2>What you saw</h2>
     <figure class="fig" id="figure"></figure>
-    <h3>In code</h3>
-    <pre class="code"><code>state, info = env.reset()
-done = False
-while not done:
-    action = agent.act(state)
-    next_state, reward, terminated, truncated, info = env.step(action)
-    print(state, action, reward)
+    <ul class="steps">
+      <li><b>The middle is the state.</b> Where the robot stands right now.</li>
+      <li><b>Each arrow is an action.</b> One of the moves open from that state, with its reward beside it.</li>
+      <li><b>Most steps cost a little.</b> The pit and the treasure are the big numbers.</li>
+    </ul>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>State</b><span>Where things stand right now.</span></th><td>The robot's position in the room.</td></tr>
+        <tr><th scope="row"><b>Action</b><span>One choice open from that state.</span></th><td>Up, down, left or right.</td></tr>
+        <tr><th scope="row"><b>Reward</b><span>A number for how that one step went.</span></th><td>−1 a step, −10 the pit, +10 the treasure.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code>state, info = env.<span class="tf">reset</span>()
+done = <span class="tk">False</span>
+<span class="tk">while</span> <span class="tk">not</span> done:
+    action = agent.<span class="tf">act</span>(state)
+    next_state, reward, terminated, truncated, info = env.<span class="tf">step</span>(action)
+    <span class="tf">print</span>(state, action, reward)
     state = next_state
-    done = terminated or truncated</code></pre>
-    <p>One line is printed per turn: the state the agent was in, the action it took, and the reward that came back.</p>
+    done = terminated <span class="tk">or</span> truncated</code></pre>
+      <p>One line is printed per turn: the state the agent was in, the action it took, and the reward that came back.</p>
+    </details>
     <p><b>The lesson:</b> a state offers actions, and every action comes with a reward. Learning is working out which actions are worth taking.</p>
   </section>
 </div>

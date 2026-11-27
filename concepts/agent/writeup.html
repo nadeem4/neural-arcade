@@ -7,17 +7,39 @@
   </section>
 
   <section id="writeup">
-    <h2>Agent and environment</h2>
-    <p>The robot is the agent: the thing that decides. Everything else is the environment: the walls, the treasure, the pit.</p>
-    <p>They take turns. The agent picks one move. The environment answers with two things: where the agent now stands, and a number that says how that move went. Then the agent picks again. That turn-taking is the loop, and all of reinforcement learning happens inside it.</p>
-    <h3>In code</h3>
-    <pre class="code"><code>state, info = env.reset()
+    <h2>What you saw</h2>
+    <div class="loop">
+      <svg viewBox="0 0 360 200" role="img" aria-label="The agent, the robot, sends an action to the environment, the room, which sends back a state and a reward.">
+        <rect class="box" x="4" y="60" width="136" height="80" rx="14"/><text class="lab" x="72" y="96" text-anchor="middle">Agent</text><text class="sub" x="72" y="117" text-anchor="middle">the robot</text>
+        <rect class="box" x="220" y="60" width="136" height="80" rx="14"/><text class="lab" x="288" y="96" text-anchor="middle">Environment</text><text class="sub" x="288" y="117" text-anchor="middle">the room</text>
+        <path class="arr" d="M140 78 C 170 20, 190 20, 212 78"/><polygon class="head" points="220,84 206,80 214,70"/><text class="msg" x="180" y="30" text-anchor="middle">action</text>
+        <path class="arr" d="M220 122 C 190 180, 170 180, 148 122"/><polygon class="head" points="140,116 154,120 146,130"/><text class="msg" x="180" y="190" text-anchor="middle">state, reward</text>
+      </svg>
+    </div>
+    <ul class="steps">
+      <li><b>The agent picks an action.</b> One of four arrows.</li>
+      <li><b>The room answers.</b> A new position and a number for how it went.</li>
+      <li><b>Repeat.</b> Until the treasure or the pit.</li>
+    </ul>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>Agent</b><span>The one that decides. It controls only its next action.</span></th><td>The robot.</td></tr>
+        <tr><th scope="row"><b>Environment</b><span>Everything else. It decides what each action leads to.</span></th><td>The room: its walls, pit and treasure.</td></tr>
+        <tr><th scope="row"><b>The loop</b><span>Act, get an answer, act again.</span></th><td>A move, then a new position and a reward.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code>state, info = env.reset()
 done = False
 while not done:
     action = agent.act(state)
     state, reward, terminated, truncated, info = env.step(action)
     done = terminated or truncated</code></pre>
-    <p><code>env</code> is the room and <code>agent</code> is the robot. Each pass through the loop is one turn.</p>
+      <p><code>env</code> is the room and <code>agent</code> is the robot. Each pass through the loop is one turn.</p>
+    </details>
     <p><b>The lesson:</b> the agent controls one thing, its next move. Everything it learns, it learns from what the environment answers.</p>
     <p>Next: what exactly goes back and forth. Lesson 2 names the three pieces: state, action and reward.</p>
   </section>

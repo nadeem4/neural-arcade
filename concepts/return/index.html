@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lesson 3: Return · Neural Arcade</title>
-<meta name="description" content="The return is all the reward still to come, with far-off reward counted for less by the discount.">
+<meta name="description" content="The return is every reward still to come, added up. The discount makes rewards further away count less.">
 <link rel="canonical" href="https://arcade.codewithnk.com/concepts/return/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
 <meta property="og:title" content="Lesson 3: Return · Neural Arcade">
-<meta property="og:description" content="The return is all the reward still to come, with far-off reward counted for less by the discount.">
+<meta property="og:description" content="The return is every reward still to come, added up. The discount makes rewards further away count less.">
 <meta property="og:url" content="https://arcade.codewithnk.com/concepts/return/">
 <meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
 <meta property="og:image:width" content="1280">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lesson 3: Return · Neural Arcade">
-<meta name="twitter:description" content="The return is all the reward still to come, with far-off reward counted for less by the discount.">
+<meta name="twitter:description" content="The return is every reward still to come, added up. The discount makes rewards further away count less.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three/three.module.min.js"}}</script>
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
@@ -36,14 +36,14 @@
 <section class="lhead">
   <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 3 of 19</div>
   <h1>Lesson 3: Return</h1>
-  <p class="lead">A small coin 2 steps away, or a big chest 6 steps away: which should the robot go for?</p>
+  <p class="lead">The return is every reward still to come, added up. The discount makes rewards further away count less.</p>
 </section>
 
 <section class="play" id="play" aria-label="Play this lesson">
   <div id="levelRoot" data-level="3"></div>
   <noscript><p>Turn on JavaScript to play this level.</p></noscript>
 </section>
-<p class="own">In this game: Coin or chest: turn the discount down and the robot stops walking to the far chest.</p>
+<p class="own">In this game: From the start there are two routes: a coin 2 steps away and a chest 6 steps away. Every step costs 1.</p>
 
 <div id="read">
   <section>
@@ -55,11 +55,7 @@
   </section>
 
   <section id="writeup">
-    <h2>The return is everything still to come, added up</h2>
-    <p>Each move costs 1 point. The coin pays 2, the chest pays 10. Add up every reward on a route and you get its <b>return</b>. The robot is not after the next reward; it is after the biggest return.</p>
-    <p>Coin: −1 + 2 = <b>1</b>. Chest: −1 −1 −1 −1 −1 + 10 = <b>5</b>. Counted like this, the chest wins easily.</p>
-    <h3>The discount: later counts for less</h3>
-    <p>A reward you get one step later counts as 90% of the same reward now. That 0.9 is the <b>discount</b>. Two steps later, 90% of 90%, and so on.</p>
+    <h2>What you saw</h2>
     <table class="disc">
       <thead><tr><th>10 points…</th><th>count as</th></tr></thead>
       <tbody>
@@ -69,19 +65,32 @@
         <tr><td>5 steps later</td><td>5.9</td></tr>
       </tbody>
     </table>
-    <p>Why? Sooner is surer: the longer the walk, the more can go wrong. And without it, a game that never ends would add up forever.</p>
-    <p>With the discount at 0.9 the chest is still worth more (1.81 against 0.8). Turn it down past about 0.85 and the coin wins: the robot gets near-sighted and grabs what is close.</p>
-    <h3>In code</h3>
-    <pre class="code"><code>def ret(rewards, gamma):
-    return sum(r * gamma**t for t, r in enumerate(rewards))
+    <ul class="steps">
+      <li><b>Add up each route.</b> Coin: −1 + 2 = 1. Chest: −1 −1 −1 −1 −1 + 10 = 5. The robot takes the biggest return.</li>
+      <li><b>Later counts less.</b> At a discount of 0.9, a reward one step later counts as 90% of the same reward now.</li>
+      <li><b>The discount can change the choice.</b> At 0.9 the chest is still worth more (1.81 against 0.8). Turn it down past about 0.85 and the coin wins.</li>
+    </ul>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>Return</b><span>Every reward still to come from where you are, added up. The past does not count.</span></th><td>From the start: coin 1, chest 5.</td></tr>
+        <tr><th scope="row"><b>Discount</b><span>How much a reward one step later still counts. 0.9 means 90%.</span></th><td>At 0.5 the near coin beats the far chest.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code><span class="tk">def</span> <span class="tf">ret</span>(rewards, gamma):
+    <span class="tk">return</span> <span class="tf">sum</span>(r * gamma**t <span class="tk">for</span> t, r <span class="tk">in</span> <span class="tf">enumerate</span>(rewards))
 
-coin  = [-1, 2]
-chest = [-1, -1, -1, -1, -1, 10]
+coin  = [-<span class="tn">1</span>, <span class="tn">2</span>]
+chest = [-<span class="tn">1</span>, -<span class="tn">1</span>, -<span class="tn">1</span>, -<span class="tn">1</span>, -<span class="tn">1</span>, <span class="tn">10</span>]
 
-for gamma in (1, 0.9, 0.5):
-    c, t = ret(coin, gamma), ret(chest, gamma)
-    print(gamma, round(c, 2), round(t, 2), "chest" if t &gt; c else "coin")</code></pre>
-    <p>Same two routes as the room. At 1 and 0.9 the chest wins; at 0.5 the coin does.</p>
+<span class="tk">for</span> gamma <span class="tk">in</span> (<span class="tn">1</span>, <span class="tn">0.9</span>, <span class="tn">0.5</span>):
+    c, t = <span class="tf">ret</span>(coin, gamma), <span class="tf">ret</span>(chest, gamma)
+    <span class="tf">print</span>(gamma, <span class="tf">round</span>(c, <span class="tn">2</span>), <span class="tf">round</span>(t, <span class="tn">2</span>), <span class="ts">"chest"</span> <span class="tk">if</span> t &gt; c <span class="tk">else</span> <span class="ts">"coin"</span>)</code></pre>
+      <p>Same two routes as the room. At 1 and 0.9 the chest wins; at 0.5 the coin does.</p>
+    </details>
     <p><b>The lesson:</b> the return adds up what is still to come. The discount decides how far ahead the robot cares, and that can change what it chooses.</p>
   </section>
 </div>

@@ -16,7 +16,7 @@ describe('lesson view builders', () => {
     expect(html).toContain('<div id="levelRoot" data-level="3"></div>');
     expect(html).toContain('<noscript>');
     expect(html).toContain('<section id="writeup">W</section>');
-    expect(html).toContain(l.asks ?? l.says);
+    expect(html).toContain(l.says);
   });
   it('page order: lead, stage, write-up, video, other games, Mark as done, neighbours', () => {
     const html = lessonBodyHtml(l, args);
@@ -45,7 +45,7 @@ describe('lesson view builders', () => {
   });
   it('own line is the own-game entry', () => {
     expect(ownLineHtml(l)).toContain('<p class="own">In this game: ');
-    expect(ownLineHtml(l)).toContain('turn the discount down');
+    expect(ownLineHtml(l)).toContain('two routes');
     expect(ownLineHtml({ ...l, wild: [] })).toBe('');
   });
   it('neighbours are numbered labels and a missing side is omitted', () => {
@@ -113,6 +113,10 @@ describe('lesson.css', () => {
   it('guards the concept playground against game.css and treasure-room.css, and keeps the level text unclipped', () => {
     for (const rule of ['#playground .sum', '#playground .dial ', '#playground .dial input', '#playground {']) expect(css).toContain(rule);
     expect(css).toContain('.lesson-page .play p { max-width: none; }');
+  });
+  it('the In code fold has a 44px summary and a focus ring', () => {
+    expect(css).toMatch(/\.incode summary \{[^}]*min-height: (4[4-9]|[5-9]\d)px/);
+    expect(css).toMatch(/\.incode summary:focus-visible \{[^}]*outline: 2px/);
   });
   it('the In this game caption has no side border, and a lone video takes the full row', () => {
     expect(css.match(/^\.own \{[^}]*\}/m)[0]).not.toContain('border');

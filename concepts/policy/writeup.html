@@ -7,15 +7,24 @@
   </section>
 
   <section id="writeup">
-    <h2>A policy is a rulebook, one move per place</h2>
-    <p>The agent does not plan from scratch every step. It carries a rulebook that says what to do in every state, and it just follows it. That rulebook is the policy.</p>
-    <h3>One action per state</h3>
-    <p>In this grid the policy is an arrow in every cell. Wherever the agent stands, it looks up that cell and takes the move the arrow shows.</p>
-    <h3>Good and bad rulebooks</h3>
-    <p>Some rulebooks go round in circles, some run straight into the pit, and some find the treasure. Learning is the search for a rulebook that earns a lot of reward.</p>
+    <h2>What you saw</h2>
     <figure class="fig" id="figure"></figure>
-    <h3>In code</h3>
-    <pre class="code"><code>policy = {5: "right", 6: "right", 7: "right", 8: "down", 13: "down", 18: "right"}
+    <ul class="steps">
+      <li><b>Each picture is one rulebook.</b> It is walked from the start, one arrow per tile.</li>
+      <li><b>A rulebook can go wrong.</b> It can circle, end in the pit, or reach the treasure.</li>
+      <li><b>The total is what it earned.</b> A better policy earns more.</li>
+    </ul>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>Policy</b><span>For every state, which action to take.</span></th><td>One arrow on every tile.</td></tr>
+        <tr><th scope="row"><b>Better policy</b><span>One that collects more return from the start.</span></th><td>Goes round the pit to the treasure.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code>policy = {5: "right", 6: "right", 7: "right", 8: "down", 13: "down", 18: "right"}
 
 state, info = env.reset()
 done = False
@@ -23,6 +32,7 @@ while not done:
     action = policy[state]
     state, reward, terminated, truncated, info = env.step(action)
     done = terminated or truncated</code></pre>
-    <p>The policy is a lookup: for the state the agent is in, which action to take. This one walks the shortest route to the treasure.</p>
+      <p>The policy is a lookup: for the state the agent is in, which action to take. This one walks the shortest route to the treasure.</p>
+    </details>
     <p><b>The lesson:</b> a policy says which action to take in each state, and a better policy earns more reward. Reinforcement learning is the search for a good one.</p>
   </section>

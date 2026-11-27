@@ -71,7 +71,7 @@ export function lessonBodyHtml(lesson, { games = GAMES, base, writeupHtml }) {
   return `<section class="lhead">
   <div class="crumb">${crumbHtml(lesson, base)}</div>
   <h1>${esc(lessonLabel(lesson))}</h1>
-  <p class="lead">${esc(lesson.asks ?? lesson.says)}</p>
+  <p class="lead">${esc(lesson.says)}</p>
 </section>
 
 ${stage}

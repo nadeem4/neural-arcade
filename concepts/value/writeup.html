@@ -7,15 +7,24 @@
   </section>
 
   <section id="writeup">
-    <h2>Value is the reward you can expect from here</h2>
-    <p>A state's value is a forecast: starting from this cell and playing well, how much reward will the agent collect? The cells leading to the treasure are worth a little less with every step back.</p>
-    <h3>Value spreads back from the treasure</h3>
-    <p>A cell next to the treasure is worth nearly the full prize. A cell one step further is worth a bit less, and so on. The numbers form a slope that always points toward the reward.</p>
-    <h3>The discount sets how far the slope reaches</h3>
-    <p>With a low discount the slope is short: only cells close to the treasure look valuable. With a high discount it reaches all the way back to the start, so the agent can tell which way to go from far away.</p>
+    <h2>What you saw</h2>
     <figure class="fig" id="figure"></figure>
-    <h3>In code</h3>
-    <pre class="code"><code>gamma = 0.9
+    <ul class="steps">
+      <li><b>Value spreads back from the treasure.</b> The tile beside it is worth nearly the full prize, and each tile further back a little less.</li>
+      <li><b>The discount sets how far.</b> Low, and only tiles near the treasure look valuable. High, and it reaches the start.</li>
+      <li><b>A high discount makes the start worth more.</b> That is how the agent can tell which way to go from far away.</li>
+    </ul>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>Value</b><span>The return you can expect from a state, acting well.</span></th><td>10 beside the treasure, 1.81 at the start.</td></tr>
+        <tr><th scope="row"><b>Discount</b><span>How far the value spreads back. See <a href="../return/">Lesson 3</a>.</span></th><td>Higher reaches further back toward the start.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code>gamma = 0.9
 route = [5, 6, 7, 8, 13, 18]
 rewards = [-1, -1, -1, -1, -1, 10]
 
@@ -24,6 +33,7 @@ for state, reward in zip(reversed(route), reversed(rewards)):
     G = reward + gamma * G
     V[state] = round(G, 2)
 print(V)</code></pre>
-    <p>The same sum as the return, kept for every state on the route. The tile next to the treasure is worth 10; the start is worth 1.81.</p>
+      <p>The same sum as the return, kept for every state on the route. The tile next to the treasure is worth 10; the start is worth 1.81.</p>
+    </details>
     <p><b>The lesson:</b> a state's value is the reward the agent can expect from there. It spreads back from the treasure, and the discount decides how far.</p>
   </section>
