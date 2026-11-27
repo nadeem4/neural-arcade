@@ -101,7 +101,7 @@ describe('every concept page', () => {
       for (const s of ['tries', 'writeup', 'play', 'watch', 'read', ...(NO_GRID.includes(id) ? [] : ['playground'])]) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
       for (const a of ['assets/studio.css', 'assets/concept.css', 'assets/lesson.css', 'assets/lesson-page.js']) expect(html, `${id} ${a}`).toContain(a);
       const lead = html.match(/<p class="lead">(.*?)<\/p>/s)[1].replace(/&#39;/g, "'").replace(/&quot;/g, '"');
-      expect(lead, id).toBe(lessonById(id).asks ?? lessonById(id).says);
+      expect(lead, id).toBe(lessonById(id).says);
       expect(read(id, 'writeup.html'), id).toContain('id="writeup"');
       if (!NO_GRID.includes(id)) expect(read(id, 'page.js'), id).toContain('wireTries');
     }

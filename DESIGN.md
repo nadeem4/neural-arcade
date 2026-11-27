@@ -247,6 +247,7 @@ A 28px round, transparent icon button (a 40 by 44px tap area around it, so it do
 
 ### Code block and other-games lead
 - **Code block (`pre.code`, lesson write-ups):** read-only Python on the `stage` plane in `stage-ink`, 500 13.5px mono at 1.6, 12px radius, 14px 16px padding; long lines scroll inside the block, never the page. Colours come from `--code-*` tokens, each at 4.5:1 or better on `stage`: keywords `signal`, strings amber, numbers ice blue, calls soft green, comments `stage-dim` in italics. The generator adds the spans, no script runs.
+- **Loop picture (`div.loop`, Lesson 1):** an inline SVG, 360 units wide so its text stays near its set size on a phone (capped at 440px): two surface boxes with a bold label over an `ink-2` line, `signal-text` arrows and mono `signal-text` arrow words.
 - **Three lines (`ul.steps`):** three short items in a row, a bold `ink` lead-in over 15px `ink-2` text; one column at 480px and below.
 - **Key terms (`table.terms`):** a surface card, hairline rows, two columns (term in 18px 800 weight over its 15px `ink-2` meaning, then what it is in this game). At 480px and below each row stacks and the second cell takes an uppercase "In this game" label.
 - **In code fold (`details.incode`):** a surface card with a 52px summary holding the h3, a `signal-text` chevron that points down closed and up open, a 2px `signal-text` focus ring, and the code block flush below; the chevron's turn stops under reduced motion.

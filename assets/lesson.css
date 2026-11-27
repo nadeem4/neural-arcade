@@ -87,7 +87,7 @@
 .lesson-page pre.code .tf { color: var(--code-fn); }
 .lesson-page pre.code .tc { color: var(--code-cm); font-style: italic; }
 
-.loop svg { display: block; width: 100%; max-width: 620px; height: auto; margin: 0 auto; }
+.loop svg { display: block; width: 100%; max-width: 440px; height: auto; margin: 0 auto; }
 .loop text { font-family: var(--sans); fill: var(--ink); }
 .loop .lab { font-size: 15px; font-weight: 700; }
 .loop .sub { font-size: 12px; fill: var(--ink-2); }

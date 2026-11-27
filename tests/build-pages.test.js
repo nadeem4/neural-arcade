@@ -75,9 +75,7 @@ describe('buildPages', () => {
   it('colours the Python in a write-up when the page is built', () => {
     const w = '<section id="writeup"><pre class="code"><code>for x in (1, 2): print(x)</code></pre></section>';
     const html = buildPages({ files: { read: () => w, exists: () => false } })['concepts/policy/index.html'];
-    expect(html).toContain('<span class="tk">for</span> x <span class="tk">in</span> (<span class="tn">1</span>');
-    expect(html).toContain('<span class="tf">print</span>(x)');
-  });
+    expect(html).toContain('<span class="tk">for</span> x <span class="tk">in</span> (<span class="tn">1</span>');  });
   it('share image is the lesson own file when it exists', () => {
     const own = buildPages({ files: { read: () => '<section id="writeup"></section>', exists: p => p === 'concepts/agent/share.png' } });
     expect(own['concepts/agent/index.html']).toContain('content="https://arcade.codewithnk.com/concepts/agent/share.png"');

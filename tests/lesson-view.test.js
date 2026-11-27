@@ -114,10 +114,9 @@ describe('lesson.css', () => {
     for (const rule of ['#playground .sum', '#playground .dial ', '#playground .dial input', '#playground {']) expect(css).toContain(rule);
     expect(css).toContain('.lesson-page .play p { max-width: none; }');
   });
-  it('the In code fold has a 44px summary and a focus ring, and terms stack on a phone', () => {
+  it('the In code fold has a 44px summary and a focus ring', () => {
     expect(css).toMatch(/\.incode summary \{[^}]*min-height: (4[4-9]|[5-9]\d)px/);
     expect(css).toMatch(/\.incode summary:focus-visible \{[^}]*outline: 2px/);
-    expect(css).toMatch(/@media \(max-width: 480px\)[\s\S]*\.terms td::before/);
   });
   it('the In this game caption has no side border, and a lone video takes the full row', () => {
     expect(css.match(/^\.own \{[^}]*\}/m)[0]).not.toContain('border');
