@@ -52,5 +52,6 @@ Release targets:
 - One optional narrated explainer video per game, hosted on YouTube, shown as a click-to-play facade (assets/video.js)
 - How it works figures come from a seeded run recorded by story-data.js; regenerate it when the sim changes
 - Treasure Room How it works figures are still images from the 3D room, never live canvases: regenerate them with `?shots=1&fig=N&size=WxH` (N is 1 to 8) (see `FIGURES` in games/treasure-room/shots.js, default 1280x800, webp under 120 KB) whenever story-data.js or the room look changes, and capture `games/treasure-room/share.png` with fig=1 at size=1280x720
-- When a heading, term or file is renamed or removed, grep README.md, DESIGN.md and docs/layout.md for the old name in the same commit
+- When a heading, term or file is renamed or removed, grep README.md, DESIGN.md and docs/layout.md for the old name in the same commit; when a level's room or rules change, update README's Treasure Room summary line too
+- A level view's behaviour (tabs, hints, picks) is tested by driving `mount()` through `tests/treasure-room-fake-ui.js`, not by matching its static markup
 - Plans live in `.plan/` (local, not in git); Notion is the dashboard only. docs/ is git-ignored except docs/layout.md
