@@ -33,7 +33,7 @@ export default {
           wild: [
             w('maze', 'The Discount slider sets how much far-off reward counts, which decides whether it walks to the small or the big treasure.'),
             w('city', 'The fare comes only at the drop-off, so the taxi weighs the whole trip, clock and fines included, not just the next block.'),
-            w('treasure-room', 'From the start there are two routes: a coin 2 steps away and a chest 6 steps away. Every step costs 1.'),
+            w('treasure-room', 'From the start there are three routes: a coin 2 steps away, a chest 6 steps away, and a longer way round to the same chest, 8 steps. Every step costs 1.'),
           ] },
         { id: 'policy', title: 'Policy', level: 4, video: null, status: 'live',
           says: 'A policy is a rulebook: one action for every state. A better policy earns more return.',
