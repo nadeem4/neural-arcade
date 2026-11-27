@@ -10,14 +10,14 @@
     <h2>What you saw</h2>
     <div class="rpart">
       <h3>1. Every route has its own return</h3>
-      <div class="sumrow"><b>Coin</b><div class="chips"><span class="reward">−1</span><span class="reward good">+2</span><span class="eq">= 1</span></div></div>
-      <div class="sumrow"><b>Chest</b><div class="chips"><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward good">+10</span><span class="eq">= 5</span></div></div>
-      <div class="sumrow"><b>Chest, the long way</b><div class="chips"><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward good">+10</span><span class="eq">= 3</span></div></div>
+      <div class="rsum"><b>Coin</b><div class="rchips"><span class="rchip">−1</span><span class="rchip good">+2</span><span class="rtotal">= 1</span></div></div>
+      <div class="rsum"><b>Chest</b><div class="rchips"><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip good">+10</span><span class="rtotal">= 5</span></div></div>
+      <div class="rsum"><b>Chest, the long way</b><div class="rchips"><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip good">+10</span><span class="rtotal">= 3</span></div></div>
       <p>Same start, three routes. The robot takes the one with the highest return: the short way to the chest. The long way goes three right, three down, one right and one up, 8 steps in all, so it pays two more steps than the short way.</p>
     </div>
     <div class="rpart">
       <h3>2. The return looks forward</h3>
-      <div class="sumrow"><b>Two steps along the chest route</b><div class="chips"><s class="reward">−1</s><s class="reward">−1</s><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward good">+10</span><span class="eq">= 7</span></div></div>
+      <div class="rsum"><b>Two steps along the chest route</b><div class="rchips"><s class="rchip">−1</s><s class="rchip">−1</s><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip">−1</span><span class="rchip good">+10</span><span class="rtotal">= 7</span></div></div>
       <p>The two steps already paid are struck out. They happened, so they do not count. Only what is still to come does: −1 −1 −1 + 10 = 7.</p>
     </div>
     <div class="rpart">
@@ -32,7 +32,7 @@
           <tr><td>5 steps later</td><td>5.9</td></tr>
         </tbody>
       </table>
-      <table class="routes">
+      <table class="rtable">
         <thead><tr><th scope="col">Route</th><th scope="col">No discount</th><th scope="col">0.9</th><th scope="col">0.5</th></tr></thead>
         <tbody>
           <tr><th scope="row">Coin</th><td>1</td><td>0.8</td><td class="win">0.0</td></tr>
@@ -44,7 +44,7 @@
     </div>
     <div class="rpart">
       <h3>4. Why discount at all</h3>
-      <ul class="why">
+      <ul class="steps">
         <li><b>The future is less sure.</b> A reward 20 steps away may never arrive: the robot can slip, or the game can end first.</li>
         <li><b>Some tasks never end.</b> Add up rewards forever and every route totals infinity. A discount keeps the total a number you can compare.</li>
         <li><b>It sets patience.</b> At 0.5 the agent cares about the next few steps. At 0.99 it plans far ahead.</li>

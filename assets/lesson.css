@@ -60,9 +60,9 @@
 .banner-play .btn { min-height: 44px; height: auto; }
 
 /* write-up: three lines, key terms, folded Python */
-.steps, .why { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.steps li, .why li { font-size: 15px; color: var(--ink-2); }
-.steps b, .why b { display: block; color: var(--ink); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.steps li { font-size: 15px; color: var(--ink-2); }
+.steps b { display: block; color: var(--ink); }
 
 .terms { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
 .terms th, .terms td { padding: 14px 20px; text-align: left; vertical-align: top; border-top: 1px solid var(--line); }
@@ -97,7 +97,7 @@
 .loop .head { fill: var(--signal-text); }
 
 @media (max-width: 480px) {
-  .steps, .why { grid-template-columns: minmax(0, 1fr); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
   .terms thead { display: none; }
   .terms, .terms tbody, .terms tr, .terms th, .terms td { display: block; width: 100%; box-sizing: border-box; }
   .terms tbody th { width: 100%; padding-bottom: 4px; border-top: 1px solid var(--line); }
@@ -111,21 +111,21 @@
 .rpart { display: grid; gap: 12px; min-width: 0; }
 .rpart h3 { margin: 0; font-size: 18px; font-weight: 800; }
 .rpart p { margin: 0; }
-.sumrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-.sumrow > b { flex: 0 0 11em; }
-.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
-.reward { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 32px; padding: 0 8px; border-radius: 8px; background: var(--track); color: var(--ink); font: 700 14px var(--mono); text-decoration: none; }
-.reward.good { background: var(--signal-fill); color: var(--signal-ink); }
-s.reward { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 2px; opacity: .7; }
-.eq { font: 700 16px var(--mono); }
+.rsum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.rsum > b { flex: 0 0 11em; }
+.rchips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.rchip { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 32px; padding: 0 8px; border-radius: 8px; background: var(--track); color: var(--ink); font: 700 14px var(--mono); text-decoration: none; }
+.rchip.good { background: var(--signal-fill); color: var(--signal-ink); }
+s.rchip { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 2px; }
+.rtotal { font: 700 16px var(--mono); }
 
-.routes { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font: 500 14px/1.4 var(--mono); }
-.routes th, .routes td { padding: 10px 12px; text-align: left; border-top: 1px solid var(--line); }
-.routes thead th { border-top: 0; font: 700 12px var(--mono); letter-spacing: .06em; color: var(--signal-text); }
-.routes tbody th { font: 700 14px var(--sans); }
-.routes td.win { background: var(--signal-fill); color: var(--signal-ink); font-weight: 700; }
-.routes td.win::before { content: "\2713\00a0"; }
+.rtable { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font: 500 14px/1.4 var(--mono); }
+.rtable th, .rtable td { padding: 10px 12px; text-align: left; border-top: 1px solid var(--line); }
+.rtable thead th { border-top: 0; font: 700 12px var(--mono); letter-spacing: .06em; color: var(--signal-text); }
+.rtable tbody th { font: 700 14px var(--sans); }
+.rtable td.win { background: var(--signal-fill); color: var(--signal-ink); font-weight: 700; }
+.rtable td.win::before { content: "\2713\00a0"; }
 @media (max-width: 480px) {
-  .sumrow > b { flex-basis: 100%; }
-  .routes th, .routes td { padding: 10px 8px; }
+  .rsum > b { flex-basis: 100%; }
+  .rtable th, .rtable td { padding: 10px 8px; }
 }
