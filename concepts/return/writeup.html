@@ -8,19 +8,19 @@
 
   <section id="writeup">
     <h2>What you saw</h2>
-    <div class="part">
+    <div class="rpart">
       <h3>1. Every route has its own return</h3>
-      <div class="sumrow"><b>Coin</b><div class="chips"><span class="chip">−1</span><span class="chip good">+2</span><span class="eq">= 1</span></div></div>
-      <div class="sumrow"><b>Chest</b><div class="chips"><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip good">+10</span><span class="eq">= 5</span></div></div>
-      <div class="sumrow"><b>Chest, the long way</b><div class="chips"><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip good">+10</span><span class="eq">= 3</span></div></div>
+      <div class="sumrow"><b>Coin</b><div class="chips"><span class="reward">−1</span><span class="reward good">+2</span><span class="eq">= 1</span></div></div>
+      <div class="sumrow"><b>Chest</b><div class="chips"><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward good">+10</span><span class="eq">= 5</span></div></div>
+      <div class="sumrow"><b>Chest, the long way</b><div class="chips"><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward good">+10</span><span class="eq">= 3</span></div></div>
       <p>Same start, three routes. The robot takes the one with the highest return: the short way to the chest. The long way goes three right, three down, one right and one up, 8 steps in all, so it pays two more steps than the short way.</p>
     </div>
-    <div class="part">
+    <div class="rpart">
       <h3>2. The return looks forward</h3>
-      <div class="sumrow"><b>Two steps along the chest route</b><div class="chips"><s class="chip">−1</s><s class="chip">−1</s><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip good">+10</span><span class="eq">= 7</span></div></div>
+      <div class="sumrow"><b>Two steps along the chest route</b><div class="chips"><s class="reward">−1</s><s class="reward">−1</s><span class="reward">−1</span><span class="reward">−1</span><span class="reward">−1</span><span class="reward good">+10</span><span class="eq">= 7</span></div></div>
       <p>The two steps already paid are struck out. They happened, so they do not count. Only what is still to come does: −1 −1 −1 + 10 = 7.</p>
     </div>
-    <div class="part">
+    <div class="rpart">
       <h3>3. Further away counts less</h3>
       <p>With a discount of 0.9, a reward keeps 90% of its worth for every step you wait. This is what 10 points count as, by how far away they are.</p>
       <table class="disc">
@@ -42,7 +42,7 @@
       </table>
       <p>Each column counts the same three routes again with that discount. The marked number is the route the robot takes. The lower the discount, the more the far chest shrinks, and below about 0.85 the near coin wins.</p>
     </div>
-    <div class="part">
+    <div class="rpart">
       <h3>4. Why discount at all</h3>
       <ul class="why">
         <li><b>The future is less sure.</b> A reward 20 steps away may never arrive: the robot can slip, or the game can end first.</li>

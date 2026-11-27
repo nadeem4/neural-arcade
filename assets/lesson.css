@@ -108,15 +108,15 @@
 @media (prefers-reduced-motion: reduce) { .incode summary::after { transition: none; } }
 
 /* Return lesson: reward chips, struck-out chips, routes table */
-.part { display: grid; gap: 12px; min-width: 0; }
-.part h3 { margin: 0; font-size: 18px; font-weight: 800; }
-.part p { margin: 0; }
+.rpart { display: grid; gap: 12px; min-width: 0; }
+.rpart h3 { margin: 0; font-size: 18px; font-weight: 800; }
+.rpart p { margin: 0; }
 .sumrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .sumrow > b { flex: 0 0 11em; }
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
-.chip { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 32px; padding: 0 8px; border-radius: 8px; background: var(--track); color: var(--ink); font: 700 14px var(--mono); text-decoration: none; }
-.chip.good { background: var(--signal-fill); color: var(--signal-ink); }
-s.chip { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 2px; opacity: .7; }
+.reward { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 32px; padding: 0 8px; border-radius: 8px; background: var(--track); color: var(--ink); font: 700 14px var(--mono); text-decoration: none; }
+.reward.good { background: var(--signal-fill); color: var(--signal-ink); }
+s.reward { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 2px; opacity: .7; }
 .eq { font: 700 16px var(--mono); }
 
 .routes { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font: 500 14px/1.4 var(--mono); }
