@@ -1,6 +1,6 @@
   <section>
     <ol class="tries" id="tries">
-      <li>In step 1, send the robot down each route and read its total.</li>
+      <li>In step 1, send the robot to the coin and to the chest and read each total. The room plays those two routes; the long way is worked out in the picture below.</li>
       <li>In step 2, watch the chest and the coin shrink in the room.</li>
       <li>In step 3, drag the discount down until the robot picks the coin.</li>
     </ol>
@@ -8,26 +8,59 @@
 
   <section id="writeup">
     <h2>What you saw</h2>
-    <table class="disc">
-      <thead><tr><th>10 points…</th><th>count as</th></tr></thead>
-      <tbody>
-        <tr><td>now</td><td>10</td></tr>
-        <tr><td>1 step later</td><td>9</td></tr>
-        <tr><td>2 steps later</td><td>8.1</td></tr>
-        <tr><td>5 steps later</td><td>5.9</td></tr>
-      </tbody>
-    </table>
+    <div class="part">
+      <h3>1. Every route has its own return</h3>
+      <div class="sumrow"><b>Coin</b><div class="chips"><span class="chip">−1</span><span class="chip good">+2</span><span class="eq">= 1</span></div></div>
+      <div class="sumrow"><b>Chest</b><div class="chips"><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip good">+10</span><span class="eq">= 5</span></div></div>
+      <div class="sumrow"><b>Chest, the long way</b><div class="chips"><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip good">+10</span><span class="eq">= 3</span></div></div>
+      <p>Same start, three routes. The robot takes the one with the highest return: the short way to the chest. The long way goes three right, three down, one right and one up, 8 steps in all, so it pays two more steps than the short way.</p>
+    </div>
+    <div class="part">
+      <h3>2. The return looks forward</h3>
+      <div class="sumrow"><b>Two steps along the chest route</b><div class="chips"><s class="chip">−1</s><s class="chip">−1</s><span class="chip">−1</span><span class="chip">−1</span><span class="chip">−1</span><span class="chip good">+10</span><span class="eq">= 7</span></div></div>
+      <p>The two steps already paid are struck out. They happened, so they do not count. Only what is still to come does: −1 −1 −1 + 10 = 7.</p>
+    </div>
+    <div class="part">
+      <h3>3. Further away counts less</h3>
+      <p>With a discount of 0.9, a reward keeps 90% of its worth for every step you wait. This is what 10 points count as, by how far away they are.</p>
+      <table class="disc">
+        <thead><tr><th>10 points…</th><th>count as</th></tr></thead>
+        <tbody>
+          <tr><td>now</td><td>10</td></tr>
+          <tr><td>1 step later</td><td>9</td></tr>
+          <tr><td>2 steps later</td><td>8.1</td></tr>
+          <tr><td>5 steps later</td><td>5.9</td></tr>
+        </tbody>
+      </table>
+      <table class="routes">
+        <thead><tr><th scope="col">Route</th><th scope="col">No discount</th><th scope="col">0.9</th><th scope="col">0.5</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Coin</th><td>1</td><td>0.8</td><td class="win">0.0</td></tr>
+          <tr><th scope="row">Chest</th><td class="win">5</td><td class="win">1.81</td><td>−1.62</td></tr>
+          <tr><th scope="row">Chest, the long way</th><td>3</td><td>−0.43</td><td>−1.91</td></tr>
+        </tbody>
+      </table>
+      <p>Each column counts the same three routes again with that discount. The marked number is the route the robot takes. The lower the discount, the more the far chest shrinks, and below about 0.85 the near coin wins.</p>
+    </div>
+    <div class="part">
+      <h3>4. Why discount at all</h3>
+      <ul class="why">
+        <li><b>The future is less sure.</b> A reward 20 steps away may never arrive: the robot can slip, or the game can end first.</li>
+        <li><b>Some tasks never end.</b> Add up rewards forever and every route totals infinity. A discount keeps the total a number you can compare.</li>
+        <li><b>It sets patience.</b> At 0.5 the agent cares about the next few steps. At 0.99 it plans far ahead.</li>
+      </ul>
+    </div>
     <ul class="steps">
-      <li><b>Add up each route.</b> Coin: −1 + 2 = 1. Chest: −1 −1 −1 −1 −1 + 10 = 5. The robot takes the biggest return.</li>
-      <li><b>Later counts less.</b> At a discount of 0.9, a reward one step later counts as 90% of the same reward now.</li>
-      <li><b>The discount can change the choice.</b> At 0.9 the chest is still worth more (1.81 against 0.8). Turn it down past about 0.85 and the coin wins.</li>
+      <li><b>Compare routes.</b> Each has its own return. Take the highest.</li>
+      <li><b>Look forward.</b> Count only the rewards still to come.</li>
+      <li><b>Discount.</b> The further away a reward is, the less it counts.</li>
     </ul>
     <h2>Key terms</h2>
     <table class="terms">
       <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
       <tbody>
-        <tr><th scope="row"><b>Return</b><span>Every reward still to come from where you are, added up. The past does not count.</span></th><td>From the start: coin 1, chest 5.</td></tr>
-        <tr><th scope="row"><b>Discount</b><span>How much a reward one step later still counts. 0.9 means 90%.</span></th><td>At 0.5 the near coin beats the far chest.</td></tr>
+        <tr><th scope="row"><b>Return</b><span>Every reward still to come from where you are, added up. The past does not count.</span></th><td>From the start: coin 1, chest 5, chest the long way 3.</td></tr>
+        <tr><th scope="row"><b>Discount</b><span>How much a reward one step later still counts. 0.9 means 90%.</span></th><td>At 0.5 the near coin beats both chest routes.</td></tr>
       </tbody>
     </table>
     <details class="incode">
@@ -35,13 +68,16 @@
       <pre class="code"><code>def ret(rewards, gamma):
     return sum(r * gamma**t for t, r in enumerate(rewards))
 
-coin  = [-1, 2]
-chest = [-1, -1, -1, -1, -1, 10]
+routes = {
+    "coin":        [-1, 2],
+    "chest":       [-1] * 5 + [10],
+    "chest, long": [-1] * 7 + [10],
+}
 
 for gamma in (1, 0.9, 0.5):
-    c, t = ret(coin, gamma), ret(chest, gamma)
-    print(gamma, round(c, 2), round(t, 2), "chest" if t &gt; c else "coin")</code></pre>
-      <p>Same two routes as the room. At 1 and 0.9 the chest wins; at 0.5 the coin does.</p>
+    returns = {name: round(ret(r, gamma), 2) for name, r in routes.items()}
+    print(gamma, returns, "best:", max(returns, key=returns.get))</code></pre>
+      <p>The same three routes. At 1 and 0.9 the chest wins; at 0.5 the coin does.</p>
     </details>
     <p><b>The lesson:</b> the return adds up what is still to come. The discount decides how far ahead the robot cares, and that can change what it chooses.</p>
   </section>

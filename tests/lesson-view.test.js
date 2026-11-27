@@ -45,7 +45,7 @@ describe('lesson view builders', () => {
   });
   it('own line is the own-game entry', () => {
     expect(ownLineHtml(l)).toContain('<p class="own">In this game: ');
-    expect(ownLineHtml(l)).toContain('two routes');
+    expect(ownLineHtml(l)).toContain('three routes');
     expect(ownLineHtml({ ...l, wild: [] })).toBe('');
   });
   it('neighbours are numbered labels and a missing side is omitted', () => {
