@@ -28,7 +28,9 @@ export const START = (() => {
 
 const UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3;
 const SIDES = [[LEFT, RIGHT], [LEFT, RIGHT], [UP, DOWN], [UP, DOWN]];
-const isFloor = (room, x, y) => !'TXC#'.includes(room.cells[y][x]);
+// Tiles that end the episode: what the walk reports and what stepping on them pays.
+export const ENDS = { T: { outcome: 'treasure', reward: REWARD.treasure }, C: { outcome: 'coin', reward: REWARD.coin }, X: { outcome: 'pit', reward: REWARD.pit } };
+export const isFloor = (room, x, y) => room.cells[y][x] !== '#' && !ENDS[room.cells[y][x]];
 
 function move(room, pos, a) {
   const { dx, dy } = ACTIONS[a];
@@ -36,11 +38,8 @@ function move(room, pos, a) {
   if (x < 0 || y < 0 || x >= room.w || y >= room.h || room.cells[y][x] === '#') {
     return { pos: { x: pos.x, y: pos.y }, reward: REWARD.step, done: false };
   }
-  const c = room.cells[y][x];
-  if (c === 'T') return { pos: { x, y }, reward: REWARD.treasure, done: true };
-  if (c === 'C') return { pos: { x, y }, reward: REWARD.coin, done: true };
-  if (c === 'X') return { pos: { x, y }, reward: REWARD.pit, done: true };
-  return { pos: { x, y }, reward: REWARD.step, done: false };
+  const end = ENDS[room.cells[y][x]];
+  return { pos: { x, y }, reward: end ? end.reward : REWARD.step, done: !!end };
 }
 
 export function transitions(room, pos, action, slip = 0) {
@@ -115,7 +114,7 @@ function walk(room, from, nextAction, { slip, rng, maxSteps }) {
     trace.push({ pos: r.pos, action, actual: r.actual, reward: r.reward, slipped: r.slipped, done: r.done });
     total += r.reward;
     pos = r.pos;
-    if (r.done) { outcome = { T: 'treasure', C: 'coin' }[room.cells[pos.y][pos.x]] ?? 'pit'; break; }
+    if (r.done) { outcome = ENDS[room.cells[pos.y][pos.x]].outcome; break; }
   }
   return { trace, total, outcome };
 }

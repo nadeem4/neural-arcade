@@ -12,7 +12,6 @@ import { lessonOfLevel } from '../../assets/tracks/model.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
 import * as levelReturn from './level-return.js';
-import { tabsHtml } from './level-return.js';
 import * as levelPolicy from './level-policy.js';
 import * as levelValue from './level-value.js';
 import * as levelMdp from './level-mdp.js';
@@ -59,7 +58,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
       <section class="controls" data-levels="3" aria-labelledby="rh" hidden>
         <h2><span id="rh">Coin or chest</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-route" aria-label="Explain routes" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-route" data-info="route" hidden></p>
-        <nav class="steps" id="stepTabs" aria-label="Lesson steps">${tabsHtml(1)}</nav>
+        <nav class="steps" id="stepTabs" aria-label="Lesson steps">${levelReturn.tabsHtml(1)}</nav>
         <div data-step-view="1">
           <p>Every move costs 1. The coin pays 2, the chest pays 10. Send the robot down each route and add up what it collects.</p>
           <div class="routes" role="group" aria-label="Routes">

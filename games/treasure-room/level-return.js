@@ -1,5 +1,5 @@
 // Level 3 (return and discount): a coin 2 steps away or a chest 6 steps away, told in three steps: add up each route, see later rewards count less, turn the discount and watch the pick flip.
-import { START, pathActions, discounted, returnOf } from './sim.js';
+import { START, pathActions, discounted, returnOf, treasureWorth } from './sim.js';
 import { tagTone } from './room-math.js';
 
 const D = 1, R = 3;
@@ -41,7 +41,7 @@ export function flipPoint(room) {
 // A prize's size in the room: what it is still worth after `delay` steps, as a share of its full worth, never below 0.15.
 export const worthScale = (delay, gamma) => Math.max(0.15, gamma ** delay);
 
-export const discountRows = gamma => [0, 1, 2, 3, 4, 5].map(n => ({ label: n ? `${n} later` : 'now', value: fmt(10 * gamma ** n) }));
+export const discountRows = gamma => [0, 1, 2, 3, 4, 5].map(n => ({ label: n ? `${n} later` : 'now', value: fmt(treasureWorth(n, gamma)) }));
 
 // One frame per step of the walk: where the robot is, the tag that floats there, and the discounted total so far.
 export function frames(room, route, gamma) {
@@ -69,7 +69,7 @@ export function mount(ui) {
   function paint() {
     const f = walk?.[at], now = g();
     ui.draw({
-      agent: f ? f.pos : START, ghost: route && step !== 2 ? scoreRoute(ui.room, route, now).cells : null, gamma: now,
+      agent: f ? f.pos : START, ghost: walk && step !== 2 ? walk.map(w => w.pos) : null, gamma: now,
       tags: f?.tag ? [f.tag] : [], treasureScale: worthScale(delay(CHEST), now), coinScale: worthScale(delay(COIN), now),
     });
     ui.readout(at, fmt(f?.total ?? 0));
@@ -103,7 +103,7 @@ export function mount(ui) {
   }
 
   function dial() {
-    const c = scoreRoute(ui.room, COIN, gamma).total, t = scoreRoute(ui.room, CHEST, gamma).total, pick = pickAt(ui.room, gamma);
+    const c = scoreRoute(ui.room, COIN, gamma).total, t = scoreRoute(ui.room, CHEST, gamma).total, pick = t > c ? CHEST : COIN;
     $('#gammaOut').textContent = gamma.toFixed(2);
     $('#ret3coin').textContent = fmt(c);
     $('#ret3chest').textContent = fmt(t);
