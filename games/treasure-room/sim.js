@@ -28,7 +28,6 @@ export const START = (() => {
 
 const UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3;
 const SIDES = [[LEFT, RIGHT], [LEFT, RIGHT], [UP, DOWN], [UP, DOWN]];
-// Tiles that end the episode: what the walk reports and what stepping on them pays.
 export const ENDS = { T: { outcome: 'treasure', reward: REWARD.treasure }, C: { outcome: 'coin', reward: REWARD.coin }, X: { outcome: 'pit', reward: REWARD.pit } };
 export const isFloor = (room, x, y) => room.cells[y][x] !== '#' && !ENDS[room.cells[y][x]];
 

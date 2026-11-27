@@ -110,6 +110,9 @@ export function mount(ui) {
     $('#box3coin').classList.toggle('win', pick === COIN);
     $('#box3chest').classList.toggle('win', pick === CHEST);
     $('#pick').textContent = pick.label;
+    $('#hint3').textContent = pick === CHEST
+      ? `Drag below ${flip.toFixed(2)} and watch it change its mind.`
+      : `Drag above ${flip.toFixed(2)} and it goes back to the chest.`;
     if (pick !== picked) { picked = pick; go(pick); return; }
     stop(); walk = frames(ui.room, pick, gamma); at = walk.length - 1; paint();
   }
@@ -122,7 +125,6 @@ export function mount(ui) {
   }
 
   $('#discRows').innerHTML = discountRows(STEP_GAMMA).map(r => `<tr><td>${r.label}</td><td>${r.value}</td></tr>`).join('');
-  $('#hint3').textContent = `Drag below ${flip.toFixed(2)} and watch it change its mind.`;
   on($('#stepTabs'), 'click', e => {
     const b = e.target.closest?.('[data-step]');
     if (b) show(Number(b.dataset.step));

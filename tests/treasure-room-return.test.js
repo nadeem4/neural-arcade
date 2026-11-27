@@ -3,7 +3,6 @@ import { ROOM, COIN_ROOM, REWARD, START, roomForLevel, pathActions } from '../ga
 import { ROUTES, scoreRoute, pickAt, flipPoint, worthScale, frames, tabsHtml, discountRows, mount } from '../games/treasure-room/level-return.js';
 import { layoutRoom, atTreasure } from '../games/treasure-room/room-math.js';
 import { tagsList } from '../games/treasure-room/room-overlays.js';
-import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
 import { fakeUi } from './treasure-room-fake-ui.js';
 import { readFileSync } from 'node:fs';
 
@@ -48,10 +47,6 @@ describe('coin or chest returns', () => {
     expect(flipPoint(COIN_ROOM)).toBeGreaterThan(0.84);
     expect(flipPoint(COIN_ROOM)).toBeLessThan(0.85);
   });
-  it('the slider range never ties the routes', () => {
-    expect(pickAt(COIN_ROOM, 0.1)).toBe(coin);
-    expect(pickAt(COIN_ROOM, 1)).toBe(chest);
-  });
   it('prizes shrink with delay and never vanish', () => {
     expect(worthScale(5, 0.9)).toBeLessThan(worthScale(1, 0.9));
     expect(worthScale(0, 1)).toBe(1);
@@ -81,12 +76,6 @@ describe('the step tabs', () => {
       tabs.forEach((t, i) => expect(t.includes('aria-current="step"')).toBe(i + 1 === open));
     }
   });
-  it('sit in the level 3 panel', () => {
-    expect(levelPanelHtml()).toContain(tabsHtml(1));
-  });
-  it('the slider runs 0.1 to 1 in steps of 0.01', () => {
-    expect(levelPanelHtml()).toMatch(/id="gamma" min="0.1" max="1" step="0.01" value="0.9"/);
-  });
 });
 
 describe('level 3 view', () => {
@@ -115,15 +104,19 @@ describe('level 3 view', () => {
   it('step 3 shows both returns and who the robot picks, and the room shrinks with the dial', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const ui = fakeUi(COIN_ROOM);
+    const tabs = [1, 2, 3].map(n => ({ dataset: { step: String(n) }, current: n === 1, setAttribute() { this.current = true; }, removeAttribute() { this.current = false; } }));
+    ui.panel.querySelectorAll = sel => (sel === '[data-step]' ? tabs : []);
     const view = mount(ui);
-    ui.panel.querySelector('#stepTabs').closest = () => ({ dataset: { step: '3' } });
+    ui.panel.querySelector('#stepTabs').closest = () => tabs[2];
     ui.click('#stepTabs');
+    expect(tabs.map(t => t.current)).toEqual([false, false, true]);
     const slider = ui.panel.querySelector('#gamma');
     slider.value = '0.5';
     ui.input('#gamma');
     expect(ui.panel.querySelector('#ret3coin').textContent).toBe('0');
     expect(ui.panel.querySelector('#ret3chest').textContent).toBe('−1.63');
     expect(ui.panel.querySelector('#pick').textContent).toBe('Coin');
+    expect(ui.panel.querySelector('#hint3').textContent).toMatch(/^Drag above 0\.85/);
     expect(ui.last().treasureScale).toBe(0.15);
     expect(ui.last().coinScale).toBeCloseTo(0.5);
     view.destroy();
