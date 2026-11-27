@@ -7,11 +7,7 @@
   </section>
 
   <section id="writeup">
-    <h2>The return is everything still to come, added up</h2>
-    <p>Each move costs 1 point. The coin pays 2, the chest pays 10. Add up every reward on a route and you get its <b>return</b>. The robot is not after the next reward; it is after the biggest return.</p>
-    <p>Coin: −1 + 2 = <b>1</b>. Chest: −1 −1 −1 −1 −1 + 10 = <b>5</b>. Counted like this, the chest wins easily.</p>
-    <h3>The discount: later counts for less</h3>
-    <p>A reward you get one step later counts as 90% of the same reward now. That 0.9 is the <b>discount</b>. Two steps later, 90% of 90%, and so on.</p>
+    <h2>What you saw</h2>
     <table class="disc">
       <thead><tr><th>10 points…</th><th>count as</th></tr></thead>
       <tbody>
@@ -21,10 +17,22 @@
         <tr><td>5 steps later</td><td>5.9</td></tr>
       </tbody>
     </table>
-    <p>Why? Sooner is surer: the longer the walk, the more can go wrong. And without it, a game that never ends would add up forever.</p>
-    <p>With the discount at 0.9 the chest is still worth more (1.81 against 0.8). Turn it down past about 0.85 and the coin wins: the robot gets near-sighted and grabs what is close.</p>
-    <h3>In code</h3>
-    <pre class="code"><code>def ret(rewards, gamma):
+    <ul class="steps">
+      <li><b>Add up each route.</b> Coin: −1 + 2 = 1. Chest: −1 −1 −1 −1 −1 + 10 = 5. The robot takes the biggest return.</li>
+      <li><b>Later counts less.</b> At a discount of 0.9, a reward one step later counts as 90% of the same reward now.</li>
+      <li><b>The discount can change the choice.</b> At 0.9 the chest is still worth more (1.81 against 0.8). Turn it down past about 0.85 and the coin wins.</li>
+    </ul>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>Return</b><span>Every reward still to come from where you are, added up. The past does not count.</span></th><td>From the start: coin 1, chest 5.</td></tr>
+        <tr><th scope="row"><b>Discount</b><span>How much a reward one step later still counts. 0.9 means 90%.</span></th><td>At 0.5 the near coin beats the far chest.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code>def ret(rewards, gamma):
     return sum(r * gamma**t for t, r in enumerate(rewards))
 
 coin  = [-1, 2]
@@ -33,6 +41,7 @@ chest = [-1, -1, -1, -1, -1, 10]
 for gamma in (1, 0.9, 0.5):
     c, t = ret(coin, gamma), ret(chest, gamma)
     print(gamma, round(c, 2), round(t, 2), "chest" if t &gt; c else "coin")</code></pre>
-    <p>Same two routes as the room. At 1 and 0.9 the chest wins; at 0.5 the coin does.</p>
+      <p>Same two routes as the room. At 1 and 0.9 the chest wins; at 0.5 the coin does.</p>
+    </details>
     <p><b>The lesson:</b> the return adds up what is still to come. The discount decides how far ahead the robot cares, and that can change what it chooses.</p>
   </section>

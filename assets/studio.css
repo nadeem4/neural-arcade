@@ -9,6 +9,7 @@
   --signal: #FF5A1F; --signal-text: #C2410C; --signal-ink: #FFFFFF; --signal-fill: #C2410C; --ghost: rgba(233, 237, 242, .18);
   --sans: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
   --wrap: 1200px;
+  --code-kw: var(--signal); --code-str: #F5C04A; --code-num: #8FD3FF; --code-fn: #9ED9A0; --code-cm: var(--stage-dim);
   /* names the canvas code reads through assets/theme.js */
   --ground: var(--bg); --tray: var(--stage); --road: var(--stage-2); --edge: var(--ghost);
   --muted: var(--ink-2); --rule: var(--line); --car: var(--stage-ink);

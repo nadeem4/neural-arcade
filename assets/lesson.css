@@ -58,3 +58,51 @@
 .banner img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
 .banner-play { margin: 0; }
 .banner-play .btn { min-height: 44px; height: auto; }
+
+/* write-up: three lines, key terms, folded Python */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.steps li { font-size: 15px; color: var(--ink-2); }
+.steps b { display: block; color: var(--ink); }
+
+.terms { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.terms th, .terms td { padding: 14px 20px; text-align: left; vertical-align: top; border-top: 1px solid var(--line); }
+.terms thead th { border-top: 0; font: 700 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--signal-text); }
+.terms tbody th { width: 55%; font-weight: 400; }
+.terms th b { display: block; font-size: 18px; font-weight: 800; }
+.terms th span { display: block; font-size: 15px; color: var(--ink-2); }
+
+.incode { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.incode summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 18px; cursor: pointer; list-style: none; }
+.incode summary::-webkit-details-marker { display: none; }
+.incode summary h3 { margin: 0; font-size: 18px; font-weight: 800; }
+.incode summary::after { content: ""; flex: none; width: 10px; height: 10px; margin: 0 4px 4px 0; border-right: 2px solid var(--signal-text); border-bottom: 2px solid var(--signal-text); transform: rotate(45deg); transition: transform .15s; }
+.incode[open] summary::after { transform: rotate(-135deg); margin: 4px 4px 0 0; }
+.incode summary:focus-visible { outline: 2px solid var(--signal-text); outline-offset: -2px; }
+.incode pre.code { border-radius: 0; }
+.incode > p { margin: 0; padding: 14px 18px; }
+
+.lesson-page pre.code .tk { color: var(--code-kw); }
+.lesson-page pre.code .ts { color: var(--code-str); }
+.lesson-page pre.code .tn { color: var(--code-num); }
+.lesson-page pre.code .tf { color: var(--code-fn); }
+.lesson-page pre.code .tc { color: var(--code-cm); font-style: italic; }
+
+.loop svg { display: block; width: 100%; max-width: 620px; height: auto; margin: 0 auto; }
+.loop text { font-family: var(--sans); fill: var(--ink); }
+.loop .lab { font-size: 15px; font-weight: 700; }
+.loop .sub { font-size: 12px; fill: var(--ink-2); }
+.loop .msg { font: 600 13px var(--mono); fill: var(--signal-text); }
+.loop .box { fill: var(--surface); stroke: var(--line); }
+.loop .arr { stroke: var(--signal-text); stroke-width: 2; fill: none; }
+.loop .head { fill: var(--signal-text); }
+
+@media (max-width: 480px) {
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .terms thead { display: none; }
+  .terms, .terms tbody, .terms tr, .terms th, .terms td { display: block; width: 100%; box-sizing: border-box; }
+  .terms tbody th { width: 100%; padding-bottom: 4px; border-top: 1px solid var(--line); }
+  .terms tr:first-child th { border-top: 0; }
+  .terms td { padding-top: 0; border-top: 0; }
+  .terms td::before { content: "In this game: "; font: 700 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--signal-text); }
+}
+@media (prefers-reduced-motion: reduce) { .incode summary::after { transition: none; } }

@@ -5,6 +5,7 @@ import { pageHtml, IMPORT_MAP_HTML } from './shell.js';
 import { trackBodyHtml } from './track-view.js';
 import { lessonBodyHtml } from './lesson-view.js';
 import { flatLessons, lessonLabel } from './model.js';
+import { highlightPython } from './python.js';
 
 const SITE_ALT = 'Neural Arcade: small browser games where tiny neural networks learn in front of you';
 
@@ -34,7 +35,8 @@ export function lessonPageHtml(lesson, games, files) {
   const whole = lesson.whole;
   const writeup = files.read(`concepts/${lesson.id}/writeup.html`);
   if (writeup == null && !whole) throw new Error(`concepts/${lesson.id}/writeup.html is missing`);
-  const writeupHtml = (writeup ?? '').replace(/\s+$/, '');
+  const writeupHtml = (writeup ?? '').replace(/\s+$/, '')
+    .replace(/(<pre class="code"><code>)([\s\S]*?)(<\/code><\/pre>)/g, (_, a, code, b) => a + highlightPython(code) + b);
   const own = files.exists(`concepts/${lesson.id}/share.png`);
   const image = own ? `concepts/${lesson.id}/share.png` : whole ? `games/${lesson.game}/share.png` : 'assets/share.png';
   const body = lessonBodyHtml(lesson, { games, base: '../../', writeupHtml });
