@@ -60,9 +60,9 @@
 .banner-play .btn { min-height: 44px; height: auto; }
 
 /* write-up: three lines, key terms, folded Python */
-.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.steps li { font-size: 15px; color: var(--ink-2); }
-.steps b { display: block; color: var(--ink); }
+.saw { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.saw li { font-size: 15px; color: var(--ink-2); }
+.saw b { display: block; color: var(--ink); }
 
 .terms { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
 .terms th, .terms td { padding: 14px 20px; text-align: left; vertical-align: top; border-top: 1px solid var(--line); }
@@ -97,7 +97,7 @@
 .loop .head { fill: var(--signal-text); }
 
 @media (max-width: 480px) {
-  .steps { grid-template-columns: minmax(0, 1fr); }
+  .saw { grid-template-columns: minmax(0, 1fr); }
   .terms thead { display: none; }
   .terms, .terms tbody, .terms tr, .terms th, .terms td { display: block; width: 100%; box-sizing: border-box; }
   .terms tbody th { width: 100%; padding-bottom: 4px; border-top: 1px solid var(--line); }

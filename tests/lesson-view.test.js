@@ -122,3 +122,13 @@ describe('lesson.css', () => {
     expect(css).toContain('.side:has(.wild)');
   });
 });
+
+describe('lesson.css', () => {
+  const classes = f => new Set([...readFileSync(new URL('../' + f, import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/\.([a-zA-Z][\w-]*)/g)].map(m => m[1]));
+  it('shares class names with the other lesson-page sheets only for its guard overrides', () => {
+    const own = classes('assets/lesson.css');
+    const shared = new Set(['assets/studio.css', 'assets/game.css', 'games/treasure-room/treasure-room.css', 'assets/concept.css']
+      .flatMap(f => [...classes(f)].filter(c => own.has(c))));
+    expect([...shared].sort()).toEqual(['btn', 'dial', 'head', 'panel', 'play', 'readouts', 'say', 'stage-head', 'sum', 'win']);
+  });
+});
