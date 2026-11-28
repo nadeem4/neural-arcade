@@ -22,10 +22,20 @@ function act(s, action) {
   };
 }
 
-// Events: move (you), handover, aiStep, restart. Nothing moves once the episode is done, until restart.
+const RIGHT = 3;
+const TURN_TABS = [
+  { label: '1 You are the agent', hint: 'Press the arrow buttons yourself. You are the agent: you pick the move, the room answers.' },
+  { label: '2 Answer off', hint: "The room's answer is cut, so the robot never hears where it is. Press Step: it keeps sending Right." },
+  { label: '3 Answer on', hint: 'Press Step. Each turn the agent sends one action and the room answers.' },
+];
+export const tabsHtml = open => TURN_TABS.map((t, i) => `<button type="button" id="tab${i + 1}" data-step="${i + 1}"${i + 1 === open ? ' aria-current="step"' : ''}>${t.label}</button>`).join('');
+
+// Events: move (you), turn (the agent acts; without the answer it believes it never left the start and sends Right), handover, aiStep, restart.
+// Nothing moves once the episode is done, until restart.
 export function reduce(s, ev) {
   if (ev.type === 'restart') return initial();
   if (s.done) return s;
+  if (ev.type === 'turn') return act(s, ev.answer ? policy()[stateId(ROOM, s.pos)] : RIGHT);
   if (ev.type === 'handover') return { ...s, mode: 'ai' };
   if (ev.type === 'move' && s.mode === 'you') return act(s, ev.action);
   if (ev.type === 'aiStep' && s.mode === 'ai') return act(s, policy()[stateId(ROOM, s.pos)]);
@@ -89,4 +99,62 @@ export function mountPlay(ui, { handover, onStep, onRestart } = {}) {
   return { destroy() { stop(); ac.abort(); }, redraw: paint };
 }
 
-export const mount = ui => mountPlay(ui, { handover: 'Hand over to the AI' });
+const cap = name => name[0].toUpperCase() + name.slice(1);
+
+// Level 1: three steps. You drive; then the agent acts with the room's answer cut; then with it on, one Step press per turn.
+export function mount(ui) {
+  const ac = new AbortController(), on = (t, ev, fn) => t.addEventListener(ev, fn, { signal: ac.signal });
+  const $ = sel => ui.panel.querySelector(sel);
+  const pad = $('#pad'), stepBtn = $('#stepBtn'), turn = $('#turn');
+  const moveBtns = [...ui.panel.querySelectorAll('[data-move]')];
+  let s = initial(), tab = 1;
+  $('#handover').hidden = true;
+
+  function paint() {
+    ui.draw({ agent: s.pos, tags: [] });
+    ui.readout(s.steps, s.total);
+    ui.sees(tab === 2 ? 'Nothing: the answer is cut' : s.lastObs ? `x ${s.lastObs.x}, y ${s.lastObs.y}, reward ${s.lastObs.reward}` : 'Nothing yet');
+    pad.hidden = tab !== 1;
+    stepBtn.hidden = tab === 1;
+    stepBtn.disabled = s.done;
+    for (const b of moveBtns) b.disabled = s.done;
+    turn.hidden = tab !== 3 || !s.lastObs;
+    if (!turn.hidden) {
+      $('#turnSends').textContent = `Agent sends: action ${cap(ACTIONS[s.lastAction].name)}`;
+      $('#turnAnswers').textContent = `Room answers: reward ${s.lastObs.reward}, now at x ${s.lastObs.x}, y ${s.lastObs.y}`;
+    }
+  }
+  function apply(ev) {
+    const before = s;
+    s = reduce(s, ev);
+    if (s.steps === before.steps) return;
+    ui.flash();
+    if (s.done) ui.say(outcomeNote(s.outcome, s.total));
+  }
+  function show(n) {
+    tab = n; s = initial(); ui.say('');
+    $('#stepHint').textContent = TURN_TABS[n - 1].hint;
+    TURN_TABS.forEach((_, i) => $(`#tab${i + 1}`).setAttribute('aria-current', i + 1 === n ? 'step' : 'false'));
+    paint();
+  }
+  const move = action => { if (tab === 1) { apply({ type: 'move', action }); paint(); } };
+
+  TURN_TABS.forEach((_, i) => on($(`#tab${i + 1}`), 'click', () => show(i + 1)));
+  on(stepBtn, 'click', () => { apply({ type: 'turn', answer: tab === 3 }); paint(); });
+  on($('#restart'), 'click', () => show(tab));
+  moveBtns.forEach(b => on(b, 'click', () => move(Number(b.dataset.move))));
+  on(document, 'keydown', e => {
+    if (!(e.key in KEYS) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (s.done || tab !== 1 || e.target.closest?.('#levels, input, select, textarea')) return;
+    e.preventDefault();
+    move(KEYS[e.key]);
+  });
+  on(ui.canvas, 'click', e => {
+    const c = ui.cellAt(e);
+    const a = c ? ACTIONS.findIndex(({ dx, dy }) => s.pos.x + dx === c.x && s.pos.y + dy === c.y) : -1;
+    if (a >= 0) move(a);
+  });
+
+  show(1);
+  return { destroy() { ac.abort(); }, redraw: paint };
+}

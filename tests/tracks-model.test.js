@@ -96,6 +96,10 @@ describe('validateTracks', () => {
     expect(bad(t => { rl(t)[1].wild[0].says = ''; }).join()).toMatch(/says/);
     expect(bad(t => { rl(t)[1].wild[0].show = 'yes'; }).join()).toMatch(/show/);
   });
+  it('rejects a question that is not a string ending in a question mark', () => {
+    expect(bad(t => { rl(t)[1].question = 'Who decides'; }).join()).toMatch(/lesson loop: question must end in "\?"/);
+    expect(bad(t => { rl(t)[1].question = 7; }).join()).toMatch(/question/);
+  });
   it('rejects needs pointing nowhere', () => {
     expect(bad(t => { t[1].needs[0].track = 'ghost'; }).join()).toMatch(/needs.*track ghost/);
     expect(bad(t => { t[1].needs[0].before = 'ghost'; }).join()).toMatch(/needs.*lesson ghost/);

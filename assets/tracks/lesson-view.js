@@ -68,15 +68,19 @@ export function lessonBodyHtml(lesson, { games = GAMES, base, writeupHtml }) {
   <div id="levelRoot" data-level="${lesson.level}"></div>
   <noscript><p>Turn on JavaScript to play this level.</p></noscript>
 </section>`;
+  const lead = lesson.question ? `<p class="question">${esc(lesson.question)}</p>` : `<p class="lead">${esc(lesson.says)}</p>`;
+  const idea = lesson.question ? `
+<section class="idea"><h2>The idea</h2><p>${esc(lesson.says)}</p></section>
+` : '';
   return `<section class="lhead">
   <div class="crumb">${crumbHtml(lesson, base)}</div>
   <h1>${esc(lessonLabel(lesson))}</h1>
-  <p class="lead">${esc(lesson.says)}</p>
+  ${lead}
 </section>
 
 ${stage}
 ${ownLineHtml(lesson)}
-
+${idea}
 ${readHtml(lesson, games, base, writeupHtml)}
 
 <div class="side">

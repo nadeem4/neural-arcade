@@ -4,7 +4,7 @@ import { lessonById, lessonLabel, lessonHref } from '../../assets/tracks/model.j
 // The six Treasure Room levels: one idea each, keyed by the id of its lesson; `assumes` lists the lesson ids a level builds on. Level names live in the track config, not here.
 export const LEVELS = [
   { id: 'loop',
-    brief: 'Drive the robot to the treasure, then hand over to the AI. All it ever gets back from the room is where it is and a reward.',
+    brief: "Drive the robot to the treasure. Then cut the room's answer and watch the robot get lost, and turn it back on to watch each turn.",
     lesson: 'The AI only knows what the room tells it.',
     info: 'The robot sends an action to the room, and the room sends back a position and a reward.' },
   { id: 'state', assumes: ['loop'],

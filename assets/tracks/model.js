@@ -103,6 +103,7 @@ export function validateTracks(tracks, games, builtLevels) {
         if (!built) errs.push(`${at}: no built levels for game ${game}`);
         else if (!built.includes(lesson.level)) errs.push(`${at}: level ${lesson.level} is not a built level of ${game}`);
       }
+      if (lesson.question !== undefined && !(typeof lesson.question === 'string' && lesson.question.endsWith('?'))) errs.push(`${at}: question must end in "?"`);
       if (lesson.video !== null && !/^[\w-]{11}$/.test(lesson.video ?? '')) errs.push(`${at}: video must be null or an 11-character id`);
       for (const w of lesson.wild ?? []) {
         checkGame(w.game, `${at} wild`);
