@@ -60,7 +60,7 @@ describe('Treasure Room lesson write-ups', () => {
     expect(w.indexOf('<h2>')).toBeGreaterThan(-1);
     expect(w.indexOf('<pre class="code">')).toBeGreaterThan(w.indexOf('<h2>'));
   });
-  it('Lesson 1 has no figure', () => {
+  it('The loop has no figure', () => {
     expect(readFileSync(new URL('../concepts/loop/writeup.html', import.meta.url), 'utf8')).not.toContain('<figure');
   });
 });

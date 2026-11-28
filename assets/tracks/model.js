@@ -50,9 +50,10 @@ export function chipsForGame(gameId, tracks = TRACKS) {
     .map(({ l, wild }) => ({ id: l.id, label: lessonLabel(l), href: `concepts/${l.id}/`, says: wild?.says ?? null }));
 }
 
-// Tracks that teach with a game, as the lesson's game or in its wild list, in track order.
+// Tracks with a live lesson that teaches with a game, as the lesson's game or in its wild list, in track order.
 export function tracksOfGame(gameId, tracks = TRACKS) {
   const ids = new Set(flatLessons(tracks)
+    .filter(l => l.status === 'live')
     .filter(l => l.game === gameId || (l.wild ?? []).some(w => w.game === gameId))
     .map(l => l.trackId));
   return tracks.filter(t => ids.has(t.id));

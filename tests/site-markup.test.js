@@ -334,7 +334,7 @@ describe('game page rendering', () => {
   it('links the write-up and the track crumb from the site root', () => {
     expect(writeupHref(g, '../../')).toBe('../../games/g/how-it-works/');
     expect(crumbHtml(gameById('city'), TRACKS, '../../')).toBe('<a href="../../reinforcement-learning/">Reinforcement learning</a> / Reward City');
-    expect(crumbHtml(gameById('racer'), TRACKS, '../../')).toContain('neural-networks/');
+    expect(crumbHtml(gameById('balance'), TRACKS, '../../')).toContain('physical-ai/');
     expect(crumbHtml({ id: 'x', title: 'Ex' }, TRACKS, '../../')).toBe('Ex');
   });
   it('renders one lesson chip per live lesson, with its number', () => {

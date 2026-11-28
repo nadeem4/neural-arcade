@@ -109,7 +109,7 @@ describe('validateTracks', () => {
 describe('moreGames', () => {
   const ids = (g, max) => moreGames(gameById(g), GAMES, TRACKS, max).map(x => x.id);
   it('lists other games that share a track, newest first, at most 3', () => {
-    expect(ids('city')).toEqual(['treasure-room', 'maze', 'balance']);
+    expect(ids('city')).toEqual(['treasure-room', 'maze', 'runner']);
     expect(ids('city')).not.toContain('city');
     expect(ids('city', 2)).toHaveLength(2);
   });
@@ -121,7 +121,6 @@ describe('moreGames', () => {
     expect(new Set(r).size).toBe(3);
   });
   it('falls back to the newest other games when none share a track', () => {
-    const alone = moreGames(gameById('balance'), GAMES, TRACKS.filter(t => t.id === 'physical-ai')).map(x => x.id);
-    expect(alone).toEqual(['treasure-room', 'city', 'maze']);
+    expect(ids('balance')).toEqual(['treasure-room', 'city', 'maze']);
   });
 });
