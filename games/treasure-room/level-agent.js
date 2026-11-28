@@ -1,4 +1,4 @@
-// Level 1 (agent and environment), and the play engine level 2 reuses: you drive the robot, or hand over to the AI.
+// The loop level (three steps), and mountPlay, the play engine the state level uses: you drive the robot, or hand over to the AI.
 // The AI is shown only { x, y, reward } after each step: that is the lesson.
 import { ROOM, START, step, valueIteration, greedyPolicy } from './sim.js';
 import { stateId, ACTIONS } from '../../assets/grid.js';

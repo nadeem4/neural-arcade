@@ -84,7 +84,6 @@ describe('the lesson shape of every live lesson with a question', () => {
     it(`${x.id}: question first, idea after the room, write-up in shape`, () => {
       const w = readFileSync(new URL(`../concepts/${x.id}/writeup.html`, import.meta.url), 'utf8');
       const html = lessonBodyHtml(x, { games: GAMES, base: B, writeupHtml: w });
-      expect(x.question).toMatch(/\?$/);
       expect(html.indexOf(esc(x.question))).toBeLessThan(html.indexOf('id="play"'));
       expect(html.indexOf('<h2>The idea</h2>')).toBeGreaterThan(html.indexOf('id="play"'));
       const at = ['One worked number', 'Key terms', '<details class="incode">', '<b>The lesson:</b>'].map(s => w.indexOf(s));

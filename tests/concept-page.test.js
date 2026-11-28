@@ -98,7 +98,7 @@ describe('every concept page', () => {
   it('the eight concept pages are generated shells with the shared sections and the lesson says as lead', () => {
     for (const id of WITH_WRITEUP) {
       const html = read(id, 'index.html');
-      for (const s of [...(id === 'loop' ? [] : ['tries']), 'writeup', 'play', 'watch', 'read', ...(NO_GRID.includes(id) ? [] : ['playground'])]) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
+      for (const s of [...(lessonById(id).question ? [] : ['tries']), 'writeup', 'play', 'watch', 'read', ...(NO_GRID.includes(id) ? [] : ['playground'])]) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
       for (const a of ['assets/studio.css', 'assets/concept.css', 'assets/lesson.css', 'assets/lesson-page.js']) expect(html, `${id} ${a}`).toContain(a);
       const unesc = t => t.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
       const lesson = lessonById(id);

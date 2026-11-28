@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
+import { lessonById } from '../assets/tracks/model.js';
 
 // The Treasure Room level on each page is the only playground; these four lessons used to repeat it as a 2D grid.
 const IDS = ['loop', 'state', 'policy', 'value'];
@@ -16,7 +17,7 @@ describe.each(IDS)('%s lesson has no 2D grid playground', id => {
     expect(html).not.toContain('<canvas');
     expect(pageJs(id)).not.toMatch(/play\.js|mountPlayground|wireTries/);
   });
-  it.skipIf(id === 'loop')('keeps its figure when it has one, and three tries that name the level controls above', () => {
+  it.skipIf(lessonById(id).question)('keeps its figure when it has one, and three tries that name the level controls above', () => {
     if (existsSync(new URL(`../concepts/${id}/figures.js`, import.meta.url))) expect(pageJs(id)).toContain('figureHtml');
     const tries = triesOf(id);
     expect(tries).toHaveLength(3);
@@ -33,7 +34,7 @@ describe('each lesson try names a control the level really has', () => {
     policy: [['Go', () => inPanel('Go')], ['Let the AI fix it', () => inPanel('Let the AI fix it')]],
     value: [['Sweep', () => inPanel('Sweep')], ['Sweep x10', () => inPanel('Sweep x10')], ['Discount', () => inPanel('Discount')], ['Walk uphill', () => inPanel('Walk uphill')]],
   };
-  for (const id of IDS.filter(i => i !== 'loop')) {
+  for (const id of IDS.filter(i => !lessonById(i).question)) {
     it(id, () => {
       const text = triesOf(id).join(' ');
       for (const [label, real] of CONTROLS[id]) {
