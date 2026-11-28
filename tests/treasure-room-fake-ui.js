@@ -17,9 +17,9 @@ export function fakeUi(room = ROOM) {
     };
   };
   const get = sel => (els[sel] ??= make());
-  const drawn = [];
+  const drawn = [], curves = [];
   return {
-    drawn, last: () => drawn.at(-1),
+    drawn, curves, dark: false, last: () => drawn.at(-1),
     listenerCount: () => listeners,
     input(sel) { for (const fn of get(sel).handlers.input ?? []) fn({ target: get(sel) }); },
     click(sel) { for (const fn of get(sel).handlers.click ?? []) fn({ target: get(sel), preventDefault() {} }); },
@@ -28,6 +28,8 @@ export function fakeUi(room = ROOM) {
     canvas: get('canvas'),
     room,
     draw(o) { drawn.push(o); },
+    curve(scores) { curves.push(scores); },
+    lightsOff(on) { this.dark = on; },
     cellAt: () => null,
     said: [], say(t) { this.said.push(t); }, readout() {}, sees() {}, setLog() {}, flash() {},
   };

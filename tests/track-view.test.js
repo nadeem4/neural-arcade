@@ -8,9 +8,9 @@ const rl = trackById('reinforcement-learning');
 const nn = trackById('neural-networks');
 
 describe('track body', () => {
-  const html = trackBodyHtml(rl, { done: ['loop'], base: '../' });
+  const html = trackBodyHtml(rl, { done: ['learning-by-reward', 'loop'], base: '../' });
   it('shows progress and the continue button', () => {
-    expect(html).toContain('1 of 7 lessons done');
+    expect(html).toContain('2 of 8 lessons done');
     expect(html).toContain('Continue: Lesson 5, State');
     expect(html).toContain('class="btn primary"');
   });
@@ -43,7 +43,7 @@ describe('track body', () => {
     expect(trackBodyHtml(trackById('physical-ai'), {})).not.toContain('class="wild"');
   });
   it('starts at lesson 1 with no progress and omits the game line when there is none', () => {
-    expect(trackBodyHtml(rl, { done: [] })).toContain('Start: Lesson 2, The loop');
+    expect(trackBodyHtml(rl, { done: [] })).toContain('Start: Lesson 1, Learning by reward');
     expect(trackBodyHtml(nn, { done: [] })).not.toContain('Played in');
   });
   it('has no primary button when finished', () => {
@@ -53,7 +53,7 @@ describe('track body', () => {
     expect(trackBodyHtml(nn, { done: ['gone', 'x'] })).toContain('0 of 2 lessons done');
   });
   it('has a progress bar with a text label', () => {
-    expect(html).toMatch(/role="img"[^>]*aria-label="1 of 7 lessons done"/);
+    expect(html).toMatch(/role="img"[^>]*aria-label="2 of 8 lessons done"/);
   });
   it('shows Watch only when a video exists', () => {
     const nnHtml = trackBodyHtml(nn, {});
@@ -73,7 +73,7 @@ describe('rows', () => {
     }
   });
   it('start button leads with a play icon', () => {
-    expect(trackBodyHtml(rl, { done: [] })).toMatch(/class="btn primary"[^>]*><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>Start: Lesson 2, The loop/);
+    expect(trackBodyHtml(rl, { done: [] })).toMatch(/class="btn primary"[^>]*><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>Start: Lesson 1, Learning by reward/);
   });
   it('wild row links the game', () => {
     expect(wildRowHtml({ game: 'maze', says: 'x', show: true }, '../')).toContain('href="../games/maze/"');

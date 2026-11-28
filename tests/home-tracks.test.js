@@ -15,7 +15,7 @@ describe('continue panel', () => {
     expect(h).toContain('href="concepts/learning-from-examples/"');
   });
   it('after progress says Continue with the lesson number', () => {
-    const h = continueHtml(continueTarget(['learning-from-examples', 'learning-by-selection', 'loop', 'state']));
+    const h = continueHtml(continueTarget(['learning-from-examples', 'learning-by-selection', 'learning-by-reward', 'loop', 'state']));
     expect(h).toContain('Continue: Lesson 6, Return');
     expect(h).toContain('href="concepts/return/"');
     expect(h.match(/class="btn primary"/g)).toHaveLength(1);
@@ -35,8 +35,8 @@ describe('track rows', () => {
   it('shows number, live and coming soon counts, progress and a link to the track', () => {
     const row = trackRowHtml(trackById('reinforcement-learning'), ['loop']);
     expect(row).toContain('>2<');
-    expect(row).toContain('1 of 7 done');
-    expect(row).toContain('19 coming soon');
+    expect(row).toContain('1 of 8 done');
+    expect(row).toContain('18 coming soon');
     expect(row).toContain('href="reinforcement-learning/"');
     expect(row).toContain('Continue');
   });

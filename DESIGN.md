@@ -242,6 +242,8 @@ White, hairline, 18px. The panel stacks sections split by hairlines; each has a 
 
 **Step tabs** (Treasure Room level 3): a row of equal-width buttons above one lesson's controls, one per step. Each is 44px tall with an 8px radius, a 1.5px `line` border and `ink-2` text; the open one is filled `signal-fill` with `signal-ink` text and carries `aria-current="step"`. Beside them, **return boxes** are `track` tiles with a 12px caption and a 22px mono total, and the winner takes a 2px `signal` inset outline.
 
+**Lesson 1 level (Treasure Room):** the lights-off cover (`.room.lights-off::after`) is a `#05070a` plane over the 3D room with a centred 13px mono `stage-dim` line, above the loader; it hides the room and nothing else, so the pad and the readout stay. Revealed rewards are `.rwd` chips (`track` fill, 6px radius, 13px 700 mono) that wrap. The score curve (`canvas.curve`, 150px tall) is `drawLine` of the average of the last 10 tries: ink line on the card, a dashed zero line, "Try 1" and "Try 200" under the ends; it stays hidden until the robot has trained.
+
 ### (i) buttons
 A 28px round, transparent icon button (a 40 by 44px tap area around it, so it does not cover buttons in the 8px gaps beside it) beside a heading or readout label; it toggles a short explanation in a track-coloured 8px box (stage-2 on the stage). An opened readout explanation spans the full row.
 

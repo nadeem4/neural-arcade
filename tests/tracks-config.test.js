@@ -18,7 +18,7 @@ describe('track configs', () => {
       'function-approximation', 'dqn', 'policy-gradient', 'actor-critic', 'ppo', 'model-based', 'search', 'reward-design', 'map-of-rl',
     ]);
     expect(rl.parts.flatMap(p => p.lessons).filter(l => l.status === 'live').map(l => l.id))
-      .toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp', 'reward-design']);
+      .toEqual(['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp', 'reward-design']);
     expect(rl.needs).toEqual([{ track: 'neural-networks', before: 'function-approximation' }]);
   });
   it('the deep lessons borrow the balance game and map-of-rl the city, none with a level', () => {

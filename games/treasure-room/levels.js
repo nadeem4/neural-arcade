@@ -1,9 +1,13 @@
 import { TRACKS } from '../../assets/tracks/index.js';
 import { lessonById, lessonLabel, lessonHref } from '../../assets/tracks/model.js';
 
-// The six Treasure Room levels: one idea each, keyed by the id of its lesson; `assumes` lists the lesson ids a level builds on. Level names live in the track config, not here.
+// The seven Treasure Room levels: one idea each, keyed by the id of its lesson; `assumes` lists the lesson ids a level builds on. Level names live in the track config, not here.
 export const LEVELS = [
-  { id: 'loop',
+  { id: 'learning-by-reward',
+    brief: 'Drive the robot with the lights off, then see what each move paid. Then watch a robot learn the room from rewards alone, in 200 tries.',
+    lesson: 'Nobody shows the robot the right move: it does more of what paid.',
+    info: 'Each try ends at the treasure or the pit. A try scores the rewards it collected, and the robot keeps what scored well.' },
+  { id: 'loop', assumes: ['learning-by-reward'],
     brief: "Drive the robot to the treasure. Then cut the room's answer and watch the robot get lost, and turn it back on to watch each turn.",
     lesson: 'The AI only knows what the room tells it.',
     info: 'The robot sends an action to the room, and the room sends back a position and a reward.' },

@@ -42,7 +42,7 @@ describe('toggleDone', () => {
 describe('trackProgress', () => {
   it('counts only live lessons that exist', () => {
     // 'ghost' was removed, 'sarsa' is soon: neither counts
-    expect(trackProgress(['loop', 'ghost', 'sarsa'], rl)).toEqual({ done: 1, live: 7, soon: 19, total: 26, complete: false });
+    expect(trackProgress(['loop', 'ghost', 'sarsa'], rl)).toEqual({ done: 1, live: 8, soon: 18, total: 26, complete: false });
   });
   it('is complete when every live lesson is done', () => {
     expect(trackProgress(ALL_LIVE_IDS, rl).complete).toBe(true);
@@ -52,13 +52,13 @@ describe('trackProgress', () => {
 
 describe('nextLesson and continueTarget', () => {
   it('nextLesson is the first live lesson not done, skipping soon ones', () => {
-    expect(nextLesson([], rl).id).toBe('loop');
-    expect(nextLesson(['loop', 'policy'], rl).id).toBe('state');
-    expect(nextLesson(['loop', 'state', 'return', 'policy', 'value', 'mdp'], rl).id).toBe('reward-design');
+    expect(nextLesson([], rl).id).toBe('learning-by-reward');
+    expect(nextLesson(['learning-by-reward', 'loop', 'policy'], rl).id).toBe('state');
+    expect(nextLesson(['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp'], rl).id).toBe('reward-design');
     expect(nextLesson(ALL_LIVE_IDS, rl)).toBeNull();
   });
   it('a stale or soon id never moves Continue', () => {
-    expect(nextLesson(['ghost', 'sarsa'], rl).id).toBe('loop');
+    expect(nextLesson(['ghost', 'sarsa'], rl).id).toBe('learning-by-reward');
     expect(continueTarget(['ghost', 'sarsa']).lesson.id).toBe('learning-from-examples');
   });
   it('continues at the first lesson of the first track when nothing is done', () => {
@@ -69,7 +69,7 @@ describe('nextLesson and continueTarget', () => {
   });
   it('moves on to the next track, and first is false once anything is done', () => {
     const c = continueTarget(['learning-from-examples', 'learning-by-selection']);
-    expect(c.lesson.id).toBe('loop');
+    expect(c.lesson.id).toBe('learning-by-reward');
     expect(c.track.id).toBe('reinforcement-learning');
     expect(c.first).toBe(false);
   });

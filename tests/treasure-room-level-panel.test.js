@@ -25,7 +25,7 @@ describe('levelPanelHtml', () => {
   it('wraps the 2D canvas in the room box the host swaps backends in, and draws through the host', () => {
     expect(html).toMatch(/<div class="room" id="roomBox"/);
     expect(panel).toMatch(/createRoomHost\(/);
-    expect(panel).not.toMatch(/getContext\('2d'\)/);
+    expect(panel).not.toMatch(/box.getContext|tiles.getContext/);
     expect(panel).toMatch(/host\.destroy\(\)/);
   });
   it('mounts the loader and wires Try again to the host', () => {
@@ -49,8 +49,8 @@ describe('levelPanelHtml', () => {
     expect(html).not.toContain('id="stage"');
     expect(html).toMatch(/id="say"[^>]*aria-live="off"|aria-live="off"[^>]*id="say"/);
   });
-  it('has four move buttons, one per action, as real buttons', () => {
-    expect([...html.matchAll(/<button[^>]*data-move="(\d)"/g)].map(m => m[1]).sort()).toEqual(['0', '1', '2', '3']);
+  it('has two pads of four move buttons, one per action, as real buttons', () => {
+    expect([...html.matchAll(/<button[^>]*data-move="(\d)"/g)].map(m => m[1]).sort()).toEqual(['0', '0', '1', '1', '2', '2', '3', '3']);
   });
   it('has an (i) button on every control, each with its INFO sentence', () => {
     const controls = [...html.matchAll(/class="info"[^>]*aria-controls="([\w-]+)"/g)].map(m => m[1]);
@@ -72,8 +72,8 @@ describe('levelPanelHtml', () => {
     expect(levelPanelHtml({ showTitle: false })).not.toContain('id="levelTitle"');
     expect(levelPanelHtml({ showTitle: false })).toContain('id="levelBrief"');
   });
-  it('lists the six built levels in track order and exports a mount function', () => {
-    expect(BUILT_LEVELS).toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp']);
+  it('lists the seven built levels in track order and exports a mount function', () => {
+    expect(BUILT_LEVELS).toEqual(['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp']);
     expect(typeof mountLevelPlay).toBe('function');
   });
 });
@@ -161,9 +161,9 @@ describe('tap bridge guards and focus wiring', () => {
 // Button audit: a button that cannot act at the start is disabled and shows why, on every level.
 describe('button audit: disabled at start says why', () => {
   const buttonIds = [...html.matchAll(/<button\b[^>]*\bid="(\w+)"/g)].map(m => m[1]);
-  const whyIdOf = { walkUp: 'walkUpWhy', resetSweeps: 'walkUpWhy' };
+  const whyIdOf = { walkUp: 'walkUpWhy', resetSweeps: 'walkUpWhy', watchLast: 'learnWhy' };
   const views = {
-    loop: () => import('../games/treasure-room/level-agent.js'), 'state': () => import('../games/treasure-room/level-triples.js'),
+    'learning-by-reward': () => import('../games/treasure-room/level-learn.js'), loop: () => import('../games/treasure-room/level-agent.js'), 'state': () => import('../games/treasure-room/level-triples.js'),
     return: () => import('../games/treasure-room/level-return.js'), policy: () => import('../games/treasure-room/level-policy.js'),
     value: () => import('../games/treasure-room/level-value.js'), mdp: () => import('../games/treasure-room/level-mdp.js'),
   };

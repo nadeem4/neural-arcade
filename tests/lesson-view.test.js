@@ -50,7 +50,8 @@ describe('lesson view builders', () => {
     expect(ownLineHtml({ ...l, wild: [] })).toBe('');
   });
   it('neighbours are numbered labels and a missing side is omitted', () => {
-    expect(neighboursHtml(lessonById('loop'), B)).not.toContain('Previous');
+    expect(neighboursHtml(lessonById('learning-by-reward'), B)).not.toContain('Previous');
+    expect(neighboursHtml(lessonById('loop'), B)).toContain('Lesson 1: Learning by reward');
     expect(neighboursHtml(lessonById('loop'), B)).toContain('Lesson 5: State');
     const mid = neighboursHtml(l, B);
     expect(mid).toContain('href="../../concepts/state/"');

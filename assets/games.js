@@ -49,7 +49,7 @@ export const GAMES = [
   },
   {
     id: 'treasure-room', title: 'Treasure Room',
-    lesson: 'One small room, six ideas: the loop, state, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.',
+    lesson: 'One small room, seven ideas: learning by reward, the loop, state, return, policy, value and the MDP. Teaches that the AI only ever knows what the room tells it.',
     learnsBy: 'Agent, reward, return, policy, value',
     goesWrongWhen: 'The floor turns icy and the best plan changes',
     added: '2026-11-18', shot: 'games/treasure-room/shot.jpg', path: 'games/treasure-room/', writeup: 'games/treasure-room/how-it-works/', youtube: null, demo: null,

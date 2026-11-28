@@ -30,7 +30,7 @@ describe('treasure room words', () => {
     }
   });
   it('the page lesson matches the games config', () => {
-    expect(LESSON).toBe('Six small ideas, one room: the AI only ever knows what the room tells it.');
+    expect(LESSON).toBe('Seven small ideas, one room: the AI only ever knows what the room tells it.');
     const g = GAMES.find(x => x.id === 'treasure-room');
     expect(g.lesson).toContain('the AI only ever knows what the room tells it');
   });

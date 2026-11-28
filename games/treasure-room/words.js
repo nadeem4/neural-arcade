@@ -1,7 +1,7 @@
 // Treasure Room words: the page lesson, the (i) texts and the lines the game prints.
 import { REWARD } from './sim.js';
 
-export const LESSON = 'Six small ideas, one room: the AI only ever knows what the room tells it.';
+export const LESSON = 'Seven small ideas, one room: the AI only ever knows what the room tells it.';
 
 export const INFO = {
   room: 'The room is a small grid with a treasure, a pit and a few walls.',
@@ -14,6 +14,7 @@ export const INFO = {
   values: 'The number on a tile is how good it is to stand there, counting what comes after.',
   ice: 'On ice a move works 80% of the time and slips to each side 10% of the time.',
   tags: 'These five parts, states, actions, rewards, slip chance and discount, are what makes the room an MDP.',
+  learn: 'The score of a try is every reward it collected added up. A short try can score worst: the pit ends it, and the pit costs 10.',
   restart: 'Restart puts the robot back on the start tile and clears the score.',
   ai: 'The AI sees only its position and the last reward, nothing else about the room.',
 };

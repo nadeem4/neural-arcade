@@ -9,6 +9,9 @@ import { roomForLevel } from './sim.js';
 import { levelById, assumesHtml } from './levels.js';
 import { INFO, MARKER_INFO } from './words.js';
 import { lessonOfLevel, flatLessons } from '../../assets/tracks/model.js';
+import { drawLine } from '../../engine/curve.js';
+import { readTheme } from '../../assets/theme.js';
+import * as levelLearn from './level-learn.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
 import * as levelReturn from './level-return.js';
@@ -16,7 +19,7 @@ import * as levelPolicy from './level-policy.js';
 import * as levelValue from './level-value.js';
 import * as levelMdp from './level-mdp.js';
 
-const views = { loop: levelAgent, state: levelTriples, return: levelReturn, policy: levelPolicy, value: levelValue, mdp: levelMdp };
+const views = { 'learning-by-reward': levelLearn, loop: levelAgent, state: levelTriples, return: levelReturn, policy: levelPolicy, value: levelValue, mdp: levelMdp };
 // The built levels in track order: the game's level order is the lessons' order.
 export const BUILT_LEVELS = flatLessons().filter(l => l.game === 'treasure-room' && l.level in views).map(l => l.level);
 
@@ -136,6 +139,36 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <output class="sum" id="tripsOut"></output>
         <ul class="tags" id="tags"></ul>
       </section>
+      <section class="controls" data-levels="learning-by-reward" aria-labelledby="lrh" hidden>
+        <h2><span id="lrh">Learn by reward</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-learn" aria-label="Explain the score" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
+        <p class="info-text" id="info-learn" data-info="learn" hidden></p>
+        <nav class="steps" id="learnTabs" aria-label="Lesson steps">${levelLearn.tabsHtml}</nav>
+        <p id="learnHint"></p>
+        <output class="sees" id="learnSees"></output>
+        <div id="learnDrive">
+          <div class="pad" role="group" aria-labelledby="lrh">
+            <button type="button" id="learnUp" data-move="0" aria-label="Up">&uarr;</button>
+            <button type="button" id="learnLeft" data-move="2" aria-label="Left">&larr;</button>
+            <button type="button" id="learnDown" data-move="1" aria-label="Down">&darr;</button>
+            <button type="button" id="learnRight" data-move="3" aria-label="Right">&rarr;</button>
+          </div>
+        </div>
+        <div id="learnRewards" hidden>
+          <output class="rewards" id="rewardRow"></output>
+          <output class="tally" id="rewardSum"></output>
+        </div>
+        <div id="learnTrain" hidden>
+          <div class="row-btns">
+            <button class="btn" type="button" id="watchFirst">Watch try 1</button>
+            <button class="btn primary" type="button" id="skipTrain">Skip to try 200</button>
+            <button class="btn" type="button" id="watchLast" disabled>Watch try 200</button>
+          </div>
+          <p class="why" id="learnWhy"></p>
+          <output class="tally" id="tryNote"></output>
+          <canvas class="curve" id="curve" role="img" aria-label="Average score of the last 10 tries, rising from below zero to above zero" hidden></canvas>
+        </div>
+        <div class="row-btns"><button class="btn" type="button" id="learnRestart">Start over</button></div>
+      </section>
       <section class="controls" data-levels="loop state" aria-labelledby="ph">
         <h2><span id="ph">Move</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rewards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-reward" data-info="reward" hidden></p>
@@ -218,6 +251,14 @@ export function mountLevelPlay(root, { id, title = '', showTitle = true } = {}) 
     sees: t => { $('sees').textContent = t; },
     setLog(lines) {
       $('log').replaceChildren(...lines.map(l => Object.assign(document.createElement('li'), { textContent: l })));
+    },
+    lightsOff: on => box.classList.toggle('lights-off', on),
+    curve(scores) {
+      const c = $('curve'), w = c.clientWidth || 300, h = 150, dpr = devicePixelRatio || 1;
+      c.hidden = false; c.width = w * dpr; c.height = h * dpr;
+      const ctx = c.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawLine(ctx, scores, { width: w, height: h, min: Math.min(...scores), max: 5, empty: '', first: 'Try 1', last: n => `Try ${n + 1}`, format: v => (v > 0 ? `+${v}` : `${v}`), theme: readTheme() });
     },
     flash() { // the two arrows light for a moment on every step; with reduced motion they stay dark
       if (reduceMotion.matches) return;

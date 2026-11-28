@@ -4,6 +4,7 @@ import { TRACKS } from '../assets/tracks/index.js';
 import { LEVELS, levelFromUrl, levelById, navModel, assumesHtml } from '../games/treasure-room/levels.js';
 
 const LESSONS = [
+  'Nobody shows the robot the right move: it does more of what paid.',
   'The AI only knows what the room tells it.',
   'The game is a list of these: state, action, reward.',
   'A low discount makes the robot near-sighted: it grabs what is close.',
@@ -13,8 +14,8 @@ const LESSONS = [
 ];
 
 describe('treasure room levels', () => {
-  it('has six levels in order, each keyed by the id of its lesson', () => {
-    expect(LEVELS.map(l => l.id)).toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp']);
+  it('has seven levels in order, each keyed by the id of its lesson', () => {
+    expect(LEVELS.map(l => l.id)).toEqual(['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp']);
     for (const l of LEVELS) expect(lessonById(l.id), l.id).toBeTruthy();
   });
   it('every level is filled in and found by id', () => {
@@ -50,7 +51,7 @@ describe('levelFromUrl', () => {
   });
   it('numbers, the old triples slug and anything unknown land on the first built level', () => {
     for (const [s, h] of [['?level=3', ''], ['?level=triples', ''], ['?level=abc', ''], ['', '#nonsense'], ['', ''], ['?level=', '']]) {
-      expect(levelFromUrl(s, h, BUILT), `${s}${h}`).toBe('loop');
+      expect(levelFromUrl(s, h, BUILT), `${s}${h}`).toBe('learning-by-reward');
     }
   });
   it('an invalid query falls back to a valid hash', () => {
@@ -79,9 +80,9 @@ describe('assumesHtml', () => {
     expect(h).toContain(lessonLabel(lessonById('loop')));
     expect(h).not.toContain('nope');
   });
-  it('level 1 has none; 2 to 6 build on the lesson before', () => {
+  it('level 1 has none; 2 to 7 build on the lesson before', () => {
     expect(LEVELS[0].assumes ?? []).toEqual([]);
-    expect(LEVELS.slice(1).map(l => l.assumes)).toEqual([['loop'], ['state'], ['return'], ['policy'], ['value']]);
+    expect(LEVELS.slice(1).map(l => l.assumes)).toEqual([['learning-by-reward'], ['loop'], ['state'], ['return'], ['policy'], ['value']]);
     for (const lv of LEVELS) for (const id of lv.assumes ?? []) expect(lessonById(id), id).toBeTruthy();
   });
 });

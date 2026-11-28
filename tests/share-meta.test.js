@@ -37,7 +37,7 @@ const meta = (html, key, name) => attr(html, 'meta', key, name)?.match(/content=
 
 describe('share and SEO tags', () => {
   it('covers every page, including each game and its write-up', () => {
-    expect(GENERATED_PAGES.filter(([f]) => f.startsWith('concepts/'))).toHaveLength(10);
+    expect(GENERATED_PAGES.filter(([f]) => f.startsWith('concepts/'))).toHaveLength(11);
     expect(GENERATED_PAGES.filter(([f]) => !f.startsWith('concepts/'))).toHaveLength(3);
     expect(pages.length).toBe(3 + GAMES.length * 2 + GENERATED_PAGES.length);
   });
