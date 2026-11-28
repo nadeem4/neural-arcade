@@ -11,7 +11,7 @@ import { mountLevelPlay } from '../games/treasure-room/level-panel.js';
 export function mountLessonPage({ id, doc = document, storage = globalThis.localStorage, mountLevel = mountLevelPlay }) {
   const lesson = lessonById(id);
   if (!lesson || lesson.status !== 'live') return null;
-  const level = lesson.level != null ? mountLevel(doc.getElementById('levelRoot'), { n: lesson.level, showTitle: false }) : null;
+  const level = lesson.level != null ? mountLevel(doc.getElementById('levelRoot'), { id: lesson.level, showTitle: false }) : null;
 
   let done = loadProgress(storage).includes(lesson.id);
   const button = doc.getElementById('markDone');

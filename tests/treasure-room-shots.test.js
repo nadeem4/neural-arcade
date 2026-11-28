@@ -13,7 +13,7 @@ describe('capture mode figure table', () => {
   it('has eight images in page order, 16:10, with registered overlays', () => {
     expect(FIGURES).toHaveLength(8);
     expect(FIGURES.map(f => f.file)).toEqual([1, 2, 3, 4, 5, 6, 7, 8].map(n => `fig-${n}.webp`));
-    expect(FIGURES.map(f => f.level)).toEqual([1, 3, 4, 4, 5, 5, 6, 6]);
+    expect(FIGURES.map(f => f.level)).toEqual(['agent', 'return', 'policy', 'policy', 'value', 'value', 'mdp', 'mdp']);
     for (const f of FIGURES) {
       expect(f.size[0] / f.size[1]).toBeCloseTo(16 / 10, 1);
       expect(overlayNames(f.overlays)).toEqual(f.overlays);

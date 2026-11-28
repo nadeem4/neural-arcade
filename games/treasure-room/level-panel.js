@@ -6,9 +6,9 @@ import { OVERLAYS_FOR_LEVEL } from './room-overlays.js';
 import { markersFor } from './room-markers.js';
 import { createMarkerLayer } from './room-markers-view.js';
 import { roomForLevel } from './sim.js';
-import { levelByN, assumesHtml } from './levels.js';
+import { levelById, assumesHtml } from './levels.js';
 import { INFO, MARKER_INFO } from './words.js';
-import { lessonOfLevel } from '../../assets/tracks/model.js';
+import { lessonOfLevel, flatLessons } from '../../assets/tracks/model.js';
 import * as levelAgent from './level-agent.js';
 import * as levelTriples from './level-triples.js';
 import * as levelReturn from './level-return.js';
@@ -16,8 +16,9 @@ import * as levelPolicy from './level-policy.js';
 import * as levelValue from './level-value.js';
 import * as levelMdp from './level-mdp.js';
 
-const views = { 1: levelAgent, 2: levelTriples, 3: levelReturn, 4: levelPolicy, 5: levelValue, 6: levelMdp }; // the levels built so far
-export const BUILT_LEVELS = Object.keys(views).map(Number);
+const views = { agent: levelAgent, 'state-action-reward': levelTriples, return: levelReturn, policy: levelPolicy, value: levelValue, mdp: levelMdp };
+// The built levels in track order: the game's level order is the lessons' order.
+export const BUILT_LEVELS = flatLessons().filter(l => l.game === 'treasure-room' && l.level in views).map(l => l.level);
 
 export function levelPanelHtml({ showTitle = true } = {}) {
   return `
@@ -27,7 +28,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
       <p class="info-text" id="info-room" data-info="room" hidden></p>
       <div class="stage-body">
         <div class="room" id="roomBox" data-label="A five by five room. The robot starts on the left, the treasure is at the bottom right, there is a pit in the middle and two walls.">
-          <div class="tilegrid" id="tiles" data-levels="4" hidden></div>
+          <div class="tilegrid" id="tiles" data-levels="policy" hidden></div>
         </div>
       </div>
       <p class="say" id="say" aria-live="off"></p>
@@ -44,18 +45,18 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <div id="levelAssumes"></div>
         <p class="lesson-line" id="status"></p>
       </section>
-      <section data-levels="1" aria-labelledby="sh">
+      <section data-levels="agent" aria-labelledby="sh">
         <h2><span id="sh">What the AI sees</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-sees" aria-label="Explain what the AI sees" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-sees" data-info="ai" hidden></p>
         <output class="sees" id="sees">Nothing yet</output>
         <div class="arrows" aria-hidden="true"><span id="arrowOut">action &rarr;</span><span id="arrowBack">&larr; position and reward</span></div>
       </section>
-      <section data-levels="2" aria-labelledby="lh" hidden>
+      <section data-levels="state-action-reward" aria-labelledby="lh" hidden>
         <h2><span id="lh">Log</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-log" aria-label="Explain the log" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-log" data-info="log" hidden></p>
         <ol class="log" id="log" aria-live="off"></ol>
       </section>
-      <section class="controls" data-levels="3" aria-labelledby="rh" hidden>
+      <section class="controls" data-levels="return" aria-labelledby="rh" hidden>
         <h2><span id="rh">Coin or chest</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-route" aria-label="Explain routes" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-route" data-info="route" hidden></p>
         <nav class="steps" id="stepTabs" aria-label="Lesson steps">${levelReturn.tabsHtml(1)}</nav>
@@ -90,7 +91,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
           <p id="hint3"></p>
         </div>
       </section>
-      <section class="controls" data-levels="4" aria-labelledby="ah" hidden>
+      <section class="controls" data-levels="policy" aria-labelledby="ah" hidden>
         <h2><span id="ah">Arrows</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-arrows" aria-label="Explain the arrows" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-arrows" data-info="arrows" hidden></p>
         <div class="row-btns">
@@ -99,7 +100,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
           <button class="btn" type="button" id="resetArrows">Reset arrows</button>
         </div>
       </section>
-      <section class="controls" data-levels="5" aria-labelledby="vh" hidden>
+      <section class="controls" data-levels="value" aria-labelledby="vh" hidden>
         <h2><span id="vh">Sweep the values</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-sweep" aria-label="Explain sweeping" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-sweep" data-info="sweep" hidden></p>
         <div class="row-btns">
@@ -117,7 +118,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <p id="valueGammaHint"></p>
         <p class="heat-legend"><i class="heat-bar" aria-hidden="true"></i> faint = worse, bright = better</p>
       </section>
-      <section class="controls" data-levels="6" aria-labelledby="mh" hidden>
+      <section class="controls" data-levels="mdp" aria-labelledby="mh" hidden>
         <h2><span id="mh">The floor</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-ice" aria-label="Explain the icy floor" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-ice" data-info="ice" hidden></p>
         <div class="row-btns">
@@ -135,7 +136,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <output class="sum" id="tripsOut"></output>
         <ul class="tags" id="tags"></ul>
       </section>
-      <section class="controls" data-levels="1 2" aria-labelledby="ph">
+      <section class="controls" data-levels="agent state-action-reward" aria-labelledby="ph">
         <h2><span id="ph">Move</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rewards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-reward" data-info="reward" hidden></p>
         <div class="pad" role="group" aria-labelledby="ph">
@@ -173,13 +174,13 @@ export function wireTileFocus({ tiles, host }) {
   tiles.addEventListener('focusout', () => host.setFocus(null));
 }
 
-// The level's lesson name; an unbuilt n reads as level 1, like the mount.
-export const levelName = n => lessonOfLevel('treasure-room', BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0]).title;
+// The level's lesson name; an unbuilt id reads as the first level, like the mount.
+export const levelName = id => lessonOfLevel('treasure-room', BUILT_LEVELS.includes(id) ? id : BUILT_LEVELS[0]).title;
 
-// Mounts level n into root and returns { n, redraw(), destroy(), host }. An unbuilt n falls back to level 1.
+// Mounts level id into root and returns { id, redraw(), destroy(), host }. An unbuilt id falls back to the first level.
 // The room is drawn by a room host in 3D; a loader panel shows progress, or a failure with Try again (see room-host.js, room-loader.js).
 // The caller redraws on a theme change (handle.redraw).
-export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
+export function mountLevelPlay(root, { id, title = '', showTitle = true } = {}) {
   root.innerHTML = levelPanelHtml({ showTitle });
   const $ = id => root.querySelector(`#${id}`);
   const box = $('roomBox'), tiles = $('tiles');
@@ -187,18 +188,18 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let view = null;
 
-  n = BUILT_LEVELS.includes(n) ? n : BUILT_LEVELS[0];
-  const room = roomForLevel(n);
+  id = BUILT_LEVELS.includes(id) ? id : BUILT_LEVELS[0];
+  const room = roomForLevel(id);
   // The loader comes first: the host reports its first state synchronously inside createRoomHost.
   let host, markers = null;
-  const loader = createLoader(box, { title: title || levelName(n), onRetry: () => host.retry(), reduceMotion: reduceMotion.matches });
+  const loader = createLoader(box, { title: title || levelName(id), onRetry: () => host.retry(), reduceMotion: reduceMotion.matches });
   host = createRoomHost({
     box, room, reduceMotion: reduceMotion.matches,
     onState: (state, reason) => { markers?.setShown(state === '3d'); if (state === 'loading') loader.loading(); else if (state === '3d') loader.done(); else loader.fail(reason); },
     onProgress: loader.progress,
   });
-  host.setOverlays(OVERLAYS_FOR_LEVEL[n]);
-  const list = markersFor(n, room);
+  host.setOverlays(OVERLAYS_FOR_LEVEL[id]);
+  const list = markersFor(id, room);
   markers = list.length ? createMarkerLayer({ box, markers: list, info: MARKER_INFO }) : null;
   markers?.setShown(host.mode() === '3d');
   host.setMarkers(markers);
@@ -220,8 +221,8 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
     },
   };
 
-  const level = levelByN(n);
-  root.querySelectorAll('[data-levels]').forEach(el => { el.hidden = !el.dataset.levels.split(' ').includes(String(n)); });
+  const level = levelById(id);
+  root.querySelectorAll('[data-levels]').forEach(el => { el.hidden = !el.dataset.levels.split(' ').includes(id); });
   if (showTitle) $('levelTitle').textContent = title;
   $('levelBrief').textContent = level.brief;
   $('levelAssumes').innerHTML = assumesHtml(level);
@@ -243,10 +244,10 @@ export function mountLevelPlay(root, { n, title = '', showTitle = true } = {}) {
   wireTileFocus({ tiles, host });
 
   host.resize();
-  view = views[n].mount(ui);
+  view = views[id].mount(ui);
 
   return {
-    n, redraw, host,
+    id, redraw, host,
     destroy() {
       view?.destroy();
       view = null;

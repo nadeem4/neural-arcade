@@ -56,8 +56,8 @@ describe('levelPanelHtml', () => {
     expect(panel).toMatch(/INFO\[/);
   });
   it('marks each panel part with the levels that show it, and every level has a view', () => {
-    for (const n of BUILT_LEVELS) expect(html).toMatch(new RegExp(`data-levels="[^"]*\\b${n}\\b`));
-    for (const m of html.matchAll(/data-levels="([\d ]+)"/g)) for (const n of m[1].split(' ')) expect(panel).toMatch(new RegExp(`\\b${n}:\\s*level`));
+    for (const id of BUILT_LEVELS) expect(html).toMatch(new RegExp(`data-levels="([^"]* )?${id}( [^"]*)?"`));
+    for (const m of html.matchAll(/data-levels="([\w -]+)"/g)) for (const id of m[1].split(' ')) expect(BUILT_LEVELS).toContain(id);
   });
   it('calls the level 6 section "The floor"', () => {
     expect(html).toContain('<span id="mh">The floor</span>');
@@ -68,8 +68,8 @@ describe('levelPanelHtml', () => {
     expect(levelPanelHtml({ showTitle: false })).not.toContain('id="levelTitle"');
     expect(levelPanelHtml({ showTitle: false })).toContain('id="levelBrief"');
   });
-  it('lists the six built levels and exports a mount function', () => {
-    expect(BUILT_LEVELS).toEqual([1, 2, 3, 4, 5, 6]);
+  it('lists the six built levels in track order and exports a mount function', () => {
+    expect(BUILT_LEVELS).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']);
     expect(typeof mountLevelPlay).toBe('function');
   });
 });
@@ -159,14 +159,14 @@ describe('button audit: disabled at start says why', () => {
   const buttonIds = [...html.matchAll(/<button\b[^>]*\bid="(\w+)"/g)].map(m => m[1]);
   const whyIdOf = { walkUp: 'walkUpWhy', resetSweeps: 'walkUpWhy' };
   const views = {
-    1: () => import('../games/treasure-room/level-agent.js'), 2: () => import('../games/treasure-room/level-triples.js'),
-    3: () => import('../games/treasure-room/level-return.js'), 4: () => import('../games/treasure-room/level-policy.js'),
-    5: () => import('../games/treasure-room/level-value.js'), 6: () => import('../games/treasure-room/level-mdp.js'),
+    agent: () => import('../games/treasure-room/level-agent.js'), 'state-action-reward': () => import('../games/treasure-room/level-triples.js'),
+    return: () => import('../games/treasure-room/level-return.js'), policy: () => import('../games/treasure-room/level-policy.js'),
+    value: () => import('../games/treasure-room/level-value.js'), mdp: () => import('../games/treasure-room/level-mdp.js'),
   };
   it('every level has a view to audit', () => {
-    expect(Object.keys(views).map(Number)).toEqual(BUILT_LEVELS);
+    expect(Object.keys(views)).toEqual(BUILT_LEVELS);
   });
-  for (const n of [1, 2, 3, 4, 5, 6]) {
+  for (const n of Object.keys(views)) {
     it(`level ${n}: each button disabled at start has a non-empty reason`, async () => {
       vi.stubGlobal('matchMedia', () => ({ matches: true }));
       vi.stubGlobal('document', { addEventListener() {}, removeEventListener() {} });
@@ -191,13 +191,13 @@ describe('button audit: disabled at start says why', () => {
 
 describe('levelName', () => {
   it('is the lesson name for every built level, never the generic fallback', () => {
-    for (const n of BUILT_LEVELS) {
-      expect(levelName(n)).toBeTruthy();
-      expect(levelName(n)).not.toBe('The treasure room');
+    for (const id of BUILT_LEVELS) {
+      expect(levelName(id)).toBeTruthy();
+      expect(levelName(id)).not.toBe('The treasure room');
     }
   });
-  it('an unbuilt level uses level 1 (as the mount does)', () => {
-    expect(levelName(99)).toBe(levelName(BUILT_LEVELS[0]));
+  it('an unbuilt level uses the first level (as the mount does)', () => {
+    expect(levelName('bandit')).toBe(levelName(BUILT_LEVELS[0]));
   });
 });
 

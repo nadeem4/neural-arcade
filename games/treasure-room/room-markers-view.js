@@ -6,7 +6,7 @@ const GAP = 8;  // between a label and its card
 const EDGE = 4; // the card stays this far inside the box
 const POINTER = 8; // the pill's pointer, between the pill and the anchor
 
-// markers: markersFor(n, room); info: MARKER_INFO. Returns { update(project, agentWorld), setShown(bool), destroy() }.
+// markers: markersFor(id, room); info: MARKER_INFO. Returns { update(project, agentWorld), setShown(bool), destroy() }.
 export function createMarkerLayer({ box, markers, info }) {
   const layer = document.createElement('div');
   layer.className = 'marker-layer';

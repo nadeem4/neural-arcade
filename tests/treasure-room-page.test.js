@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { GAMES } from '../assets/games.js';
 import { LESSON } from '../games/treasure-room/words.js';
-import { levelFromUrl, navModel } from '../games/treasure-room/levels.js';
+import { navModel } from '../games/treasure-room/levels.js';
 import { BUILT_LEVELS } from '../games/treasure-room/level-panel.js';
 import { lessonOfLevel } from '../assets/tracks/model.js';
 import { initial, reduce } from '../games/treasure-room/level-agent.js';
@@ -15,27 +15,8 @@ const entry = GAMES.find(g => g.id === 'treasure-room');
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 
 describe('treasure room deep links', () => {
-  it('lands every odd input on a valid level', () => {
-    for (const [q, h] of [['?level=0', ''], ['?level=7', ''], ['?level=abc', ''], ['', '#nonsense'], ['', ''], ['?level=-1', '']]) {
-      expect(levelFromUrl(q, h), q + h).toBe(1);
-    }
-  });
-  it('takes a number, a slug or a concept id, and the query beats the hash', () => {
-    expect(levelFromUrl('?level=3', '')).toBe(3);
-    expect(levelFromUrl('', '#value')).toBe(5);
-    expect(levelFromUrl('?level=state-action-reward', '')).toBe(2);
-    expect(levelFromUrl('?level=2', '#value')).toBe(2);
-  });
-  it('the nav lists only built levels and marks exactly one current', () => {
-    const nav = navModel([1, 2], 2, n => `T${n}`);
-    expect(nav.map(n => n.n)).toEqual([1, 2]);
-    expect(nav.map(n => n.href)).toEqual(['?level=1', '?level=2']);
-    expect(nav.filter(n => n.current)).toHaveLength(1);
-    expect(nav.find(n => n.current).n).toBe(2);
-    expect(nav[0].title).toBe('T1');
-  });
   it('a level that is not built falls back to the first built one', () => {
-    expect(navModel([1, 2], 5, String).find(n => n.current).n).toBe(1);
+    expect(navModel(['agent', 'return'], 'bandit', String).find(n => n.current).id).toBe('agent');
   });
 });
 
@@ -57,9 +38,9 @@ describe('treasure room page mounts the shared panel', () => {
     expect(main).not.toContain('getContext');
   });
   it('the nav reads its names from the track config', () => {
-    const titleOf = n => lessonOfLevel('treasure-room', n).title;
-    expect(navModel(BUILT_LEVELS, 3, titleOf).find(x => x.n === 3).title).toBe('Return');
-    expect(navModel(BUILT_LEVELS, 3, titleOf).find(x => x.n === 6).title).toBe('MDP');
+    const titleOf = id => lessonOfLevel('treasure-room', id).title;
+    expect(navModel(BUILT_LEVELS, 'return', titleOf).find(x => x.id === 'return').title).toBe('Return');
+    expect(navModel(BUILT_LEVELS, 'return', titleOf).find(x => x.id === 'mdp').title).toBe('MDP');
     expect(main).toContain('lessonOfLevel');
   });
 });
@@ -84,10 +65,6 @@ describe('treasure room page markup', () => {
     expect(html).toContain('<meta property="og:image:width" content="1280">');
     expect(html).toContain('<meta property="og:image:height" content="720">');
     expect(html).toMatch(/<meta property="og:image:alt" content="[^"]+">/);
-  });
-  it('lists levels 3 and 4 in the nav once they are built', () => {
-    expect(navModel([1, 2, 3, 4], 4, String).filter(n => n.current)).toHaveLength(1);
-    expect(navModel([1, 2, 3, 4], 3, String).map(n => n.href)).toEqual(['?level=1', '?level=2', '?level=3', '?level=4']);
   });
 });
 

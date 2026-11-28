@@ -5,10 +5,9 @@ import {
   chipsForGame, tracksOfGame, moreGames, lessonOfLevel, lessonVideo, validateTracks,
 } from '../assets/tracks/model.js';
 import { GAMES, gameById } from '../assets/games.js';
-import { LEVELS } from '../games/treasure-room/levels.js';
 
-const counts = { 'treasure-room': LEVELS.length };
-const bad = edit => { const t = structuredClone(TRACKS); edit(t); return validateTracks(t, GAMES, counts); };
+const built = { 'treasure-room': ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'] };
+const bad = edit => { const t = structuredClone(TRACKS); edit(t); return validateTracks(t, GAMES, built); };
 
 describe('lesson model', () => {
   it('numbers lessons within their track and resolves the game', () => {
@@ -53,8 +52,8 @@ describe('lesson model', () => {
     expect(tracksOfGame('treasure-room').map(t => t.id)).toEqual(['reinforcement-learning']);
     expect(tracksOfGame('maze').map(t => t.id)).toEqual(['reinforcement-learning']);
     expect(tracksOfGame('racer').map(t => t.id)).toEqual(['neural-networks']);
-    expect(lessonOfLevel('treasure-room', 5).id).toBe('value');
-    expect(lessonOfLevel('treasure-room', 99)).toBeUndefined();
+    expect(lessonOfLevel('treasure-room', 'value').id).toBe('value');
+    expect(lessonOfLevel('treasure-room', 'nope')).toBeUndefined();
   });
   it('takes a lesson video, else the game video for a whole-game lesson', () => {
     expect(lessonVideo(lessonById('learning-from-examples'))).toBe('qfzRiq3DoJo');
@@ -66,7 +65,7 @@ describe('lesson model', () => {
 
 describe('validateTracks', () => {
   it('accepts the real config', () => {
-    expect(validateTracks(TRACKS, GAMES, counts)).toEqual([]);
+    expect(validateTracks(TRACKS, GAMES, built)).toEqual([]);
   });
   const rl = t => t[1].parts[0].lessons;
   it('rejects a duplicate lesson id', () => {
@@ -86,9 +85,12 @@ describe('validateTracks', () => {
     expect(bad(t => { t[0].parts[0].lessons[0].game = 'ghost'; }).join()).toMatch(/unknown game ghost/);
     expect(bad(t => { t[2].game = 'ghost'; }).join()).toMatch(/unknown game ghost/);
   });
-  it('rejects a live level beyond the game, or with no count', () => {
-    expect(bad(t => { rl(t)[0].level = 9; }).join()).toMatch(/level 9/);
-    expect(validateTracks(TRACKS, GAMES, {}).join()).toMatch(/no level count/);
+  it('rejects a live level that is not built, or a game with no built levels', () => {
+    expect(bad(t => { rl(t)[0].level = 'bandit'; }).join()).toMatch(/level bandit is not a built level/);
+    expect(validateTracks(TRACKS, GAMES, {}).join()).toMatch(/no built levels/);
+  });
+  it('rejects a level that is not the lesson\'s own id', () => {
+    expect(bad(t => { rl(t)[1].level = 'agent'; }).join()).toMatch(/level agent must be its own id/);
   });
   it('rejects a wild entry without says or a boolean show', () => {
     expect(bad(t => { rl(t)[0].wild[0].says = ''; }).join()).toMatch(/says/);

@@ -21,7 +21,7 @@ export const COIN_ROOM = makeGrid([
   'C#..T',
   '.....',
 ]);
-export const roomForLevel = n => (n === 3 ? COIN_ROOM : ROOM);
+export const roomForLevel = id => (id === 'return' ? COIN_ROOM : ROOM);
 export const START = (() => {
   for (let y = 0; y < ROOM.h; y++) for (let x = 0; x < ROOM.w; x++) if (ROOM.cells[y][x] === 'S') return { x, y };
 })();
