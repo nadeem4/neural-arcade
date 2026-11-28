@@ -32,26 +32,26 @@
   <h1>Reinforcement learning</h1>
   <p class="lead">Learning by reward, in one room that grows: from one choice to deep RL.</p>
   <div class="facts">
-    <div class="prog"><span class="count">0 of 7 lessons done</span><div class="bar" role="img" aria-label="0 of 7 lessons done"><i style="width:0%"></i></div></div>
+    <div class="prog"><span class="count">0 of 8 lessons done</span><div class="bar" role="img" aria-label="0 of 8 lessons done"><i style="width:0%"></i></div></div>
     <p>Played in Treasure Room</p>
     <p class="needs">Before Lesson 18: Function approximation, you will want <a href="../neural-networks/">Neural networks</a>.</p>
-    <a class="btn primary" href="../concepts/loop/"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>Start: Lesson 2, The loop</a>
+    <a class="btn primary" href="../concepts/learning-by-reward/"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>Start: Lesson 1, Learning by reward</a>
   </div>
 </div>
 <section class="part">
   <h2><span class="num">Part 1</span> What is reinforcement learning?</h2>
   <ol class="rows">
-<li class="row" data-lesson="learning-by-reward" data-state="soon">
+<li class="row" data-lesson="learning-by-reward" data-state="next">
   <span class="num">1</span>
   <span class="what"><b>Learning by reward</b><span class="says">Nobody shows the robot the right move. It tries moves, gets rewards, and does more of what paid.</span></span>
-  
-  <span class="st">Coming soon</span>
+  <span class="do"><a href="../concepts/learning-by-reward/#play" aria-label="Play Lesson 1: Learning by reward" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/learning-by-reward/#read" aria-label="Read Lesson 1: Learning by reward" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  <span class="st" title="Up next"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-93.66a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32-11.32L148.69,136H88a8,8,0,0,1,0-16h60.69l-18.35-18.34a8,8,0,0,1,11.32-11.32Z"/></svg><span class="sr">Up next</span></span>
 </li>
-<li class="row" data-lesson="loop" data-state="next">
+<li class="row" data-lesson="loop" data-state="">
   <span class="num">2</span>
   <span class="what"><b>The loop</b><span class="says">The agent picks an action. The environment answers with a reward and a new situation. Then it repeats.</span></span>
   <span class="do"><a href="../concepts/loop/#play" aria-label="Play Lesson 2: The loop" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/loop/#read" aria-label="Read Lesson 2: The loop" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
-  <span class="st" title="Up next"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-93.66a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32-11.32L148.69,136H88a8,8,0,0,1,0-16h60.69l-18.35-18.34a8,8,0,0,1,11.32-11.32Z"/></svg><span class="sr">Up next</span></span>
+  <span class="st"></span>
 </li>
   </ol>
 </section>

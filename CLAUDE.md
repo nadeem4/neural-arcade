@@ -36,7 +36,7 @@ Release targets:
 - `neural-networks/`: generated track page
 - `reinforcement-learning/`: generated track page
 - `physical-ai/`: generated track page
-- `games/`: one game per folder (index.html, sim.js, ai.js, main.js, words.js, story-data.js, how-it-works/); city/ is Reward City, a 3D taxi on an OSM Chicago grid (start at sim.js, presets.js, main.js); treasure-room/ is Treasure Room, a 3D room with six levels (start at sim.js, levels.js, level-panel.js)
+- `games/`: one game per folder (index.html, sim.js, ai.js, main.js, words.js, story-data.js, how-it-works/); city/ is Reward City, a 3D taxi on an OSM Chicago grid (start at sim.js, presets.js, main.js); treasure-room/ is Treasure Room, a 3D room with seven levels (start at sim.js, levels.js, level-panel.js)
 - `engine/`: shared learning code (tinynet, evolve, reinforce, qlearn, train, brain-panel, curve)
 - `scripts/`: build-pages.mjs writes the generated pages; city/ makes chicago.json; check_pr.py, with .githooks/pre-push and .github/workflows/check.yml, is the PR check
 - `tests/`: Vitest tests, flat, named `<game>-*.test.js`

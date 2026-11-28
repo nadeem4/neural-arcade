@@ -6,7 +6,7 @@ import {
 } from '../assets/tracks/model.js';
 import { GAMES, gameById } from '../assets/games.js';
 
-const built = { 'treasure-room': ['loop', 'state', 'return', 'policy', 'value', 'mdp'] };
+const built = { 'treasure-room': ['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp'] };
 const bad = edit => { const t = structuredClone(TRACKS); edit(t); return validateTracks(t, GAMES, built); };
 
 describe('lesson model', () => {
@@ -29,18 +29,19 @@ describe('lesson model', () => {
     expect(neighbours('mdp').next.id).toBe('reward-design'); // lessons 10 to 24 are soon
     expect(neighbours('reward-design').next).toBeNull();
     expect(neighbours('mdp').prev.id).toBe('value');
-    expect(neighbours('loop').prev).toBeNull();
+    expect(neighbours('learning-by-reward').prev).toBeNull();
+    expect(neighbours('loop').prev.id).toBe('learning-by-reward');
     expect(neighbours('learning-from-examples').next.id).toBe('learning-by-selection');
     expect(neighbours('learning-by-selection').next).toBeNull();
   });
   it('counts lessons', () => {
-    expect(trackCounts(trackById('reinforcement-learning'))).toEqual({ total: 26, live: 7, soon: 19 });
+    expect(trackCounts(trackById('reinforcement-learning'))).toEqual({ total: 26, live: 8, soon: 18 });
   });
   it('builds chips from live lessons only', () => {
     expect(chipsForGame('maze').map(c => c.id)).toEqual(['loop', 'state', 'return', 'policy', 'value']);
     expect(chipsForGame('city').map(c => c.id)).toContain('reward-design');
     expect(chipsForGame('runner').map(c => c.id)).toEqual(['loop', 'state', 'policy', 'reward-design']);
-    expect(chipsForGame('treasure-room').map(c => c.id)).toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp']);
+    expect(chipsForGame('treasure-room').map(c => c.id)).toEqual(['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp']);
     expect(chipsForGame('maze')[2]).toEqual({
       id: 'return', label: 'Lesson 6: Return', href: 'concepts/return/',
       says: 'The Discount slider sets how much far-off reward counts, which decides whether it walks to the small or the big treasure.',

@@ -44,7 +44,7 @@ describe('registry', () => {
   });
   it('has a list for each overlay, and a row for each level', () => {
     expect(OVERLAYS.values.list(ROOM, { values: v, heat })).toEqual(valuesList(ROOM, v, heat));
-    expect(Object.keys(OVERLAYS_FOR_LEVEL)).toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp']);
+    expect(Object.keys(OVERLAYS_FOR_LEVEL)).toEqual(['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp']);
   });
 });
 

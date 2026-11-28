@@ -31,7 +31,7 @@ const TURN_TABS = [
 export const tabsHtml = TURN_TABS.map((t, i) => `<button type="button" id="tab${i + 1}">${t.label}</button>`).join('');
 
 // Arrow keys and room clicks drive the robot only while canDrive(): not from the level links or a form control.
-function wireDrive(on, ui, pos, canDrive, move) {
+export function wireDrive(on, ui, pos, canDrive, move) {
   on(document, 'keydown', e => {
     if (!(e.key in KEYS) || e.metaKey || e.ctrlKey || e.altKey) return;
     if (!canDrive() || e.target.closest?.('#levels, input, select, textarea')) return;

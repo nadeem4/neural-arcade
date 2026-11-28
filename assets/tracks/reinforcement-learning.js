@@ -12,7 +12,7 @@ export default {
     {
       title: 'What is reinforcement learning?',
       lessons: [
-        { id: 'learning-by-reward', title: 'Learning by reward', level: 'learning-by-reward', video: null, status: 'soon',
+        { id: 'learning-by-reward', title: 'Learning by reward', level: 'learning-by-reward', video: null, status: 'live',
           question: 'How can a robot learn a room nobody explained to it?',
           says: 'Nobody shows the robot the right move. It tries moves, gets rewards, and does more of what paid.' },
         { id: 'loop', title: 'The loop', level: 'loop', video: null, status: 'live',

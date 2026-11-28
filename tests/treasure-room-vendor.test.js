@@ -36,9 +36,9 @@ describe('import map', () => {
     expect(html).toContain(IMPORT_MAP_HTML);
     expect(html.indexOf('importmap')).toBeLessThan(html.indexOf('type="module"'));
   });
-  it('is on the six level lesson pages and not on a whole-game one', () => {
+  it('is on the seven level lesson pages and not on a whole-game one', () => {
     const out = buildPages({ files });
-    for (const id of ['loop', 'state', 'return', 'policy', 'value', 'mdp']) expect(out[`concepts/${id}/index.html`], id).toContain(IMPORT_MAP_HTML);
+    for (const id of ['learning-by-reward', 'loop', 'state', 'return', 'policy', 'value', 'mdp']) expect(out[`concepts/${id}/index.html`], id).toContain(IMPORT_MAP_HTML);
     expect(out['concepts/pid/index.html']).not.toContain('importmap');
   });
 });

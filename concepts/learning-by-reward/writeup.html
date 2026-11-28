@@ -1,0 +1,28 @@
+  <section id="writeup">
+    <h2>One worked number</h2>
+    <p>Add the rewards you saw in step 2 by hand: that sum is one try's score. The pit ends a try, so a short try can be the worst one. The robot's try 1 scored -42 (32 steps at -1, then the pit at -10). After 200 tries it scores +5, the best this room allows: 5 steps at -1, then the treasure at +10.</p>
+    <h2>Key terms</h2>
+    <table class="terms">
+      <thead><tr><th scope="col">Term</th><th scope="col">In this game</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><b>Reward</b><span>The number the room sends back after a move.</span></th><td>-1 for a step, +10 for the treasure, -10 for the pit.</td></tr>
+        <tr><th scope="row"><b>Try (episode)</b><span>One run from the start until it ends.</span></th><td>The start tile to the treasure or the pit. Its score is the rewards added up.</td></tr>
+      </tbody>
+    </table>
+    <details class="incode">
+      <summary><h3>In code: the same idea in Python</h3></summary>
+      <pre class="code"><code>scores = []
+for try_number in range(200):
+    state, info = env.reset()
+    score, done = 0, False
+    while not done:
+        action = agent.act(state)
+        state, reward, terminated, truncated, info = env.step(action)
+        agent.learn(reward)
+        score += reward
+        done = terminated or truncated
+    scores.append(score)</code></pre>
+      <p>Each pass through the outer loop is one try, and <code>score</code> is its tally. <code>agent.learn</code> is where the robot keeps what paid; later lessons open it up.</p>
+    </details>
+    <p><b>The lesson:</b> Reinforcement learning is learning from rewards when nobody gives the answers.</p>
+  </section>

@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { LEVELS } from '../games/treasure-room/levels.js';
+import { LEVELS as ALL } from '../games/treasure-room/levels.js';
 import { GAMES } from '../assets/games.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const html = read('games/treasure-room/how-it-works/index.html');
 const story = read('games/treasure-room/how-it-works/story.js');
 const css = read('games/treasure-room/how-it-works/story.css');
+// Lesson 1 has no section here: How it works starts at the loop.
+const LEVELS = ALL.slice(1);
 const URL_ = 'https://arcade.codewithnk.com/games/treasure-room/';
 const sections = html.split('<section class="step"').slice(1).slice(0, 6);
 
