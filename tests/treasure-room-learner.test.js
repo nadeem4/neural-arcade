@@ -14,5 +14,6 @@ describe('the room learner', () => {
   });
   it('is the same on every call', () => {
     expect(learn()).toEqual(run);
+    expect(run.first.score).toBe(-42);
   });
 });
