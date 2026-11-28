@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reinforcement learning · Neural Arcade</title>
-<meta name="description" content="Learning by reward, in one room that grows: from a single agent to deep RL.">
+<meta name="description" content="Learning by reward, in one room that grows: from one choice to deep RL.">
 <link rel="canonical" href="https://arcade.codewithnk.com/reinforcement-learning/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
 <meta property="og:title" content="Reinforcement learning · Neural Arcade">
-<meta property="og:description" content="Learning by reward, in one room that grows: from a single agent to deep RL.">
+<meta property="og:description" content="Learning by reward, in one room that grows: from one choice to deep RL.">
 <meta property="og:url" content="https://arcade.codewithnk.com/reinforcement-learning/">
 <meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
 <meta property="og:image:width" content="1280">
@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Reinforcement learning · Neural Arcade">
-<meta name="twitter:description" content="Learning by reward, in one room that grows: from a single agent to deep RL.">
+<meta name="twitter:description" content="Learning by reward, in one room that grows: from one choice to deep RL.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/studio.css">
@@ -30,157 +30,214 @@
 <main id="track" class="wrap">
 <div class="thead">
   <h1>Reinforcement learning</h1>
-  <p class="lead">Learning by reward, in one room that grows: from a single agent to deep RL.</p>
+  <p class="lead">Learning by reward, in one room that grows: from one choice to deep RL.</p>
   <div class="facts">
     <div class="prog"><span class="count">0 of 7 lessons done</span><div class="bar" role="img" aria-label="0 of 7 lessons done"><i style="width:0%"></i></div></div>
     <p>Played in Treasure Room</p>
-    <p class="needs">Before Lesson 14: Function approximation, you will want <a href="../neural-networks/">Neural networks</a>.</p>
-    <a class="btn primary" href="../concepts/agent/"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>Start: Lesson 1, Agent and environment</a>
+    <p class="needs">Before Lesson 18: Function approximation, you will want <a href="../neural-networks/">Neural networks</a>.</p>
+    <a class="btn primary" href="../concepts/loop/"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg>Start: Lesson 2, The loop</a>
   </div>
 </div>
 <section class="part">
-  <h2><span class="num">Part 1</span> The problem</h2>
+  <h2><span class="num">Part 1</span> What is reinforcement learning?</h2>
   <ol class="rows">
-<li class="row" data-lesson="agent" data-state="next">
+<li class="row" data-lesson="learning-by-reward" data-state="soon">
   <span class="num">1</span>
-  <span class="what"><b>Agent and environment</b><span class="says">The agent picks an action. The environment answers. That loop is all of reinforcement learning.</span></span>
-  <span class="do"><a href="../concepts/agent/#play" aria-label="Play Lesson 1: Agent and environment" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/agent/#read" aria-label="Read Lesson 1: Agent and environment" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  <span class="what"><b>Learning by reward</b><span class="says">Nobody shows the robot the right move. It tries moves, gets rewards, and does more of what paid.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="loop" data-state="next">
+  <span class="num">2</span>
+  <span class="what"><b>The loop</b><span class="says">The agent picks an action. The environment answers with a reward and a new situation. Then it repeats.</span></span>
+  <span class="do"><a href="../concepts/loop/#play" aria-label="Play Lesson 2: The loop" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/loop/#read" aria-label="Read Lesson 2: The loop" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
   <span class="st" title="Up next"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-93.66a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32-11.32L148.69,136H88a8,8,0,0,1,0-16h60.69l-18.35-18.34a8,8,0,0,1,11.32-11.32Z"/></svg><span class="sr">Up next</span></span>
 </li>
-<li class="row" data-lesson="state-action-reward" data-state="">
-  <span class="num">2</span>
-  <span class="what"><b>State, action, reward</b><span class="says">Every step is three things: the state you are in, the action you take, the reward you get back.</span></span>
-  <span class="do"><a href="../concepts/state-action-reward/#play" aria-label="Play Lesson 2: State, action, reward" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/state-action-reward/#read" aria-label="Read Lesson 2: State, action, reward" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 2</span> One decision</h2>
+  <ol class="rows">
+<li class="row" data-lesson="bandit" data-state="soon">
+  <span class="num">3</span>
+  <span class="what"><b>Which chest pays best</b><span class="says">One payout is luck. The value of a chest is the average of what it has paid you, corrected after every open.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="exploration" data-state="soon">
+  <span class="num">4</span>
+  <span class="what"><b>Explore or exploit</b><span class="says">Always taking the best so far locks in early luck. Take the best most of the time and a random one sometimes.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 3</span> A chain of decisions</h2>
+  <ol class="rows">
+<li class="row" data-lesson="state" data-state="">
+  <span class="num">5</span>
+  <span class="what"><b>State</b><span class="says">The state is what the agent knows about where it is. The best action depends on the state, and every action changes the state.</span></span>
+  <span class="do"><a href="../concepts/state/#play" aria-label="Play Lesson 5: State" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/state/#read" aria-label="Read Lesson 5: State" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
   <span class="st"></span>
 </li>
 <li class="row" data-lesson="return" data-state="">
-  <span class="num">3</span>
-  <span class="what"><b>Return</b><span class="says">The return is every reward still to come, added up. The discount makes rewards further away count less.</span></span>
-  <span class="do"><a href="../concepts/return/#play" aria-label="Play Lesson 3: Return" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/return/#read" aria-label="Read Lesson 3: Return" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  <span class="num">6</span>
+  <span class="what"><b>Return</b><span class="says">The return is every reward still to come, added up. The discount makes rewards further away count a little less.</span></span>
+  <span class="do"><a href="../concepts/return/#play" aria-label="Play Lesson 6: Return" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/return/#read" aria-label="Read Lesson 6: Return" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
   <span class="st"></span>
 </li>
 <li class="row" data-lesson="policy" data-state="">
-  <span class="num">4</span>
-  <span class="what"><b>Policy</b><span class="says">A policy is a rulebook: one action for every state. A better policy earns more return.</span></span>
-  <span class="do"><a href="../concepts/policy/#play" aria-label="Play Lesson 4: Policy" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/policy/#read" aria-label="Read Lesson 4: Policy" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  <span class="num">7</span>
+  <span class="what"><b>Policy</b><span class="says">A policy is one action for every state: an arrow on every tile. A better policy earns more return.</span></span>
+  <span class="do"><a href="../concepts/policy/#play" aria-label="Play Lesson 7: Policy" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/policy/#read" aria-label="Read Lesson 7: Policy" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
   <span class="st"></span>
 </li>
 <li class="row" data-lesson="value" data-state="">
-  <span class="num">5</span>
-  <span class="what"><b>Value</b><span class="says">A state's value is the return you can expect from there. It spreads back from the treasure.</span></span>
-  <span class="do"><a href="../concepts/value/#play" aria-label="Play Lesson 5: Value" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/value/#read" aria-label="Read Lesson 5: Value" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  <span class="num">8</span>
+  <span class="what"><b>Value</b><span class="says">A state's value is the return you expect from there if you follow the policy. Store it on the tile and you never recount.</span></span>
+  <span class="do"><a href="../concepts/value/#play" aria-label="Play Lesson 8: Value" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/value/#read" aria-label="Read Lesson 8: Value" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
   <span class="st"></span>
 </li>
 <li class="row" data-lesson="mdp" data-state="">
-  <span class="num">6</span>
-  <span class="what"><b>MDP</b><span class="says">An MDP is the game written down: states, actions, rewards, and the probability of where each action lands.</span></span>
-  <span class="do"><a href="../concepts/mdp/#play" aria-label="Play Lesson 6: MDP" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/mdp/#read" aria-label="Read Lesson 6: MDP" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  <span class="num">9</span>
+  <span class="what"><b>When moves slip: the MDP</b><span class="says">An action now has odds, so a value is an average over what might happen. States, actions, rewards and odds together are called an MDP.</span></span>
+  <span class="do"><a href="../concepts/mdp/#play" aria-label="Play Lesson 9: When moves slip: the MDP" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/mdp/#read" aria-label="Read Lesson 9: When moves slip: the MDP" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
   <span class="st"></span>
 </li>
   </ol>
 </section>
 <section class="part">
-  <h2><span class="num">Part 2</span> Planning with a map</h2>
+  <h2><span class="num">Part 4</span> Planning with the rulebook</h2>
   <ol class="rows">
 <li class="row" data-lesson="bellman-equation" data-state="soon">
-  <span class="num">7</span>
-  <span class="what"><b>Bellman equation</b><span class="says">A state is worth its reward plus the discounted worth of where it leads.</span></span>
+  <span class="num">10</span>
+  <span class="what"><b>One step ahead: the Bellman equation</b><span class="says">A tile is worth its reward plus the discounted worth of the tile it leads to. One step ahead is enough.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="value-iteration" data-state="soon">
+  <span class="num">11</span>
+  <span class="what"><b>Value iteration</b><span class="says">Apply the one-step rule to every tile, again and again. The chest's worth spreads one tile per sweep until the numbers stop moving.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
 <li class="row" data-lesson="policy-iteration" data-state="soon">
-  <span class="num">8</span>
-  <span class="what"><b>Policy iteration</b><span class="says">Score the current plan, improve it, and repeat until it stops changing.</span></span>
+  <span class="num">12</span>
+  <span class="what"><b>Policy iteration</b><span class="says">Score the current plan, turn each arrow to its best neighbour, and repeat until no arrow changes.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
   </ol>
 </section>
 <section class="part">
-  <h2><span class="num">Part 3</span> Learning without a map</h2>
+  <h2><span class="num">Part 5</span> Learning without the rulebook</h2>
   <ol class="rows">
-<li class="row" data-lesson="exploration" data-state="soon">
-  <span class="num">9</span>
-  <span class="what"><b>Exploration</b><span class="says">Sometimes try something new, or you never find what is better.</span></span>
-  
-  <span class="st">Coming soon</span>
-</li>
 <li class="row" data-lesson="monte-carlo" data-state="soon">
-  <span class="num">10</span>
-  <span class="what"><b>Monte Carlo</b><span class="says">Play whole episodes and learn from the rewards you actually got.</span></span>
+  <span class="num">13</span>
+  <span class="what"><b>Monte Carlo</b><span class="says">Play whole episodes and, for each tile you passed, average the returns you actually got from there.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
 <li class="row" data-lesson="td-learning" data-state="soon">
-  <span class="num">11</span>
-  <span class="what"><b>TD learning</b><span class="says">Learn after every step, from your own next guess.</span></span>
+  <span class="num">14</span>
+  <span class="what"><b>TD learning</b><span class="says">After every step, nudge this tile's value toward the reward plus the next tile's value.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
-<li class="row" data-lesson="sarsa" data-state="soon">
-  <span class="num">12</span>
-  <span class="what"><b>SARSA</b><span class="says">Learn the value of the moves you really make, exploring included.</span></span>
+<li class="row" data-lesson="action-values" data-state="soon">
+  <span class="num">15</span>
+  <span class="what"><b>The value of a move: Q</b><span class="says">Give every move on every tile its own value, called Q. To act, take the move with the biggest Q.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
 <li class="row" data-lesson="q-learning" data-state="soon">
-  <span class="num">13</span>
-  <span class="what"><b>Q-learning</b><span class="says">Learn the best plan while exploring.</span></span>
+  <span class="num">16</span>
+  <span class="what"><b>Q-learning</b><span class="says">Update each move toward the reward plus the best move available next, whatever the robot does next.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
 <li class="wild"><a href="../games/maze/">Also in Treasure Maze</a><span class="says">The explorer learns the best move for each tile by trying them.</span></li>
+<li class="row" data-lesson="sarsa" data-state="soon">
+  <span class="num">17</span>
+  <span class="what"><b>SARSA: the safe path</b><span class="says">Update each move toward the move the robot really takes next. It learns the path that is best for a learner that still slips.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
   </ol>
 </section>
 <section class="part">
-  <h2><span class="num">Part 4</span> Too big for a table</h2>
+  <h2><span class="num">Part 6</span> Too big for a table</h2>
   <ol class="rows">
 <li class="row" data-lesson="function-approximation" data-state="soon">
-  <span class="num">14</span>
-  <span class="what"><b>Function approximation</b><span class="says">When there are too many states for a table, a network guesses the value instead.</span></span>
+  <span class="num">18</span>
+  <span class="what"><b>Function approximation</b><span class="says">Replace the table with a network that takes the state and guesses the values. What it learns on one tile helps on tiles like it.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
 <li class="row" data-lesson="dqn" data-state="soon">
-  <span class="num">15</span>
-  <span class="what"><b>DQN</b><span class="says">Q-learning with a neural network, kept steady by replaying old moves.</span></span>
+  <span class="num">19</span>
+  <span class="what"><b>DQN</b><span class="says">Learn from a shuffled memory of old moves, and aim at a frozen copy of the network that is refreshed only now and then.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
   </ol>
 </section>
 <section class="part">
-  <h2><span class="num">Part 5</span> Learning the policy</h2>
+  <h2><span class="num">Part 7</span> Learning the policy directly</h2>
   <ol class="rows">
 <li class="row" data-lesson="policy-gradient" data-state="soon">
-  <span class="num">16</span>
-  <span class="what"><b>Policy gradient</b><span class="says">Nudge the policy itself toward the moves that paid well.</span></span>
+  <span class="num">20</span>
+  <span class="what"><b>Policy gradient</b><span class="says">Let the policy give odds for each move. After an episode, raise the odds of the moves taken in proportion to the return.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
 <li class="wild"><a href="../games/runner/">Also in Coin Runner</a><span class="says">Its brain is a policy the points reshape.</span></li>
 <li class="row" data-lesson="actor-critic" data-state="soon">
-  <span class="num">17</span>
-  <span class="what"><b>Actor-critic</b><span class="says">One part picks the moves, another judges them, and both learn.</span></span>
+  <span class="num">21</span>
+  <span class="what"><b>Actor-critic</b><span class="says">A critic learns what to expect from each state. The actor is rewarded only for doing better than expected.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
 <li class="row" data-lesson="ppo" data-state="soon">
-  <span class="num">18</span>
-  <span class="what"><b>PPO</b><span class="says">Improve the policy in small safe steps so one bad update cannot ruin it.</span></span>
+  <span class="num">22</span>
+  <span class="what"><b>PPO</b><span class="says">Limit how far the new odds may move from the old ones in one update.</span></span>
   
   <span class="st">Coming soon</span>
 </li>
   </ol>
 </section>
 <section class="part">
-  <h2><span class="num">Part 6</span> Getting the reward right</h2>
+  <h2><span class="num">Part 8</span> Planning meets learning</h2>
+  <ol class="rows">
+<li class="row" data-lesson="model-based" data-state="soon">
+  <span class="num">23</span>
+  <span class="what"><b>Learn the rulebook</b><span class="says">Record what each move did and you have your own rulebook. Between real steps, practise with it, as in Part 4.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+<li class="row" data-lesson="search" data-state="soon">
+  <span class="num">24</span>
+  <span class="what"><b>Think before you move</b><span class="says">From where it stands, imagine many futures a few moves deep, guided by its learned values, and take the move that did best.</span></span>
+  
+  <span class="st">Coming soon</span>
+</li>
+  </ol>
+</section>
+<section class="part">
+  <h2><span class="num">Part 9</span> In the real world</h2>
   <ol class="rows">
 <li class="row" data-lesson="reward-design" data-state="">
-  <span class="num">19</span>
-  <span class="what"><b>Reward design</b><span class="says">Reward design is choosing the numbers an agent is paid and fined; it does exactly what they pay for, so every loophole in them becomes a behaviour.</span></span>
-  <span class="do"><a href="../concepts/reward-design/#play" aria-label="Play Lesson 19: Reward design" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/reward-design/#read" aria-label="Read Lesson 19: Reward design" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
+  <span class="num">25</span>
+  <span class="what"><b>Reward design</b><span class="says">The agent maximises the reward you wrote, not the goal you had in mind. Every loophole in the numbers becomes a behaviour.</span></span>
+  <span class="do"><a href="../concepts/reward-design/#play" aria-label="Play Lesson 25: Reward design" title="Play"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></svg></a><a href="../concepts/reward-design/#read" aria-label="Read Lesson 25: Reward design" title="Read"><svg aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"/></svg></a></span>
   <span class="st"></span>
+</li>
+<li class="row" data-lesson="map-of-rl" data-state="soon">
+  <span class="num">26</span>
+  <span class="what"><b>The map of reinforcement learning</b><span class="says">Every method answers three questions: do you have the rulebook, does a table fit, and do you learn values or the policy. Answer them and the method picks itself.</span></span>
+  
+  <span class="st">Coming soon</span>
 </li>
   </ol>
 </section>

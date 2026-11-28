@@ -8,14 +8,14 @@ const rl = trackById('reinforcement-learning');
 const nn = trackById('neural-networks');
 
 describe('track body', () => {
-  const html = trackBodyHtml(rl, { done: ['agent'], base: '../' });
+  const html = trackBodyHtml(rl, { done: ['loop'], base: '../' });
   it('shows progress and the continue button', () => {
     expect(html).toContain('1 of 7 lessons done');
-    expect(html).toContain('Continue: Lesson 2, State, action, reward');
+    expect(html).toContain('Continue: Lesson 5, State');
     expect(html).toContain('class="btn primary"');
   });
   it('done and next show an icon and keep the words for screen readers', () => {
-    for (const [lesson, word] of [['agent', 'Done'], ['state-action-reward', 'Up next']]) {
+    for (const [lesson, word] of [['loop', 'Done'], ['state', 'Up next']]) {
       const row = html.slice(html.indexOf(`data-lesson="${lesson}"`)).split('</li>')[0];
       const st = row.slice(row.indexOf('<span class="st"'));
       expect(st).toContain('<svg');
@@ -23,27 +23,27 @@ describe('track body', () => {
     }
   });
   it('marks each row with its state', () => {
-    expect(html).toMatch(/<li[^>]*data-lesson="agent"[^>]*data-state="done"/);
-    expect(html).toMatch(/data-lesson="state-action-reward"[^>]*data-state="next"/);
+    expect(html).toMatch(/<li[^>]*data-lesson="loop"[^>]*data-state="done"/);
+    expect(html).toMatch(/data-lesson="state"[^>]*data-state="next"/);
     expect(html).toMatch(/data-lesson="sarsa"[^>]*data-state="soon"[\s\S]*?Coming soon/);
   });
   it('gives soon lessons no links', () => {
     expect(html).not.toContain('concepts/sarsa/');
-    expect(html).toContain('href="../concepts/agent/#play"');
+    expect(html).toContain('href="../concepts/loop/#play"');
   });
   it('names the game, the needs note and wild rows', () => {
     expect(html).toContain('Played in Treasure Room');
-    expect(html).toContain('Before Lesson 14: Function approximation');
+    expect(html).toContain('Before Lesson 18: Function approximation');
     expect(html).toMatch(/class="wild"[\s\S]*Treasure Maze/);
-    expect(html).toContain('Lesson 3: Return');
+    expect(html).toContain('Lesson 6: Return');
   });
   it('renders show:true wild rows of soon lessons, never own-game or hidden ones', () => {
-    expect(html.match(/class="wild"/g).length).toBe(2);   // lessons 13 and 16
+    expect(html.match(/class="wild"/g).length).toBe(2);   // lessons 16 and 20
     expect(html).toContain('href="../games/runner/"');
     expect(trackBodyHtml(trackById('physical-ai'), {})).not.toContain('class="wild"');
   });
   it('starts at lesson 1 with no progress and omits the game line when there is none', () => {
-    expect(trackBodyHtml(rl, { done: [] })).toContain('Start: Lesson 1, Agent');
+    expect(trackBodyHtml(rl, { done: [] })).toContain('Start: Lesson 2, The loop');
     expect(trackBodyHtml(nn, { done: [] })).not.toContain('Played in');
   });
   it('has no primary button when finished', () => {
@@ -68,12 +68,12 @@ describe('rows', () => {
     for (const [hash, name] of [['play', 'Play'], ['read', 'Read']]) {
       const a = row.match(new RegExp(`<a href="[^"]*concepts/return/#${hash}"[^>]*>([\\s\\S]*?)</a>`));
       expect(a, hash).not.toBeNull();
-      expect(a[0]).toContain(`aria-label="${name} Lesson 3: Return"`);
+      expect(a[0]).toContain(`aria-label="${name} Lesson 6: Return"`);
       expect(a[1]).toMatch(/^<svg[^>]*aria-hidden="true"[\s\S]*<\/svg>$/);
     }
   });
   it('start button leads with a play icon', () => {
-    expect(trackBodyHtml(rl, { done: [] })).toMatch(/class="btn primary"[^>]*><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>Start: Lesson 1, Agent/);
+    expect(trackBodyHtml(rl, { done: [] })).toMatch(/class="btn primary"[^>]*><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>Start: Lesson 2, The loop/);
   });
   it('wild row links the game', () => {
     expect(wildRowHtml({ game: 'maze', says: 'x', show: true }, '../')).toContain('href="../games/maze/"');

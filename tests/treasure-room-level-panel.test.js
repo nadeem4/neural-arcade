@@ -69,7 +69,7 @@ describe('levelPanelHtml', () => {
     expect(levelPanelHtml({ showTitle: false })).toContain('id="levelBrief"');
   });
   it('lists the six built levels in track order and exports a mount function', () => {
-    expect(BUILT_LEVELS).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']);
+    expect(BUILT_LEVELS).toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp']);
     expect(typeof mountLevelPlay).toBe('function');
   });
 });
@@ -159,7 +159,7 @@ describe('button audit: disabled at start says why', () => {
   const buttonIds = [...html.matchAll(/<button\b[^>]*\bid="(\w+)"/g)].map(m => m[1]);
   const whyIdOf = { walkUp: 'walkUpWhy', resetSweeps: 'walkUpWhy' };
   const views = {
-    agent: () => import('../games/treasure-room/level-agent.js'), 'state-action-reward': () => import('../games/treasure-room/level-triples.js'),
+    loop: () => import('../games/treasure-room/level-agent.js'), 'state': () => import('../games/treasure-room/level-triples.js'),
     return: () => import('../games/treasure-room/level-return.js'), policy: () => import('../games/treasure-room/level-policy.js'),
     value: () => import('../games/treasure-room/level-value.js'), mdp: () => import('../games/treasure-room/level-mdp.js'),
   };

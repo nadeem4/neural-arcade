@@ -16,7 +16,7 @@ import * as levelPolicy from './level-policy.js';
 import * as levelValue from './level-value.js';
 import * as levelMdp from './level-mdp.js';
 
-const views = { agent: levelAgent, 'state-action-reward': levelTriples, return: levelReturn, policy: levelPolicy, value: levelValue, mdp: levelMdp };
+const views = { loop: levelAgent, state: levelTriples, return: levelReturn, policy: levelPolicy, value: levelValue, mdp: levelMdp };
 // The built levels in track order: the game's level order is the lessons' order.
 export const BUILT_LEVELS = flatLessons().filter(l => l.game === 'treasure-room' && l.level in views).map(l => l.level);
 
@@ -45,13 +45,13 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <div id="levelAssumes"></div>
         <p class="lesson-line" id="status"></p>
       </section>
-      <section data-levels="agent" aria-labelledby="sh">
+      <section data-levels="loop" aria-labelledby="sh">
         <h2><span id="sh">What the AI sees</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-sees" aria-label="Explain what the AI sees" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-sees" data-info="ai" hidden></p>
         <output class="sees" id="sees">Nothing yet</output>
         <div class="arrows" aria-hidden="true"><span id="arrowOut">action &rarr;</span><span id="arrowBack">&larr; position and reward</span></div>
       </section>
-      <section data-levels="state-action-reward" aria-labelledby="lh" hidden>
+      <section data-levels="state" aria-labelledby="lh" hidden>
         <h2><span id="lh">Log</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-log" aria-label="Explain the log" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-log" data-info="log" hidden></p>
         <ol class="log" id="log" aria-live="off"></ol>
@@ -136,7 +136,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <output class="sum" id="tripsOut"></output>
         <ul class="tags" id="tags"></ul>
       </section>
-      <section class="controls" data-levels="agent state-action-reward" aria-labelledby="ph">
+      <section class="controls" data-levels="loop state" aria-labelledby="ph">
         <h2><span id="ph">Move</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rewards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-reward" data-info="reward" hidden></p>
         <div class="pad" role="group" aria-labelledby="ph">

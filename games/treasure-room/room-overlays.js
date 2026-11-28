@@ -73,7 +73,7 @@ export const OVERLAYS = {
   ice: { list: (room, opts) => iceList(room, opts.ice) },
 };
 
-export const OVERLAYS_FOR_LEVEL = { agent: [], 'state-action-reward': ['tags'], return: ['trail', 'tags'], policy: ['arrows'], value: ['values'], mdp: ['trail', 'tags', 'ice'] };
+export const OVERLAYS_FOR_LEVEL = { loop: [], state: ['tags'], return: ['trail', 'tags'], policy: ['arrows'], value: ['values'], mdp: ['trail', 'tags', 'ice'] };
 
 export function overlayNames(names) {
   const list = names ?? [];

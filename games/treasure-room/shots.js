@@ -9,7 +9,7 @@ const SIZE = [1280, 800]; // 16:10
 const fig = (n, level, overlays) => ({ n, file: `fig-${n}.webp`, size: SIZE, level, overlays, pose: 'default' });
 
 export const FIGURES = [
-  fig(1, 'agent', ['trail']),
+  fig(1, 'loop', ['trail']),
   fig(2, 'return', ['trail']),
   fig(3, 'policy', ['arrows', 'trail']),
   fig(4, 'policy', ['arrows', 'trail']),

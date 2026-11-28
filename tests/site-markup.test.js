@@ -334,13 +334,13 @@ describe('game page rendering', () => {
   it('links the write-up and the track crumb from the site root', () => {
     expect(writeupHref(g, '../../')).toBe('../../games/g/how-it-works/');
     expect(crumbHtml(gameById('city'), TRACKS, '../../')).toBe('<a href="../../reinforcement-learning/">Reinforcement learning</a> / Reward City');
-    expect(crumbHtml(gameById('balance'), TRACKS, '../../')).toContain('physical-ai/');
+    expect(crumbHtml(gameById('racer'), TRACKS, '../../')).toContain('neural-networks/');
     expect(crumbHtml({ id: 'x', title: 'Ex' }, TRACKS, '../../')).toBe('Ex');
   });
   it('renders one lesson chip per live lesson, with its number', () => {
-    expect(lessonChipsHtml(gameById('maze'), '../../')).toContain('<a class="chip" href="../../concepts/return/">Lesson 3: Return</a>');
+    expect(lessonChipsHtml(gameById('maze'), '../../')).toContain('<a class="chip" href="../../concepts/return/">Lesson 6: Return</a>');
     expect(lessonChipsHtml(gameById('racer'), '../../')).toContain('Lesson 2: Learning by selection');
-    expect(lessonChipsHtml(gameById('city'), '../../')).toContain('Lesson 19: Reward design');
+    expect(lessonChipsHtml(gameById('city'), '../../')).toContain('Lesson 25: Reward design');
     expect(lessonChipsHtml({ id: 'x' }, '../../')).toBe('');
   });
   it('renders More from tiles, and nothing when alone', () => {

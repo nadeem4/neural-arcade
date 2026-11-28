@@ -3,7 +3,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { lessonById } from '../assets/tracks/model.js';
 import * as cp from '../assets/concept-page.js';
 
-const CONCEPT_IDS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
+const CONCEPT_IDS = ['loop', 'state', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
 
 const { videoHtml, triesHtml, wireTries } = cp;
 const pid = { id: 'pid', title: 'PID control', youtube: 'abcdef12345', related: ['mdp'] };
@@ -93,8 +93,8 @@ describe('pid lesson files', () => {
 
 describe('every concept page', () => {
   const read = (id, f) => readFileSync(new URL(`../concepts/${id}/${f}`, import.meta.url), 'utf8');
-  const WITH_WRITEUP = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
-  const NO_GRID = ['agent', 'state-action-reward', 'return', 'policy', 'value'];
+  const WITH_WRITEUP = ['loop', 'state', 'return', 'policy', 'value', 'mdp', 'pid', 'reward-design'];
+  const NO_GRID = ['loop', 'state', 'return', 'policy', 'value'];
   it('the eight concept pages are generated shells with the shared sections and the lesson says as lead', () => {
     for (const id of WITH_WRITEUP) {
       const html = read(id, 'index.html');

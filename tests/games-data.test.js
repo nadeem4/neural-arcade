@@ -65,7 +65,7 @@ describe('newest', () => {
 describe('browse', () => {
   it('filters by track, a game showing under every track that names it', () => {
     expect(browse(GAMES, TRACKS, { track: 'reinforcement-learning' }).items.map(g => g.id).sort())
-      .toEqual(['city', 'maze', 'runner', 'treasure-room']);
+      .toEqual(['balance', 'city', 'maze', 'runner', 'treasure-room']);
     expect(browse(GAMES, TRACKS, { track: 'physical-ai' }).items.map(g => g.id)).toEqual(['balance']);
     expect(browse(GAMES, TRACKS, { track: 'neural-networks' }).items.map(g => g.id).sort()).toEqual(['racer', 'teach']);
   });

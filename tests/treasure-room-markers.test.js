@@ -29,12 +29,12 @@ describe('projectPoint', () => {
 
 describe('level 1 markers', () => {
   it('has the agent pill, the treasure dot and the pit dot, and no other level has any', () => {
-    expect(MARKERS_FOR_LEVEL.agent.map(m => [m.id, m.kind])).toEqual([['agent', 'pill'], ['treasure', 'dot'], ['pit', 'dot']]);
-    expect(MARKERS_FOR_LEVEL.agent[0].label).toBe('Agent');
-    for (const id of ['state-action-reward', 'return', 'policy', 'value', 'mdp']) expect(markersFor(id, ROOM)).toEqual([]);
+    expect(MARKERS_FOR_LEVEL.loop.map(m => [m.id, m.kind])).toEqual([['agent', 'pill'], ['treasure', 'dot'], ['pit', 'dot']]);
+    expect(MARKERS_FOR_LEVEL.loop[0].label).toBe('Agent');
+    for (const id of ['state', 'return', 'policy', 'value', 'mdp']) expect(markersFor(id, ROOM)).toEqual([]);
   });
   it('anchors the dots above the treasure and pit cells and the pill to the agent', () => {
-    const list = markersFor('agent', ROOM), by = id => list.find(m => m.id === id);
+    const list = markersFor('loop', ROOM), by = id => list.find(m => m.id === id);
     for (const [id, ch] of [['treasure', 'T'], ['pit', 'X']]) {
       let c; ROOM.cells.forEach((row, y) => { const x = [...row].indexOf(ch); if (x >= 0) c = { x, y }; });
       const w = cellToWorld(ROOM, c.x, c.y);
@@ -46,7 +46,7 @@ describe('level 1 markers', () => {
     expect(AGENT_HEAD_Y).toBeGreaterThan(0);
   });
   it('every marker has a card with a title and text built from the rewards', () => {
-    for (const m of MARKERS_FOR_LEVEL.agent) {
+    for (const m of MARKERS_FOR_LEVEL.loop) {
       expect(MARKER_INFO[m.id].title.length).toBeGreaterThan(0);
       expect(MARKER_INFO[m.id].text.length).toBeGreaterThan(0);
     }

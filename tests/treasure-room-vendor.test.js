@@ -38,7 +38,7 @@ describe('import map', () => {
   });
   it('is on the six level lesson pages and not on a whole-game one', () => {
     const out = buildPages({ files });
-    for (const id of ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']) expect(out[`concepts/${id}/index.html`], id).toContain(IMPORT_MAP_HTML);
+    for (const id of ['loop', 'state', 'return', 'policy', 'value', 'mdp']) expect(out[`concepts/${id}/index.html`], id).toContain(IMPORT_MAP_HTML);
     expect(out['concepts/pid/index.html']).not.toContain('importmap');
   });
 });

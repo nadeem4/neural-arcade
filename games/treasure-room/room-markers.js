@@ -7,7 +7,7 @@ const DOT_Y = 0.9;                // above the chest and the pit
 
 // The one place a level gets labels. An entry is { id, kind: 'pill' | 'dot', label?, cell?: grid char, anchor?: 'agent' }.
 export const MARKERS_FOR_LEVEL = {
-  agent: [
+  loop: [
     { id: 'agent', kind: 'pill', label: 'Agent', anchor: 'agent' },
     { id: 'treasure', kind: 'dot', cell: 'T' },
     { id: 'pit', kind: 'dot', cell: 'X' },
