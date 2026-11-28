@@ -39,12 +39,12 @@ describe('registry', () => {
   });
   it('rejects an unknown overlay name', () => {
     expect(() => overlayNames(['values', 'nope'])).toThrow(/nope/);
-    expect(overlayNames(OVERLAYS_FOR_LEVEL[5])).toEqual(['values']);
+    expect(overlayNames(OVERLAYS_FOR_LEVEL.value)).toEqual(['values']);
     expect(overlayNames(undefined)).toEqual([]);
   });
   it('has a list for each overlay, and a row for each level', () => {
     expect(OVERLAYS.values.list(ROOM, { values: v, heat })).toEqual(valuesList(ROOM, v, heat));
-    expect(Object.keys(OVERLAYS_FOR_LEVEL).map(Number)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(Object.keys(OVERLAYS_FOR_LEVEL)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']);
   });
 });
 
@@ -75,7 +75,7 @@ describe('source guards', () => {
     expect(values.match(/board\.set\(.*\)\);/)[0]).not.toMatch(/size|color/);
   });
   it('the panel hands the level its overlays', () => {
-    expect(read('level-panel.js')).toMatch(/setOverlays\(OVERLAYS_FOR_LEVEL\[n\]\)/);
+    expect(read('level-panel.js')).toMatch(/setOverlays\(OVERLAYS_FOR_LEVEL\[id\]\)/);
   });
   it('the scene builds its layers from the mesh registry and draws marks as rings', () => {
     const s = read('room-scene.js');
@@ -122,7 +122,7 @@ describe('trailList', () => {
 
 describe('arrows and trail registry', () => {
   it('level 4 draws arrows and the level passes gamma with its ghost', () => {
-    expect(overlayNames(OVERLAYS_FOR_LEVEL[4])).toEqual(['arrows']);
+    expect(overlayNames(OVERLAYS_FOR_LEVEL.policy)).toEqual(['arrows']);
     expect(Object.keys(OVERLAYS)).toEqual(expect.arrayContaining(['arrows', 'trail']));
     expect(read('level-return.js')).toMatch(/gamma/);
   });
@@ -130,7 +130,7 @@ describe('arrows and trail registry', () => {
 
 describe('level 3 trail', () => {
   it('level 3 draws the trail', () => {
-    expect(overlayNames(OVERLAYS_FOR_LEVEL[3])).toContain('trail');
+    expect(overlayNames(OVERLAYS_FOR_LEVEL['return'])).toContain('trail');
   });
   it('the scene shows a focus ring on setFocus', () => {
     expect(read('room-scene.js')).toMatch(/setFocus\(.*focusRing/);
@@ -216,7 +216,7 @@ describe('tags and ice lists', () => {
   it('is registered, and level 6 draws trail, tags and ice', () => {
     expect(OVERLAYS.tags.list(ROOM, { tags: [{ x: 1, y: 1, text: '-1', tone: 'step' }] })).toHaveLength(1);
     expect(OVERLAYS.ice.list(ROOM, { ice: false })).toEqual([]);
-    expect(overlayNames(OVERLAYS_FOR_LEVEL[6])).toEqual(['trail', 'tags', 'ice']);
+    expect(overlayNames(OVERLAYS_FOR_LEVEL.mdp)).toEqual(['trail', 'tags', 'ice']);
   });
 });
 

@@ -13,7 +13,7 @@ describe('lesson view builders', () => {
     const html = lessonBodyHtml(l, args);
     expect(html).toContain('<h1>Lesson 3: Return</h1>');
     for (const id of ['play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
-    expect(html).toContain('<div id="levelRoot" data-level="3"></div>');
+    expect(html).toContain('<div id="levelRoot" data-level="return"></div>');
     expect(html).toContain('<noscript>');
     expect(html).toContain('<section id="writeup">W</section>');
     expect(html).toContain(l.says);

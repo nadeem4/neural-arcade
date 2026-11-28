@@ -9,14 +9,14 @@ const SIZE = [1280, 800]; // 16:10
 const fig = (n, level, overlays) => ({ n, file: `fig-${n}.webp`, size: SIZE, level, overlays, pose: 'default' });
 
 export const FIGURES = [
-  fig(1, 1, ['trail']),
-  fig(2, 3, ['trail']),
-  fig(3, 4, ['arrows', 'trail']),
-  fig(4, 4, ['arrows', 'trail']),
-  fig(5, 5, ['values']), // Fig. 5, after the second sweep
-  fig(6, 5, ['values']), // Fig. 5, settled
-  fig(7, 6, ['trail', 'ice']),
-  fig(8, 6, ['trail', 'ice']),
+  fig(1, 'agent', ['trail']),
+  fig(2, 'return', ['trail']),
+  fig(3, 'policy', ['arrows', 'trail']),
+  fig(4, 'policy', ['arrows', 'trail']),
+  fig(5, 'value', ['values']), // Fig. 5, after the second sweep
+  fig(6, 'value', ['values']), // Fig. 5, settled
+  fig(7, 'mdp', ['trail', 'ice']),
+  fig(8, 'mdp', ['trail', 'ice']),
 ];
 
 // The scene.draw opts for image n.

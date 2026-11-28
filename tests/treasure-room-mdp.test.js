@@ -2,8 +2,8 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ROOM, START, SLIP, valueIteration, greedyPolicy } from '../games/treasure-room/sim.js';
 import { TAGS, tagNote, compareRoutes, simulateTrips, tripsVerdict, mount } from '../games/treasure-room/level-mdp.js';
-import { LEVELS, navModel } from '../games/treasure-room/levels.js';
-import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
+import { LEVELS } from '../games/treasure-room/levels.js';
+import { levelPanelHtml, BUILT_LEVELS } from '../games/treasure-room/level-panel.js';
 import { fakeUi } from './treasure-room-fake-ui.js';
 
 const read = f => readFileSync(new URL(`../games/treasure-room/${f}`, import.meta.url), 'utf8');
@@ -129,10 +129,9 @@ describe('level 6 view and wiring', () => {
     view.destroy();
     expect(ui.listenerCount()).toBe(0);
   });
-  it('the nav lists all six levels and every level has a registered view', () => {
-    expect(navModel([1, 2, 3, 4, 5, 6], 6, String).map(n => n.n)).toEqual([1, 2, 3, 4, 5, 6]);
-    for (const l of LEVELS) expect(panel).toMatch(new RegExp(`\\b${l.n}:\\s*level`));
-    for (const m of html.matchAll(/data-levels="([\d ]+)"/g)) for (const n of m[1].split(' ')) expect(panel).toMatch(new RegExp(`\\b${n}:\\s*level`));
+  it('every level has a registered view, and the panel marks parts only with built level ids', () => {
+    expect(BUILT_LEVELS).toEqual(LEVELS.map(l => l.id));
+    for (const m of html.matchAll(/data-levels="([\w -]+)"/g)) for (const id of m[1].split(' ')) expect(BUILT_LEVELS).toContain(id);
   });
   it('has the level 5 and 6 controls', () => {
     for (const id of ['sweep', 'sweep10', 'walkUp', 'resetSweeps', 'icy', 'dry', 'walkPlan', 'trips', 'showMdp', 'tags']) expect(html).toContain(`id="${id}"`);

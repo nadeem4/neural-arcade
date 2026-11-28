@@ -4,7 +4,7 @@ import * as games from '../assets/games.js';
 import { GAMES, videoOf, newest, heroOf, browse, gameById } from '../assets/games.js';
 import { TRACKS } from '../assets/tracks/index.js';
 import { validateTracks } from '../assets/tracks/model.js';
-import { LEVELS } from '../games/treasure-room/levels.js';
+import { BUILT_LEVELS } from '../games/treasure-room/level-panel.js';
 
 const FIELDS = ['id', 'title', 'lesson', 'learnsBy', 'goesWrongWhen', 'added', 'shot', 'path', 'writeup'];
 const fake = (id, o = {}) => ({ id, title: id, lesson: '', added: '2026-01-01', ...o });
@@ -44,7 +44,7 @@ describe('games data', () => {
     expect(gameById('nope')).toBeUndefined();
   });
   it('the track configs are valid against the games and the Treasure Room levels', () => {
-    expect(validateTracks(TRACKS, GAMES, { 'treasure-room': LEVELS.length })).toEqual([]);
+    expect(validateTracks(TRACKS, GAMES, { 'treasure-room': BUILT_LEVELS })).toEqual([]);
   });
 });
 

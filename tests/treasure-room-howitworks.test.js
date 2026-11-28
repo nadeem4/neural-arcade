@@ -36,11 +36,11 @@ describe('treasure room how it works page', () => {
   });
 
   it('links each step to its concept page', () => {
-    sections.forEach((s, i) => expect(s).toContain(`../../../concepts/${LEVELS[i].concept}/`));
+    sections.forEach((s, i) => expect(s).toContain(`../../../concepts/${LEVELS[i].id}/`));
   });
 
   it('links each step to play its level', () => {
-    sections.forEach((s, i) => expect(s).toContain(`href="../?level=${i + 1}"`));
+    sections.forEach((s, i) => expect(s).toContain(`href="../?level=${LEVELS[i].id}"`));
   });
 
   it('has a Try it live link to the game and no status words', () => {

@@ -7,7 +7,7 @@ const DOT_Y = 0.9;                // above the chest and the pit
 
 // The one place a level gets labels. An entry is { id, kind: 'pill' | 'dot', label?, cell?: grid char, anchor?: 'agent' }.
 export const MARKERS_FOR_LEVEL = {
-  1: [
+  agent: [
     { id: 'agent', kind: 'pill', label: 'Agent', anchor: 'agent' },
     { id: 'treasure', kind: 'dot', cell: 'T' },
     { id: 'pit', kind: 'dot', cell: 'X' },
@@ -15,8 +15,8 @@ export const MARKERS_FOR_LEVEL = {
 };
 
 // The level's markers; a cell marker gets its world position from the grid, an agent marker is placed by the scene each frame.
-export function markersFor(n, room) {
-  return (MARKERS_FOR_LEVEL[n] ?? []).map(m => {
+export function markersFor(id, room) {
+  return (MARKERS_FOR_LEVEL[id] ?? []).map(m => {
     if (!m.cell) return { ...m };
     for (let y = 0; y < room.h; y++) {
       const x = room.cells[y].indexOf(m.cell);

@@ -67,8 +67,8 @@ export function moreGames(game, games, tracks = TRACKS, max = 3) {
   return [...sharing, ...others.filter(g => !sharing.includes(g))].slice(0, max);
 }
 
-export const lessonOfLevel = (gameId, n, tracks = TRACKS) =>
-  flatLessons(tracks).find(l => l.game === gameId && l.level === n);
+export const lessonOfLevel = (gameId, id, tracks = TRACKS) =>
+  flatLessons(tracks).find(l => l.game === gameId && l.level === id);
 
 // The lesson's own video, else the game's video for a whole-game lesson.
 export function lessonVideo(lesson, games = GAMES) {
@@ -77,7 +77,7 @@ export function lessonVideo(lesson, games = GAMES) {
 }
 
 // Every problem with the config as a message; empty when it is valid.
-export function validateTracks(tracks, games, levelCounts) {
+export function validateTracks(tracks, games, builtLevels) {
   const errs = [];
   const gameIds = new Set(games.map(g => g.id));
   const checkGame = (game, where) => { if (!gameIds.has(game)) errs.push(`${where}: unknown game ${game}`); };
@@ -97,9 +97,9 @@ export function validateTracks(tracks, games, levelCounts) {
       if (lesson.level == null && !lesson.game) errs.push(`${at}: needs a level or a game`);
       if (lesson.game) checkGame(lesson.game, at);
       if (lesson.status === 'live' && lesson.level != null && game) {
-        const count = levelCounts[game];
-        if (count == null) errs.push(`${at}: no level count for game ${game}`);
-        else if (lesson.level > count) errs.push(`${at}: level ${lesson.level} is beyond the ${count} levels of ${game}`);
+        const built = builtLevels[game];
+        if (!built) errs.push(`${at}: no built levels for game ${game}`);
+        else if (!built.includes(lesson.level)) errs.push(`${at}: level ${lesson.level} is not a built level of ${game}`);
       }
       if (lesson.video !== null && !/^[\w-]{11}$/.test(lesson.video ?? '')) errs.push(`${at}: video must be null or an 11-character id`);
       for (const w of lesson.wild ?? []) {

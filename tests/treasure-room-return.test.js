@@ -12,9 +12,9 @@ const r2 = v => Math.sign(v) * Math.round(Math.abs(v) * 100) / 100;
 
 describe('the coin room', () => {
   it('level 3 has a coin tile and no other level does', () => {
-    expect(roomForLevel(3)).toBe(COIN_ROOM);
+    expect(roomForLevel('return')).toBe(COIN_ROOM);
     expect(COIN_ROOM.cells[3][0]).toBe('C');
-    for (const n of [1, 2, 4, 5, 6]) expect(roomForLevel(n)).toBe(ROOM);
+    for (const id of ['agent', 'state-action-reward', 'policy', 'value', 'mdp']) expect(roomForLevel(id)).toBe(ROOM);
     expect(ROOM.cells.flat()).not.toContain('C');
   });
   it('stepping onto the coin pays 2 and ends the round', () => {

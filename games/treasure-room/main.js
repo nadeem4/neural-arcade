@@ -7,15 +7,15 @@ import { mountLevelPlay, BUILT_LEVELS } from './level-panel.js';
 import { parseShots } from './shots.js'; // pure and small; the capture mount itself loads below only on ?shots=1
 
 const $ = id => document.getElementById(id);
-const titleOf = n => lessonOfLevel('treasure-room', n).title;
+const titleOf = id => lessonOfLevel('treasure-room', id).title;
 let handle = null;
 
-function mountLevel(n) {
+function mountLevel(id) {
   handle?.destroy();
-  const nav = navModel(BUILT_LEVELS, n, titleOf);
-  n = nav.find(x => x.current).n;
+  const nav = navModel(BUILT_LEVELS, id, titleOf);
+  const cur = nav.find(x => x.current);
   $('levels').innerHTML = nav.map(x => `<a href="${x.href}"${x.current ? ' aria-current="true"' : ''}><b>${x.n}</b> ${x.title}</a>`).join('');
-  handle = mountLevelPlay($('levelRoot'), { n, title: `Level ${n}: ${titleOf(n)}` });
+  handle = mountLevelPlay($('levelRoot'), { id: cur.id, title: `Level ${cur.n}: ${cur.title}` });
 }
 
 $('levels').addEventListener('click', e => {
@@ -23,7 +23,7 @@ $('levels').addEventListener('click', e => {
   if (!a) return;
   e.preventDefault();
   history.replaceState(null, '', a.getAttribute('href'));
-  mountLevel(levelFromUrl(location.search, location.hash));
+  mountLevel(levelFromUrl(location.search, location.hash, BUILT_LEVELS));
 });
 
 // Start the 3D scene and models before the first mount asks for them, and on a hover over the level nav. Every level is 3D and
@@ -40,5 +40,5 @@ if (shot) {
   document.body.innerHTML = '<div id="shotBox"></div>';
   import('./shots.js').then(m => m.mountShots(document.getElementById('shotBox'), shot));
 } else {
-  mountLevel(levelFromUrl(location.search, location.hash));
+  mountLevel(levelFromUrl(location.search, location.hash, BUILT_LEVELS));
 }

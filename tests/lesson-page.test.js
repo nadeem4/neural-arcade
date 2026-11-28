@@ -26,7 +26,7 @@ describe('mountLessonPage', () => {
     const mountLevel = vi.fn(() => ({ redraw() {} }));
     const storage = store('["return"]');
     mountLessonPage({ id: 'return', base: '../../', doc, storage, mountLevel });
-    expect(mountLevel).toHaveBeenCalledWith(levelRoot, expect.objectContaining({ n: 3, showTitle: false }));
+    expect(mountLevel).toHaveBeenCalledWith(levelRoot, expect.objectContaining({ id: 'return', showTitle: false }));
     expect(markDone.getAttribute('aria-pressed')).toBe('true');
     markDone.click();
     expect(storage.get()).toBe('[]');
