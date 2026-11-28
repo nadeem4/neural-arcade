@@ -13,7 +13,7 @@ export function fakeUi(room = ROOM) {
         opts?.signal?.addEventListener('abort', () => { if (handlers[t].delete(fn)) listeners--; });
       },
       removeEventListener(t, fn) { if (handlers[t]?.delete(fn)) listeners--; },
-      setAttribute() {}, focus() {}, querySelector: () => null, querySelectorAll: () => [],
+      setAttribute() {}, removeAttribute() {}, focus() {}, querySelector: () => null, querySelectorAll: () => [],
     };
   };
   const get = sel => (els[sel] ??= make());

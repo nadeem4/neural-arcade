@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { lessonById } from '../assets/tracks/model.js';
+import { lessonById, flatLessons } from '../assets/tracks/model.js';
+import { esc } from '../assets/tracks/shell.js';
 import { GAMES } from '../assets/games.js';
 import { crumbHtml, videoSlotHtml, wildListHtml, ownLineHtml, neighboursHtml, markDoneHtml, lessonBodyHtml, bannerStageHtml, readHtml } from '../assets/tracks/lesson-view.js';
 
@@ -62,6 +63,35 @@ describe('lesson view builders', () => {
     expect(markDoneHtml(true)).toContain('aria-pressed="true"');
     expect(markDoneHtml(true)).toContain('Done');
   });
+});
+
+describe('a lesson with a question', () => {
+  const q = { ...l, question: 'Who decides, and who answers?' };
+  const html = lessonBodyHtml(q, args);
+  it('leads with the question and puts the idea (says) after the room, before the write-up', () => {
+    const at = ['class="question"', 'id="play"', '<h2>The idea</h2>', 'id="writeup"', 'id="watch"'].map(s => html.indexOf(s));
+    expect(at).not.toContain(-1);
+    expect(at).toEqual([...at].sort((a, b) => a - b));
+    expect(html).not.toContain('class="lead"');
+    expect(html.indexOf(l.says)).toBeGreaterThan(html.indexOf('<h2>The idea</h2>'));
+  });
+});
+
+describe('the lesson shape of every live lesson with a question', () => {
+  const shaped = flatLessons().filter(x => x.status === 'live' && x.question);
+  it('there is at least one', () => expect(shaped.length).toBeGreaterThan(0));
+  for (const x of shaped) {
+    it(`${x.id}: question first, idea after the room, write-up in shape`, () => {
+      const w = readFileSync(new URL(`../concepts/${x.id}/writeup.html`, import.meta.url), 'utf8');
+      const html = lessonBodyHtml(x, { games: GAMES, base: B, writeupHtml: w });
+      expect(html.indexOf(esc(x.question))).toBeLessThan(html.indexOf('id="play"'));
+      expect(html.indexOf('<h2>The idea</h2>')).toBeGreaterThan(html.indexOf('id="play"'));
+      const at = ['One worked number', 'Key terms', '<details class="incode">', '<b>The lesson:</b>'].map(s => w.indexOf(s));
+      expect(at).not.toContain(-1);
+      expect(at).toEqual([...at].sort((a, b) => a - b));
+      expect(w.match(/<tbody>[\s\S]*?<\/tbody>/)[0].match(/<tr>/g).length).toBeLessThanOrEqual(3);
+    });
+  }
 });
 
 describe('whole-game lessons', () => {

@@ -139,18 +139,22 @@ export function levelPanelHtml({ showTitle = true } = {}) {
       <section class="controls" data-levels="loop state" aria-labelledby="ph">
         <h2><span id="ph">Move</span> <button class="info" type="button" aria-expanded="false" aria-controls="info-reward" aria-label="Explain the rewards" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button></h2>
         <p class="info-text" id="info-reward" data-info="reward" hidden></p>
-        <div class="pad" role="group" aria-labelledby="ph">
+        <nav class="steps" id="loopTabs" aria-label="Lesson steps" data-levels="loop">${levelAgent.tabsHtml}</nav>
+        <p id="stepHint" data-levels="loop"></p>
+        <div class="pad" id="pad" role="group" aria-labelledby="ph">
           <button type="button" data-move="0" aria-label="Up">&uarr;</button>
           <button type="button" data-move="2" aria-label="Left">&larr;</button>
           <button type="button" data-move="1" aria-label="Down">&darr;</button>
           <button type="button" data-move="3" aria-label="Right">&rarr;</button>
         </div>
         <div class="row-btns">
-          <button class="btn primary" type="button" id="handover">Let the AI play</button>
+          <button class="btn primary" type="button" id="stepBtn" hidden>Step</button>
+          <button class="btn primary" type="button" id="handover" data-levels="state">Let the AI play</button>
           <button class="btn" type="button" id="restart">Restart</button>
           <button class="info" type="button" aria-expanded="false" aria-controls="info-restart" aria-label="Explain restart" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
         </div>
         <p class="info-text" id="info-restart" data-info="restart" hidden></p>
+        <div class="turn" id="turn" hidden><p id="turnSends"></p><p id="turnAnswers"></p></div>
       </section>
     </aside>
 `;

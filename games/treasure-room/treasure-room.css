@@ -67,6 +67,8 @@
 .pad [data-move="3"] { grid-area: right; }
 
 /* Level 1: what comes back to the AI, and the two arrows that light on every step. */
+.turn { display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; background: var(--track); font: 600 13px/1.6 var(--mono); }
+.turn p { margin: 0; }
 .sees { display: block; padding: 10px 12px; border-radius: 8px; background: var(--track); font: 600 14px/1.5 var(--mono); }
 .arrows { display: flex; justify-content: space-between; gap: 8px; font: 600 13px/1.5 var(--sans); color: var(--ink-2); }
 .arrows .lit { color: var(--signal); }

@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ROOM, START, REWARD } from '../games/treasure-room/sim.js';
-import { initial, reduce } from '../games/treasure-room/level-agent.js';
+import { initial, reduce, mount } from '../games/treasure-room/level-agent.js';
+import { fakeUi } from './treasure-room-fake-ui.js';
 import { appendLog, tagsFor } from '../games/treasure-room/level-triples.js';
 import { logLine } from '../games/treasure-room/words.js';
 
@@ -58,5 +59,53 @@ describe('level 2 log', () => {
     expect(tagsFor({ pos: { x: 4, y: 3 }, reward: 10 })[0]).toMatchObject({ text: '+10', tone: 'good' });
     expect(tagsFor({ pos: { x: 2, y: 2 }, reward: -10 })[0]).toMatchObject({ text: '−10', tone: 'bad' });
     expect(tagsFor(null)).toEqual([]);
+  });
+});
+
+describe('level 1 steps (mount)', () => {
+  let ui, view, score, steps;
+  const el = id => ui.panel.querySelector(id);
+  const press = (id, n = 1) => { for (let i = 0; i < n; i++) ui.click(id); };
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    vi.stubGlobal('document', { addEventListener() {}, removeEventListener() {} });
+    ui = fakeUi();
+    ui.readout = (st, sc) => { steps = st; score = sc; };
+    view = mount(ui);
+  });
+  afterEach(() => { view.destroy(); vi.unstubAllGlobals(); });
+
+  it('answer off: ten presses send Right into the wall, score -10, and the robot hears nothing', () => {
+    press('#tab2');
+    press('#stepBtn', 10);
+    expect(ui.last().agent).toEqual({ x: 4, y: 1 });
+    expect([steps, score]).toEqual([10, -10]);
+    expect(el('#turn').hidden).toBe(true);
+  });
+  it('answer on: six presses reach the treasure for +5, and the turn card shows the last turn', () => {
+    press('#tab3');
+    press('#stepBtn');
+    expect(el('#turnSends').textContent).toBe('Agent sends: action Right');
+    expect(el('#turnAnswers').textContent).toBe('Room answers: reward -1, now at x 1, y 1');
+    expect(el('#turn').hidden).toBe(false);
+    press('#stepBtn', 5);
+    expect([steps, score]).toEqual([6, 5]);
+    expect(ui.said.at(-1)).toContain('Found the treasure');
+    expect(el('#stepBtn').disabled).toBe(true);
+  });
+  it('a tab starts from the start tile with zero score, and Restart does too', () => {
+    press('#tab3');
+    press('#stepBtn', 3);
+    press('#tab2');
+    expect([steps, score]).toEqual([0, 0]);
+    expect(ui.last().agent).toEqual({ x: 0, y: 1 });
+    press('#stepBtn', 2);
+    press('#restart');
+    expect([steps, score]).toEqual([0, 0]);
+  });
+  it('step 1 shows the arrow pad and no Step button, steps 2 and 3 the reverse', () => {
+    expect([el('#pad').hidden, el('#stepBtn').hidden]).toEqual([false, true]);
+    press('#tab2');
+    expect([el('#pad').hidden, el('#stepBtn').hidden]).toEqual([true, false]);
   });
 });

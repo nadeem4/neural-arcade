@@ -18,6 +18,10 @@ describe('levelPanelHtml', () => {
       expect(html, id).toContain(`id="${id}"`);
     }
   });
+  it('uses each element id once, since every level looks its controls up by id', () => {
+    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(m => m[1]);
+    expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([]);
+  });
   it('wraps the 2D canvas in the room box the host swaps backends in, and draws through the host', () => {
     expect(html).toMatch(/<div class="room" id="roomBox"/);
     expect(panel).toMatch(/createRoomHost\(/);

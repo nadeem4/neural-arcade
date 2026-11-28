@@ -98,10 +98,12 @@ describe('every concept page', () => {
   it('the eight concept pages are generated shells with the shared sections and the lesson says as lead', () => {
     for (const id of WITH_WRITEUP) {
       const html = read(id, 'index.html');
-      for (const s of ['tries', 'writeup', 'play', 'watch', 'read', ...(NO_GRID.includes(id) ? [] : ['playground'])]) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
+      for (const s of [...(lessonById(id).question ? [] : ['tries']), 'writeup', 'play', 'watch', 'read', ...(NO_GRID.includes(id) ? [] : ['playground'])]) expect(html, `${id} #${s}`).toContain(`id="${s}"`);
       for (const a of ['assets/studio.css', 'assets/concept.css', 'assets/lesson.css', 'assets/lesson-page.js']) expect(html, `${id} ${a}`).toContain(a);
-      const lead = html.match(/<p class="lead">(.*?)<\/p>/s)[1].replace(/&#39;/g, "'").replace(/&quot;/g, '"');
-      expect(lead, id).toBe(lessonById(id).says);
+      const unesc = t => t.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+      const lesson = lessonById(id);
+      if (lesson.question) expect(unesc(html.match(/<p class="question">(.*?)<\/p>/s)[1]), id).toBe(lesson.question);
+      else expect(unesc(html.match(/<p class="lead">(.*?)<\/p>/s)[1]), id).toBe(lesson.says);
       expect(read(id, 'writeup.html'), id).toContain('id="writeup"');
       if (!NO_GRID.includes(id)) expect(read(id, 'page.js'), id).toContain('wireTries');
     }

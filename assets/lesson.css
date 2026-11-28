@@ -6,6 +6,9 @@
 .lesson-page .play .panel h2 { font-size: 18px; letter-spacing: -.01em; }
 
 .lesson-page .play p { max-width: none; }
+.question { margin: 0; max-width: 32ch; font-size: 22px; line-height: 1.35; font-weight: 600; color: var(--ink-2); }
+.idea { display: grid; gap: 8px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.idea h2, .idea p { margin: 0; max-width: 60ch; }
 .own { margin: 0; font-size: 16px; color: var(--ink-2); }
 .done-row { margin: 0; }
 #markDone { min-height: 44px; height: auto; }
