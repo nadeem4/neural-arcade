@@ -1,7 +1,7 @@
 // Treasure Room words: the page lesson, the (i) texts and the lines the game prints.
 import { REWARD } from './sim.js';
 
-export const LESSON = 'Six small ideas, one room: the AI only ever knows what the room tells it.';
+export const LESSON = 'Seven small ideas, one room: the AI only ever knows what the room tells it.';
 
 export const INFO = {
   room: 'The room is a small grid with a treasure, a pit and a few walls.',

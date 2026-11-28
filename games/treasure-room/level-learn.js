@@ -1,4 +1,3 @@
-// Lesson 1: drive with the lights off, see what each move paid, then watch a robot learn the room over 200 tries.
 import { initial, reduce, wireDrive } from './level-agent.js';
 import { learn, TRIES } from './learner.js';
 import { outcomeNote } from './words.js';
@@ -13,6 +12,7 @@ const TABS = [
 export const tabsHtml = TABS.map((t, i) => `<button type="button" id="learnTab${i + 1}">${t.label}</button>`).join('');
 
 const sum = list => list.reduce((a, b) => a + b, 0);
+const mean10 = scores => scores.map((_, i) => sum(scores.slice(Math.max(0, i - 9), i + 1)) / Math.min(i + 1, 10));
 const chips = rewards => rewards.map(r => `<span class="rwd">${r}</span>`).join('');
 
 export function mount(ui) {
@@ -56,7 +56,7 @@ export function mount(ui) {
     if (s.steps === before) return;
     rewards.push(s.lastObs.reward);
     ui.flash();
-    if (s.done && tab === 2) ui.say(outcomeNote(s.outcome, s.total));
+    if (s.done) ui.say(tab === 2 ? outcomeNote(s.outcome, s.total) : 'This try has ended. Open step 2 to see what it paid.');
     paintDrive();
   }
 
@@ -84,7 +84,7 @@ export function mount(ui) {
   on($('#watchFirst'), 'click', () => watch(ensure().first, 'Try 1'));
   on($('#skipTrain'), 'click', () => {
     stop(); ensure(); trained = true;
-    ui.curve(run.scores);
+    ui.curve(mean10(run.scores));
     $('#tryNote').textContent = `Try ${TRIES}`;
     paintTab();
   });
@@ -92,5 +92,5 @@ export function mount(ui) {
   wireDrive(on, ui, () => s.pos, () => !s.done && tab !== 3, move);
 
   show(1);
-  return { destroy() { stop(); ac.abort(); }, redraw() { if (trained) ui.curve(run.scores); } };
+  return { destroy() { stop(); ac.abort(); }, redraw() { if (trained) ui.curve(mean10(run.scores)); } };
 }

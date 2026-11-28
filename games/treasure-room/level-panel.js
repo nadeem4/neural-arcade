@@ -165,7 +165,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
           </div>
           <p class="why" id="learnWhy"></p>
           <output class="tally" id="tryNote"></output>
-          <canvas class="curve" id="curve" role="img" aria-label="Score of each try, rising from below zero to plus 5" hidden></canvas>
+          <canvas class="curve" id="curve" role="img" aria-label="Average score of the last 10 tries, rising from below zero to above zero" hidden></canvas>
         </div>
         <div class="row-btns"><button class="btn" type="button" id="learnRestart">Start over</button></div>
       </section>

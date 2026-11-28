@@ -22,6 +22,11 @@ describe('learning by reward steps (mount)', () => {
     expect(el('#learnSees').textContent).toBe('x 3, y 4, reward ?');
     expect([steps, score]).toEqual([10, '?']);
   });
+  it('step 1: a try that falls in the pit ends aloud, without giving the reward away', () => {
+    press('#learnRight', 2);
+    press('#learnDown');
+    expect(ui.said.at(-1)).toBe('This try has ended. Open step 2 to see what it paid.');
+  });
   it('step 2: the lights come on and your moves show as rewards that add up to the score', () => {
     press('#learnRight', 2);
     press('#learnDown');
@@ -46,10 +51,13 @@ describe('learning by reward steps (mount)', () => {
     expect(el('#watchLast').disabled).toBe(false);
     expect(el('#learnWhy').textContent).toBe('');
   });
-  it('Skip to try 200 draws the score of every try, and Watch try 200 reaches the treasure for +5 in 6 steps', () => {
+  it('Skip to try 200 draws the average of the last 10 tries, from below zero to at or above zero, and Watch try 200 reaches the treasure for +5 in 6 steps', () => {
     press('#learnTab3');
     press('#skipTrain');
-    expect(ui.curves.at(-1)).toHaveLength(200);
+    const curve = ui.curves.at(-1);
+    expect(curve).toHaveLength(200);
+    expect(curve[0]).toBeLessThan(0);
+    expect(curve.at(-1)).toBeGreaterThanOrEqual(0);
     expect(el('#tryNote').textContent).toBe('Try 200');
     press('#watchLast');
     expect([steps, score]).toEqual([6, 5]);
