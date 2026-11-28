@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { levelPanelHtml } from '../games/treasure-room/level-panel.js';
 
 // The Treasure Room level on each page is the only playground; these four lessons used to repeat it as a 2D grid.
-const IDS = ['agent', 'state-action-reward', 'policy', 'value'];
+const IDS = ['loop', 'state', 'policy', 'value'];
 const read = (id, f) => readFileSync(new URL(`../concepts/${id}/${f}`, import.meta.url), 'utf8');
 const pageJs = id => (existsSync(new URL(`../concepts/${id}/page.js`, import.meta.url)) ? read(id, 'page.js') : '');
 const triesOf = id => [...read(id, 'index.html').match(/<ol class="tries" id="tries">([\s\S]*?)<\/ol>/)[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map(m => m[1]);
@@ -31,8 +31,8 @@ describe('each lesson try names a control the level really has', () => {
   const inPanel = l => new RegExp(`>${l}[\\s<]`).test(panel);
   const handover = (file, l) => level(file).includes(`handover: '${l}'`);
   const CONTROLS = {
-    agent: [['Hand over to the AI', () => handover('level-agent.js', 'Hand over to the AI')], ['What the AI sees', () => inPanel('What the AI sees')]],
-    'state-action-reward': [['Log', () => inPanel('Log')]],
+    loop: [['Hand over to the AI', () => handover('level-agent.js', 'Hand over to the AI')], ['What the AI sees', () => inPanel('What the AI sees')]],
+    'state': [['Log', () => inPanel('Log')]],
     policy: [['Go', () => inPanel('Go')], ['Let the AI fix it', () => inPanel('Let the AI fix it')]],
     value: [['Sweep', () => inPanel('Sweep')], ['Sweep x10', () => inPanel('Sweep x10')], ['Discount', () => inPanel('Discount')], ['Walk uphill', () => inPanel('Walk uphill')]],
   };
@@ -46,11 +46,11 @@ describe('each lesson try names a control the level really has', () => {
     });
   }
   it('no try uses the wrong handover label, adds a pointless Go after the fix, or moves Discount before Walk uphill', () => {
-    expect(triesOf('agent').join(' ')).not.toContain('Let the AI play');
+    expect(triesOf('loop').join(' ')).not.toContain('Let the AI play');
     expect(triesOf('policy').join(' ')).not.toMatch(/fix it[^.]*then press Go/i);
     expect(triesOf('value')[2]).not.toMatch(/Discount/);
   });
-  it('state-action-reward writes the minus the way the log does', () => {
-    expect(triesOf('state-action-reward').join(' ')).toContain('−10');
+  it('state writes the minus the way the log does', () => {
+    expect(triesOf('state').join(' ')).toContain('−10');
   });
 });

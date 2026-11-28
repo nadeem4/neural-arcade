@@ -11,7 +11,7 @@ const args = { games: GAMES, base: B, writeupHtml: '<section id="writeup">W</sec
 describe('lesson view builders', () => {
   it('body has the number in the h1 and the three anchors the track rows link to', () => {
     const html = lessonBodyHtml(l, args);
-    expect(html).toContain('<h1>Lesson 3: Return</h1>');
+    expect(html).toContain('<h1>Lesson 6: Return</h1>');
     for (const id of ['play', 'watch', 'read']) expect(html).toContain(`id="${id}"`);
     expect(html).toContain('<div id="levelRoot" data-level="return"></div>');
     expect(html).toContain('<noscript>');
@@ -25,7 +25,8 @@ describe('lesson view builders', () => {
     expect(at).toEqual([...at].sort((a, b) => a - b));
   });
   it('crumb links the track and counts the lesson', () => {
-    expect(crumbHtml(l, B)).toContain('<a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 3 of 19');
+    expect(crumbHtml(l, B)).toContain('<a href="../../reinforcement-learning/">Reinforcement learning</a> / A chain of decisions / Lesson 6 of 26');
+    expect(lessonBodyHtml(lessonById('mdp'), args)).toContain('<h1>Lesson 9: When moves slip: the MDP</h1>');
   });
   it('video slot: own video, game video, or coming soon', () => {
     expect(videoSlotHtml(l, GAMES, B)).toContain('Video coming soon');
@@ -48,12 +49,12 @@ describe('lesson view builders', () => {
     expect(ownLineHtml({ ...l, wild: [] })).toBe('');
   });
   it('neighbours are numbered labels and a missing side is omitted', () => {
-    expect(neighboursHtml(lessonById('agent'), B)).not.toContain('Previous');
-    expect(neighboursHtml(lessonById('agent'), B)).toContain('Lesson 2: State, action, reward');
+    expect(neighboursHtml(lessonById('loop'), B)).not.toContain('Previous');
+    expect(neighboursHtml(lessonById('loop'), B)).toContain('Lesson 5: State');
     const mid = neighboursHtml(l, B);
-    expect(mid).toContain('href="../../concepts/state-action-reward/"');
-    expect(mid).toContain('Lesson 4: Policy');
-    expect(neighboursHtml(lessonById('mdp'), B)).toContain('Lesson 19: Reward design');
+    expect(mid).toContain('href="../../concepts/state/"');
+    expect(mid).toContain('Lesson 7: Policy');
+    expect(neighboursHtml(lessonById('mdp'), B)).toContain('Lesson 25: Reward design');
   });
   it('mark done button carries its state', () => {
     expect(markDoneHtml(false)).toContain('aria-pressed="false"');

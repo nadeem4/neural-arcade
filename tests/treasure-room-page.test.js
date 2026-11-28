@@ -16,7 +16,7 @@ const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1]
 
 describe('treasure room deep links', () => {
   it('a level that is not built falls back to the first built one', () => {
-    expect(navModel(['agent', 'return'], 'bandit', String).find(n => n.current).id).toBe('agent');
+    expect(navModel(['loop', 'return'], 'bandit', String).find(n => n.current).id).toBe('loop');
   });
 });
 
@@ -40,7 +40,7 @@ describe('treasure room page mounts the shared panel', () => {
   it('the nav reads its names from the track config', () => {
     const titleOf = id => lessonOfLevel('treasure-room', id).title;
     expect(navModel(BUILT_LEVELS, 'return', titleOf).find(x => x.id === 'return').title).toBe('Return');
-    expect(navModel(BUILT_LEVELS, 'return', titleOf).find(x => x.id === 'mdp').title).toBe('MDP');
+    expect(navModel(BUILT_LEVELS, 'return', titleOf).find(x => x.id === 'mdp').title).toBe('When moves slip: the MDP');
     expect(main).toContain('lessonOfLevel');
   });
 });
@@ -112,7 +112,7 @@ describe('treasure-room.css', () => {
 describe('3D by default needs the import map and the docs say so', () => {
   it('carries the import map on the game page and the six lesson pages', () => {
     expect(read('games/treasure-room/index.html')).toContain('importmap');
-    for (const id of ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']) expect(read(`concepts/${id}/index.html`), id).toContain('importmap');
+    for (const id of ['loop', 'state', 'return', 'policy', 'value', 'mdp']) expect(read(`concepts/${id}/index.html`), id).toContain('importmap');
   });
   it('documents the loader and the 3D-only host', () => {
     expect(read('README.md')).toMatch(/room-loader\.js/);

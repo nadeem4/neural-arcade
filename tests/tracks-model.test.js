@@ -6,43 +6,43 @@ import {
 } from '../assets/tracks/model.js';
 import { GAMES, gameById } from '../assets/games.js';
 
-const built = { 'treasure-room': ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'] };
+const built = { 'treasure-room': ['loop', 'state', 'return', 'policy', 'value', 'mdp'] };
 const bad = edit => { const t = structuredClone(TRACKS); edit(t); return validateTracks(t, GAMES, built); };
 
 describe('lesson model', () => {
   it('numbers lessons within their track and resolves the game', () => {
     const all = flatLessons();
-    expect(all).toHaveLength(2 + 19 + 1);
+    expect(all).toHaveLength(2 + 26 + 1);
     const ret = lessonById('return');
-    expect(ret).toMatchObject({ trackId: 'reinforcement-learning', partTitle: 'The problem', partIndex: 0, n: 3, total: 19, game: 'treasure-room', whole: false });
-    expect(lessonById('reward-design')).toMatchObject({ n: 19, game: 'city', whole: true });
+    expect(ret).toMatchObject({ trackId: 'reinforcement-learning', partTitle: 'A chain of decisions', partIndex: 2, n: 6, total: 26, game: 'treasure-room', whole: false });
+    expect(lessonById('reward-design')).toMatchObject({ n: 25, game: 'city', whole: true });
     expect(lessonById('pid')).toMatchObject({ n: 1, total: 1, game: 'balance' });
     expect(lessonById('nope')).toBeUndefined();
   });
   it('formats labels and links', () => {
-    expect(lessonLabel(lessonById('return'))).toBe('Lesson 3: Return');
-    expect(lessonLabel(lessonById('return'), ', ')).toBe('Lesson 3, Return');
+    expect(lessonLabel(lessonById('return'))).toBe('Lesson 6: Return');
+    expect(lessonLabel(lessonById('return'), ', ')).toBe('Lesson 6, Return');
     expect(lessonHref(lessonById('return'), '../../')).toBe('../../concepts/return/');
     expect(trackHref('physical-ai', '../')).toBe('../physical-ai/');
   });
   it('finds live neighbours in the same track', () => {
-    expect(neighbours('mdp').next.id).toBe('reward-design'); // lessons 7 to 18 are soon
+    expect(neighbours('mdp').next.id).toBe('reward-design'); // lessons 10 to 24 are soon
     expect(neighbours('reward-design').next).toBeNull();
     expect(neighbours('mdp').prev.id).toBe('value');
-    expect(neighbours('agent').prev).toBeNull();
+    expect(neighbours('loop').prev).toBeNull();
     expect(neighbours('learning-from-examples').next.id).toBe('learning-by-selection');
     expect(neighbours('learning-by-selection').next).toBeNull();
   });
   it('counts lessons', () => {
-    expect(trackCounts(trackById('reinforcement-learning'))).toEqual({ total: 19, live: 7, soon: 12 });
+    expect(trackCounts(trackById('reinforcement-learning'))).toEqual({ total: 26, live: 7, soon: 19 });
   });
   it('builds chips from live lessons only', () => {
-    expect(chipsForGame('maze').map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value']);
+    expect(chipsForGame('maze').map(c => c.id)).toEqual(['loop', 'state', 'return', 'policy', 'value']);
     expect(chipsForGame('city').map(c => c.id)).toContain('reward-design');
-    expect(chipsForGame('runner').map(c => c.id)).toEqual(['agent', 'state-action-reward', 'policy', 'reward-design']);
-    expect(chipsForGame('treasure-room').map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']);
+    expect(chipsForGame('runner').map(c => c.id)).toEqual(['loop', 'state', 'policy', 'reward-design']);
+    expect(chipsForGame('treasure-room').map(c => c.id)).toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp']);
     expect(chipsForGame('maze')[2]).toEqual({
-      id: 'return', label: 'Lesson 3: Return', href: 'concepts/return/',
+      id: 'return', label: 'Lesson 6: Return', href: 'concepts/return/',
       says: 'The Discount slider sets how much far-off reward counts, which decides whether it walks to the small or the big treasure.',
     });
     expect(chipsForGame('teach')).toEqual([{ id: 'learning-from-examples', label: 'Lesson 1: Learning from examples', href: 'concepts/learning-from-examples/', says: null }]);
@@ -69,7 +69,7 @@ describe('validateTracks', () => {
   });
   const rl = t => t[1].parts[0].lessons;
   it('rejects a duplicate lesson id', () => {
-    expect(bad(t => { rl(t)[1].id = 'agent'; }).join()).toMatch(/duplicate lesson id agent/);
+    expect(bad(t => { rl(t)[0].id = 'loop'; }).join()).toMatch(/duplicate lesson id loop/);
   });
   it('rejects a duplicate track id', () => {
     expect(bad(t => { t[2].id = 'neural-networks'; }).join()).toMatch(/duplicate track id neural-networks/);
@@ -81,20 +81,20 @@ describe('validateTracks', () => {
     expect(bad(t => { t[0].parts[0].lessons[0].game = undefined; }).join()).toMatch(/learning-from-examples.*level or a game/);
   });
   it('rejects an unknown game', () => {
-    expect(bad(t => { rl(t)[0].wild[0].game = 'ghost'; }).join()).toMatch(/unknown game ghost/);
+    expect(bad(t => { rl(t)[1].wild[0].game = 'ghost'; }).join()).toMatch(/unknown game ghost/);
     expect(bad(t => { t[0].parts[0].lessons[0].game = 'ghost'; }).join()).toMatch(/unknown game ghost/);
     expect(bad(t => { t[2].game = 'ghost'; }).join()).toMatch(/unknown game ghost/);
   });
   it('rejects a live level that is not built, or a game with no built levels', () => {
-    expect(bad(t => { rl(t)[0].level = 'bandit'; }).join()).toMatch(/level bandit is not a built level/);
+    expect(bad(t => { rl(t)[1].level = 'bandit'; }).join()).toMatch(/level bandit is not a built level/);
     expect(validateTracks(TRACKS, GAMES, {}).join()).toMatch(/no built levels/);
   });
   it('rejects a level that is not the lesson\'s own id', () => {
-    expect(bad(t => { rl(t)[1].level = 'agent'; }).join()).toMatch(/level agent must be its own id/);
+    expect(bad(t => { rl(t)[0].level = 'loop'; }).join()).toMatch(/level loop must be its own id/);
   });
   it('rejects a wild entry without says or a boolean show', () => {
-    expect(bad(t => { rl(t)[0].wild[0].says = ''; }).join()).toMatch(/says/);
-    expect(bad(t => { rl(t)[0].wild[0].show = 'yes'; }).join()).toMatch(/show/);
+    expect(bad(t => { rl(t)[1].wild[0].says = ''; }).join()).toMatch(/says/);
+    expect(bad(t => { rl(t)[1].wild[0].show = 'yes'; }).join()).toMatch(/show/);
   });
   it('rejects needs pointing nowhere', () => {
     expect(bad(t => { t[1].needs[0].track = 'ghost'; }).join()).toMatch(/needs.*track ghost/);

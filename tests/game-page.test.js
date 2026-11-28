@@ -36,7 +36,7 @@ describe('mountGamePage lessons row', () => {
     const els = await mount(['uses', 'usesChips', 'usesTitle']);
     expect(els.uses.hidden).toBe(false);
     expect(els.usesTitle.innerHTML).toBe('Lessons this game appears in');
-    expect(els.usesChips.innerHTML).toContain('href="../../concepts/return/">Lesson 3: Return</a>');
+    expect(els.usesChips.innerHTML).toContain('href="../../concepts/return/">Lesson 6: Return</a>');
   });
   it('a page without the #uses section still sets up the rest', async () => {
     const els = await mount(['crumb']);

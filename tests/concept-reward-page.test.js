@@ -25,7 +25,7 @@ describe('reward design lesson page', () => {
   });
   it('has one h1, the numbered title and the lesson line as description and lead', () => {
     expect(html.match(/<h1[ >]/g)).toHaveLength(1);
-    expect(html).toContain('<h1>Lesson 19: Reward design</h1>');
+    expect(html).toContain('<h1>Lesson 25: Reward design</h1>');
     expect(html.match(/<meta name="description" content="([^"]*)"/)[1]).toBe(lesson.says);
     expect(html.match(/<p class="lead">([\s\S]*?)<\/p>/)[1]).toBe(lesson.says);
   });

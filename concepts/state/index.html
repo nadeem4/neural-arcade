@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lesson 2: State, action, reward · Neural Arcade</title>
-<meta name="description" content="Every step is three things: the state you are in, the action you take, the reward you get back.">
-<link rel="canonical" href="https://arcade.codewithnk.com/concepts/state-action-reward/">
+<title>Lesson 5: State · Neural Arcade</title>
+<meta name="description" content="The state is what the agent knows about where it is. The best action depends on the state, and every action changes the state.">
+<link rel="canonical" href="https://arcade.codewithnk.com/concepts/state/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neural Arcade">
-<meta property="og:title" content="Lesson 2: State, action, reward · Neural Arcade">
-<meta property="og:description" content="Every step is three things: the state you are in, the action you take, the reward you get back.">
-<meta property="og:url" content="https://arcade.codewithnk.com/concepts/state-action-reward/">
+<meta property="og:title" content="Lesson 5: State · Neural Arcade">
+<meta property="og:description" content="The state is what the agent knows about where it is. The best action depends on the state, and every action changes the state.">
+<meta property="og:url" content="https://arcade.codewithnk.com/concepts/state/">
 <meta property="og:image" content="https://arcade.codewithnk.com/assets/share.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="Neural Arcade: small browser games where tiny neural networks learn in front of you">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Lesson 2: State, action, reward · Neural Arcade">
-<meta name="twitter:description" content="Every step is three things: the state you are in, the action you take, the reward you get back.">
+<meta name="twitter:title" content="Lesson 5: State · Neural Arcade">
+<meta name="twitter:description" content="The state is what the agent knows about where it is. The best action depends on the state, and every action changes the state.">
 <meta name="twitter:image" content="https://arcade.codewithnk.com/assets/share.png">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three/three.module.min.js"}}</script>
 <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
@@ -28,19 +28,19 @@
 <link rel="stylesheet" href="../../assets/lesson.css">
 <script>try { const t = localStorage.getItem('na-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
 </head>
-<body data-lesson="state-action-reward">
+<body data-lesson="state">
 <header data-site="reinforcement-learning"></header>
 
 <main class="wrap concept-page lesson-page">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i" viewBox="0 0 256 256"><path fill="currentColor" d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol></svg>
 <section class="lhead">
-  <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / The problem / Lesson 2 of 19</div>
-  <h1>Lesson 2: State, action, reward</h1>
-  <p class="lead">Every step is three things: the state you are in, the action you take, the reward you get back.</p>
+  <div class="crumb"><a href="../../reinforcement-learning/">Reinforcement learning</a> / A chain of decisions / Lesson 5 of 26</div>
+  <h1>Lesson 5: State</h1>
+  <p class="lead">The state is what the agent knows about where it is. The best action depends on the state, and every action changes the state.</p>
 </section>
 
 <section class="play" id="play" aria-label="Play this lesson">
-  <div id="levelRoot" data-level="state-action-reward"></div>
+  <div id="levelRoot" data-level="state"></div>
   <noscript><p>Turn on JavaScript to play this level.</p></noscript>
 </section>
 <p class="own">In this game: The state is where the robot stands. The action is an arrow. The reward is the number the room hands back.</p>
@@ -93,7 +93,7 @@ done = <span class="tk">False</span>
 </div>
 
 <p class="done-row"><button class="btn" id="markDone" type="button" aria-pressed="false">Mark as done</button></p>
-<nav class="neighbours" aria-label="Lessons"><a class="prev" href="../../concepts/agent/"><small>Previous</small>Lesson 1: Agent and environment</a><a class="next" href="../../concepts/return/"><small>Next</small>Lesson 3: Return</a></nav>
+<nav class="neighbours" aria-label="Lessons"><a class="prev" href="../../concepts/loop/"><small>Previous</small>Lesson 2: The loop</a><a class="next" href="../../concepts/return/"><small>Next</small>Lesson 6: Return</a></nav>
 </main>
 
 <footer data-site></footer>

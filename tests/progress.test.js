@@ -16,7 +16,7 @@ const memory = (start = {}) => {
 
 describe('parse and serialize', () => {
   it('keeps unique strings only', () => {
-    expect(parseProgress('["agent","agent",3,null]')).toEqual(['agent']);
+    expect(parseProgress('["loop","loop",3,null]')).toEqual(['loop']);
   });
   it('gives [] for anything that is not an array of ids', () => {
     for (const bad of [null, undefined, '', 'x', '{}', '[1', '{"a":1}', '[1,null]', '"x"']) {
@@ -24,25 +24,25 @@ describe('parse and serialize', () => {
     }
   });
   it('round-trips', () => {
-    expect(parseProgress(serializeProgress(['agent', 'pid']))).toEqual(['agent', 'pid']);
+    expect(parseProgress(serializeProgress(['loop', 'pid']))).toEqual(['loop', 'pid']);
   });
 });
 
 describe('toggleDone', () => {
   it('adds and removes without mutating or duplicating', () => {
-    const a = ['agent'];
-    expect(toggleDone(a, 'policy', true)).toEqual(['agent', 'policy']);
-    expect(toggleDone(a, 'agent', true)).toEqual(['agent']);
-    expect(toggleDone(a, 'agent', false)).toEqual([]);
-    expect(toggleDone(a, 'ghost', false)).toEqual(['agent']);
-    expect(a).toEqual(['agent']);
+    const a = ['loop'];
+    expect(toggleDone(a, 'policy', true)).toEqual(['loop', 'policy']);
+    expect(toggleDone(a, 'loop', true)).toEqual(['loop']);
+    expect(toggleDone(a, 'loop', false)).toEqual([]);
+    expect(toggleDone(a, 'ghost', false)).toEqual(['loop']);
+    expect(a).toEqual(['loop']);
   });
 });
 
 describe('trackProgress', () => {
   it('counts only live lessons that exist', () => {
     // 'ghost' was removed, 'sarsa' is soon: neither counts
-    expect(trackProgress(['agent', 'ghost', 'sarsa'], rl)).toEqual({ done: 1, live: 7, soon: 12, total: 19, complete: false });
+    expect(trackProgress(['loop', 'ghost', 'sarsa'], rl)).toEqual({ done: 1, live: 7, soon: 19, total: 26, complete: false });
   });
   it('is complete when every live lesson is done', () => {
     expect(trackProgress(ALL_LIVE_IDS, rl).complete).toBe(true);
@@ -52,13 +52,13 @@ describe('trackProgress', () => {
 
 describe('nextLesson and continueTarget', () => {
   it('nextLesson is the first live lesson not done, skipping soon ones', () => {
-    expect(nextLesson([], rl).id).toBe('agent');
-    expect(nextLesson(['agent', 'policy'], rl).id).toBe('state-action-reward');
-    expect(nextLesson(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'], rl).id).toBe('reward-design');
+    expect(nextLesson([], rl).id).toBe('loop');
+    expect(nextLesson(['loop', 'policy'], rl).id).toBe('state');
+    expect(nextLesson(['loop', 'state', 'return', 'policy', 'value', 'mdp'], rl).id).toBe('reward-design');
     expect(nextLesson(ALL_LIVE_IDS, rl)).toBeNull();
   });
   it('a stale or soon id never moves Continue', () => {
-    expect(nextLesson(['ghost', 'sarsa'], rl).id).toBe('agent');
+    expect(nextLesson(['ghost', 'sarsa'], rl).id).toBe('loop');
     expect(continueTarget(['ghost', 'sarsa']).lesson.id).toBe('learning-from-examples');
   });
   it('continues at the first lesson of the first track when nothing is done', () => {
@@ -69,7 +69,7 @@ describe('nextLesson and continueTarget', () => {
   });
   it('moves on to the next track, and first is false once anything is done', () => {
     const c = continueTarget(['learning-from-examples', 'learning-by-selection']);
-    expect(c.lesson.id).toBe('agent');
+    expect(c.lesson.id).toBe('loop');
     expect(c.track.id).toBe('reinforcement-learning');
     expect(c.first).toBe(false);
   });
@@ -82,21 +82,21 @@ describe('nextLesson and continueTarget', () => {
 describe('guarded storage', () => {
   it('never throws when storage throws or is missing', () => {
     expect(loadProgress(throwing)).toEqual([]);
-    expect(saveProgress(['agent'], throwing)).toBe(false);
+    expect(saveProgress(['loop'], throwing)).toBe(false);
     expect(loadProgress(undefined)).toEqual([]);
-    expect(saveProgress(['agent'], undefined)).toBe(false);
+    expect(saveProgress(['loop'], undefined)).toBe(false);
     expect(loadProgress(null)).toEqual([]);
   });
   it('treats garbage in storage as no progress', () => {
-    for (const raw of ['x', '{}', '[1,null]', '["agent"']) {
+    for (const raw of ['x', '{}', '[1,null]', '["loop"']) {
       expect(loadProgress(memory({ [PROGRESS_KEY]: raw }))).toEqual([]);
     }
   });
   it('saves and loads under na-progress-v1', () => {
     const s = memory();
     expect(PROGRESS_KEY).toBe('na-progress-v1');
-    expect(saveProgress(['agent', 'pid'], s)).toBe(true);
-    expect(s.data['na-progress-v1']).toBe('["agent","pid"]');
-    expect(loadProgress(s)).toEqual(['agent', 'pid']);
+    expect(saveProgress(['loop', 'pid'], s)).toBe(true);
+    expect(s.data['na-progress-v1']).toBe('["loop","pid"]');
+    expect(loadProgress(s)).toEqual(['loop', 'pid']);
   });
 });

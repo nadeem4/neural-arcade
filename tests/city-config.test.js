@@ -15,7 +15,7 @@ describe('Reward City listing', () => {
     });
     expect(g.lesson).toMatch(/Teaches reward design, and why an agent does what you pay it for, not what you meant\.$/);
     expect(tracksOfGame('city').map(t => t.id)).toEqual(['reinforcement-learning']);
-    expect(chipsForGame('city').map(c => c.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'reward-design']);
+    expect(chipsForGame('city').map(c => c.id)).toEqual(['loop', 'state', 'return', 'policy', 'value', 'reward-design']);
     expect(chipsForGame('city').at(-1).says).toBe('The rate card is the reward design: every fine you add closes one loophole and the taxi finds the next.');
   });
   it('share.png is 1280x720', () => {

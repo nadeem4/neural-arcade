@@ -48,8 +48,8 @@ describe('buildPages', () => {
   const disk = p => new URL('../' + p, import.meta.url);
   const files = { read: p => (existsSync(disk(p)) ? readFileSync(disk(p), 'utf8') : null), exists: p => existsSync(disk(p)) };
   const out = buildPages({ files });
-  const LESSONS = ['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp'];
-  const NO_GRID = ['agent', 'state-action-reward', 'return', 'policy', 'value'];
+  const LESSONS = ['loop', 'state', 'return', 'policy', 'value', 'mdp'];
+  const NO_GRID = ['loop', 'state', 'return', 'policy', 'value'];
   it('emits the three track pages and a page for every live lesson', () => {
     const live = flatLessons().filter(l => l.status === 'live').map(l => l.id);
     expect(Object.keys(out).filter(p => p.startsWith('concepts/')).map(p => p.split('/')[1]).sort()).toEqual([...live].sort());
@@ -70,15 +70,15 @@ describe('buildPages', () => {
       expect(html, id).toContain('href="../../games/treasure-room/treasure-room.css"');
       expect(html, id).toContain('<symbol id="i"');
     }
-    expect(out['concepts/return/index.html']).toContain('<title>Lesson 3: Return · Neural Arcade</title>');
+    expect(out['concepts/return/index.html']).toContain('<title>Lesson 6: Return · Neural Arcade</title>');
   });
   it('colours the Python in a write-up when the page is built', () => {
     const w = '<section id="writeup"><pre class="code"><code>for x in (1, 2): print(x)</code></pre></section>';
     const html = buildPages({ files: { read: () => w, exists: () => false } })['concepts/policy/index.html'];
     expect(html).toContain('<span class="tk">for</span> x <span class="tk">in</span> (<span class="tn">1</span>');  });
   it('share image is the lesson own file when it exists', () => {
-    const own = buildPages({ files: { read: () => '<section id="writeup"></section>', exists: p => p === 'concepts/agent/share.png' } });
-    expect(own['concepts/agent/index.html']).toContain('content="https://arcade.codewithnk.com/concepts/agent/share.png"');
+    const own = buildPages({ files: { read: () => '<section id="writeup"></section>', exists: p => p === 'concepts/loop/share.png' } });
+    expect(own['concepts/loop/index.html']).toContain('content="https://arcade.codewithnk.com/concepts/loop/share.png"');
     expect(own['concepts/return/index.html']).toContain('content="https://arcade.codewithnk.com/assets/share.png"');
   });
   it('whole-game lesson pages: banner shell, no Treasure Room CSS, own or game share image', () => {

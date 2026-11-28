@@ -101,13 +101,13 @@ describe('track and lesson page guards', () => {
     }
   });
   it('no lesson title is shown as a bare label without its number', () => {
-    const says = new Set(lessons.map(l => l.says));
+    const says = new Set([...lessons.map(l => l.says), ...TRACKS.map(t => t.blurb)]);
     const pages = [
       ...TRACKS.map(t => trackBodyHtml(t, { done: [], base: '../' })),
       ...TRACKS.map(t => trackRowHtml(t, [], '')),
       ...lessons.map(l => lessonBodyHtml(l, { games: GAMES, base: '../../', writeupHtml: '' })),
       continueHtml(continueTarget([])),
-      continueHtml(continueTarget(['learning-from-examples', 'agent'])),
+      continueHtml(continueTarget(['learning-from-examples', 'loop'])),
       ...GAMES.map(g => lessonChipsHtml(g, '../../')),
     ];
     for (const page of pages) {
@@ -115,7 +115,7 @@ describe('track and lesson page guards', () => {
       const html = page.replace(/<span class="num">\d+<\/span>\s*<span class="what"><b>[^<]*<\/b>/g, '');
       const bare = [];
       for (const m of html.matchAll(/>([^<>]+)</g)) {
-        // a lesson's own description sentence is prose, not a label
+        // a lesson's description or a track blurb is prose, not a label
         if (says.has(m[1].trim().replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, '&'))) continue;
         // drop every numbered label first, so "Lesson 8: Policy iteration" does not count as a bare "Policy"
         let text = m[1];

@@ -14,7 +14,7 @@ const LESSONS = [
 
 describe('treasure room levels', () => {
   it('has six levels in order, each keyed by the id of its lesson', () => {
-    expect(LEVELS.map(l => l.id)).toEqual(['agent', 'state-action-reward', 'return', 'policy', 'value', 'mdp']);
+    expect(LEVELS.map(l => l.id)).toEqual(['loop', 'state', 'return', 'policy', 'value', 'mdp']);
     for (const l of LEVELS) expect(lessonById(l.id), l.id).toBeTruthy();
   });
   it('every level is filled in and found by id', () => {
@@ -31,10 +31,10 @@ const BUILT = LEVELS.map(l => l.id);
 
 describe('navModel', () => {
   it('takes each title from the caller and numbers the levels in the given order', () => {
-    const nav = navModel(['agent', 'return', 'mdp'], 'mdp', id => `T-${id}`);
-    expect(nav.map(x => x.title)).toEqual(['T-agent', 'T-return', 'T-mdp']);
+    const nav = navModel(['loop', 'return', 'mdp'], 'mdp', id => `T-${id}`);
+    expect(nav.map(x => x.title)).toEqual(['T-loop', 'T-return', 'T-mdp']);
     expect(nav.map(x => x.n)).toEqual([1, 2, 3]);
-    expect(nav.map(x => x.href)).toEqual(['?level=agent', '?level=return', '?level=mdp']);
+    expect(nav.map(x => x.href)).toEqual(['?level=loop', '?level=return', '?level=mdp']);
     expect(nav.find(x => x.current).id).toBe('mdp');
   });
 });
@@ -50,7 +50,7 @@ describe('levelFromUrl', () => {
   });
   it('numbers, the old triples slug and anything unknown land on the first built level', () => {
     for (const [s, h] of [['?level=3', ''], ['?level=triples', ''], ['?level=abc', ''], ['', '#nonsense'], ['', ''], ['?level=', '']]) {
-      expect(levelFromUrl(s, h, BUILT), `${s}${h}`).toBe('agent');
+      expect(levelFromUrl(s, h, BUILT), `${s}${h}`).toBe('loop');
     }
   });
   it('an invalid query falls back to a valid hash', () => {
@@ -68,20 +68,20 @@ describe('assumesHtml', () => {
     expect(assumesHtml({ assumes: ['nope'] }, TRACKS)).toBe('');
   });
   it('links each lesson a level builds on, with its number', () => {
-    const l = lessonById('state-action-reward');
+    const l = lessonById('state');
     const h = assumesHtml(levelById('return'), TRACKS);
     expect(h).toContain('<p class="assumes">Builds on ');
     expect(h).toContain(lessonLabel(l));
     expect(h).toContain(`href="${lessonHref(l, '../../')}"`);
   });
   it('skips ids that are not live and keeps the rest', () => {
-    const h = assumesHtml({ assumes: ['nope', 'agent'] }, TRACKS);
-    expect(h).toContain(lessonLabel(lessonById('agent')));
+    const h = assumesHtml({ assumes: ['nope', 'loop'] }, TRACKS);
+    expect(h).toContain(lessonLabel(lessonById('loop')));
     expect(h).not.toContain('nope');
   });
   it('level 1 has none; 2 to 6 build on the lesson before', () => {
     expect(LEVELS[0].assumes ?? []).toEqual([]);
-    expect(LEVELS.slice(1).map(l => l.assumes)).toEqual([['agent'], ['state-action-reward'], ['return'], ['policy'], ['value']]);
+    expect(LEVELS.slice(1).map(l => l.assumes)).toEqual([['loop'], ['state'], ['return'], ['policy'], ['value']]);
     for (const lv of LEVELS) for (const id of lv.assumes ?? []) expect(lessonById(id), id).toBeTruthy();
   });
 });
