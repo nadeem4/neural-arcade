@@ -46,7 +46,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         <p class="lesson-line" id="status"></p>
       </section>
       <section data-levels="loop" aria-label="Steps">
-        <nav class="steps" id="stepTabs" aria-label="Lesson steps">${levelAgent.tabsHtml(1)}</nav>
+        <nav class="steps" id="loopTabs" aria-label="Lesson steps">${levelAgent.tabsHtml}</nav>
         <p id="stepHint"></p>
       </section>
       <section data-levels="loop" aria-labelledby="sh">
@@ -151,7 +151,7 @@ export function levelPanelHtml({ showTitle = true } = {}) {
         </div>
         <div class="row-btns">
           <button class="btn primary" type="button" id="stepBtn" hidden>Step</button>
-          <button class="btn primary" type="button" id="handover">Let the AI play</button>
+          <button class="btn primary" type="button" id="handover" data-levels="state">Let the AI play</button>
           <button class="btn" type="button" id="restart">Restart</button>
           <button class="info" type="button" aria-expanded="false" aria-controls="info-restart" aria-label="Explain restart" title="What is this?"><svg aria-hidden="true"><use href="#i"/></svg></button>
         </div>

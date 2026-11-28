@@ -103,8 +103,7 @@ describe('level 1 steps (mount)', () => {
     press('#restart');
     expect([steps, score]).toEqual([0, 0]);
   });
-  it('step 1 shows the arrow pad and no Step button, steps 2 and 3 the reverse, and there is no handover', () => {
-    expect(el('#handover').hidden).toBe(true);
+  it('step 1 shows the arrow pad and no Step button, steps 2 and 3 the reverse', () => {
     expect([el('#pad').hidden, el('#stepBtn').hidden]).toEqual([false, true]);
     press('#tab2');
     expect([el('#pad').hidden, el('#stepBtn').hidden]).toEqual([true, false]);

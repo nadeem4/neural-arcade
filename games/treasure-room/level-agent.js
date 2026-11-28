@@ -28,7 +28,22 @@ const TURN_TABS = [
   { label: '2 Answer off', hint: "The room's answer is cut, so the robot never hears where it is. Press Step: it keeps sending Right." },
   { label: '3 Answer on', hint: 'Press Step. Each turn the agent sends one action and the room answers.' },
 ];
-export const tabsHtml = open => TURN_TABS.map((t, i) => `<button type="button" id="tab${i + 1}" data-step="${i + 1}"${i + 1 === open ? ' aria-current="step"' : ''}>${t.label}</button>`).join('');
+export const tabsHtml = TURN_TABS.map((t, i) => `<button type="button" id="tab${i + 1}">${t.label}</button>`).join('');
+
+// Arrow keys and room clicks drive the robot only while canDrive(): not from the level links or a form control.
+function wireDrive(on, ui, pos, canDrive, move) {
+  on(document, 'keydown', e => {
+    if (!(e.key in KEYS) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!canDrive() || e.target.closest?.('#levels, input, select, textarea')) return;
+    e.preventDefault(); // stops the page scrolling under the arrow
+    move(KEYS[e.key]);
+  });
+  on(ui.canvas, 'click', e => {
+    const c = ui.cellAt(e), p = pos();
+    const a = c ? ACTIONS.findIndex(({ dx, dy }) => p.x + dx === c.x && p.y + dy === c.y) : -1;
+    if (a >= 0) move(a);
+  });
+}
 
 // Events: move (you), turn (the agent acts; without the answer it believes it never left the start and sends Right), handover, aiStep, restart.
 // Nothing moves once the episode is done, until restart.
@@ -82,18 +97,7 @@ export function mountPlay(ui, { handover, onStep, onRestart } = {}) {
   pads.forEach(b => on(b, 'click', () => move(Number(b.dataset.move))));
   on(handBtn, 'click', handOver);
   on(restartBtn, 'click', () => { stop(); s = initial(); onRestart?.(); ui.say(''); paint(); });
-  // Arrow keys play only while you drive: not once the episode is over or the AI has the robot, and not from the level links or a form control.
-  on(document, 'keydown', e => {
-    if (!(e.key in KEYS) || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (s.done || s.mode !== 'you' || e.target.closest?.('#levels, input, select, textarea')) return;
-    e.preventDefault(); // stops the page scrolling under the arrow
-    move(KEYS[e.key]);
-  });
-  on(ui.canvas, 'click', e => {
-    const c = ui.cellAt(e);
-    const a = c ? ACTIONS.findIndex(({ dx, dy }) => s.pos.x + dx === c.x && s.pos.y + dy === c.y) : -1;
-    if (a >= 0) move(a);
-  });
+  wireDrive(on, ui, () => s.pos, () => !s.done && s.mode === 'you', move);
 
   paint();
   return { destroy() { stop(); ac.abort(); }, redraw: paint };
@@ -108,7 +112,6 @@ export function mount(ui) {
   const pad = $('#pad'), stepBtn = $('#stepBtn'), turn = $('#turn');
   const moveBtns = [...ui.panel.querySelectorAll('[data-move]')];
   let s = initial(), tab = 1;
-  $('#handover').hidden = true;
 
   function paint() {
     ui.draw({ agent: s.pos, tags: [] });
@@ -134,7 +137,7 @@ export function mount(ui) {
   function show(n) {
     tab = n; s = initial(); ui.say('');
     $('#stepHint').textContent = TURN_TABS[n - 1].hint;
-    TURN_TABS.forEach((_, i) => $(`#tab${i + 1}`).setAttribute('aria-current', i + 1 === n ? 'step' : 'false'));
+    TURN_TABS.forEach((_, i) => { const b = $(`#tab${i + 1}`); i + 1 === n ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current'); });
     paint();
   }
   const move = action => { if (tab === 1) { apply({ type: 'move', action }); paint(); } };
@@ -143,17 +146,7 @@ export function mount(ui) {
   on(stepBtn, 'click', () => { apply({ type: 'turn', answer: tab === 3 }); paint(); });
   on($('#restart'), 'click', () => show(tab));
   moveBtns.forEach(b => on(b, 'click', () => move(Number(b.dataset.move))));
-  on(document, 'keydown', e => {
-    if (!(e.key in KEYS) || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (s.done || tab !== 1 || e.target.closest?.('#levels, input, select, textarea')) return;
-    e.preventDefault();
-    move(KEYS[e.key]);
-  });
-  on(ui.canvas, 'click', e => {
-    const c = ui.cellAt(e);
-    const a = c ? ACTIONS.findIndex(({ dx, dy }) => s.pos.x + dx === c.x && s.pos.y + dy === c.y) : -1;
-    if (a >= 0) move(a);
-  });
+  wireDrive(on, ui, () => s.pos, () => !s.done && tab === 1, move);
 
   show(1);
   return { destroy() { ac.abort(); }, redraw: paint };
