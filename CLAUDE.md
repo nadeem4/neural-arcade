@@ -54,5 +54,6 @@ Release targets:
 - Treasure Room How it works figures are still images from the 3D room, never live canvases: regenerate them with `?shots=1&fig=N&size=WxH` (N is 1 to 8) (see `FIGURES` in games/treasure-room/shots.js, default 1280x800, webp under 120 KB) whenever story-data.js or the room look changes, and capture `games/treasure-room/share.png` with fig=1 at size=1280x720
 - Lesson pages load studio.css, game.css, treasure-room.css, concept.css and lesson.css together, so a class added to lesson.css or a writeup.html takes a name none of the other four defines, or is scoped under its own parent like `.loop .head` (a test in lesson-view.test.js lists the shared names)
 - When a heading, term or file is renamed or removed, grep README.md, DESIGN.md and docs/layout.md for the old name in the same commit; when a level's room or rules change, update README's Treasure Room summary line too
+- One test per behaviour across all of tests/: before adding or moving a test of a function, grep tests/ for its name and drop the copy in the other file
 - A level view's behaviour (tabs, hints, picks) is tested by driving `mount()` through `tests/treasure-room-fake-ui.js`, not by matching its static markup
 - Plans live in `.plan/` (local, not in git); Notion is the dashboard only. docs/ is git-ignored except docs/layout.md

@@ -16,7 +16,7 @@ import * as levelPolicy from './level-policy.js';
 import * as levelValue from './level-value.js';
 import * as levelMdp from './level-mdp.js';
 
-const views = { agent: levelAgent, 'state-action-reward': levelTriples, return: levelReturn, policy: levelPolicy, value: levelValue, mdp: levelMdp }; // the levels built so far, by lesson id
+const views = { agent: levelAgent, 'state-action-reward': levelTriples, return: levelReturn, policy: levelPolicy, value: levelValue, mdp: levelMdp };
 // The built levels in track order: the game's level order is the lessons' order.
 export const BUILT_LEVELS = flatLessons().filter(l => l.game === 'treasure-room' && l.level in views).map(l => l.level);
 

@@ -96,6 +96,7 @@ export function validateTracks(tracks, games, builtLevels) {
       const game = lesson.game ?? track.game;
       if (lesson.level == null && !lesson.game) errs.push(`${at}: needs a level or a game`);
       if (lesson.game) checkGame(lesson.game, at);
+      if (lesson.level != null && lesson.level !== lesson.id) errs.push(`${at}: level ${lesson.level} must be its own id`);
       if (lesson.status === 'live' && lesson.level != null && game) {
         const built = builtLevels[game];
         if (!built) errs.push(`${at}: no built levels for game ${game}`);

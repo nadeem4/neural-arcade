@@ -89,6 +89,9 @@ describe('validateTracks', () => {
     expect(bad(t => { rl(t)[0].level = 'bandit'; }).join()).toMatch(/level bandit is not a built level/);
     expect(validateTracks(TRACKS, GAMES, {}).join()).toMatch(/no built levels/);
   });
+  it('rejects a level that is not the lesson\'s own id', () => {
+    expect(bad(t => { rl(t)[1].level = 'agent'; }).join()).toMatch(/level agent must be its own id/);
+  });
   it('rejects a wild entry without says or a boolean show', () => {
     expect(bad(t => { rl(t)[0].wild[0].says = ''; }).join()).toMatch(/says/);
     expect(bad(t => { rl(t)[0].wild[0].show = 'yes'; }).join()).toMatch(/show/);

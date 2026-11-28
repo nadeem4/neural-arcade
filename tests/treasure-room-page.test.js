@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { GAMES } from '../assets/games.js';
 import { LESSON } from '../games/treasure-room/words.js';
-import { levelFromUrl, navModel } from '../games/treasure-room/levels.js';
+import { navModel } from '../games/treasure-room/levels.js';
 import { BUILT_LEVELS } from '../games/treasure-room/level-panel.js';
 import { lessonOfLevel } from '../assets/tracks/model.js';
 import { initial, reduce } from '../games/treasure-room/level-agent.js';
@@ -15,24 +15,6 @@ const entry = GAMES.find(g => g.id === 'treasure-room');
 const rules = sel => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => m[1].trim() === sel).map(m => m[2]).join(' ');
 
 describe('treasure room deep links', () => {
-  it('lands every odd input on the first built level', () => {
-    for (const [q, h] of [['?level=0', ''], ['?level=3', ''], ['?level=abc', ''], ['', '#nonsense'], ['', ''], ['?level=-1', '']]) {
-      expect(levelFromUrl(q, h, BUILT_LEVELS), q + h).toBe(BUILT_LEVELS[0]);
-    }
-  });
-  it('takes a lesson id, and the query beats the hash', () => {
-    expect(levelFromUrl('?level=state-action-reward', '', BUILT_LEVELS)).toBe('state-action-reward');
-    expect(levelFromUrl('', '#value', BUILT_LEVELS)).toBe('value');
-    expect(levelFromUrl('?level=return', '#value', BUILT_LEVELS)).toBe('return');
-  });
-  it('the nav lists only built levels and marks exactly one current', () => {
-    const nav = navModel(['agent', 'return'], 'return', id => `T-${id}`);
-    expect(nav.map(n => n.id)).toEqual(['agent', 'return']);
-    expect(nav.map(n => n.href)).toEqual(['?level=agent', '?level=return']);
-    expect(nav.filter(n => n.current)).toHaveLength(1);
-    expect(nav.find(n => n.current).id).toBe('return');
-    expect(nav[0].title).toBe('T-agent');
-  });
   it('a level that is not built falls back to the first built one', () => {
     expect(navModel(['agent', 'return'], 'bandit', String).find(n => n.current).id).toBe('agent');
   });
