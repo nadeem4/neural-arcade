@@ -1,5 +1,5 @@
 // Lesson 1's learner: tabular Q-learning on ROOM, trained in one call. The page never shows the table.
-import { ROOM, START, step } from './sim.js';
+import { ROOM, START, ENDS, step } from './sim.js';
 import { ACTIONS, stateId } from '../../assets/grid.js';
 import { createQTable, chooseAction, update } from '../../engine/qlearn.js';
 import { mulberry32 } from '../../engine/rng.js';
@@ -18,7 +18,7 @@ function run(q, epsilon, rng, learning) {
     pos = r.pos; score += r.reward; path.push(pos); rewards.push(r.reward);
     if (r.done) break;
   }
-  return { path, rewards, score };
+  return { path, rewards, score, outcome: ENDS[ROOM.cells[pos.y][pos.x]]?.outcome ?? null };
 }
 
 export function learn() {

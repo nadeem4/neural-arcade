@@ -2,7 +2,6 @@
 import { initial, reduce, wireDrive } from './level-agent.js';
 import { learn, TRIES } from './learner.js';
 import { outcomeNote } from './words.js';
-import { ROOM } from './sim.js';
 
 const BEAT = 250; // ms between the steps of a watched try
 const PADS = { learnUp: 0, learnDown: 1, learnLeft: 2, learnRight: 3 };
@@ -20,18 +19,17 @@ export function mount(ui) {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ac = new AbortController(), on = (t, ev, fn) => t.addEventListener(ev, fn, { signal: ac.signal });
   const $ = sel => ui.panel.querySelector(sel);
-  let s = initial(), rewards = [], tab = 1, run = null, timer = null;
+  let s = initial(), rewards = [], tab = 1, run = null, trained = false, timer = null;
 
   const stop = () => { clearInterval(timer); timer = null; };
-  const trained = () => run?.trained;
 
   function paintDrive() {
     ui.draw({ agent: s.pos, tags: [] });
     const shown = tab === 2;
-    ui.readout(s.steps, shown ? sum(rewards) : '?');
+    ui.readout(s.steps, shown ? s.total : '?');
     $('#learnSees').textContent = `x ${s.pos.x}, y ${s.pos.y}, reward ${shown && s.lastObs ? s.lastObs.reward : '?'}`;
     $('#rewardRow').innerHTML = rewards.length ? chips(rewards) : 'Make a move in step 1 and its reward shows here.';
-    $('#rewardSum').textContent = rewards.length ? `Score ${sum(rewards)}` : '';
+    $('#rewardSum').textContent = rewards.length ? `Score ${s.total}` : '';
     for (const id in PADS) $('#' + id).disabled = s.done;
   }
   function paintTab() {
@@ -41,8 +39,8 @@ export function mount(ui) {
     $('#learnDrive').hidden = tab === 3;
     $('#learnRewards').hidden = tab !== 2;
     $('#learnTrain').hidden = tab !== 3;
-    $('#watchLast').disabled = !trained();
-    $('#learnWhy').textContent = trained() ? '' : 'Press Skip to try 200 first: the robot has to learn before you can watch it.';
+    $('#watchLast').disabled = !trained;
+    $('#learnWhy').textContent = trained ? '' : 'Press Skip to try 200 first: the robot has to learn before you can watch it.';
   }
   function show(n) {
     stop(); tab = n; ui.say('');
@@ -58,7 +56,7 @@ export function mount(ui) {
     if (s.steps === before) return;
     rewards.push(s.lastObs.reward);
     ui.flash();
-    if (s.done && tab === 2) ui.say(outcomeNote(s.outcome, sum(rewards)));
+    if (s.done && tab === 2) ui.say(outcomeNote(s.outcome, s.total));
     paintDrive();
   }
 
@@ -69,8 +67,7 @@ export function mount(ui) {
       ui.draw({ agent: trace.path[i], tags: [] });
       ui.readout(i, sum(got));
       if (i === trace.rewards.length) {
-        const end = trace.path[i], cell = ROOM.cells[end.y][end.x];
-        ui.say(outcomeNote(cell === 'T' ? 'treasure' : cell === 'X' ? 'pit' : null, trace.score));
+        ui.say(outcomeNote(trace.outcome, trace.score));
         $('#tryNote').textContent = `${label} · Score ${trace.score} · ${trace.rewards.length} steps`;
       }
     };
@@ -79,14 +76,14 @@ export function mount(ui) {
     at(0);
     timer = setInterval(() => { if (document.hidden) return; at(++i); if (i >= trace.rewards.length) stop(); }, BEAT);
   }
-  const ensure = () => (run ??= { ...learn(), trained: false });
+  const ensure = () => (run ??= learn());
 
   for (const [id, a] of Object.entries(PADS)) on($('#' + id), 'click', () => move(a));
   TABS.forEach((_, i) => on($(`#learnTab${i + 1}`), 'click', () => show(i + 1)));
   on($('#learnRestart'), 'click', () => { s = initial(); rewards = []; show(1); });
   on($('#watchFirst'), 'click', () => watch(ensure().first, 'Try 1'));
   on($('#skipTrain'), 'click', () => {
-    stop(); ensure().trained = true;
+    stop(); ensure(); trained = true;
     ui.curve(run.scores);
     $('#tryNote').textContent = `Try ${TRIES}`;
     paintTab();
@@ -95,5 +92,5 @@ export function mount(ui) {
   wireDrive(on, ui, () => s.pos, () => !s.done && tab !== 3, move);
 
   show(1);
-  return { destroy() { stop(); ac.abort(); }, redraw() { if (trained()) ui.curve(run.scores); } };
+  return { destroy() { stop(); ac.abort(); }, redraw() { if (trained) ui.curve(run.scores); } };
 }

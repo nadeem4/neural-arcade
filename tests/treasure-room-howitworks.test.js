@@ -8,7 +8,7 @@ const html = read('games/treasure-room/how-it-works/index.html');
 const story = read('games/treasure-room/how-it-works/story.js');
 const css = read('games/treasure-room/how-it-works/story.css');
 // Lesson 1 has no section here: How it works starts at the loop.
-const LEVELS = ALL.slice(1);
+const LEVELS = ALL.filter(l => l.id !== 'learning-by-reward');
 const URL_ = 'https://arcade.codewithnk.com/games/treasure-room/';
 const sections = html.split('<section class="step"').slice(1).slice(0, 6);
 

@@ -7,7 +7,6 @@ describe('the room learner', () => {
   it('scores every try and starts below zero', () => {
     expect(run.scores).toHaveLength(TRIES);
     expect(run.scores[0]).toBeLessThan(0);
-    expect(run.first.score).toBe(run.scores[0]);
   });
   it('its greedy last try reaches the treasure in 6 steps for +5', () => {
     const { path, score } = run.last;

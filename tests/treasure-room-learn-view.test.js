@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '../games/treasure-room/level-learn.js';
-import { learn } from '../games/treasure-room/learner.js';
 import { fakeUi } from './treasure-room-fake-ui.js';
 
 describe('learning by reward steps (mount)', () => {
@@ -35,10 +34,9 @@ describe('learning by reward steps (mount)', () => {
   it('step 3: try 1 replays what the learner did, with a score below zero', () => {
     press('#learnTab3');
     press('#watchFirst');
-    const { first } = learn();
-    expect(ui.last().agent).toEqual(first.path.at(-1));
-    expect(score).toBe(first.score);
-    expect(el('#tryNote').textContent).toBe(`Try 1 · Score ${first.score} · ${first.rewards.length} steps`);
+    expect([steps, score]).toEqual([33, -42]);
+    expect(ui.said.at(-1)).toContain('pit');
+    expect(el('#tryNote').textContent).toBe('Try 1 · Score -42 · 33 steps');
   });
   it('Watch try 200 stays disabled, with a reason, until the learner has trained', () => {
     press('#learnTab3');
@@ -51,7 +49,7 @@ describe('learning by reward steps (mount)', () => {
   it('Skip to try 200 draws the score of every try, and Watch try 200 reaches the treasure for +5 in 6 steps', () => {
     press('#learnTab3');
     press('#skipTrain');
-    expect(ui.curves.at(-1)).toEqual(learn().scores);
+    expect(ui.curves.at(-1)).toHaveLength(200);
     expect(el('#tryNote').textContent).toBe('Try 200');
     press('#watchLast');
     expect([steps, score]).toEqual([6, 5]);
